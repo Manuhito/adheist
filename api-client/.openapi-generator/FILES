@@ -1,0 +1,8 @@
+.openapi-generator-ignore
+apis/CmsApi.ts
+apis/DashboardApi.ts
+apis/index.ts
+index.ts
+models/UserSignupStats.ts
+models/index.ts
+runtime.ts

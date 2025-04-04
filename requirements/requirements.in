@@ -1,0 +1,18 @@
+Django
+boto3
+celery
+celery-progress
+celery[redis]
+dj-stripe<2.9
+django-allauth[socialaccount,mfa]
+django-anymail[mailgun]  # email services
+django-celery-beat
+django-environ
+django-storages
+django-waffle
+djangorestframework
+drf-spectacular
+psycopg2-binary
+redis
+stripe
+wagtail
