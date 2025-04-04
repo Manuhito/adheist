@@ -21,7 +21,6 @@ _dist/
 .DS_Store
 .direnv
 .envrc
-
-# compiled static files are built in dev/deploy
+*.pem
 static/css/
 static/js/
