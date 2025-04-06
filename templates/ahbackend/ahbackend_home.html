@@ -1,0 +1,18 @@
+{% extends "web/app/app_base.html" %}
+{% load static %}
+{% load i18n %}
+{% load partials %}
+{% block app %}
+<div id="page-content" hx-target="#page-content">
+  {% partialdef page-content inline %}
+  <div class="app-card">
+    <h1 class="pg-title">Welcome to the ahbackend app!</h1>
+    <div class="pg-content">
+      <ul>
+        <li><a hx-get="{% url 'ahbackend:adlibrary_list' %}" hx-push-url="true" class="pg-link">{% translate "Manage AdLibrarys" %}</a></li>
+      </ul>
+    </div>
+  </div>
+  {% endpartialdef page-content %}
+</div>
+{% endblock %}

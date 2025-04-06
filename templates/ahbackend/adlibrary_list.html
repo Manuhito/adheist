@@ -1,0 +1,59 @@
+{% extends "web/app/app_base.html" %}
+{% load static %}
+{% load i18n %}
+{% load partials %}
+{% block app %}
+{% partialdef page-content inline %}
+<div id="page-content" hx-target="#page-content">
+  <nav class="mb-2" aria-label="breadcrumbs">
+    <ol class="pg-breadcrumbs">
+      <li><a hx-get="{% url 'ahbackend:ahbackend_home' %}" hx-push-url="true">{% translate "Ahbackend" %}</a></li>
+      <li class="pg-breadcrumb-active" aria-current="page">{% translate "All AdLibrarys" %}</li>
+    </ol>
+  </nav>
+  <section class="app-card">
+    <h3 class="pg-subtitle">{% translate "All AdLibrarys" %}</h3>
+    {% partialdef object-table inline %}
+      <div id="list-content">
+      {% for object in object_list %}
+        {% if forloop.first %}
+          <div class="table-responsive">
+            <table class="table pg-table">
+              <thead>
+                <tr>
+                  <th>{% translate "Name" %}</th>
+                  <th>{% translate "Created" %}</th>
+                  <th>{% translate "Updated" %}</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% endif %}
+              <tr>
+                <td>
+                  <a class="pg-link" hx-get="{{ object.get_absolute_url }}" hx-push-url="true">{{ object.name }}</a>
+                </td>
+                <td>{{ object.created_at }}</td>
+                <td>{{ object.updated_at }}</td>
+              </tr>
+              {% if forloop.last %}
+              </tbody>
+            </table>
+          </div>
+        {% endif %}
+      {% empty %}
+        <div class="mb-2">{% translate "There aren't any adlibrarys! Add one below." %}</div>
+        {% endfor %}
+        {% include "web/components/paginator_htmx.html" %}
+      </div>
+    {% endpartialdef %}
+    <div class="mt-2">
+      <a class="pg-button-secondary"
+         hx-get="{% url 'ahbackend:adlibrary_create' %}" hx-push-url="true">
+        <span class="pg-icon"><i class="fa fa-plus"></i></span>
+        <span>{% translate "Add AdLibrary" %}</span>
+      </a>
+    </div>
+  </section>
+</div>
+{% endpartialdef %}
+{% endblock %}

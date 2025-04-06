@@ -1,0 +1,46 @@
+{% extends "web/app/app_base.html" %}
+{% load static %}
+{% load i18n %}
+{% load form_tags %}
+{% load partials %}
+{% block app %}
+<div id="page-content" hx-target="#page-content">
+  {% partialdef page-content inline %}
+  <nav class="mb-2" aria-label="breadcrumbs">
+    <ol class="pg-breadcrumbs">
+      <li><a hx-get="{% url 'ahbackend:ahbackend_home' %}" hx-push-url="true">{% translate "Ahbackend" %}</a></li>
+      <li>
+        <a hx-get="{% url 'ahbackend:adlibrary_list' %}" hx-push-url="true">{% translate "AdLibrarys" %}</a>
+      </li>
+      {% if object %}
+        <li>
+          <a hx-get="{{ object.get_absolute_url }}" hx-push-url="true">{{ object.name }}</a>
+        </li>
+        <li class="pg-breadcrumb-active" aria-current="page">{% translate "Edit" %}</li>
+      {% else %}
+        <li class="pg-breadcrumb-active" aria-current="page">{% translate "New" %}</li>
+      {% endif %}
+    </ol>
+  </nav>
+  <section class="app-card">
+    <h3 class="pg-subtitle">
+      {% if object %}
+        {% blocktranslate with name=object.name %}Edit {{ name }}{% endblocktranslate %}
+      {% else %}
+        {% translate "New AdLibrary" %}
+      {% endif %}
+    </h3>
+    <form hx-post="{% if object %}{% url 'ahbackend:adlibrary_update' object.id %}{% else %}{% url 'ahbackend:adlibrary_create' %}{% endif %}" hx-push-url="true">
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+        {{ form.non_field_errors }}
+      {% endif %}
+      {% render_form_fields form %}
+      <div class="mt-2">
+        <input type="submit" class="pg-button-primary" value="{% translate 'Save' %}"/>
+      </div>
+    </form>
+  </section>
+  {% endpartialdef page-content %}
+</div>
+{% endblock %}

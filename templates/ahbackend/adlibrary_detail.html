@@ -1,0 +1,62 @@
+{% extends "web/app/app_base.html" %}
+{% load static %}
+{% load i18n %}
+{% load partials %}
+{% block app %}
+<div id="page-content" hx-target="#page-content">
+  {% partialdef page-content inline %}
+  <div x-data="{
+    showDeleteModal: false,
+    closeModal() {
+       this.showDeleteModal = false;
+     }
+   }"
+   @keydown.escape.window="closeModal()">
+    <nav class="mb-2" aria-label="breadcrumbs">
+      <ol class="pg-breadcrumbs">
+        <li><a hx-get="{% url 'ahbackend:ahbackend_home' %}" hx-push-url="true">{% translate "Ahbackend" %}</a></li>
+        <li><a hx-get="{% url 'ahbackend:adlibrary_list' %}" hx-push-url="true">{% translate "AdLibrarys" %}</a></li>
+        <li class="pg-breadcrumb-active" aria-current="page">{{ object.name }}</li>
+      </ol>
+    </nav>
+    <section class="app-card">
+      <h3 class="pg-subtitle">{% blocktranslate with name=object.name %}Detail view for {{ name }}{% endblocktranslate %}</h3>
+      <div class="mt-2">
+        <div>{% translate "Created at" %}: {{ object.created_at }}</div>
+        <div>{% translate "Updated at" %}: {{ object.updated_at }}</div>
+      </div>
+      <div class="mt-2">
+        <a hx-get="{% url 'ahbackend:adlibrary_update' object.pk %}" hx-push-url="true" class="pg-button-secondary">
+          <span class="pg-icon"><i class="fa fa-pencil"></i></span>
+          <span>{% translate "Edit" %}</span>
+        </a>
+        <button class="pg-button-danger pg-ml" @click="showDeleteModal = true">
+          <span class="pg-icon"><i class="fa fa-times"></i></span>
+          <span>{% translate "Delete" %}</span>
+        </button>
+      </div>
+    </section>
+    <div class="modal" x-show="showDeleteModal" x-cloak :class="showDeleteModal ? 'modal-open' : ''">
+      <form method="dialog" class="modal-backdrop" @click="closeModal()">
+        <button>close</button>
+      </form>
+      <div class="modal-box">
+        <p>
+          {% blocktranslate with name=object.name %}
+          Are you sure you want to delete the AdLibrary "{{ name }}"?
+          <strong>This is not reversible.</strong>
+          {% endblocktranslate %}
+        </p>
+        <div class="mt-2">
+          <form method="post" action="{% url 'ahbackend:adlibrary_delete' object.pk %}">
+            {% csrf_token %}
+            <button class="pg-button-danger" type="submit">{% translate "Delete" %}</button>
+            <button class="pg-button-secondary" type="button" @click="closeModal()">{% translate "Cancel" %}</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endpartialdef page-content %}
+</div>
+{% endblock %}
