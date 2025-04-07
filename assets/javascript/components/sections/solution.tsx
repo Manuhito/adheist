@@ -1,5 +1,5 @@
 "use client";
-
+import * as React from "react";
 import FlickeringGrid from "@/components/magicui/flickering-grid";
 import Ripple from "@/components/magicui/ripple";
 import Safari from "@/components/safari";

@@ -70,11 +70,10 @@
     <div class="animate-spin rounded-full h-16 w-16 border-4 border-primary border-t-transparent"></div>
   </div>
 
-  {# Main Content #}
-  <div id="root" style="opacity: 0; transition: opacity 0.3s ease-in-out;">
-    <div id="content-root">
-      {% block content %}{% endblock %}
-    </div>
+  <div id="root"></div>
+  <script src="{% static 'js/base-bundle.js' %}"></script>
+  <div id="page-content">
+    {% block content %}{% endblock %}
   </div>
 
   {# Base Scripts #}
@@ -86,7 +85,6 @@
   <script>__cssFramework = 'tailwind';</script>
 
   {# React Base Layout #}
-  <script src="{% static 'js/base-bundle.js' %}"></script>
   <script>
     // Show loading state immediately
     document.getElementById('loading-state').style.display = 'flex';
@@ -152,9 +150,8 @@
   {% endif %}
 
   {# Page Specific Scripts #}
-  {% block page_js %}
-  
-  {% endblock page_js %}
+  {% block page_js %}{% endblock %}
+  {% block extra_js %}{% endblock %}
 </body>
 
 </html>

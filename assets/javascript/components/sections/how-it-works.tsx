@@ -1,3 +1,5 @@
+"use client";
+import * as React from "react";
 import Features from "@/components/features-vertical";
 import Section from "@/components/section";
 import { Sparkles, Upload, Zap } from "lucide-react";

@@ -1,5 +1,5 @@
 "use client";
-
+import * as React from "react";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { Play, XIcon } from "lucide-react";

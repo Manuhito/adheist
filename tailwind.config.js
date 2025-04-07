@@ -2,12 +2,11 @@
 module.exports = {
   darkMode: ["class", '[data-theme="dark"]'],
   content: [
-    "./templates/**/*.{html,js,jsx,ts,tsx}",
-    "./assets/javascript/**/*.{js,jsx,ts,tsx}",
-    "./assets/styles/**/*.css",
-    "./static/**/*.{js,jsx,ts,tsx}",
-    "./**/*.html",  // catch any HTML files in any directory
-    "./**/*.{js,jsx,ts,tsx}"  // catch any JS/TS files in any directory
+    './apps/**/*.html',
+    './apps/web/templatetags/form_tags.py',
+    './assets/**/*.{js,ts,jsx,tsx,vue}',
+    './templates/**/*.html',
+    './components/**/*.{ts,tsx}',
   ],
   safelist: [
     // Alert variants

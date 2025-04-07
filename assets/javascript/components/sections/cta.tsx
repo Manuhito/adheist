@@ -1,3 +1,6 @@
+"use client";
+
+import * as React from "react";
 import Section from "@/components/section";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";

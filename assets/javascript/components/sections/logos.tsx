@@ -1,3 +1,4 @@
+import * as React from "react";
 import Marquee from "@/components/magicui/marquee";
 
 const companies = [

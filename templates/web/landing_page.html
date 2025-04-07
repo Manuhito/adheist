@@ -1,12 +1,9 @@
 {% extends "web/base.html" %}
 {% load static %}
-{% block body %}
 
-{% include "web/components/hero.html" %}
-{% include "web/components/feature_highlight.html" %}
-{% include "web/components/landing_section1.html" %}
-{% include "web/components/testimonials.html" %}
-{% include "web/components/landing_section2.html" %}
-{% include "web/components/cta.html" %}
+{% block content %}
+{% endblock %}
 
+{% block extra_js %}
+<script src="{% static 'js/landing-bundle.js' %}"></script>
 {% endblock %}

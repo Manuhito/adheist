@@ -1,3 +1,7 @@
+
+"use client";
+
+import * as React from "react";
 import BlurFade from "@/components/magicui/blur-fade";
 import Section from "@/components/section";
 import { Card, CardContent } from "@/components/ui/card";

@@ -5,13 +5,14 @@ import Header from "@/components/sections/header";
 import { ThemeProvider } from "@/lib/theme-context";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-const BaseLayout = ({ children }) => {
+const BaseLayout = () => {
+  console.log("BaseLayout renderizado");
   return (
     <ThemeProvider>
-      <main className="min-h-screen">
+      <main className="min-h-screen flex flex-col">
         <Header />
-        <div className="container mx-auto px-4">
-          {children}
+        <div className="flex-grow container mx-auto px-4">
+          <div id="page-content-mount" />
         </div>
         <Footer />
         <ThemeToggle />
@@ -20,20 +21,18 @@ const BaseLayout = ({ children }) => {
   );
 };
 
-// Componente raíz que se montará en el DOM
-const BaseApp = () => {
-  return (
-    <BaseLayout>
-      <div id="content-wrapper"></div>
-    </BaseLayout>
-  );
+// Initialize base layout
+const init = () => {
+  console.log("Initializing base layout...");
+  const mountNode = document.getElementById('root');
+  if (mountNode) {
+    const root = createRoot(mountNode);
+    root.render(<BaseLayout />);
+    
+    // Signal that base layout is ready
+    window.baseLayoutReady = true;
+    console.log("Base layout ready for page content");
+  }
 };
 
-// Montar en el DOM
-const mountNode = document.getElementById('root');
-if (mountNode) {
-  const root = createRoot(mountNode);
-  root.render(<BaseApp />);
-}
-
-export default BaseLayout;
+init();
