@@ -1,0 +1,116 @@
+{% load static %}
+{% load meta_tags %}
+<!DOCTYPE html>
+<html lang="en" {% if dark_mode %}class="dark" data-theme="{{ dark_theme }}" {% endif %}>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!--IE compatibility-->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <!--Mobile friendly-->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% block meta %}
+  {% if project_meta %}
+  {% with project_meta|get_title:page_title as title %}
+  {% with project_meta|get_description:page_description as description %}
+  {% with project_meta|get_image_url:page_image as image %}
+  <title>{% block page_title %}{{ title }}{% endblock %}</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'images/web/logo-adheist.png' %}">
+  <meta name="description" content="{{ description }}">
+  <meta name="keywords" content="{{ project_meta.KEYWORDS }}">
+  <!-- Twitter Card data -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ title }}">
+  <meta name="twitter:description" content="{{ description }}">
+  <meta name="twitter:image" content="{{ image }}">
+  <!-- Open Graph data -->
+  <meta property="og:title" content="{{ title }}" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="{{ page_url }}" />
+  <meta property="og:image" content="{{ image }}" />
+  <meta property="og:description" content="{{ description }}" />
+  <meta property="og:site_name" content="{{ project_meta.NAME }}" />
+  <link rel="canonical" href="{% if page_canonical_url %}{{ page_canonical_url }}{% else %}{{ page_url }}{% endif %}">
+  {% endwith %}
+  {% endwith %}
+  {% endwith %}
+  {% endif %}
+  {% endblock meta %}
+
+  {# Fonts #}
+  <link rel="preconnect" href="https://rsms.me/">
+  <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+
+  {# Base Styles #}
+  <link rel="stylesheet" href="{% static 'css/site-base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/site-tailwind.css' %}">
+
+  {# Icons #}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"
+    integrity="sha512-xh6O/CkQoPOWDdYTDqeRdPCVd1SpvCA9XXcUnZS2FmJNp1coAFzvtCN9BmamE+4aHK8yyUHUSCcJHgXloTyT2A=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/v4-shims.min.css"
+    integrity="sha512-ARfx5eajdcCAuWvuJrgUuJ6D25ON3KZRTCghNXXKeJldCQJ5bXS+6CvG2EhcFWITF95uwZydzpufSKvhmSpTxA=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  {# Extra CSS #}
+  {% block extra_css %}{% endblock %}
+
+  {# Page Head #}
+  {% block page_head %}{% endblock %}
+</head>
+
+<body class="min-h-screen bg-base-100 antialiased w-full mx-auto scroll-smooth"
+  hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+  
+  {% block body %}{% endblock %}
+
+  {# Base Scripts #}
+  {% include 'web/components/messages-js.html' %}
+  <script src="{% static 'js/site-base-bundle.js' %}" defer></script>
+  <script src="{% static 'js/site-tailwind-bundle.js' %}" defer></script>
+  <script src="{% static 'js/site-bundle.js' %}" defer></script>
+  <script src="{% url 'javascript-catalog' %}" defer></script>
+  <script>__cssFramework = 'tailwind';</script>
+
+  {# Dark Mode Script #}
+  <script>
+    function syncDarkMode() {
+      const darkTheme = '{{ dark_theme }}' || 'dark';
+      const lightTheme = '{{ light_theme }}' || 'light';
+      const systemTheme = 'system';
+
+      const theme = localStorage.getItem('theme') || systemTheme;
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+      if (theme === darkTheme || (theme === systemTheme && prefersDark)) {
+        document.documentElement.classList.add('dark');
+        document.documentElement.setAttribute('data-theme', darkTheme);
+        document.cookie = `theme=${darkTheme};path=/;max-age=31536000`;
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.setAttribute('data-theme', lightTheme);
+        document.cookie = `theme=${lightTheme};path=/;max-age=31536000`;
+      }
+    }
+    syncDarkMode();
+    document.addEventListener('DOMContentLoaded', () => {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      mediaQuery.addListener(syncDarkMode);
+
+      window.addEventListener('storage', (event) => {
+        if (event.key === 'theme') {
+          syncDarkMode();
+        }
+      });
+    });
+  </script>
+
+  {# Google Analytics #}
+  {% if GOOGLE_ANALYTICS_ID %}
+  {% include 'web/components/google_analytics.html' %}
+  {% endif %}
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>
