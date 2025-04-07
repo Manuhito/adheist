@@ -1,9 +1,9 @@
 from django import forms
 
-from .models import AdLibrary
+from .models import AdLibrary, IndustryList, TagList
 
 
 class AdLibraryForm(forms.ModelForm):
     class Meta:
         model = AdLibrary
-        fields = ["name"]
+        fields = ["company_name", "industry", "tag"]

@@ -6,7 +6,7 @@ from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
-from .models import AdLibrary
+from .models import AdLibrary, IndustryList, TagList
 from .forms import AdLibraryForm
 
 # A reasonable value for pagination would be 10 or 20 entries per page.
@@ -30,7 +30,7 @@ def home(request):
 def adlibrary_list(request):
     """Display a list of AdLibrarys."""
     context = {}
-    adlibrary_list = AdLibrary.objects.filter(user=request.user).order_by("-created_at")
+    adlibrary_list = AdLibrary.objects.all().order_by("-created_at")
 
 
     paginator = Paginator(adlibrary_list, PAGINATE_BY)
@@ -63,7 +63,7 @@ def adlibrary_detail(request, pk):
     """Display AdLibrary details."""
     context = {}
     context["active_tab"] = "ahbackend"
-    context["object"] = AdLibrary.objects.get(id=pk)
+    context["object"] = get_object_or_404(AdLibrary, id=pk)
 
     if request.htmx:
         template = "ahbackend/adlibrary_detail.html#page-content"
@@ -79,9 +79,7 @@ def adlibrary_create(request):
     context = {}
     form = AdLibraryForm(request.POST or None)
     if form.is_valid():
-        instance = form.save(commit=False)
-        instance.user = request.user
-        instance.save()
+        form.save()
         return HttpResponseRedirect(reverse("ahbackend:adlibrary_list"))
 
     if request.htmx:

@@ -29,6 +29,7 @@ class AdLibrary(BaseModel):
     company_name = models.CharField(max_length=100)
     industry = models.ForeignKey(IndustryList, on_delete=models.CASCADE, related_name="adlibraries")
     tag = models.ForeignKey(TagList, on_delete=models.CASCADE, related_name="adlibraries")
+    ad_image = models.ImageField(upload_to="adlibrary/", null=True, blank=True)
 
     def __str__(self):
         return self.company_name
