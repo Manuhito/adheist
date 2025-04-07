@@ -1,10 +1,9 @@
 {% extends "web/app/app_base.html" %}
 {% load static %}
 {% load i18n %}
-{% load partials %}
+
 {% block app %}
-<div id="page-content" hx-target="#page-content">
-  {% partialdef page-content inline %}
+<div id="page-content">
   <div x-data="{
     showDeleteModal: false,
     closeModal() {
@@ -14,19 +13,28 @@
    @keydown.escape.window="closeModal()">
     <nav class="mb-2" aria-label="breadcrumbs">
       <ol class="pg-breadcrumbs">
-        <li><a hx-get="{% url 'ahbackend:ahbackend_home' %}" hx-push-url="true">{% translate "Ahbackend" %}</a></li>
-        <li><a hx-get="{% url 'ahbackend:adlibrary_list' %}" hx-push-url="true">{% translate "AdLibrarys" %}</a></li>
-        <li class="pg-breadcrumb-active" aria-current="page">{{ object.name }}</li>
+        <li><a href="{% url 'ahbackend:ahbackend_home' %}">{% translate "Ahbackend" %}</a></li>
+        <li><a href="{% url 'ahbackend:adlibrary_list' %}">{% translate "AdLibraries" %}</a></li>
+        <li class="pg-breadcrumb-active" aria-current="page">{{ object.company_name }}</li>
       </ol>
     </nav>
     <section class="app-card">
-      <h3 class="pg-subtitle">{% blocktranslate with name=object.name %}Detail view for {{ name }}{% endblocktranslate %}</h3>
+      <h3 class="pg-subtitle">{% blocktranslate with name=object.company_name %}Detail view for {{ name }}{% endblocktranslate %}</h3>
       <div class="mt-2">
+        <div>{% translate "Industry" %}: {{ object.industry.name }}</div>
+        <div>{% translate "Tag" %}: {{ object.tag.name }}</div>
         <div>{% translate "Created at" %}: {{ object.created_at }}</div>
         <div>{% translate "Updated at" %}: {{ object.updated_at }}</div>
+        
+        {% if object.ad_image %}
+        <div class="mt-4">
+          <h4 class="text-lg font-medium mb-2">{% translate "Ad Image" %}</h4>
+          <img src="{{ object.ad_image.url }}" alt="{{ object.company_name }}" class="max-w-md rounded-md">
+        </div>
+        {% endif %}
       </div>
       <div class="mt-2">
-        <a hx-get="{% url 'ahbackend:adlibrary_update' object.pk %}" hx-push-url="true" class="pg-button-secondary">
+        <a href="{% url 'ahbackend:adlibrary_update' object.pk %}" class="pg-button-secondary">
           <span class="pg-icon"><i class="fa fa-pencil"></i></span>
           <span>{% translate "Edit" %}</span>
         </a>
@@ -42,7 +50,7 @@
       </form>
       <div class="modal-box">
         <p>
-          {% blocktranslate with name=object.name %}
+          {% blocktranslate with name=object.company_name %}
           Are you sure you want to delete the AdLibrary "{{ name }}"?
           <strong>This is not reversible.</strong>
           {% endblocktranslate %}
@@ -57,6 +65,5 @@
       </div>
     </div>
   </div>
-  {% endpartialdef page-content %}
 </div>
 {% endblock %}

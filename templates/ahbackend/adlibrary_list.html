@@ -1,59 +1,58 @@
 {% extends "web/app/app_base.html" %}
 {% load static %}
 {% load i18n %}
-{% load partials %}
+
 {% block app %}
-{% partialdef page-content inline %}
-<div id="page-content" hx-target="#page-content">
+<div id="page-content">
   <nav class="mb-2" aria-label="breadcrumbs">
     <ol class="pg-breadcrumbs">
-      <li><a hx-get="{% url 'ahbackend:ahbackend_home' %}" hx-push-url="true">{% translate "Ahbackend" %}</a></li>
-      <li class="pg-breadcrumb-active" aria-current="page">{% translate "All AdLibrarys" %}</li>
+      <li><a href="{% url 'ahbackend:ahbackend_home' %}">{% translate "Ahbackend" %}</a></li>
+      <li class="pg-breadcrumb-active" aria-current="page">{% translate "All AdLibraries" %}</li>
     </ol>
   </nav>
   <section class="app-card">
-    <h3 class="pg-subtitle">{% translate "All AdLibrarys" %}</h3>
-    {% partialdef object-table inline %}
-      <div id="list-content">
-      {% for object in object_list %}
-        {% if forloop.first %}
-          <div class="table-responsive">
-            <table class="table pg-table">
-              <thead>
-                <tr>
-                  <th>{% translate "Name" %}</th>
-                  <th>{% translate "Created" %}</th>
-                  <th>{% translate "Updated" %}</th>
-                </tr>
-              </thead>
-              <tbody>
-              {% endif %}
-              <tr>
-                <td>
-                  <a class="pg-link" hx-get="{{ object.get_absolute_url }}" hx-push-url="true">{{ object.name }}</a>
-                </td>
-                <td>{{ object.created_at }}</td>
-                <td>{{ object.updated_at }}</td>
-              </tr>
-              {% if forloop.last %}
-              </tbody>
-            </table>
-          </div>
-        {% endif %}
-      {% empty %}
-        <div class="mb-2">{% translate "There aren't any adlibrarys! Add one below." %}</div>
-        {% endfor %}
-        {% include "web/components/paginator_htmx.html" %}
-      </div>
-    {% endpartialdef %}
+    <h3 class="pg-subtitle">{% translate "All AdLibraries" %}</h3>
+    <div id="list-content">
+      {% if object_list %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {% for object in object_list %}
+            <div class="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+              <div class="p-4">
+                <h4 class="text-lg font-semibold mb-2">
+                  <a href="{{ object.get_absolute_url }}" class="pg-link">{{ object.company_name }}</a>
+                </h4>
+                {% if object.ad_image %}
+                  <div class="aspect-video mb-3">
+                    <img src="{{ object.ad_image.url }}" alt="{{ object.company_name }}" class="w-full h-full object-cover rounded">
+                  </div>
+                {% else %}
+                  <div class="aspect-video mb-3 bg-gray-100 flex items-center justify-center rounded">
+                    <span class="text-gray-400">No image</span>
+                  </div>
+                {% endif %}
+                <div class="text-sm text-gray-600">
+                  <div><strong>Industry:</strong> {{ object.industry.name }}</div>
+                  <div><strong>Tag:</strong> {{ object.tag.name }}</div>
+                  <div class="mt-2 text-xs text-gray-500">
+                    <div>Created: {{ object.created_at|date:"M d, Y" }}</div>
+                    <div>Updated: {{ object.updated_at|date:"M d, Y" }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+        {% include "web/components/paginator.html" %}
+      {% else %}
+        <div class="mb-2">{% translate "There aren't any adlibraries! Add one below." %}</div>
+      {% endif %}
+    </div>
     <div class="mt-2">
-      <a class="pg-button-secondary"
-         hx-get="{% url 'ahbackend:adlibrary_create' %}" hx-push-url="true">
+      <a class="pg-button-secondary" href="{% url 'ahbackend:adlibrary_create' %}">
         <span class="pg-icon"><i class="fa fa-plus"></i></span>
         <span>{% translate "Add AdLibrary" %}</span>
       </a>
     </div>
   </section>
 </div>
-{% endpartialdef %}
 {% endblock %}

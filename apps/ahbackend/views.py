@@ -18,11 +18,7 @@ PAGINATE_BY = 4
 
 @login_required
 def home(request):
-    if request.htmx:
-        template = "ahbackend/ahbackend_home.html#page-content"
-    else:
-        template = "ahbackend/ahbackend_home.html"
-
+    template = "ahbackend/ahbackend_home.html"
     return TemplateResponse(request, template, {"active_tab": "ahbackend"})
 
 
@@ -31,7 +27,6 @@ def adlibrary_list(request):
     """Display a list of AdLibrarys."""
     context = {}
     adlibrary_list = AdLibrary.objects.all().order_by("-created_at")
-
 
     paginator = Paginator(adlibrary_list, PAGINATE_BY)
     page = request.GET.get("page", 1)
@@ -42,13 +37,7 @@ def adlibrary_list(request):
     except EmptyPage:
         page = paginator.page(paginator.num_pages)
 
-    if request.htmx:
-        if request.htmx.target == "page-content":
-            template = "ahbackend/adlibrary_list.html#page-content"
-        else:
-            template = "ahbackend/adlibrary_list.html#object-table"
-    else:
-        template = "ahbackend/adlibrary_list.html"
+    template = "ahbackend/adlibrary_list.html"
 
     context["active_tab"] = "ahbackend"
     context["page_obj"] = page
@@ -65,10 +54,7 @@ def adlibrary_detail(request, pk):
     context["active_tab"] = "ahbackend"
     context["object"] = get_object_or_404(AdLibrary, id=pk)
 
-    if request.htmx:
-        template = "ahbackend/adlibrary_detail.html#page-content"
-    else:
-        template = "ahbackend/adlibrary_detail.html"
+    template = "ahbackend/adlibrary_detail.html"
 
     return render(request, template, context)
 
@@ -77,16 +63,16 @@ def adlibrary_detail(request, pk):
 def adlibrary_create(request):
     """Create a new AdLibrary."""
     context = {}
-    form = AdLibraryForm(request.POST or None)
+    form = AdLibraryForm(request.POST or None, request.FILES or None)
     if form.is_valid():
         form.save()
         return HttpResponseRedirect(reverse("ahbackend:adlibrary_list"))
 
-    if request.htmx:
-        template = "ahbackend/adlibrary_form.html#page-content"
-    else:
-        template = "ahbackend/adlibrary_form.html"
+    template = "ahbackend/adlibrary_form.html"
 
+    # Get all industries and tags for the form context
+    context["industries"] = IndustryList.objects.all()
+    context["tags"] = TagList.objects.all()
     context["active_tab"] = "ahbackend"
     context["form"] = form
     return render(request, template, context)
@@ -97,15 +83,16 @@ def adlibrary_update(request, pk):
     """Edit / update a AdLibrary."""
     context = {}
     obj = get_object_or_404(AdLibrary, id=pk)
-    form = AdLibraryForm(request.POST or None, instance=obj)
+    form = AdLibraryForm(request.POST or None, request.FILES or None, instance=obj)
     if form.is_valid():
         form.save()
         return HttpResponseRedirect(reverse("ahbackend:adlibrary_detail", kwargs={"pk": pk}))
 
-    if request.htmx:
-        template = "ahbackend/adlibrary_form.html#page-content"
-    else:
-        template = "ahbackend/adlibrary_form.html"
+    template = "ahbackend/adlibrary_form.html"
+    
+    # Get all industries and tags for the form context
+    context["industries"] = IndustryList.objects.all()
+    context["tags"] = TagList.objects.all()
     context["active_tab"] = "ahbackend"
     context["form"] = form
     context["object"] = obj
