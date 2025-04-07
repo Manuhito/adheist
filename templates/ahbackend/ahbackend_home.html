@@ -1,0 +1,16 @@
+{% extends "web/app/app_base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block app %}
+<div id="page-content">
+  <div class="app-card">
+    <h1 class="pg-title">Welcome to the ahbackend app!</h1>
+    <div class="pg-content">
+      <ul>
+        <li><a href="{% url 'ahbackend:adlibrary_list' %}" class="pg-link">{% translate "Manage AdLibraries" %}</a></li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}
