@@ -37,21 +37,19 @@
       {% render_form_fields form %}
       
       <div class="mt-4">
-        <label for="id_industry" class="block text-sm font-medium text-gray-700">{% translate "Industry" %}</label>
-        <select id="id_industry" name="industry" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-          <option value="">{% translate "Select an industry" %}</option>
+        <label for="id_industries" class="block text-sm font-medium text-gray-700">{% translate "Industries" %} ({% translate "Hold Ctrl/Cmd to select multiple" %})</label>
+        <select id="id_industries" name="industries" multiple class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" size="5">
           {% for industry in industries %}
-            <option value="{{ industry.id }}" {% if object.industry.id == industry.id %}selected{% endif %}>{{ industry.name }}</option>
+            <option value="{{ industry.id }}" {% if industry in object.industries.all %}selected{% endif %}>{{ industry.name }}</option>
           {% endfor %}
         </select>
       </div>
       
       <div class="mt-4">
-        <label for="id_tag" class="block text-sm font-medium text-gray-700">{% translate "Tag" %}</label>
-        <select id="id_tag" name="tag" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-          <option value="">{% translate "Select a tag" %}</option>
+        <label for="id_tags" class="block text-sm font-medium text-gray-700">{% translate "Tags" %} ({% translate "Hold Ctrl/Cmd to select multiple" %})</label>
+        <select id="id_tags" name="tags" multiple class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" size="5">
           {% for tag in tags %}
-            <option value="{{ tag.id }}" {% if object.tag.id == tag.id %}selected{% endif %}>{{ tag.name }}</option>
+            <option value="{{ tag.id }}" {% if tag in object.tags.all %}selected{% endif %}>{{ tag.name }}</option>
           {% endfor %}
         </select>
       </div>

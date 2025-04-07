@@ -21,8 +21,22 @@
     <section class="app-card">
       <h3 class="pg-subtitle">{% blocktranslate with name=object.company_name %}Detail view for {{ name }}{% endblocktranslate %}</h3>
       <div class="mt-2">
-        <div>{% translate "Industry" %}: {{ object.industry.name }}</div>
-        <div>{% translate "Tag" %}: {{ object.tag.name }}</div>
+        <div>
+          {% translate "Industries" %}:
+          {% for industry in object.industries.all %}
+            <span class="badge badge-primary">{{ industry.name }}</span>{% if not forloop.last %}, {% endif %}
+          {% empty %}
+            <span class="text-gray-500">{% translate "No industries selected" %}</span>
+          {% endfor %}
+        </div>
+        <div>
+          {% translate "Tags" %}:
+          {% for tag in object.tags.all %}
+            <span class="badge badge-secondary">{{ tag.name }}</span>{% if not forloop.last %}, {% endif %}
+          {% empty %}
+            <span class="text-gray-500">{% translate "No tags selected" %}</span>
+          {% endfor %}
+        </div>
         <div>{% translate "Created at" %}: {{ object.created_at }}</div>
         <div>{% translate "Updated at" %}: {{ object.updated_at }}</div>
         

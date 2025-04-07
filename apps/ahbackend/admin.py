@@ -12,9 +12,10 @@ from .models import (
 
 @admin.register(AdLibrary)
 class AdLibraryAdmin(admin.ModelAdmin):
-    list_display = ["company_name", "industry", "tag", "created_at", "updated_at"]
+    list_display = ["company_name", "created_at", "updated_at"]
     search_fields = ["company_name"]
-    list_filter = ["industry", "tag"]
+    list_filter = ["industries", "tags"]
+    filter_horizontal = ["industries", "tags"]
 
 
 @admin.register(IndustryList)
@@ -31,9 +32,9 @@ class TagListAdmin(admin.ModelAdmin):
 
 @admin.register(AdRequest)
 class AdRequestAdmin(admin.ModelAdmin):
-    list_display = ["user", "ad_library", "created_at", "updated_at"]
+    list_display = ["user", "ad_library", "status", "canvas_size", "created_at", "updated_at"]
     search_fields = ["user__email", "ad_library__company_name"]
-    list_filter = ["ad_library__industry"]
+    list_filter = ["status", "canvas_size"]
 
 
 @admin.register(AdRequestAssets)
