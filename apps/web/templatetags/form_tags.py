@@ -21,22 +21,37 @@ def render_field(form_field, **attrs):
 
 @register.simple_tag
 def render_text_input(form_field, **attrs):
-    TEXT_INPUT_TEMPLATE = """<div class="w-full mt-2" {% include "django/forms/attrs.html" %}>
-      <label class="block mb-1 font-bold" for="{{ form_field.id_for_label }}">{{ form_field.label }}</label>
-      {{ form_field }}
-      <small class="pg-text-muted">{{ form_field.help_text|safe }}</small>
-      {{ form_field.errors }}
+    TEXT_INPUT_TEMPLATE = """<div class="form-control w-full">
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2" for="{{ form_field.id_for_label }}">
+        {{ form_field.label }}
+      </label>
+      <div>
+        {{ form_field }}
+      </div>
+      {% if form_field.help_text %}
+        <small class="mt-2 text-sm text-gray-500 dark:text-gray-400">{{ form_field.help_text|safe }}</small>
+      {% endif %}
+      {% if form_field.errors %}
+        <div class="mt-2 text-sm text-red-600 dark:text-red-400">
+          {{ form_field.errors }}
+        </div>
+      {% endif %}
     </div>
     """
+    # Add modern input classes to the field
+    if 'class' not in form_field.field.widget.attrs:
+        form_field.field.widget.attrs['class'] = ''
+    form_field.field.widget.attrs['class'] += ' block w-full px-3 py-2 rounded-md border dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary focus:ring-2 focus:ring-primary focus:ring-opacity-50 sm:text-sm'
+    
     return _render_field(TEXT_INPUT_TEMPLATE, form_field, **attrs)
 
 
 @register.simple_tag
 def render_select_input(form_field, **attrs):
-    SELECT_INPUT_TEMPLATE = """<div class="w-full mt-2" {% include "django/forms/attrs.html" %}>
-      <label class="block mb-1 font-bold" for="{{ form_field.id_for_label }}">{{ form_field.label }}</label>
+    SELECT_INPUT_TEMPLATE = """<div class="form-control w-full" {% include "django/forms/attrs.html" %}>
+      <label class="label font-bold" for="{{ form_field.id_for_label }}">{{ form_field.label }}</label>
       {{ form_field }}
-      <small class="pg-text-muted">{{ form_field.help_text|safe }}</small>
+      <small class="form-text pg-text-muted">{{ form_field.help_text|safe }}</small>
       {{ form_field.errors }}
     </div>
     """
@@ -46,14 +61,14 @@ def render_select_input(form_field, **attrs):
 @register.simple_tag
 def render_checkbox_input(form_field, **attrs):
     CHECKBOX_INPUT_TEMPLATE = """
-    <div class="w-full mt-2" {% include "django/forms/attrs.html" %}>
-      <div>
-        <label class="font-bold cursor-pointer flex items-center gap-2">
+    <div class="form-control" {% include "django/forms/attrs.html" %}>
+      <div class="form-check">
+        <label class="label font-bold cursor-pointer">
           {{ form_field }}
-          {{ form_field.label }}
+          <span class="label-text">{{ form_field.label }}</span>
         </label>
       </div>
-      <small class="pg-text-muted">{{ form_field.help_text|safe }}</small>
+      <small class="form-text pg-text-muted">{{ form_field.help_text|safe }}</small>
       {{ form_field.errors }}
     </div>
     """
