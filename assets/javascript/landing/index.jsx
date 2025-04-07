@@ -10,7 +10,6 @@ import Solution from "@/components/sections/solution";
 import CTA from "@/components/sections/cta";
 
 const LandingPage = () => {
-  console.log("LandingPage renderizado");
   return (
     <div className="space-y-16">
       <Hero />
@@ -25,21 +24,17 @@ const LandingPage = () => {
 
 // Wait for base layout before mounting
 const init = () => {
-  console.log("Initializing landing page...");
-  
+
   const waitForBaseLayout = () => {
     if (window.baseLayoutReady) {
-      console.log("Base layout ready, mounting landing page...");
       const mountNode = document.getElementById('page-content-mount');
       if (mountNode) {
         const root = createRoot(mountNode);
         root.render(<LandingPage />);
-        console.log("Landing page mounted successfully");
       } else {
         console.error("Could not find page-content-mount element");
       }
     } else {
-      console.log("Waiting for base layout...");
       setTimeout(waitForBaseLayout, 50);
     }
   };

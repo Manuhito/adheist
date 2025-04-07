@@ -15,8 +15,6 @@ import { IoMenuSharp } from "react-icons/io5";
 import { siteConfig } from "../lib/config";
 
 export default function DrawerDemo() {
-  console.log('siteConfig:', siteConfig);
-  console.log('header:', siteConfig?.header);
 
   return (
     <Drawer>

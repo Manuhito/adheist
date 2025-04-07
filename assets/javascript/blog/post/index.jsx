@@ -9,9 +9,7 @@ if (container) {
   const root = createRoot(container);
   const blogDataElement = document.getElementById('blogPostData');
   const postData = blogDataElement ? JSON.parse(blogDataElement.textContent || '{}') : {};
-  
-  console.log('Post data:', postData); // Para debug
-  
+    
   root.render(
     <React.StrictMode>
       <BlogPost post={postData} />

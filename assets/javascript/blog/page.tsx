@@ -10,7 +10,6 @@ export const metadata = constructMetadata({
 export default function Blog() {
   const blogDataElement = document.getElementById('blogData');
   const blogData = blogDataElement ? JSON.parse(blogDataElement.textContent || '[]') : [];
-  console.log('Blog data:', blogData);
   
   const articles = blogData.sort((a: any, b: any) => b.publishedAt.localeCompare(a.publishedAt));
 
