@@ -1,5 +1,4 @@
 
-import React from 'react';
 import Drawer from "@/components/drawer";
 import { Icons } from "@/components/icons";
 import Menu from "@/components/menu";

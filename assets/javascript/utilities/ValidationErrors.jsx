@@ -1,5 +1,3 @@
-import React from 'react';
-
 export default function(props) {
   if (props.errors) {
     return (

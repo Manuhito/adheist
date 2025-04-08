@@ -3,7 +3,7 @@
 import { BorderBeam } from "@/components/magicui/border-beam";
 import * as Accordion from "@radix-ui/react-accordion";
 import { motion, useInView } from "framer-motion";
-import React, {
+import {
   forwardRef,
   ReactNode,
   useEffect,

@@ -5,7 +5,7 @@ import CtaSection from "@/components/sections/cta";
 import { siteConfig } from "@/lib/config";
 import { formatDate } from "@/lib/utils";
 import { Image } from "@/components/common/index";
-import React, { Suspense } from "react";
+import { Suspense } from "react";
 
 interface Post {
   metadata: {

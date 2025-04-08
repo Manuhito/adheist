@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import Footer from "@/components/sections/footer";
 import Header from "@/components/sections/header";

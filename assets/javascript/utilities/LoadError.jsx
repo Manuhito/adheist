@@ -1,5 +1,3 @@
-import React from "react";
-
 const LoadError = function() {
   return (
     <section className="app-card">

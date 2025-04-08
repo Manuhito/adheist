@@ -1,4 +1,3 @@
-import React from "react";
 import { Icons } from "@/components/icons";
 import { FaTwitter } from "react-icons/fa";
 import { FaYoutube } from "react-icons/fa6";

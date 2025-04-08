@@ -1,5 +1,3 @@
-import React from "react";
-
 const LoadingScreen = function() {
   return (
     <div className='app-card pg-text-centered'>

@@ -1,6 +1,5 @@
 "use client";
 
-import React from 'react';
 import { createRoot } from 'react-dom/client';
 import Hero from "@/components/sections/hero";
 import Logos from "@/components/sections/logos";
