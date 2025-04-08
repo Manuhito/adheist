@@ -26,9 +26,11 @@ module.exports = {
   resolve: {
     extensions: ['.js', '.jsx', '.ts', '.tsx'],
     alias: {
-      '@': path.resolve(__dirname, 'assets/javascript'),
-      'react': path.resolve(__dirname, 'node_modules/react'),
-      'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),    },
+      '@/components': path.resolve(__dirname, './assets/javascript/components'),
+      '@/shadcn': path.resolve(__dirname, './assets/javascript/shadcn/components'),
+      '@/utilities': path.resolve(__dirname, './assets/javascript/utilities'),
+      '@': path.resolve(__dirname, './assets/javascript'),
+    },
     fallback: {
       'use-sync-external-store/shim': require.resolve('use-sync-external-store/shim')
     },

@@ -1,5 +1,6 @@
 "use client";
 
+import React from 'react';
 import { siteConfig } from "@/lib/config";
 import { Check } from "lucide-react";
 import Link from "@/components/common";

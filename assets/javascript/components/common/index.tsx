@@ -1,5 +1,7 @@
 'use client';
 
+import React from 'react';
+
 // Reemplazo para next/image
 export function Image({ src, alt, width, height, className, ...props }: {
   src: string;

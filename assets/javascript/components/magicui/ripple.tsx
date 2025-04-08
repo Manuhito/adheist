@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { CSSProperties } from "react";
+import React, { CSSProperties } from "react";
 
 interface RippleProps {
   mainCircleSize?: number;

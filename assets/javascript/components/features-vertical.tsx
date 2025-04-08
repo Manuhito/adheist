@@ -2,7 +2,7 @@
 
 import * as Accordion from "@radix-ui/react-accordion";
 import { motion, useInView } from "framer-motion";
-import {
+import React, {
   forwardRef,
   ReactNode,
   useEffect,
