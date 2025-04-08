@@ -1,42 +1,64 @@
 {% extends "web/base.html" %}
+{% block page_title %}Sign Up - AdHeist{% endblock %}
 {% load i18n %}
 {% load static %}
 {% load form_tags %}
 {% block page_head %}
 {% if turnstile_key %}
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 {% endif %}
 {% endblock %}
-{% block body %}
-  <div class="flex justify-center my-8 ">
-    <div class="w-96 px-4 py-4">
-      <div>
-        <h2 class="mt-6 text-center text-2xl font-bold text-gray-900 dark:text-gray-100">
-          Sign up
-        </h2>
-        <form class="mt-6 space-y-6" method="post">
-          {% csrf_token %}
-          {{ form.non_field_errors }}
-          {% render_field form.email %}
-          {% render_field form.password1 %}
-          {% if project_settings.ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE %}
-          {% render_field form.password2 %}
-          {% endif %}
-          {% render_field form.terms_agreement %}
-          {% if turnstile_key %}
-          <div class="cf-turnstile" data-sitekey="{{ turnstile_key }}" data-response-field-name="turnstile_token"></div>
-          {{ form.turnstile_token.errors }}
-          {% endif %}
-          <input class="btn btn-primary btn-block" type="submit" value="{% translate "Sign Up" %}">
-        </form>
-        {% include 'account/components/social/social_buttons.html' %}
-        <div class="text-sm mt-4">
-          {% translate "Already have account?" %}
-          <a href="{% url 'account_login' %}" class="font-medium pg-link">
-            {% translate "Go to sign in." %}
-          </a>
-        </div>
+{% block content %}
+<div class="flex justify-center my-8">
+  <div class="w-96 px-4 py-4">
+    {# Logo Header #}
+    <a href="/" title="brand-logo" class="flex justify-center items-center">
+      <img class="w-auto h-14" src="{% static 'images/web/logo-adheist.png' %}" alt="Seozella">
+    </a>
+
+    {# Card Header #}
+    <div class="space-y-2 text-center">
+      <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+        {% translate "Create your account" %}
+      </h2>
+      <p class="text-sm text-gray-600 dark:text-gray-400">
+        {% translate "Get 5 Free Backlinks" %}
+      </p>
+    </div>
+
+    <form class="mt-8 space-y-6" method="post">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      <div class="space-y-4 rounded-md">
+        {% render_field form.email %}
+        {% render_field form.password1 %}
+        {% if project_settings.ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE %}
+        {% render_field form.password2 %}
+        {% endif %}
+        {% render_field form.terms_agreement %}
       </div>
+
+      {% if turnstile_key %}
+      <div class="cf-turnstile" data-sitekey="{{ turnstile_key }}" data-response-field-name="turnstile_token"></div>
+      {{ form.turnstile_token.errors }}
+      {% endif %}
+
+      <div>
+        <button type="submit"
+          class="group relative flex w-full justify-center rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-focus focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+          {% translate "Sign Up" %}
+        </button>
+      </div>
+    </form>
+
+    {% include 'account/components/social/social_buttons.html' %}
+
+    <div class="mt-4 text-center text-sm">
+      {% translate "Already have account?" %}
+      <a href="{% url 'account_login' %}" class="font-medium text-primary hover:text-primary-focus">
+        {% translate "Go to sign in." %}
+      </a>
     </div>
   </div>
+</div>
 {% endblock %}
