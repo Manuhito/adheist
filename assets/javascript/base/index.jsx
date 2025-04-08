@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import Footer from "@/components/sections/footer";
 import Header from "@/components/sections/header";
-import { ThemeProvider } from "@/lib/theme-context";
+import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 const BaseLayout = () => {
@@ -24,7 +24,7 @@ const BaseLayout = () => {
   }, []);
 
   return (
-    <ThemeProvider>
+    <ThemeProvider defaultTheme="system" storageKey="theme">
       <main className="min-h-screen flex flex-col">
         <Header />
         <div className="flex-grow container mx-auto px-4">

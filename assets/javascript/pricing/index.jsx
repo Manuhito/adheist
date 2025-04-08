@@ -1,6 +1,5 @@
 "use client";
 
-import { ThemeProvider } from '@/lib/theme-context';
 import { ThemeToggle } from '@/components/theme-toggle';
 // import { TailwindIndicator } from '@/components/tailwind-indicator';
 import Footer from "@/components/sections/footer";
@@ -11,18 +10,12 @@ import Pricing from "@/components/sections/pricing";
 
 const PricingLayout = () => {
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="light"
-      enableSystem={false}
-    >
-      <main>
-        <Header />
-        <Pricing />
-        <Footer />
-      </main>
+    <main>
+      <Header />
+      <Pricing />
+      <Footer />
       <ThemeToggle />
-    </ThemeProvider>
+    </main>
   );
 };
 
