@@ -34,7 +34,7 @@ export default function Component() {
     <Section>
     <div className= "text-center space-y-4 pb-6 mx-auto" >
     <h2 className="mx-auto mt-4 max-w-xs text-3xl font-semibold sm:max-w-none sm:text-4xl md:text-5xl" >
-      Building Links with <span className= "text-primary" > SEOZella </span> is
+      Building Links with <span className= "text-primary" > AdHeist </span> is
   Easy
     </h2>
     </div>

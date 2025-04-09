@@ -1,0 +1,17 @@
+{% extends "web/base.html" %}
+{% load wagtailcore_tags wagtailimages_tags blog_tags static %}
+
+{% block title %}{{ page.title }}{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script src="{% static 'js/blog-bundle.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+{% with blog_posts=page.get_ordered_blog_posts %}
+{{ blog_posts|serialize_blog_posts|json_script:"blogData" }}
+{% endwith %}
+
+<div id="blog-root"></div>
+{% endblock %}

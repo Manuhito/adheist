@@ -7,61 +7,52 @@ from wagtail.images.blocks import ImageChooserBlock
 from wagtail.models import Orderable, Page
 from wagtail.search import index
 
-from apps.content.blocks import CaptionBlock
-
 
 def _get_default_block_types():
     return [
-        ("paragraph", blocks.RichTextBlock()),
+        ("paragraph", blocks.RichTextBlock(features=[
+            # Encabezados
+            'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+            
+            # Formato básico
+            'bold', 'italic', 'underline', 'strikethrough',
+            'superscript', 'subscript',
+            
+            # Listas y estructura
+            'ol', 'ul', 'hr',
+            
+            # Enlaces y media
+            'link', 'document-link', 'image', 'embed',
+            
+            # Código y citas
+            'code', 'blockquote',
+            
+            # Alineación
+            'center', 'left', 'right',
+            
+            # Tablas
+            'table',
+        ])),
         ("image", ImageChooserBlock()),
-        ("caption", CaptionBlock()),
         ("html", blocks.RawHTMLBlock()),
     ]
 
 
-class BaseContentPage(Page):
-    social_image = models.ImageField(null=True, blank=True, help_text="The image to use in social sharing metadata.")
-    promote_panels = Page.promote_panels + [
-        FieldPanel("social_image"),
-    ]
-
-    def get_social_image_url(self):
-        if self.social_image:
-            return self.social_image.url
-        return ""
-
-    class Meta:
-        abstract = True
-
-
-class ContentPage(BaseContentPage):
+class BlogIndexPage(Page):
     """
-    A page of generic content.
+    Index page for the blog
     """
-
-    body = StreamField(_get_default_block_types())
-    content_panels = Page.content_panels + [
-        FieldPanel("body", classname="full"),
-    ]
-
-
-class BlogIndexPage(BaseContentPage):
-    """
-    Index page for a blog
-    """
-
     intro = RichTextField(blank=True)
     content_panels = Page.content_panels + [FieldPanel("intro", classname="full")]
 
     def get_ordered_blog_posts(self):
-        return self.get_children().live().order_by("-first_published_at")
+        return self.get_children().live().specific().order_by("-first_published_at")
 
 
-class BlogPage(BaseContentPage):
+class BlogPage(Page):
     """
     A single blog post
     """
-
     date = models.DateField("Post date")
     intro = models.CharField(max_length=250)
     body = StreamField(_get_default_block_types())
@@ -83,8 +74,7 @@ class BlogPage(BaseContentPage):
         gallery_item = self.gallery_images.first()
         if gallery_item:
             return gallery_item.image
-        else:
-            return None
+        return None
 
 
 class BlogPageGalleryImage(Orderable):
