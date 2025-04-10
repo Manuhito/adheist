@@ -1,6 +1,6 @@
 import logging
 
-
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
@@ -8,13 +8,13 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from djstripe.enums import SubscriptionStatus
+from djstripe.settings import djstripe_settings
 from stripe.error import InvalidRequestError
 
 from ..decorators import redirect_subscription_errors, active_subscription_required
 from ..wrappers import SubscriptionWrapper, InvoiceFacade
 from ..forms import UsageRecordForm
 from ..helpers import get_subscription_urls, subscription_is_active, subscription_is_trialing
-from ..metadata import get_active_products_with_metadata, ACTIVE_PLAN_INTERVALS, get_active_plan_interval_metadata
 from ..models import SubscriptionModelBase
 from apps.utils.billing import get_stripe_module
 
@@ -98,26 +98,15 @@ def _view_subscription(request, subscription_holder: SubscriptionModelBase):
     )
 
 
-def _upgrade_subscription(request, subscription_holder):
-    """
-    Show subscription upgrade form / options.
-    """
-    assert not subscription_holder.has_active_subscription()
-
-    active_products = list(get_active_products_with_metadata())
-    default_products = [p for p in active_products if p.metadata.is_default]
-    default_product = default_products[0] if default_products else active_products[0]
-
+def _upgrade_subscription(request, subscription_holder: SubscriptionModelBase):
     return render(
         request,
         "subscriptions/upgrade_subscription.html",
         {
             "active_tab": "subscription",
-            "default_product": default_product,
-            "active_products": active_products,
-            "active_plan_intervals": get_active_plan_interval_metadata(),
-            "default_interval": ACTIVE_PLAN_INTERVALS[0],
-            "subscription_urls": get_subscription_urls(subscription_holder),
+            "stripe_public_key": djstripe_settings.STRIPE_PUBLIC_KEY,
+            "stripe_pricing_table_id": settings.STRIPE_PRICING_TABLE_ID,
+            "client_reference_id": subscription_holder.id,
         },
     )
 

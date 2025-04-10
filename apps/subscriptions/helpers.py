@@ -37,7 +37,6 @@ def get_subscription_urls(subscription_holder):
         "subscription_gated_page",
         "metered_billing_demo",
         # checkout urls
-        "create_checkout_session",
         "checkout_canceled",
     ]
 

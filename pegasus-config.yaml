@@ -32,7 +32,7 @@ default_context:
   standalone_front_end: none
   stripe_payment_mode: checkout
   subscription_billing_model: default
-  subscription_pricing_ui: in_app
+  subscription_pricing_ui: stripe_hosted
   use_2fa: y
   use_admin_docs: n
   use_ai_rules_claude: n

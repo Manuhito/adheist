@@ -15,7 +15,6 @@ urlpatterns = [
     path("checkout-canceled/", views.checkout_canceled, name="checkout_canceled"),
     # stripe integration views that return redirects to Stripe
     # these are the defaults
-    path("stripe/create-checkout-session/", views.create_checkout_session, name="create_checkout_session"),
     path("stripe/portal/", views.create_portal_session, name="create_stripe_portal_session"),
     # stripe api views that return Stripe URLs instead of redirects
     # these can be used by JavaScript front-ends to handle the redirect from the response

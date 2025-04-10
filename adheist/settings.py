@@ -88,7 +88,6 @@ PROJECT_APPS = [
     "apps.users.apps.UserConfig",
     "apps.dashboard.apps.DashboardConfig",
     "apps.web",
-    "apps.ahbackend",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + PROJECT_APPS + WAGTAIL_APPS
@@ -438,6 +437,7 @@ STRIPE_TEST_PUBLIC_KEY = env("STRIPE_TEST_PUBLIC_KEY", default="pk_test_***")
 STRIPE_TEST_SECRET_KEY = env("STRIPE_TEST_SECRET_KEY", default="sk_test_***")
 # Change to True in production
 STRIPE_LIVE_MODE = env.bool("STRIPE_LIVE_MODE", False)
+STRIPE_PRICING_TABLE_ID = env("STRIPE_PRICING_TABLE_ID", default="")
 
 # djstripe settings
 # Get it from the section in the Stripe dashboard where you added the webhook endpoint
