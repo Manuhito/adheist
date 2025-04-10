@@ -39,8 +39,8 @@ class AdRequestAdmin(admin.ModelAdmin):
 
 @admin.register(AdRequestAssets)
 class AdRequestAssetsAdmin(admin.ModelAdmin):
-    list_display = ["company_website", "created_at", "updated_at"]
-    search_fields = ["company_website"]
+    list_display = ["user", "created_at", "updated_at"]
+    search_fields = ["user__email"]
 
 
 @admin.register(AdRequestVersion)

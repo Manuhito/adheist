@@ -1,6 +1,8 @@
 from django.db import models
 from django.urls import reverse
 from django.conf import settings
+from django.core.serializers.json import DjangoJSONEncoder
+import json
 
 from apps.utils.models import BaseModel
 
@@ -39,6 +41,7 @@ class AdLibrary(BaseModel):
 
 
 class AdRequestAssets(BaseModel):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="asset_collections", null=True, blank=True)
     company_website = models.URLField(null=True, blank=True)
     logo = models.ImageField(upload_to="adrequest_assets/", null=True, blank=True)
     main_hex_color = models.CharField(max_length=7, null=True, blank=True)
@@ -50,6 +53,19 @@ class AdRequestAssets(BaseModel):
     marketing_image_1 = models.ImageField(upload_to="adrequest_assets/", null=True, blank=True)
     marketing_image_2 = models.ImageField(upload_to="adrequest_assets/", null=True, blank=True)
     marketing_image_3 = models.ImageField(upload_to="adrequest_assets/", null=True, blank=True)
+
+    def __str__(self):
+        return f"Asset Collection {self.user}"
+    
+    def to_dict(self):
+        """Convert asset fields to dictionary for easier override handling"""
+        return {
+            'company_website': self.company_website,
+            'main_hex_color': self.main_hex_color,
+            'key_benefits': self.key_benefits,
+            # We don't include images in the dict as they need special handling
+        }
+
 
 class AdRequest(BaseModel):
     STATUS_DRAFT = 'DRAFT'
@@ -67,9 +83,72 @@ class AdRequest(BaseModel):
     
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     ad_library = models.ForeignKey(AdLibrary, on_delete=models.CASCADE)
-    ad_req_assets = models.ForeignKey(AdRequestAssets, on_delete=models.CASCADE)
+    base_assets = models.ForeignKey(AdRequestAssets, on_delete=models.PROTECT, related_name="ad_requests", null=True, blank=True)
+    asset_overrides = models.JSONField(default=dict, blank=True, encoder=DjangoJSONEncoder,
+                                      help_text="Stores overrides for specific asset fields")
+    # Image overrides need separate fields since they can't be stored in JSON
+    logo_override = models.ImageField(upload_to="adrequest_assets/", null=True, blank=True)
+    product_image_1_override = models.ImageField(upload_to="adrequest_assets/", null=True, blank=True)
+    product_image_2_override = models.ImageField(upload_to="adrequest_assets/", null=True, blank=True)
+    app_image_1_override = models.ImageField(upload_to="adrequest_assets/", null=True, blank=True)
+    app_image_2_override = models.ImageField(upload_to="adrequest_assets/", null=True, blank=True)
+    marketing_image_1_override = models.ImageField(upload_to="adrequest_assets/", null=True, blank=True)
+    marketing_image_2_override = models.ImageField(upload_to="adrequest_assets/", null=True, blank=True)
+    marketing_image_3_override = models.ImageField(upload_to="adrequest_assets/", null=True, blank=True)
+    
     canvas_size = models.CharField(max_length=20, default="1080x1080")
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=STATUS_DRAFT)
+    
+    def __str__(self):
+        return f"Request #{self.id} - {self.user}"
+    
+    def get_asset_value(self, field_name):
+        """Get asset value with override if it exists"""
+        # For text-based fields stored in JSON
+        if field_name in self.asset_overrides:
+            return self.asset_overrides[field_name]
+        
+        # For image fields that have separate override fields
+        override_field = f"{field_name}_override"
+        if hasattr(self, override_field) and getattr(self, override_field):
+            return getattr(self, override_field)
+        
+        # Fall back to base assets
+        return getattr(self.base_assets, field_name)
+    
+    def get_company_website(self):
+        return self.get_asset_value('company_website')
+    
+    def get_main_hex_color(self):
+        return self.get_asset_value('main_hex_color')
+    
+    def get_key_benefits(self):
+        return self.get_asset_value('key_benefits')
+    
+    def get_logo(self):
+        return self.logo_override or self.base_assets.logo
+    
+    def get_product_image_1(self):
+        return self.product_image_1_override or self.base_assets.product_image_1
+    
+    def get_product_image_2(self):
+        return self.product_image_2_override or self.base_assets.product_image_2
+    
+    def get_app_image_1(self):
+        return self.app_image_1_override or self.base_assets.app_image_1
+    
+    def get_app_image_2(self):
+        return self.app_image_2_override or self.base_assets.app_image_2
+    
+    def get_marketing_image_1(self):
+        return self.marketing_image_1_override or self.base_assets.marketing_image_1
+    
+    def get_marketing_image_2(self):
+        return self.marketing_image_2_override or self.base_assets.marketing_image_2
+    
+    def get_marketing_image_3(self):
+        return self.marketing_image_3_override or self.base_assets.marketing_image_3
+
 
 class AdRequestVersion(BaseModel):
     STATUS_DRAFT = 'DRAFT'
