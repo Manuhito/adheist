@@ -1,12 +1,12 @@
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.http.response import HttpResponseRedirect
+from django.http.response import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
-from .models import AdLibrary, IndustryList, TagList
+from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets
 from .forms import AdLibraryForm
 
 # A reasonable value for pagination would be 10 or 20 entries per page.
@@ -106,4 +106,38 @@ def adlibrary_delete(request, pk):
     obj = get_object_or_404(AdLibrary, id=pk)
     obj.delete()
     return HttpResponseRedirect(reverse("ahbackend:adlibrary_list"))
+
+
+@login_required
+@require_POST
+def adrequest_create(request):
+    """
+    Create a new AdRequest instance.
+    
+    Returns: JSON with the AdRequest instance ID
+    """
+    ad_library_id = request.POST.get('ad_library')
+    canvas_size = request.POST.get('canvas_size')
+    
+    # Validate inputs
+    if not ad_library_id:
+        return JsonResponse({'error': 'Ad library ID is required'}, status=400)
+    
+    try:
+        # Get the AdLibrary instance
+        ad_library = get_object_or_404(AdLibrary, id=ad_library_id)
+        
+        # Create a new AdRequest instance
+        ad_request = AdRequest.objects.create(
+            user=request.user,
+            ad_library=ad_library,
+            canvas_size=canvas_size if canvas_size else None
+        )
+        
+        # Return the AdRequest instance ID
+        return JsonResponse({'id': ad_request.id}, status=201)
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
 

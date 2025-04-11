@@ -11,4 +11,5 @@ urlpatterns = [
     path("adlibrary/create/", views.adlibrary_create, name="adlibrary_create"),
     path("adlibrary/<int:pk>/update/", views.adlibrary_update, name="adlibrary_update"),
     path("adlibrary/<int:pk>/delete/", views.adlibrary_delete, name="adlibrary_delete"),
+    path("adrequest/create/", views.adrequest_create, name="adrequest_create"),
 ]
