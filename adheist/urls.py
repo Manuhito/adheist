@@ -59,9 +59,12 @@ urlpatterns = [
     path("stripe/", include("djstripe.urls", namespace="djstripe")),
     # wagtail config
     # redirect Wagtail admin login to main login page
+    path('cms/', include(wagtailadmin_urls)),  # The Wagtail admin interface
     path("cms/login/", RedirectView.as_view(pattern_name="account_login")),
-    path("cms/", include(wagtailadmin_urls)),
-    path("documents/", include(wagtaildocs_urls)),
-    path("content/", include(wagtail_urls)),
-    path("ahbackend/", include("apps.ahbackend.urls")),
+    path('documents/', include(wagtaildocs_urls)),  # The Wagtail document library
+    # Add Wagtail's URL patterns at the end. It will catch all URLs that weren't matched by previous patterns
+    # This will automatically handle:
+    # - /blog/ -> blog index page
+    # - /blog/post-slug/ -> individual blog posts
+    path('', include(wagtail_urls)),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

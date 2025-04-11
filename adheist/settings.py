@@ -83,7 +83,7 @@ WAGTAIL_APPS = [
 
 # Put your project-specific apps here
 PROJECT_APPS = [
-    "apps.content",
+    "apps.blog",
     "apps.subscriptions.apps.SubscriptionConfig",
     "apps.users.apps.UserConfig",
     "apps.dashboard.apps.DashboardConfig",
@@ -398,7 +398,7 @@ CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 
 # Wagtail config
 
-WAGTAIL_SITE_NAME = "AdHeist Content"
+WAGTAIL_SITE_NAME = "AdHeist"
 WAGTAILADMIN_BASE_URL = "http://localhost:8000"
 
 

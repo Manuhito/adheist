@@ -1,3 +1,4 @@
+import * as React from 'react';
 import BlogCard from "@/components/blog-card";
 import { siteConfig } from "@/lib/config";
 import { constructMetadata } from "@/lib/utils";
