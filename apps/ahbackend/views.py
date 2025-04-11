@@ -147,8 +147,8 @@ def get_adlibrary_company_list(request):
     if company_names is None:
         adlibraries = AdLibrary.objects.all()
         company_names = [adlibrary.company_name for adlibrary in adlibraries]
-        # Cache for 1 hour (3600 seconds)
-        cache.set(cache_key, company_names, 3600)
+        # Cache for 1 hour (3600 seconds) - I will set to none for now
+        cache.set(cache_key, company_names, None)
     
     return JsonResponse({'companies': company_names}, safe=True)
 
