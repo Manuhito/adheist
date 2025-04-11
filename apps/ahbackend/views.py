@@ -51,6 +51,29 @@ def get_all_tags(request):
     return JsonResponse({'tags': tag_list}, safe=True)
 
 
+def get_adlibrary_by_company_name(request):
+    """
+    Get list of AdLibrary company names, optionally filtered.
+    
+    GET Parameters:
+        name: Filter company names containing this string (optional)
+    
+    Returns: JSON with list of matching company names
+    """
+    name_filter = request.GET.get('name', '')
+    
+    # Filter AdLibrary objects by company_name
+    if name_filter:
+        adlibraries = AdLibrary.objects.filter(company_name__icontains=name_filter)
+    else:
+        adlibraries = AdLibrary.objects.all()
+    
+    # Get just the company names as a plain list
+    company_names = [adlibrary.company_name for adlibrary in adlibraries]
+    
+    return JsonResponse({'companies': company_names}, safe=True)
+
+
 @login_required
 @require_POST
 def adrequest_create(request):
