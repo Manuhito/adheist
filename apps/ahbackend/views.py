@@ -26,13 +26,22 @@ def home(request):
 def get_all_industries(request):
     """
     Get all IndustryList objects from the database.
+    Uses Redis caching for improved performance.
     
     Returns: JSON with list of industry names
     """
-    industries = IndustryList.objects.all()
+    from django.core.cache import cache
     
-    # Get just the names as a plain list
-    industry_list = [industry.name for industry in industries]
+    # Try to get from cache first
+    cache_key = 'industry_name_list'
+    industry_list = cache.get(cache_key)
+    
+    # If not in cache, get from database and cache it
+    if industry_list is None:
+        industries = IndustryList.objects.all()
+        industry_list = [industry.name for industry in industries]
+        # Cache with no expiration - will be invalidated by signals
+        cache.set(cache_key, industry_list, None)
     
     return JsonResponse({'industries': industry_list}, safe=True)
 
@@ -40,13 +49,22 @@ def get_all_industries(request):
 def get_all_tags(request):
     """
     Get all TagList objects from the database.
+    Uses Redis caching for improved performance.
     
     Returns: JSON with list of tag names
     """
-    tags = TagList.objects.all()
+    from django.core.cache import cache
     
-    # Get just the names as a plain list
-    tag_list = [tag.name for tag in tags]
+    # Try to get from cache first
+    cache_key = 'tag_name_list'
+    tag_list = cache.get(cache_key)
+    
+    # If not in cache, get from database and cache it
+    if tag_list is None:
+        tags = TagList.objects.all()
+        tag_list = [tag.name for tag in tags]
+        # Cache with no expiration - will be invalidated by signals
+        cache.set(cache_key, tag_list, None)
     
     return JsonResponse({'tags': tag_list}, safe=True)
 
@@ -147,8 +165,8 @@ def get_adlibrary_company_list(request):
     if company_names is None:
         adlibraries = AdLibrary.objects.all()
         company_names = [adlibrary.company_name for adlibrary in adlibraries]
-        # Cache for 1 hour (3600 seconds)
-        cache.set(cache_key, company_names, 3600)
+        # Cache for 1 hour (3600 seconds) - I will set to none for now
+        cache.set(cache_key, company_names, None)
     
     return JsonResponse({'companies': company_names}, safe=True)
 
