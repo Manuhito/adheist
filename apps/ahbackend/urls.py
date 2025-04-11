@@ -6,9 +6,11 @@ app_name = "ahbackend"
 
 urlpatterns = [
     path("", views.home, name="ahbackend_home"),
-    path("adlibrary/", views.adlibrary_list, name="adlibrary_list"),
-    path("adlibrary/<int:pk>/", views.adlibrary_detail, name="adlibrary_detail"),
-    path("adlibrary/create/", views.adlibrary_create, name="adlibrary_create"),
-    path("adlibrary/<int:pk>/update/", views.adlibrary_update, name="adlibrary_update"),
-    path("adlibrary/<int:pk>/delete/", views.adlibrary_delete, name="adlibrary_delete"),
+    path("adrequest/create/", views.adrequest_create, name="adrequest_create"),
+    path("adrequest/<int:pk>/", views.adrequest_detail, name="adrequest_detail"),
+    path("adrequest/version/create/", views.adrequest_version_create, name="adrequest_version_create"),
+    path("industries/", views.get_all_industries, name="get_all_industries"),
+    path("tags/", views.get_all_tags, name="get_all_tags"),
+    path("adlibraries/", views.get_adlibrary_filters, name="get_adlibrary_filters"),
+    path("companies/", views.get_adlibrary_company_list, name="get_adlibrary_company_list"),
 ]
