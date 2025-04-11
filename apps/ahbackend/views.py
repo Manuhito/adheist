@@ -74,6 +74,29 @@ def get_adlibrary_by_company_name(request):
     return JsonResponse({'companies': company_names}, safe=True)
 
 
+def get_adlibrary_company_list(request):
+    """
+    Get a simple list of all company names from AdLibrary.
+    Uses Redis caching for improved performance.
+    
+    Returns: JSON with list of all company names
+    """
+    from django.core.cache import cache
+    
+    # Try to get from cache first
+    cache_key = 'adlibrary_company_names'
+    company_names = cache.get(cache_key)
+    
+    # If not in cache, get from database and cache it
+    if company_names is None:
+        adlibraries = AdLibrary.objects.all()
+        company_names = [adlibrary.company_name for adlibrary in adlibraries]
+        # Cache for 1 hour (3600 seconds)
+        cache.set(cache_key, company_names, 3600)
+    
+    return JsonResponse({'companies': company_names}, safe=True)
+
+
 @login_required
 @require_POST
 def adrequest_create(request):
