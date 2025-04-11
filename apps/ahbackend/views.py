@@ -7,7 +7,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST, require_http_methods
 import json
 
-from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets
+from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion
 from .forms import AdLibraryForm
 
 # A reasonable value for pagination would be 10 or 20 entries per page.
@@ -276,3 +276,53 @@ def adrequest_detail(request, pk):
     return JsonResponse({'error': 'Method not allowed'}, status=405)
 
 
+@login_required
+@require_POST
+def adrequest_version_create(request):
+    """
+    Create a new AdRequestVersion instance.
+    
+    Required input:
+    - ad_request: The primary key of the AdRequest to create a version for
+    
+    Optional inputs:
+    - generated_prompt: The generated prompt for the version
+    - user_prompt: The user prompt for the version
+    
+    Returns: JSON with the AdRequestVersion instance ID
+    """
+    ad_request_id = request.POST.get('ad_request')
+    
+    # Validate inputs
+    if not ad_request_id:
+        return JsonResponse({'error': 'Ad request ID is required'}, status=400)
+    
+    try:
+        # Get the AdRequest instance
+        ad_request = get_object_or_404(AdRequest, id=ad_request_id)
+        
+        # Check if the user has permission to create a version for this request
+        if ad_request.user != request.user:
+            return JsonResponse({'error': 'You do not have permission to create a version for this request'}, status=403)
+        
+        # Get optional fields
+        generated_prompt = request.POST.get('generated_prompt')
+        user_prompt = request.POST.get('user_prompt')
+        
+        # Create a new AdRequestVersion instance
+        version = AdRequestVersion.objects.create(
+            ad_request=ad_request,
+            generated_prompt=generated_prompt,
+            user_prompt=user_prompt,
+            status=AdRequestVersion.STATUS_UNASSIGNED
+        )
+        
+        # Return the AdRequestVersion instance ID
+        return JsonResponse({
+            'id': version.id,
+            'status': version.status,
+            'message': 'Version created successfully'
+        }, status=201)
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

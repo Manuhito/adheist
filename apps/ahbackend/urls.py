@@ -13,4 +13,5 @@ urlpatterns = [
     path("adlibrary/<int:pk>/delete/", views.adlibrary_delete, name="adlibrary_delete"),
     path("adrequest/create/", views.adrequest_create, name="adrequest_create"),
     path("adrequest/<int:pk>/", views.adrequest_detail, name="adrequest_detail"),
+    path("adrequest/version/create/", views.adrequest_version_create, name="adrequest_version_create"),
 ]
