@@ -23,7 +23,32 @@ def home(request):
     return TemplateResponse(request, template, {"active_tab": "ahbackend"})
 
 
+def get_all_industries(request):
+    """
+    Get all IndustryList objects from the database.
+    
+    Returns: JSON with list of industry names
+    """
+    industries = IndustryList.objects.all()
+    
+    # Get just the names as a plain list
+    industry_list = [industry.name for industry in industries]
+    
+    return JsonResponse({'industries': industry_list}, safe=True)
 
+
+def get_all_tags(request):
+    """
+    Get all TagList objects from the database.
+    
+    Returns: JSON with list of tag names
+    """
+    tags = TagList.objects.all()
+    
+    # Get just the names as a plain list
+    tag_list = [tag.name for tag in tags]
+    
+    return JsonResponse({'tags': tag_list}, safe=True)
 
 
 @login_required
