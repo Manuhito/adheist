@@ -51,22 +51,62 @@ def get_all_tags(request):
     return JsonResponse({'tags': tag_list}, safe=True)
 
 
-def get_adlibrary_by_company_name(request):
+def get_adlibrary_filters(request):
     """
-    Get list of AdLibrary objects, optionally filtered by company name.
+    Get list of AdLibrary objects with flexible filtering options.
     
     GET Parameters:
-        name: Filter company names containing this string (optional)
+        company_name: Filter by company name (case-insensitive contains)
+        industries: Filter by industry names (comma-separated list)
+        tags: Filter by tag names (comma-separated list)
+        has_image: Filter to only include entries with images (true/false)
     
     Returns: JSON with list of AdLibrary objects including company_name, industries, tags, and ad_image
     """
-    name_filter = request.GET.get('name', '')
+    from django.db.models import Q
     
-    # Filter AdLibrary objects by company_name
-    if name_filter:
-        adlibraries = AdLibrary.objects.filter(company_name__icontains=name_filter)
-    else:
-        adlibraries = AdLibrary.objects.all()
+    # Get filter parameters from request
+    company_name = request.GET.get('company_name', '')
+    industries = request.GET.getlist('industries', [])
+    tags = request.GET.getlist('tags', [])
+    has_image = request.GET.get('has_image', '').lower()
+    
+    # If single values are provided instead of lists, convert them
+    if not industries and request.GET.get('industry'):
+        industries = [request.GET.get('industry')]
+    
+    if not tags and request.GET.get('tag'):
+        tags = [request.GET.get('tag')]
+    
+    # Start with all AdLibrary objects
+    adlibraries = AdLibrary.objects.all()
+    
+    # Apply filters if provided
+    if company_name:
+        adlibraries = adlibraries.filter(company_name__icontains=company_name)
+    
+    # Filter by multiple industries (OR logic - must have at least one of the specified industries)
+    if industries:
+        industry_query = Q()
+        for industry in industries:
+            if industry:
+                industry_query |= Q(industries__name=industry)
+        if industry_query:
+            adlibraries = adlibraries.filter(industry_query)
+    
+    # Filter by multiple tags (OR logic - must have at least one of the specified tags)
+    if tags:
+        tag_query = Q()
+        for tag in tags:
+            if tag:
+                tag_query |= Q(tags__name=tag)
+        if tag_query:
+            adlibraries = adlibraries.filter(tag_query)
+    
+    if has_image == 'true':
+        adlibraries = adlibraries.exclude(ad_image='')
+    elif has_image == 'false':
+        adlibraries = adlibraries.filter(ad_image='')
     
     # Convert to list of dictionaries with all required fields
     adlibrary_list = []
@@ -86,6 +126,8 @@ def get_adlibrary_by_company_name(request):
         adlibrary_list.append(adlibrary_data)
     
     return JsonResponse({'adlibraries': adlibrary_list}, safe=True)
+
+
 
 
 def get_adlibrary_company_list(request):
