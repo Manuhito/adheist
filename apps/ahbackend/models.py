@@ -151,12 +151,10 @@ class AdRequest(BaseModel):
 
 
 class AdRequestVersion(BaseModel):
-    STATUS_DRAFT = 'DRAFT'
     STATUS_UNASSIGNED = 'UNASSIGNED'
     STATUS_ASSIGNED = 'ASSIGNED'
     STATUS_COMPLETED = 'COMPLETED'
     STATUS_CHOICES = [
-        (STATUS_DRAFT, 'Draft'),
         (STATUS_UNASSIGNED, 'Unassigned'),
         (STATUS_ASSIGNED, 'Assigned'),
         (STATUS_COMPLETED, 'Completed'),
@@ -166,4 +164,4 @@ class AdRequestVersion(BaseModel):
     prompt = models.TextField()
     generated_image = models.ImageField(upload_to="revisions/", null=True, blank=True)
     user_admin_assigned = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True, related_name="assigned_requests")
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_DRAFT)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_UNASSIGNED)

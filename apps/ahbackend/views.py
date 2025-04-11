@@ -106,3 +106,4 @@ def adlibrary_delete(request, pk):
     obj = get_object_or_404(AdLibrary, id=pk)
     obj.delete()
     return HttpResponseRedirect(reverse("ahbackend:adlibrary_list"))
+
