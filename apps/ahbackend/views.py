@@ -53,12 +53,12 @@ def get_all_tags(request):
 
 def get_adlibrary_by_company_name(request):
     """
-    Get list of AdLibrary company names, optionally filtered.
+    Get list of AdLibrary objects, optionally filtered by company name.
     
     GET Parameters:
         name: Filter company names containing this string (optional)
     
-    Returns: JSON with list of matching company names
+    Returns: JSON with list of AdLibrary objects including company_name, industries, tags, and ad_image
     """
     name_filter = request.GET.get('name', '')
     
@@ -68,10 +68,24 @@ def get_adlibrary_by_company_name(request):
     else:
         adlibraries = AdLibrary.objects.all()
     
-    # Get just the company names as a plain list
-    company_names = [adlibrary.company_name for adlibrary in adlibraries]
+    # Convert to list of dictionaries with all required fields
+    adlibrary_list = []
+    for adlibrary in adlibraries:
+        # Get industries and tags as lists of names
+        industry_names = [industry.name for industry in adlibrary.industries.all()]
+        tag_names = [tag.name for tag in adlibrary.tags.all()]
+        
+        # Create dictionary with all fields
+        adlibrary_data = {
+            'id': adlibrary.id,
+            'company_name': adlibrary.company_name,
+            'industries': industry_names,
+            'tags': tag_names,
+            'ad_image': adlibrary.ad_image.url if adlibrary.ad_image else None,
+        }
+        adlibrary_list.append(adlibrary_data)
     
-    return JsonResponse({'companies': company_names}, safe=True)
+    return JsonResponse({'adlibraries': adlibrary_list}, safe=True)
 
 
 def get_adlibrary_company_list(request):
