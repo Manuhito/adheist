@@ -193,3 +193,23 @@ class AdRequestVersion(BaseModel):
     generated_image = models.ImageField(upload_to="revisions/", null=True, blank=True)
     user_admin_assigned = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True, related_name="assigned_requests")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_UNASSIGNED)
+    
+    def save(self, *args, **kwargs):
+        """Override save method to update generated_prompt if needed"""
+        # Check if this is a new instance or if generated_prompt is empty
+        is_new = self.pk is None
+        force_regenerate = kwargs.pop('regenerate_prompt', False)
+        
+        # First save the model to ensure it has an ID
+        super().save(*args, **kwargs)
+        
+        # Generate prompt if it's empty, new, or forced
+        if is_new or not self.generated_prompt or force_regenerate:
+            from .gen_prompt import generate_prompt
+            self.generated_prompt = generate_prompt(self)
+            # Save again to store the generated prompt
+            super().save(update_fields=['generated_prompt'])
+    
+    def regenerate_prompt(self):
+        """Regenerate the prompt for this version"""
+        self.save(regenerate_prompt=True)
