@@ -128,10 +128,18 @@ def adrequest_create(request):
         # Get the AdLibrary instance
         ad_library = get_object_or_404(AdLibrary, id=ad_library_id)
         
-        # Create a new AdRequest instance
+        # Check if the user already has an AdRequestAssets instance
+        user_assets = AdRequestAssets.objects.filter(user=request.user).first()
+        
+        # If not, create one
+        if not user_assets:
+            user_assets = AdRequestAssets.objects.create(user=request.user)
+        
+        # Create a new AdRequest instance with the user's assets
         ad_request = AdRequest.objects.create(
             user=request.user,
             ad_library=ad_library,
+            base_assets=user_assets,
             canvas_size=canvas_size if canvas_size else None
         )
         
@@ -209,6 +217,18 @@ def adrequest_detail(request, pk):
                     ad_request.status = new_status
                 else:
                     return JsonResponse({'error': f'Invalid status: {new_status}'}, status=400)
+            
+            # Ensure the AdRequest has base_assets
+            if not ad_request.base_assets:
+                # Check if the user already has an AdRequestAssets instance
+                user_assets = AdRequestAssets.objects.filter(user=request.user).first()
+                
+                # If not, create one
+                if not user_assets:
+                    user_assets = AdRequestAssets.objects.create(user=request.user)
+                
+                # Associate the assets with the ad request
+                ad_request.base_assets = user_assets
             
             # Handle asset overrides
             asset_overrides = {}
