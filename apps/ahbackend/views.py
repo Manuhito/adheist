@@ -4,7 +4,8 @@ from django.http.response import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.template.response import TemplateResponse
 from django.urls import reverse
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_http_methods
+import json
 
 from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets
 from .forms import AdLibraryForm
@@ -139,5 +140,119 @@ def adrequest_create(request):
         
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def adrequest_detail(request, pk):
+    """
+    Get or update an AdRequest instance.
+    
+    GET: Returns JSON with the AdRequest details
+    POST: Updates the AdRequest and returns the updated instance
+    
+    Args:
+        request: The HTTP request
+        pk: The primary key of the AdRequest to retrieve or update
+        
+    Returns:
+        JsonResponse with the AdRequest data or error message
+    """
+    # Get the AdRequest instance
+    ad_request = get_object_or_404(AdRequest, id=pk)
+    
+    # Check if the user has permission to access this AdRequest
+    if ad_request.user != request.user:
+        return JsonResponse({'error': 'You do not have permission to access this request'}, status=403)
+    
+    if request.method == 'GET':
+        # Return the AdRequest details
+        response_data = {
+            'id': ad_request.id,
+            'user_id': ad_request.user.id,
+            'ad_library_id': ad_request.ad_library.id,
+            'ad_library_name': ad_request.ad_library.company_name,
+            'canvas_size': ad_request.canvas_size,
+            'status': ad_request.status,
+            'created_at': ad_request.created_at.isoformat(),
+            'updated_at': ad_request.updated_at.isoformat(),
+        }
+        
+        # Add asset information if available
+        if ad_request.base_assets:
+            response_data['assets'] = {
+                'company_website': ad_request.get_company_website(),
+                'main_hex_color': ad_request.get_main_hex_color(),
+                'key_benefits': ad_request.get_key_benefits(),
+                # Include URLs for images if they exist
+                'logo': ad_request.get_logo().url if ad_request.get_logo() else None,
+                'product_image_1': ad_request.get_product_image_1().url if ad_request.get_product_image_1() else None,
+                'product_image_2': ad_request.get_product_image_2().url if ad_request.get_product_image_2() else None,
+                'app_image_1': ad_request.get_app_image_1().url if ad_request.get_app_image_1() else None,
+                'app_image_2': ad_request.get_app_image_2().url if ad_request.get_app_image_2() else None,
+                'marketing_image_1': ad_request.get_marketing_image_1().url if ad_request.get_marketing_image_1() else None,
+                'marketing_image_2': ad_request.get_marketing_image_2().url if ad_request.get_marketing_image_2() else None,
+                'marketing_image_3': ad_request.get_marketing_image_3().url if ad_request.get_marketing_image_3() else None,
+            }
+            
+        return JsonResponse(response_data)
+    
+    elif request.method == 'POST':
+        try:
+            # Update the AdRequest fields
+            if 'canvas_size' in request.POST:
+                ad_request.canvas_size = request.POST.get('canvas_size')
+                
+            if 'status' in request.POST:
+                new_status = request.POST.get('status')
+                if new_status in dict(AdRequest.STATUS_CHOICES).keys():
+                    ad_request.status = new_status
+                else:
+                    return JsonResponse({'error': f'Invalid status: {new_status}'}, status=400)
+            
+            # Handle asset overrides
+            asset_overrides = {}
+            
+            # Text-based fields that can be stored in JSON
+            text_fields = ['company_website', 'main_hex_color', 'key_benefits']
+            for field in text_fields:
+                if field in request.POST:
+                    asset_overrides[field] = request.POST.get(field)
+            
+            # Update asset_overrides if we have any
+            if asset_overrides:
+                # Merge with existing overrides
+                current_overrides = ad_request.asset_overrides
+                current_overrides.update(asset_overrides)
+                ad_request.asset_overrides = current_overrides
+            
+            # Handle file uploads for image overrides
+            image_fields = [
+                'logo', 'product_image_1', 'product_image_2', 
+                'app_image_1', 'app_image_2',
+                'marketing_image_1', 'marketing_image_2', 'marketing_image_3'
+            ]
+            
+            for field in image_fields:
+                if field in request.FILES:
+                    # Set the override field
+                    override_field = f"{field}_override"
+                    setattr(ad_request, override_field, request.FILES[field])
+            
+            # Save the updated AdRequest
+            ad_request.save()
+            
+            # Return success response
+            return JsonResponse({
+                'id': ad_request.id,
+                'status': ad_request.status,
+                'message': 'AdRequest updated successfully'
+            })
+            
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    # This should never happen due to the @require_http_methods decorator
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
 
 
