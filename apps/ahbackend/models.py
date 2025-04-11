@@ -99,6 +99,33 @@ class AdRequest(BaseModel):
     canvas_size = models.CharField(max_length=20, default="1080x1080")
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=STATUS_DRAFT)
     
+    def save(self, *args, **kwargs):
+        """Override save method to update base_assets with overrides"""
+        # First save the model to ensure it has an ID
+        super().save(*args, **kwargs)
+        
+        # Update base_assets with any overrides if base_assets exists
+        if self.base_assets:
+            # Update JSON fields from asset_overrides
+            for field_name, value in self.asset_overrides.items():
+                if hasattr(self.base_assets, field_name):
+                    setattr(self.base_assets, field_name, value)
+            
+            # Update image fields from their respective override fields
+            image_fields = [
+                'logo', 'product_image_1', 'product_image_2', 
+                'app_image_1', 'app_image_2',
+                'marketing_image_1', 'marketing_image_2', 'marketing_image_3'
+            ]
+            
+            for field_name in image_fields:
+                override_field = f"{field_name}_override"
+                if hasattr(self, override_field) and getattr(self, override_field):
+                    setattr(self.base_assets, field_name, getattr(self, override_field))
+            
+            # Save the updated base_assets
+            self.base_assets.save()
+    
     def __str__(self):
         return f"Request #{self.id} - {self.user}"
     
@@ -161,7 +188,8 @@ class AdRequestVersion(BaseModel):
     ]
     
     ad_request = models.ForeignKey(AdRequest, on_delete=models.CASCADE, related_name="versions")
-    prompt = models.TextField()
+    generated_prompt = models.TextField(null=True, blank=True)
+    user_prompt = models.TextField(null=True, blank=True)
     generated_image = models.ImageField(upload_to="revisions/", null=True, blank=True)
     user_admin_assigned = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True, related_name="assigned_requests")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_UNASSIGNED)
