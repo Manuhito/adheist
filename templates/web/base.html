@@ -1,6 +1,10 @@
 {% extends "web/base_core.html" %}
 {% load static %}
-
+{% block top_nav %}
+{% endblock %}
+{% block messages %}
+{% include 'web/components/messages.html' %}
+{% endblock messages %}
 {% block body %}
 {# Loading State #}
 <div id="loading-state"

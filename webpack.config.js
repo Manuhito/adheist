@@ -17,6 +17,7 @@ module.exports = {
     pricing: './assets/javascript/pricing/index.jsx',  // entry point para la página de pricing
     blog: './assets/javascript/blog/index.jsx',  // entry point para el blog
     'blog-post': './assets/javascript/blog/post/index.jsx',  // entry point para el post individual
+    'app-header': './assets/javascript/app-header.js',
   },
   output: {
     path: path.resolve(__dirname, './static'),
