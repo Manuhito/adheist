@@ -21,6 +21,7 @@ export const SearchComponent = () => {
   // Cargar la lista de empresas al montar el componente
   useEffect(() => {
     setIsLoading(true);
+    
     fetch('/ahbackend/companies/')
       .then(response => response.json())
       .then(data => {

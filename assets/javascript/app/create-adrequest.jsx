@@ -1,15 +1,17 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { SearchComponent } from './components/SearchComponent';
+import { FilterFormComponent } from './components/FilterFormComponent';
 
 /**
  * Main component for the Create Ad Request page
+ * Includes search functionality and filter form for industries and tags
  */
 const CreateAdRequestApp = () => {
   return (
     <div className="space-y-6 flex flex-col items-center w-full">
       <SearchComponent />
-      {/* Aquí se pueden añadir más componentes en el futuro */}
+      <FilterFormComponent />
     </div>
   );
 };
