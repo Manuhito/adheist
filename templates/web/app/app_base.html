@@ -1,22 +1,35 @@
-{% extends "web/base.html" %}
+{% extends "web/base_core.html" %}
 {% load static %}
-{% block top_nav %}
-  {% include 'web/components/top_nav_app.html' %}
+{% block extra_js %}
+<script>
+  // Pass user data to the React component
+  window.__USER_DATA__ = {
+    name: "{{ request.user.get_full_name|default:'' }}",
+    email: "{{ request.user.email|default:'' }}",
+    avatar: "{{ request.user.profile.avatar_url|default:'' }}"
+  };
+</script>
+<script src="{% static 'js/app-header-bundle.js' %}" defer></script>
 {% endblock %}
+
 {% block body %}
-  {% block notifications %}
-  {% endblock %}
-  <section class="section">
-    <div class="container flex flex-row">
-      <div class="w-64 hidden lg:flex">
-        {% block sidebar-nav %}
-          {% include "web/components/app_nav.html" %}
-        {% endblock %}
-      </div>
-      <div class="w-full">
-        {% block app %}
-        {% endblock %}
-      </div>
+{% block notifications %}
+{% endblock %}
+
+<!-- App Header -->
+<div id="app-header-container"></div>
+
+<section class="section mt-4">
+  <div class="container flex flex-row">
+    <div class="w-64 hidden lg:flex">
+      {% block sidebar-nav %}
+      {% include "web/components/app_nav.html" %}
+      {% endblock %}
     </div>
-  </section>
+    <div class="w-full">
+      {% block app %}
+      {% endblock %}
+    </div>
+  </div>
+</section>
 {% endblock %}
