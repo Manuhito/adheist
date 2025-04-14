@@ -8,15 +8,16 @@ import { Search, Check, ChevronDown } from 'lucide-react';
  * Search component with popover functionality
  * Uses ShadCN UI components for a clean, accessible interface
  * Similar to the Command pattern from ShadCN
+ * @param {Object} props - Component props
+ * @param {string|null} props.selectedCompany - Currently selected company
+ * @param {Function} props.onCompanyChange - Callback when company selection changes
  */
-export const SearchComponent = () => {
+export const SearchComponent = ({ selectedCompany, onCompanyChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [companies, setCompanies] = useState([]);
   const [filteredCompanies, setFilteredCompanies] = useState([]);
-  const [selectedCompany, setSelectedCompany] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [companyDetails, setCompanyDetails] = useState(null);
   
   // Cargar la lista de empresas al montar el componente
   useEffect(() => {
@@ -49,27 +50,11 @@ export const SearchComponent = () => {
     }
   }, [searchQuery, companies]);
   
-  const fetchCompanyDetails = (company) => {
-    setIsLoading(true);
-    // Llamar al endpoint de filtros para obtener información detallada
-    fetch(`/ahbackend/adlibraries/?company_name=${encodeURIComponent(company)}`)
-      .then(response => response.json())
-      .then(data => {
-        console.log('Información de empresa recuperada:', data);
-        setCompanyDetails(data);
-        setSelectedCompany(company);
-        setIsLoading(false);
-        setIsOpen(false);
-      })
-      .catch(error => {
-        console.error('Error al recuperar información:', error);
-        setIsLoading(false);
-      });
-  };
-  
   const handleSelectCompany = (company) => {
     setSearchQuery('');
-    fetchCompanyDetails(company);
+    setIsOpen(false);
+    // Llamar al callback del componente padre
+    onCompanyChange(company);
   };
 
   return (

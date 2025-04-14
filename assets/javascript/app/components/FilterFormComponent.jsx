@@ -23,29 +23,39 @@ const FilterFormSchema = z.object({
 /**
  * Componente de formulario para seleccionar múltiples industrias y etiquetas
  * Utiliza react-hook-form y zod para validación
+ * @param {Object} props - Component props
+ * @param {string[]} props.selectedIndustries - Currently selected industries
+ * @param {string[]} props.selectedTags - Currently selected tags
+ * @param {Function} props.onIndustriesChange - Callback when industries selection changes
+ * @param {Function} props.onTagsChange - Callback when tags selection changes
  */
-export const FilterFormComponent = () => {
+export const FilterFormComponent = ({
+  selectedIndustries = [],
+  selectedTags = [],
+  onIndustriesChange,
+  onTagsChange
+}) => {
   const [industriesList, setIndustriesList] = useState([]);
   const [tagsList, setTagsList] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Configurar el formulario con react-hook-form
   const form = useForm({
     resolver: zodResolver(FilterFormSchema),
     defaultValues: {
-      industries: [],
-      tags: [],
+      industries: selectedIndustries,
+      tags: selectedTags,
     },
   });
 
   // Cargar industrias y etiquetas al montar el componente
   useEffect(() => {
     setIsLoading(true);
-    
+
     // Cargar industrias y etiquetas en paralelo
     const fetchIndustries = fetch('/ahbackend/industries/').then(res => res.json());
     const fetchTags = fetch('/ahbackend/tags/').then(res => res.json());
-    
+
     Promise.all([fetchIndustries, fetchTags])
       .then(([industriesData, tagsData]) => {
         // Procesar datos de industrias
@@ -57,7 +67,7 @@ export const FilterFormComponent = () => {
         }));
         setIndustriesList(industryOptions);
         console.log('Industrias cargadas:', industryList.length);
-        
+
         // Procesar datos de etiquetas
         const tagList = tagsData.tags || [];
         // Convertir a formato de opciones para MultipleSelector
@@ -67,7 +77,7 @@ export const FilterFormComponent = () => {
         }));
         setTagsList(tagOptions);
         console.log('Etiquetas cargadas:', tagList.length);
-        
+
         setIsLoading(false);
       })
       .catch(error => {
@@ -75,11 +85,19 @@ export const FilterFormComponent = () => {
         setIsLoading(false);
       });
   }, []);
-  
+
+  // Sincronizar el formulario cuando cambian las props
+  useEffect(() => {
+    form.reset({
+      industries: selectedIndustries,
+      tags: selectedTags
+    });
+  }, [selectedIndustries, selectedTags, form]);
+
   // Manejar envío del formulario
   const onSubmit = (data) => {
     console.log('Filtros aplicados:', data);
-    // Aquí se implementaría la lógica para aplicar los filtros
+    // No es necesario hacer nada aquí ya que los cambios se manejan en tiempo real
   };
 
   return (
@@ -92,79 +110,105 @@ export const FilterFormComponent = () => {
               <Factory className="h-4 w-4 mr-2" />
               <h3 className="text-base font-medium">Industrias</h3>
             </div>
-            
+
             <FormField
               control={form.control}
               name="industries"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <MultipleSelector
-                      value={industriesList.filter(industry => 
-                        field.value.includes(industry.value)
-                      )}
-                      options={industriesList}
-                      placeholder="Seleccionar industrias"
-                      emptyIndicator={
-                        isLoading ? (
-                          <p className="text-center text-sm">Cargando industrias...</p>
-                        ) : (
-                          <p className="text-center text-sm">No hay industrias disponibles</p>
-                        )
-                      }
-                      disabled={isLoading}
-                      onChange={(options) => {
-                        field.onChange(options.map(option => option.value));
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              render={({ field }) => {
+                // Pre-filtrar las opciones disponibles para evitar mostrar elementos ya seleccionados
+                const availableIndustries = React.useMemo(() => {
+                  return industriesList.filter(
+                    industry => !field.value.includes(industry.value)
+                  );
+                }, [industriesList, field.value]);
+
+                return (
+                  <FormItem>
+                    <FormControl>
+                      <MultipleSelector
+                        value={industriesList.filter(industry =>
+                          field.value.includes(industry.value)
+                        )}
+                        options={availableIndustries}
+                        placeholder="Seleccionar industrias"
+                        emptyIndicator={
+                          isLoading ? (
+                            <p className="text-center text-sm">Cargando industrias...</p>
+                          ) : (
+                            <p className="text-center text-sm">No hay industrias disponibles</p>
+                          )
+                        }
+                        disabled={isLoading}
+                        onChange={(options) => {
+                          const values = options.map(option => option.value);
+                          field.onChange(values);
+                          // Notificar al componente padre sobre el cambio
+                          onIndustriesChange(values);
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }
+              }
             />
           </div>
-          
+
           {/* Campo de etiquetas */}
           <div className="space-y-2">
             <div className="flex items-center">
               <Tag className="h-4 w-4 mr-2" />
               <h3 className="text-base font-medium">Etiquetas</h3>
             </div>
-            
+
             <FormField
               control={form.control}
               name="tags"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <MultipleSelector
-                      value={tagsList.filter(tag => 
-                        field.value.includes(tag.value)
-                      )}
-                      options={tagsList}
-                      placeholder="Seleccionar etiquetas"
-                      emptyIndicator={
-                        isLoading ? (
-                          <p className="text-center text-sm">Cargando etiquetas...</p>
-                        ) : (
-                          <p className="text-center text-sm">No hay etiquetas disponibles</p>
-                        )
-                      }
-                      disabled={isLoading}
-                      onChange={(options) => {
-                        field.onChange(options.map(option => option.value));
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              render={({ field }) => {
+                // Pre-filtrar las opciones disponibles para evitar mostrar elementos ya seleccionados
+                const availableTags = React.useMemo(() => {
+                  return tagsList.filter(
+                    tag => !field.value.includes(tag.value)
+                  );
+                }, [tagsList, field.value]);
+
+                return (
+                  <FormItem>
+                    <FormControl>
+                      <MultipleSelector
+                        value={tagsList.filter(tag =>
+                          field.value.includes(tag.value)
+                        )}
+                        options={availableTags}
+                        placeholder="Seleccionar etiquetas"
+                        emptyIndicator={
+                          isLoading ? (
+                            <p className="text-center text-sm">Cargando etiquetas...</p>
+                          ) : (
+                            <p className="text-center text-sm">No hay etiquetas disponibles</p>
+                          )
+                        }
+                        disabled={isLoading}
+                        onChange={(options) => {
+                          const values = options.map(option => option.value);
+                          field.onChange(values);
+                          // Notificar al componente padre sobre el cambio
+                          onTagsChange(values);
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }
+              }
             />
           </div>
-          
+
           {/* Botón para aplicar filtros */}
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             className="w-full"
             disabled={isLoading}
           >
