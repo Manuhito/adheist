@@ -404,3 +404,12 @@ def adrequest_version_create(request):
         
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def create_adrequest_page(request):
+    """
+    Render the create ad request page with React components.
+    """
+    template = "ahbackend/create_adrequest_page.html"
+    return TemplateResponse(request, template, {"active_tab": "create_adrequest"})
