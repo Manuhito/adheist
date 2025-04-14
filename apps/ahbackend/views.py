@@ -332,6 +332,29 @@ def adrequest_detail(request, pk):
 
 
 @login_required
+def user_ad_requests(request):
+    """
+    Get all ad requests for the current user and return as JSON.
+    """
+    ad_requests = AdRequest.objects.filter(user=request.user).order_by('-updated_at')
+    
+    # Serialize the ad requests to JSON
+    requests_data = [{
+        'ad_request_id': req.id,
+        'ad_library_name': req.ad_library.company_name,
+        'status': req.status,
+        'created_at': req.created_at.isoformat(),
+        'updated_at': req.updated_at.isoformat(),
+        'canvas_size': req.canvas_size,
+        # Add any other fields you need
+    } for req in ad_requests]
+    
+    return JsonResponse({
+        'ad_requests': requests_data
+    })
+
+
+@login_required
 @require_POST
 def adrequest_version_create(request):
     """

@@ -9,6 +9,7 @@ urlpatterns = [
     path("adrequest/create/", views.adrequest_create, name="adrequest_create"),
     path("adrequest/<int:pk>/", views.adrequest_detail, name="adrequest_detail"),
     path("adrequest/version/create/", views.adrequest_version_create, name="adrequest_version_create"),
+    path("my-requests/", views.user_ad_requests, name="user_ad_requests"),
     path("industries/", views.get_all_industries, name="get_all_industries"),
     path("tags/", views.get_all_tags, name="get_all_tags"),
     path("adlibraries/", views.get_adlibrary_filters, name="get_adlibrary_filters"),
