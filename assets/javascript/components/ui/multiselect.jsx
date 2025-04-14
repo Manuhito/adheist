@@ -120,7 +120,7 @@ export const MultipleSelector = React.forwardRef(
               return (
                 <div
                   key={option.value}
-                  className={`relative inline-flex h-7 items-center rounded-md border bg-background pl-2 pr-7 text-xs font-medium text-secondary-foreground transition-all hover:bg-background ${badgeClassName || ''}`}
+                  className={`relative inline-flex h-7 items-center rounded-md border bg-background pl-2 pr-7 text-xs font-medium text-foreground dark:text-secondary-foreground transition-all hover:bg-background ${badgeClassName || ''}`}
                   data-disabled={disabled || undefined}
                 >
                   {option.label}
