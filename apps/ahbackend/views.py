@@ -77,7 +77,6 @@ def get_adlibrary_filters(request):
         company_name: Filter by company name (case-insensitive contains)
         industries: Filter by industry names (comma-separated list)
         tags: Filter by tag names (comma-separated list)
-        has_image: Filter to only include entries with images (true/false)
     
     Returns: JSON with list of AdLibrary objects including company_name, industries, tags, and ad_image
     """
@@ -87,7 +86,6 @@ def get_adlibrary_filters(request):
     company_name = request.GET.get('company_name', '')
     industries = request.GET.getlist('industries', [])
     tags = request.GET.getlist('tags', [])
-    has_image = request.GET.get('has_image', '').lower()
     
     # If single values are provided instead of lists, convert them
     if not industries and request.GET.get('industry'):
@@ -120,11 +118,6 @@ def get_adlibrary_filters(request):
                 tag_query |= Q(tags__name=tag)
         if tag_query:
             adlibraries = adlibraries.filter(tag_query)
-    
-    if has_image == 'true':
-        adlibraries = adlibraries.exclude(ad_image='')
-    elif has_image == 'false':
-        adlibraries = adlibraries.filter(ad_image='')
     
     # Convert to list of dictionaries with all required fields
     adlibrary_list = []
