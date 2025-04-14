@@ -190,13 +190,33 @@ def adrequest_create(request):
         if not user_assets:
             user_assets = AdRequestAssets.objects.create(user=request.user)
         
-        # Create a new AdRequest instance with the user's assets
-        ad_request = AdRequest.objects.create(
-            user=request.user,
-            ad_library=ad_library,
-            base_assets=user_assets,
-            canvas_size=canvas_size if canvas_size else None
-        )
+        # Prepare creation parameters
+        create_params = {
+            'user': request.user,
+            'ad_library': ad_library,
+            'base_assets': user_assets,
+            'canvas_size': canvas_size if canvas_size else None,
+        }
+        
+        # Add override fields if user_assets exists
+        if user_assets:
+            # Add text fields to asset_overrides
+            create_params['asset_overrides'] = user_assets.to_dict()
+            
+            # Add image fields to their respective override fields
+            image_fields = [
+                'logo', 'product_image_1', 'product_image_2', 
+                'app_image_1', 'app_image_2',
+                'marketing_image_1', 'marketing_image_2', 'marketing_image_3'
+            ]
+            
+            for field in image_fields:
+                base_image = getattr(user_assets, field)
+                if base_image:
+                    create_params[f"{field}_override"] = base_image
+        
+        # Create the AdRequest with all fields at once
+        ad_request = AdRequest.objects.create(**create_params)
         
         # Return the AdRequest instance ID
         return JsonResponse({'id': ad_request.id}, status=201)
@@ -205,21 +225,16 @@ def adrequest_create(request):
         return JsonResponse({'error': str(e)}, status=500)
 
 
-@login_required
-@require_http_methods(["GET", "POST"])
-def adrequest_detail(request, pk):
+def _get_user_adrequest(request, pk):
     """
-    Get or update an AdRequest instance.
-    
-    GET: Returns JSON with the AdRequest details
-    POST: Updates the AdRequest and returns the updated instance
+    Helper function to get an AdRequest and check user permissions.
     
     Args:
         request: The HTTP request
-        pk: The primary key of the AdRequest to retrieve or update
+        pk: The primary key of the AdRequest
         
     Returns:
-        JsonResponse with the AdRequest data or error message
+        AdRequest object if the user has permission, or JsonResponse with error
     """
     # Get the AdRequest instance
     ad_request = get_object_or_404(AdRequest, id=pk)
@@ -228,107 +243,126 @@ def adrequest_detail(request, pk):
     if ad_request.user != request.user:
         return JsonResponse({'error': 'You do not have permission to access this request'}, status=403)
     
-    if request.method == 'GET':
-        # Return the AdRequest details
-        response_data = {
-            'id': ad_request.id,
-            'user_id': ad_request.user.id,
-            'ad_library_id': ad_request.ad_library.id,
-            'ad_library_name': ad_request.ad_library.company_name,
-            'canvas_size': ad_request.canvas_size,
-            'status': ad_request.status,
-            'created_at': ad_request.created_at.isoformat(),
-            'updated_at': ad_request.updated_at.isoformat(),
-        }
+    return ad_request
+
+
+@login_required
+@require_http_methods(["GET"])
+def adrequest_get(request, pk):
+    """
+    Get an AdRequest instance details.
+    
+    Args:
+        request: The HTTP request
+        pk: The primary key of the AdRequest to retrieve
         
-        # Add asset information if available
-        if ad_request.base_assets:
-            response_data['assets'] = {
-                'company_website': ad_request.get_company_website(),
-                'main_hex_color': ad_request.get_main_hex_color(),
-                'key_benefits': ad_request.get_key_benefits(),
-                # Include URLs for images if they exist
-                'logo': ad_request.get_logo().url if ad_request.get_logo() else None,
-                'product_image_1': ad_request.get_product_image_1().url if ad_request.get_product_image_1() else None,
-                'product_image_2': ad_request.get_product_image_2().url if ad_request.get_product_image_2() else None,
-                'app_image_1': ad_request.get_app_image_1().url if ad_request.get_app_image_1() else None,
-                'app_image_2': ad_request.get_app_image_2().url if ad_request.get_app_image_2() else None,
-                'marketing_image_1': ad_request.get_marketing_image_1().url if ad_request.get_marketing_image_1() else None,
-                'marketing_image_2': ad_request.get_marketing_image_2().url if ad_request.get_marketing_image_2() else None,
-                'marketing_image_3': ad_request.get_marketing_image_3().url if ad_request.get_marketing_image_3() else None,
-            }
-            
-        return JsonResponse(response_data)
+    Returns:
+        JsonResponse with the AdRequest data
+    """
+    # Get the AdRequest and check permissions
+    result = _get_user_adrequest(request, pk)
     
-    elif request.method == 'POST':
-        try:
-            # Update the AdRequest fields
-            if 'canvas_size' in request.POST:
-                ad_request.canvas_size = request.POST.get('canvas_size')
-                
-            if 'status' in request.POST:
-                new_status = request.POST.get('status')
-                if new_status in dict(AdRequest.STATUS_CHOICES).keys():
-                    ad_request.status = new_status
-                else:
-                    return JsonResponse({'error': f'Invalid status: {new_status}'}, status=400)
-            
-            # Ensure the AdRequest has base_assets
-            if not ad_request.base_assets:
-                # Check if the user already has an AdRequestAssets instance
-                user_assets = AdRequestAssets.objects.filter(user=request.user).first()
-                
-                # If not, create one
-                if not user_assets:
-                    user_assets = AdRequestAssets.objects.create(user=request.user)
-                
-                # Associate the assets with the ad request
-                ad_request.base_assets = user_assets
-            
-            # Handle asset overrides
-            asset_overrides = {}
-            
-            # Text-based fields that can be stored in JSON
-            text_fields = ['company_website', 'main_hex_color', 'key_benefits']
-            for field in text_fields:
-                if field in request.POST:
-                    asset_overrides[field] = request.POST.get(field)
-            
-            # Update asset_overrides if we have any
-            if asset_overrides:
-                # Merge with existing overrides
-                current_overrides = ad_request.asset_overrides
-                current_overrides.update(asset_overrides)
-                ad_request.asset_overrides = current_overrides
-            
-            # Handle file uploads for image overrides
-            image_fields = [
-                'logo', 'product_image_1', 'product_image_2', 
-                'app_image_1', 'app_image_2',
-                'marketing_image_1', 'marketing_image_2', 'marketing_image_3'
-            ]
-            
-            for field in image_fields:
-                if field in request.FILES:
-                    # Set the override field
-                    override_field = f"{field}_override"
-                    setattr(ad_request, override_field, request.FILES[field])
-            
-            # Save the updated AdRequest
-            ad_request.save()
-            
-            # Return success response
-            return JsonResponse({
-                'id': ad_request.id,
-                'status': ad_request.status,
-                'message': 'AdRequest updated successfully'
-            })
-            
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
+    # If result is a JsonResponse, it means there was an error
+    if isinstance(result, JsonResponse):
+        return result
     
-    # This should never happen due to the @require_http_methods decorator
-    return JsonResponse({'error': 'Method not allowed'}, status=405)
+    # Otherwise, result is the ad_request object
+    ad_request = result
+    
+    # Return the AdRequest with minimal processing
+    return JsonResponse({
+        'id': ad_request.id,
+        'user_id': ad_request.user.id,
+        'ad_library_id': ad_request.ad_library.id,
+        'ad_library_name': ad_request.ad_library.company_name,
+        'canvas_size': ad_request.canvas_size,
+        'status': ad_request.status,
+        'created_at': ad_request.created_at.isoformat(),
+        'updated_at': ad_request.updated_at.isoformat(),
+        'asset_overrides': ad_request.asset_overrides
+    })
+
+
+@login_required
+@require_POST
+def adrequest_update(request, pk):
+    """
+    Update an AdRequest instance with parameters from the request.
+    Empty or missing fields in the request will result in empty fields in the instance.
+    
+    Args:
+        request: The HTTP request
+        pk: The primary key of the AdRequest to update
+        
+    Returns:
+        JsonResponse with the updated AdRequest data
+    """
+    # Get the AdRequest and check permissions
+    result = _get_user_adrequest(request, pk)
+    
+    # If result is a JsonResponse, it means there was an error
+    if isinstance(result, JsonResponse):
+        return result
+    
+    # Otherwise, result is the ad_request object
+    ad_request = result
+    
+    try:
+        # Update basic fields
+        if 'canvas_size' in request.POST:
+            ad_request.canvas_size = request.POST.get('canvas_size')
+            
+        if 'status' in request.POST:
+            new_status = request.POST.get('status')
+            if new_status in dict(AdRequest.STATUS_CHOICES).keys():
+                ad_request.status = new_status
+            else:
+                return JsonResponse({'error': f'Invalid status: {new_status}'}, status=400)
+        
+        # Update text fields in asset_overrides
+        text_fields = ['company_website', 'main_hex_color', 'key_benefits']
+        
+        # Get current overrides or initialize if needed
+        current_overrides = ad_request.asset_overrides if ad_request.asset_overrides else {}
+        
+        # Update only the fields that are explicitly in the request
+        for field in text_fields:
+            if field in request.POST:
+                # If the field is explicitly empty, set it to empty
+                # Otherwise, update with the new value
+                current_overrides[field] = request.POST.get(field)
+        
+        # Save the updated overrides
+        ad_request.asset_overrides = current_overrides
+        
+        # Update image override fields
+        image_fields = [
+            'logo', 'product_image_1', 'product_image_2', 
+            'app_image_1', 'app_image_2',
+            'marketing_image_1', 'marketing_image_2', 'marketing_image_3'
+        ]
+        
+        for field in image_fields:
+            override_field = f"{field}_override"
+            # Clear the field if it's mentioned in the request but no file is provided
+            if field in request.POST and field not in request.FILES:
+                setattr(ad_request, override_field, None)
+            # Update the field if a file is provided
+            elif field in request.FILES:
+                setattr(ad_request, override_field, request.FILES[field])
+        
+        # Save the updated AdRequest
+        ad_request.save()
+        
+        # Return success response
+        return JsonResponse({
+            'id': ad_request.id,
+            'status': ad_request.status,
+            'message': 'AdRequest updated successfully'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 
 @login_required
