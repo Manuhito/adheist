@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { SearchComponent } from './components/SearchComponent';
 import { FilterFormComponent } from './components/FilterFormComponent';
+import InteractiveBentoGallery from '../components/ui/interactive-bento-gallery.jsx';
+import { demoMediaItems } from '../components/ui/gallery-demo-data.js';
 
 /**
  * Main component for the Create Ad Request page
@@ -76,6 +78,13 @@ const CreateAdRequestApp = () => {
         onIndustriesChange={handleIndustriesChange}
         onTagsChange={handleTagsChange}
       />
+      <div className="mt-8 w-full">
+        <InteractiveBentoGallery 
+          mediaItems={demoMediaItems}
+          title="Ad Inspiration Gallery"
+          description="Explore and discover creative ad concepts"
+        />
+      </div>
     </div>
   );
 };
