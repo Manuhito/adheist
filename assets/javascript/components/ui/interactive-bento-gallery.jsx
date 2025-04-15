@@ -122,7 +122,9 @@ const GalleryModal = ({ selectedItem, isOpen, onClose, onSelect }) => {
 const InteractiveBentoGallery = ({
     mediaItems,
     title = "Select Your Ideal Ad Style",
-    description = "Browse and choose the ad style that best matches your desired outcome"
+    description = "Browse and choose the ad style that best matches your desired outcome",
+    onItemSelect,
+    selectedItemId
 }) => {
     const [selectedItem, setSelectedItem] = useState(null);
     const [selectedAdStyle, setSelectedAdStyle] = useState(null);
@@ -130,8 +132,12 @@ const InteractiveBentoGallery = ({
     const handleSelectAdStyle = (item) => {
         setSelectedAdStyle(item);
         setSelectedItem(null);
-        // Here you could add additional logic to handle the selection,
-        // such as notifying a parent component or making an API call
+        
+        // Call the external onItemSelect handler if provided
+        if (onItemSelect && typeof onItemSelect === 'function') {
+            onItemSelect(item);
+        }
+        
         console.log('Selected ad style:', item);
     };
 
@@ -205,8 +211,14 @@ const InteractiveBentoGallery = ({
                     <motion.div
                         key={item.id}
                         layoutId={`media-${item.id}`}
-                        className={`relative overflow-hidden rounded-xl shadow-md hover:shadow-lg transition-shadow ${item.span}`}
-                        onClick={() => setSelectedItem(item)}
+                        className={`relative overflow-hidden rounded-xl shadow-md hover:shadow-lg transition-shadow ${item.span} ${selectedItemId === item.id ? 'ring-2 ring-primary ring-offset-2' : ''}`}
+                        onClick={() => {
+                            setSelectedItem(item);
+                            // If external selection handler is provided, call it
+                            if (onItemSelect && typeof onItemSelect === 'function') {
+                                onItemSelect(item);
+                            }
+                        }}
                         variants={{
                             hidden: { y: 20, opacity: 0 },
                             visible: {

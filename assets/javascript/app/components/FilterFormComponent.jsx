@@ -66,7 +66,7 @@ export const FilterFormComponent = ({
           label: industry
         }));
         setIndustriesList(industryOptions);
-        console.log('Industrias cargadas:', industryList.length);
+        console.log('Industries loaded:', industryList.length);
 
         // Procesar datos de etiquetas
         const tagList = tagsData.tags || [];
@@ -76,12 +76,12 @@ export const FilterFormComponent = ({
           label: tag
         }));
         setTagsList(tagOptions);
-        console.log('Etiquetas cargadas:', tagList.length);
+        console.log('Tags loaded:', tagList.length);
 
         setIsLoading(false);
       })
       .catch(error => {
-        console.error('Error al cargar datos de filtros:', error);
+        console.error('Error loading filter data:', error);
         setIsLoading(false);
       });
   }, []);
@@ -108,7 +108,7 @@ export const FilterFormComponent = ({
           <div className="space-y-2">
             <div className="flex items-center">
               <Factory className="h-4 w-4 mr-2" />
-              <h3 className="text-base font-medium">Industrias</h3>
+              <h3 className="text-base font-medium">Industries</h3>
             </div>
 
             <FormField
@@ -133,9 +133,9 @@ export const FilterFormComponent = ({
                         placeholder="Select industries"
                         emptyIndicator={
                           isLoading ? (
-                            <p className="text-center text-sm">Cargando industrias...</p>
+                            <p className="text-center text-sm">Loading industries...</p>
                           ) : (
-                            <p className="text-center text-sm">No hay industrias disponibles</p>
+                            <p className="text-center text-sm">No industries available</p>
                           )
                         }
                         disabled={isLoading}
@@ -159,7 +159,7 @@ export const FilterFormComponent = ({
           <div className="space-y-2">
             <div className="flex items-center">
               <Tag className="h-4 w-4 mr-2" />
-              <h3 className="text-base font-medium">Etiquetas</h3>
+              <h3 className="text-base font-medium">Tags</h3>
             </div>
 
             <FormField
@@ -184,9 +184,9 @@ export const FilterFormComponent = ({
                         placeholder="Select tags"
                         emptyIndicator={
                           isLoading ? (
-                            <p className="text-center text-sm">Cargando etiquetas...</p>
+                            <p className="text-center text-sm">Loading tags...</p>
                           ) : (
-                            <p className="text-center text-sm">No hay etiquetas disponibles</p>
+                            <p className="text-center text-sm">No tags available</p>
                           )
                         }
                         disabled={isLoading}
