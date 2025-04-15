@@ -18,9 +18,9 @@ const MediaItem = ({ item, className, onClick, isSelected }) => {
                 decoding="async"
             />
             {isSelected && (
-                <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
-                    <div className="bg-white rounded-full p-1">
-                        <Check className="w-5 h-5 text-blue-500" />
+                <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                    <div className="bg-background rounded-full p-1">
+                        <Check className="w-5 h-5 text-primary" />
                     </div>
                 </div>
             )}
@@ -36,25 +36,33 @@ const MediaItem = ({ item, className, onClick, isSelected }) => {
 const GalleryModal = ({ selectedItem, isOpen, onClose, onSelect }) => {
     if (!isOpen) return null;
 
+    const handleBackdropClick = (e) => {
+        if (e.target === e.currentTarget) {
+            onClose();
+        }
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            onClick={handleBackdropClick}
         >
             <motion.div
                 initial={{ scale: 0.95 }}
                 animate={{ scale: 1 }}
                 exit={{ scale: 0.95 }}
-                className="bg-white rounded-xl overflow-hidden max-w-4xl w-full max-h-[90vh] shadow-2xl flex flex-col"
+                className="bg-background rounded-xl overflow-hidden max-w-4xl w-full max-h-[90vh] shadow-2xl flex flex-col"
+                onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="p-4 border-b flex items-center justify-between">
+                <div className="p-4 border-b border-border flex items-center justify-between">
                     <h3 className="text-lg font-semibold">{selectedItem.title}</h3>
                     <button
                         onClick={onClose}
-                        className="p-1 rounded-full hover:bg-gray-100"
+                        className="p-1 rounded-full hover:bg-accent"
                     >
                         <X className="w-5 h-5" />
                     </button>
@@ -74,18 +82,18 @@ const GalleryModal = ({ selectedItem, isOpen, onClose, onSelect }) => {
                     {/* Details */}
                     <div className="md:w-1/3 p-4 overflow-y-auto">
                         <div className="mb-4">
-                            <h4 className="font-medium text-gray-700">Company</h4>
+                            <h4 className="font-medium text-muted-foreground">Company</h4>
                             <p className="text-lg font-semibold">{selectedItem.title}</p>
                         </div>
 
                         {selectedItem.desc && (
                             <div className="mb-4">
-                                <h4 className="font-medium text-gray-700">Tags</h4>
+                                <h4 className="font-medium text-muted-foreground">Tags</h4>
                                 <div className="flex flex-wrap gap-2 mt-1">
                                     {selectedItem.desc.split(', ').map((tag, i) => (
                                         <span
                                             key={i}
-                                            className="px-2 py-1 bg-gray-100 rounded-full text-sm"
+                                            className="px-2 py-1 bg-muted rounded-full text-sm"
                                         >
                                             {tag}
                                         </span>
@@ -96,7 +104,7 @@ const GalleryModal = ({ selectedItem, isOpen, onClose, onSelect }) => {
 
                         <button
                             onClick={() => onSelect(selectedItem)}
-                            className="w-full mt-4 py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+                            className="w-full mt-4 py-2 px-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors"
                         >
                             Select This Ad Style
                         </button>
@@ -131,7 +139,7 @@ const InteractiveBentoGallery = ({
         <div className="container mx-auto px-4 py-6 max-w-5xl">
             <div className="mb-6 text-center">
                 <motion.h2
-                    className="text-2xl sm:text-3xl font-bold text-gray-900"
+                    className="text-2xl sm:text-3xl font-bold text-foreground"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
@@ -139,7 +147,7 @@ const InteractiveBentoGallery = ({
                     {title}
                 </motion.h2>
                 <motion.p
-                    className="mt-2 text-sm sm:text-base text-gray-600"
+                    className="mt-2 text-sm sm:text-base text-muted-foreground"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.1 }}
@@ -149,7 +157,7 @@ const InteractiveBentoGallery = ({
             </div>
 
             {selectedAdStyle && (
-                <div className="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-lg flex items-center">
+                <div className="mb-6 p-4 bg-accent/20 border border-border rounded-lg flex items-center">
                     <div className="w-16 h-16 rounded-md overflow-hidden mr-4 flex-shrink-0">
                         <img
                             src={selectedAdStyle.url}
@@ -159,11 +167,11 @@ const InteractiveBentoGallery = ({
                     </div>
                     <div className="flex-1">
                         <h3 className="font-medium">Selected Style: {selectedAdStyle.title}</h3>
-                        <p className="text-sm text-gray-600">{selectedAdStyle.desc}</p>
+                        <p className="text-sm text-muted-foreground">{selectedAdStyle.desc}</p>
                     </div>
                     <button
                         onClick={() => setSelectedAdStyle(null)}
-                        className="ml-4 p-2 text-gray-500 hover:text-gray-700"
+                        className="ml-4 p-2 text-muted-foreground hover:text-foreground"
                     >
                         <X className="w-5 h-5" />
                     </button>
@@ -221,11 +229,11 @@ const InteractiveBentoGallery = ({
                         />
                         <div className="absolute inset-x-0 bottom-0 p-3">
                             <div className="relative z-10">
-                                <h3 className="text-white text-sm font-medium truncate">
+                                <h3 className="text-primary-foreground text-sm font-medium truncate">
                                     {item.title}
                                 </h3>
                                 {item.desc && (
-                                    <p className="text-white/80 text-xs mt-0.5 line-clamp-1">
+                                    <p className="text-primary-foreground/80 text-xs mt-0.5 line-clamp-1">
                                         {item.desc}
                                     </p>
                                 )}
@@ -236,7 +244,7 @@ const InteractiveBentoGallery = ({
             </motion.div>
 
             {mediaItems.length === 0 && (
-                <div className="py-12 text-center text-gray-500">
+                <div className="py-12 text-center text-muted-foreground">
                     <p>No ad examples available. Try different filters.</p>
                 </div>
             )}

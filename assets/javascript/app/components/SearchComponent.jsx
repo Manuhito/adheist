@@ -18,11 +18,11 @@ export const SearchComponent = ({ selectedCompany, onCompanyChange }) => {
   const [companies, setCompanies] = useState([]);
   const [filteredCompanies, setFilteredCompanies] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Cargar la lista de empresas al montar el componente
   useEffect(() => {
     setIsLoading(true);
-    
+
     fetch('/ahbackend/companies/')
       .then(response => response.json())
       .then(data => {
@@ -37,11 +37,11 @@ export const SearchComponent = ({ selectedCompany, onCompanyChange }) => {
         setIsLoading(false);
       });
   }, []);
-  
+
   // Filtrar empresas basado en la búsqueda
   useEffect(() => {
     if (searchQuery.trim()) {
-      const filtered = companies.filter(company => 
+      const filtered = companies.filter(company =>
         company.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setFilteredCompanies(filtered);
@@ -49,32 +49,37 @@ export const SearchComponent = ({ selectedCompany, onCompanyChange }) => {
       setFilteredCompanies(companies);
     }
   }, [searchQuery, companies]);
-  
+
   const handleSelectCompany = (company) => {
     setSearchQuery('');
     setIsOpen(false);
-    // Llamar al callback del componente padre
-    onCompanyChange(company);
+    // If clicking on the already selected company, deselect it
+    if (selectedCompany === company) {
+      onCompanyChange(null);
+    } else {
+      // Otherwise select the new company
+      onCompanyChange(company);
+    }
   };
 
   return (
     <div className="w-full max-w-md space-y-2">
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             role="combobox"
             aria-expanded={isOpen}
             className="w-full justify-between bg-background px-3 font-normal"
           >
             <span className={!selectedCompany ? "text-muted-foreground" : ""}>
-              {selectedCompany || "Seleccionar empresa"}
+              {selectedCompany || "Select Company"}
             </span>
-            <ChevronDown 
-              size={16} 
-              strokeWidth={2} 
-              className="shrink-0 text-muted-foreground/80" 
-              aria-hidden="true" 
+            <ChevronDown
+              size={16}
+              strokeWidth={2}
+              className="shrink-0 text-muted-foreground/80"
+              aria-hidden="true"
             />
           </Button>
         </PopoverTrigger>
@@ -83,14 +88,14 @@ export const SearchComponent = ({ selectedCompany, onCompanyChange }) => {
             <div className="flex items-center border-b px-3 py-2">
               <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
               <Input
-                placeholder="Buscar empresa..."
+                placeholder="Search company..."
                 className="flex h-8 w-full rounded-md border-0 bg-transparent py-2 text-sm outline-none placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 autoFocus
               />
             </div>
-            
+
             <div className="max-h-[300px] overflow-y-auto overflow-x-hidden">
               {isLoading ? (
                 <div className="py-6 text-center text-sm">
@@ -103,8 +108,8 @@ export const SearchComponent = ({ selectedCompany, onCompanyChange }) => {
               ) : (
                 <div className="py-2">
                   {filteredCompanies.map((company, index) => (
-                    <div 
-                      key={index} 
+                    <div
+                      key={index}
                       className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
                       onClick={() => handleSelectCompany(company)}
                     >

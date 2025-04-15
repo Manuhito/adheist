@@ -130,7 +130,7 @@ export const FilterFormComponent = ({
                           field.value.includes(industry.value)
                         )}
                         options={availableIndustries}
-                        placeholder="Seleccionar industrias"
+                        placeholder="Select industries"
                         emptyIndicator={
                           isLoading ? (
                             <p className="text-center text-sm">Cargando industrias...</p>
@@ -181,7 +181,7 @@ export const FilterFormComponent = ({
                           field.value.includes(tag.value)
                         )}
                         options={availableTags}
-                        placeholder="Seleccionar etiquetas"
+                        placeholder="Select tags"
                         emptyIndicator={
                           isLoading ? (
                             <p className="text-center text-sm">Cargando etiquetas...</p>
