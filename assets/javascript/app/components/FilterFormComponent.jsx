@@ -205,15 +205,6 @@ export const FilterFormComponent = ({
               }
             />
           </div>
-
-          {/* Botón para aplicar filtros */}
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={isLoading}
-          >
-            Aplicar filtros
-          </Button>
         </form>
       </Form>
     </div>
