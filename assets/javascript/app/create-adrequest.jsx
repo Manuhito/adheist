@@ -188,10 +188,12 @@ const CreateAdRequestApp = () => {
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to create ad request');
+      }else{
+        console.log('Ad request created successfully:', data);
       }
 
       // Redirect to the created ad request
-      window.location.href = `/ahbackend/adrequest/${data.id}/`;
+      //window.location.href = `/ahbackend/adrequest/${data.id}/`;
     } catch (error) {
       console.error('Error creating ad request:', error);
       setSubmitError(error.message || 'An unexpected error occurred');
