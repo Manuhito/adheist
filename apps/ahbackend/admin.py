@@ -58,6 +58,7 @@ class AdRequestVersionAdmin(admin.ModelAdmin):
     list_filter = ["status", "user_admin_assigned"]
     readonly_fields = ["ad_request", "generated_prompt", "status", "download_overrides_button"]
     exclude = ["user_prompt"]
+    actions = ["assign_to_me"]
     
     def get_urls(self):
         urls = super().get_urls()
@@ -134,4 +135,26 @@ class AdRequestVersionAdmin(admin.ModelAdmin):
             
         except AdRequestVersion.DoesNotExist:
             return HttpResponse("Ad request version not found", status=404)
+            
+    def assign_to_me(self, request, queryset):
+        """Admin action to assign selected AdRequestVersion objects to the logged-in user"""
+        updated = 0
+        for version in queryset:
+            # Only update if not already assigned or if assigned to someone else
+            if version.user_admin_assigned != request.user:
+                version.user_admin_assigned = request.user
+                # If status is UNASSIGNED, change it to ASSIGNED
+                if version.status == AdRequestVersion.STATUS_UNASSIGNED:
+                    version.status = AdRequestVersion.STATUS_ASSIGNED
+                version.save()
+                updated += 1
+        
+        if updated == 0:
+            self.message_user(request, "No versions were assigned to you.")
+        else:
+            self.message_user(
+                request, 
+                f"{updated} version{'s' if updated > 1 else ''} successfully assigned to you."
+            )
+    assign_to_me.short_description = "Assign to me"
 
