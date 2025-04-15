@@ -19,6 +19,7 @@ module.exports = {
     'blog-post': './assets/javascript/blog/post/index.jsx',  // entry point para el post individual
     'app-header': './assets/javascript/app-header.js',
     'create-adrequest': './assets/javascript/app/create-adrequest.jsx',
+    'ad-requests': './assets/javascript/app/ad-requests.tsx',  // entry point para la página de ad_requests
   },
   output: {
     path: path.resolve(__dirname, './static'),

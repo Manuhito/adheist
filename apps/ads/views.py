@@ -39,17 +39,21 @@ def home(request):
             'ad_request_id': req.id,
             'ad_library_name': req.ad_library.company_name if req.ad_library else 'No library',
             'status': req.status,
-            'created_at': req.created_at,
-            'updated_at': req.updated_at,
+            'created_at': req.created_at.isoformat() if req.created_at else None,
+            'updated_at': req.updated_at.isoformat() if req.updated_at else None,
             'canvas_size': req.canvas_size,
             'tags': tags,
             'industries': industries,
         }
         requests_data.append(request_data)
     
+    # Convertir a JSON para pasar al componente React
+    ad_requests_json = json.dumps(requests_data)
+    
     return TemplateResponse(request, template, {
         "active_tab": "ads",
-        "ad_requests": requests_data
+        "ad_requests": requests_data,
+        "ad_requests_json": ad_requests_json
     })
 
 
