@@ -302,6 +302,9 @@ def adrequest_update(request, pk):
         # Update basic fields
         if 'canvas_size' in request.POST:
             ad_request.canvas_size = request.POST.get('canvas_size')
+
+        if 'ad_library' in request.POST:
+            ad_request.ad_library = get_object_or_404(AdLibrary, id=request.POST.get('ad_library'))
             
         if 'status' in request.POST:
             new_status = request.POST.get('status')
