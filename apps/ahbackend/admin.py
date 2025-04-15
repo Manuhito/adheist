@@ -56,8 +56,9 @@ class AdRequestVersionAdmin(admin.ModelAdmin):
     list_display = ["ad_request", "status", "user_admin_assigned", "created_at", "updated_at"]
     search_fields = ["ad_request__ad_library__company_name", "status"]
     list_filter = ["status", "user_admin_assigned"]
-    readonly_fields = ["ad_request", "generated_prompt", "status", "download_overrides_button"]
-    exclude = ["user_prompt"]
+    readonly_fields = ["user_admin_assigned", "ad_request", "generated_prompt_with_copy", "status", "download_overrides_button"]
+    # readonly_fields = ["ad_request", "generated_prompt", "status", "download_overrides_button"]
+    exclude = ["user_prompt", "generated_prompt"]
     actions = ["assign_to_me"]
     
     def get_urls(self):
@@ -136,6 +137,48 @@ class AdRequestVersionAdmin(admin.ModelAdmin):
         except AdRequestVersion.DoesNotExist:
             return HttpResponse("Ad request version not found", status=404)
             
+    def generated_prompt_with_copy(self, obj):
+        """Display generated_prompt field with a copy to clipboard button"""
+        if not obj.generated_prompt:
+            return "-"
+            
+        # Unique ID for this field to target with JavaScript
+        field_id = f"generated-prompt-{obj.pk}"
+        button_id = f"copy-button-{obj.pk}"
+        
+        # JavaScript for clipboard functionality
+        js = f"""
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {{            
+                document.getElementById('{button_id}').addEventListener('click', function() {{                
+                    const textArea = document.getElementById('{field_id}');
+                    textArea.select();
+                    document.execCommand('copy');
+                    
+                    // Show feedback
+                    const button = document.getElementById('{button_id}');
+                    const originalText = button.textContent;
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {{ button.textContent = originalText; }}, 2000);
+                }});
+            }});
+        </script>
+        """
+        
+        # HTML for the textarea and button
+        html = f"""
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <textarea id="{field_id}" style="width: 100%; height: 200px; font-family: monospace;" readonly>{obj.generated_prompt}</textarea>
+            <button id="{button_id}" type="button" class="button" style="width: fit-content;">
+                Copy to Clipboard
+            </button>
+        </div>
+        {js}
+        """
+        
+        return mark_safe(html)
+    generated_prompt_with_copy.short_description = "Generated Prompt"
+    
     def assign_to_me(self, request, queryset):
         """Admin action to assign selected AdRequestVersion objects to the logged-in user"""
         updated = 0
