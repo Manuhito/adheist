@@ -119,8 +119,17 @@ class AdRequestVersionAdmin(admin.ModelAdmin):
                 
             # Create the response with the zip file
             zip_buffer.seek(0)
+            
+            # Get user email (use username if email is not available)
+            user_email = ad_request.user.email if hasattr(ad_request.user, 'email') else ad_request.user.username
+            # Clean the email to make it filename-safe (remove special characters)
+            safe_email = ''.join(c if c.isalnum() or c in '._-' else '_' for c in user_email)
+            
+            # Create filename in the requested format
+            filename = f'{safe_email}_request_{ad_request.id}.zip'
+            
             response = HttpResponse(zip_buffer.read(), content_type='application/zip')
-            response['Content-Disposition'] = f'attachment; filename="ad_request_{ad_request.id}_images.zip"'
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
             return response
             
         except AdRequestVersion.DoesNotExist:
