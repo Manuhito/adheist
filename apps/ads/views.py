@@ -169,21 +169,11 @@ def get_adlibrary_company_list(request):
 @require_POST
 def adrequest_create(request):
     """
-    Create a new AdRequest instance.
+    Create a new AdRequest instance without requiring input parameters.
     
     Returns: JSON with the AdRequest instance ID
     """
-    ad_library_id = request.POST.get('ad_library')
-    canvas_size = request.POST.get('canvas_size')
-    
-    # Validate inputs
-    if not ad_library_id:
-        return JsonResponse({'error': 'Ad library ID is required'}, status=400)
-    
     try:
-        # Get the AdLibrary instance
-        ad_library = get_object_or_404(AdLibrary, id=ad_library_id)
-        
         # Check if the user already has an AdRequestAssets instance
         user_assets = AdRequestAssets.objects.filter(user=request.user).first()
         
@@ -194,9 +184,9 @@ def adrequest_create(request):
         # Prepare creation parameters
         create_params = {
             'user': request.user,
-            'ad_library': ad_library,
             'base_assets': user_assets,
-            'canvas_size': canvas_size if canvas_size else None,
+            # No ad_library_id needed
+            # No canvas_size needed (will use default from model)
         }
         
         # Add override fields if user_assets exists

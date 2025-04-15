@@ -68,12 +68,14 @@ class AdRequestAssets(BaseModel):
 
 
 class AdRequest(BaseModel):
+    STATUS_NEW = 'NEW'
     STATUS_DRAFT = 'DRAFT'
     STATUS_FILLED = 'FILLED'
     STATUS_SUBMITTED = 'SUBMITTED'
     STATUS_APPROVED = 'COMPLETED'
     STATUS_REOPENED = 'REOPENED'
     STATUS_CHOICES = [
+        (STATUS_NEW, 'New'),
         (STATUS_DRAFT, 'Draft'),
         (STATUS_FILLED, 'Filled'),
         (STATUS_SUBMITTED, 'Submitted'),
@@ -82,7 +84,7 @@ class AdRequest(BaseModel):
     ]
     
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    ad_library = models.ForeignKey(AdLibrary, on_delete=models.CASCADE)
+    ad_library = models.ForeignKey(AdLibrary, on_delete=models.CASCADE, null=True, blank=True)
     base_assets = models.ForeignKey(AdRequestAssets, on_delete=models.PROTECT, related_name="ad_requests", null=True, blank=True)
     asset_overrides = models.JSONField(default=dict, blank=True, encoder=DjangoJSONEncoder,
                                       help_text="Stores overrides for specific asset fields")
@@ -97,7 +99,7 @@ class AdRequest(BaseModel):
     marketing_image_3_override = models.ImageField(upload_to="adrequest_assets/", null=True, blank=True)
     
     canvas_size = models.CharField(max_length=20, default="1080x1080")
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=STATUS_DRAFT)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=STATUS_NEW)
     
     def save(self, *args, **kwargs):
         """Override save method to update base_assets with overrides"""
