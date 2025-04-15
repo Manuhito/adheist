@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { SearchComponent } from './components/SearchComponent';
 import { FilterFormComponent } from './components/FilterFormComponent';
 import InteractiveBentoGallery from '../components/ui/interactive-bento-gallery.jsx';
+import { Building } from 'lucide-react';
 
 /**
  * Main component for the Create Ad Request page
@@ -10,67 +11,67 @@ import InteractiveBentoGallery from '../components/ui/interactive-bento-gallery.
  * Manages all filters in one place and calls the API when any filter changes
  */
 const CreateAdRequestApp = () => {
-  // Estado centralizado para todos los filtros
+  // Centralized state for all filters
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [selectedIndustries, setSelectedIndustries] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
   const [filteredResults, setFilteredResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Función para llamar a la API con todos los filtros
+  // Function to call the API with all filters
   const fetchFilteredResults = () => {
-    // Construir la URL con los parámetros
+    // Build URL with parameters
     const params = new URLSearchParams();
     setIsLoading(true);
 
-    // Añadir company si hay alguna seleccionada
+    // Add company if one is selected
     if (selectedCompany) {
       params.append('company_name', selectedCompany);
     }
 
-    // Añadir industrias si hay alguna seleccionada
+    // Add industries if any are selected
     if (selectedIndustries && selectedIndustries.length > 0) {
       selectedIndustries.forEach(industry => params.append('industries', industry));
     }
 
-    // Añadir etiquetas si hay alguna seleccionada
+    // Add tags if any are selected
     if (selectedTags && selectedTags.length > 0) {
       selectedTags.forEach(tag => params.append('tags', tag));
     }
 
-    // Llamar a la API siempre, incluso cuando no hay filtros seleccionados
+    // Always call the API, even when no filters are selected
     fetch(`/ahbackend/adlibraries/?${params.toString()}`)
       .then(response => response.json())
       .then(data => {
-        // Verificar la estructura de los datos
+        // Verify data structure
         if (data && Array.isArray(data)) {
-          // Si data es directamente un array
+          // If data is directly an array
           setFilteredResults(data);
         } else if (data && Array.isArray(data.results)) {
-          // Si data tiene una propiedad results que es un array
+          // If data has a results property that is an array
           setFilteredResults(data.results);
         } else if (data && Array.isArray(data.adlibraries)) {
-          // Si data tiene una propiedad adlibraries que es un array
+          // If data has an adlibraries property that is an array
           setFilteredResults(data.adlibraries);
         } else if (data && typeof data === 'object') {
-          // Si data es un objeto, intentar convertirlo a un array
+          // If data is an object, try to convert it to an array
           const resultsArray = Object.values(data).filter(item => typeof item === 'object');
 
-          // Si el primer elemento es un array, usamos ese directamente
+          // If the first element is an array, use it directly
           if (resultsArray.length > 0 && Array.isArray(resultsArray[0])) {
             setFilteredResults(resultsArray[0]);
           } else {
             setFilteredResults(resultsArray);
           }
         } else {
-          // Si no se puede determinar la estructura, establecer un array vacío
+          // If structure cannot be determined, set an empty array
           setFilteredResults([]);
         }
 
         setIsLoading(false);
       })
       .catch(error => {
-        console.error('Error al aplicar filtros:', error);
+        console.error('Error applying filters:', error);
         setFilteredResults([]);
         setIsLoading(false);
       });
@@ -91,12 +92,12 @@ const CreateAdRequestApp = () => {
       "md:col-span-1 md:row-span-3 sm:col-span-1 sm:row-span-2"
     ];
 
-    // Extraer los campos necesarios de cada elemento
+    // Extract required fields from each item
     return apiResults.map((item, index) => {
-      // Intentar encontrar los campos necesarios
+      // Try to find the necessary fields
       const title = item.company_name || item.name || item.title || "Company " + (index + 1);
 
-      // Manejar tags que pueden ser string o array
+      // Handle tags that can be string or array
       let desc = "";
       if (item.tags) {
         if (Array.isArray(item.tags)) {
@@ -108,7 +109,7 @@ const CreateAdRequestApp = () => {
         desc = item.description;
       }
 
-      // Buscar la URL de la imagen en diferentes propiedades posibles
+      // Look for image URL in different possible properties
       const imageUrl = item.ad_image || item.image || item.url || item.image_url ||
         "https://images.unsplash.com/photo-1557804506-669a67965ba0";
 
@@ -123,12 +124,12 @@ const CreateAdRequestApp = () => {
     });
   };
 
-  // Llamar a la API cuando cambie cualquier filtro
+  // Call the API when any filter changes
   useEffect(() => {
     fetchFilteredResults();
   }, [selectedCompany, selectedIndustries, selectedTags]);
 
-  // Manejadores para cada tipo de filtro
+  // Handlers for each filter type
   const handleCompanyChange = (company) => {
     setSelectedCompany(company);
   };
@@ -146,10 +147,16 @@ const CreateAdRequestApp = () => {
 
   return (
     <div className="space-y-6 flex flex-col items-center w-full">
-      <SearchComponent
-        selectedCompany={selectedCompany}
-        onCompanyChange={handleCompanyChange}
-      />
+      <div className="w-full max-w-md">
+        <div className="flex items-center mb-2">
+          <Building className="h-4 w-4 mr-2" />
+          <h3 className="text-base font-medium">Company</h3>
+        </div>
+        <SearchComponent
+          selectedCompany={selectedCompany}
+          onCompanyChange={handleCompanyChange}
+        />
+      </div>
       <FilterFormComponent
         selectedIndustries={selectedIndustries}
         selectedTags={selectedTags}
