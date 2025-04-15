@@ -165,10 +165,21 @@ class AdRequestVersionAdmin(admin.ModelAdmin):
         </script>
         """
         
-        # HTML for the textarea and button
+        # HTML for the textarea and button with wider container
         html = f"""
+        <style>
+            .field-generated_prompt_with_copy .form-row .field-box {{  
+                width: 100% !important;
+                flex: 0 0 100% !important;
+                max-width: 100% !important;
+            }}
+            .field-generated_prompt_with_copy .form-row div.help {{  
+                padding-left: 0 !important;
+                width: 100% !important;
+            }}
+        </style>
         <div style="display: flex; flex-direction: column; gap: 10px;">
-            <textarea id="{field_id}" style="width: 100%; height: 200px; font-family: monospace;" readonly>{obj.generated_prompt}</textarea>
+            <textarea id="{field_id}" style="width: 100%; height: 250px; font-family: monospace; min-width: 800px;" readonly>{obj.generated_prompt}</textarea>
             <button id="{button_id}" type="button" class="button" style="width: fit-content;">
                 Copy to Clipboard
             </button>
