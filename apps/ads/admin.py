@@ -53,7 +53,10 @@ class AdRequestAssetsAdmin(admin.ModelAdmin):
 
 @admin.register(AdRequestVersion)
 class AdRequestVersionAdmin(admin.ModelAdmin):
-    list_display = ["ad_request", "status", "user_admin_assigned", "created_at", "updated_at"]
+    def get_version_id(self, obj):
+        return f"Ad Request #{obj.id}"
+    get_version_id.short_description = "Version ID"
+    list_display = ["get_version_id", "status", "user_admin_assigned", "created_at", "updated_at"]
     search_fields = ["ad_request__ad_library__company_name", "status"]
     list_filter = ["status", "user_admin_assigned"]
     readonly_fields = ["user_admin_assigned", "generated_prompt_with_copy", "status", "download_overrides_button"]
