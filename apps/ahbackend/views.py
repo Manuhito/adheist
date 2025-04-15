@@ -399,7 +399,6 @@ def adrequest_version_create(request):
     - ad_request: The primary key of the AdRequest to create a version for
     
     Optional inputs:
-    - generated_prompt: The generated prompt for the version
     - user_prompt: The user prompt for the version
     
     Returns: JSON with the AdRequestVersion instance ID
@@ -419,13 +418,11 @@ def adrequest_version_create(request):
             return JsonResponse({'error': 'You do not have permission to create a version for this request'}, status=403)
         
         # Get optional fields
-        generated_prompt = request.POST.get('generated_prompt')
         user_prompt = request.POST.get('user_prompt')
         
         # Create a new AdRequestVersion instance
         version = AdRequestVersion.objects.create(
             ad_request=ad_request,
-            generated_prompt=generated_prompt,
             user_prompt=user_prompt,
             status=AdRequestVersion.STATUS_UNASSIGNED
         )
