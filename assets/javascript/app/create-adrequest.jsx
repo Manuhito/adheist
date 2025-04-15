@@ -17,6 +17,7 @@ const CreateAdRequestApp = () => {
   const [selectedTags, setSelectedTags] = useState([]);
   const [filteredResults, setFilteredResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedCanvasSize, setSelectedCanvasSize] = useState(null);
 
   // Function to call the API with all filters
   const fetchFilteredResults = () => {
@@ -145,6 +146,19 @@ const CreateAdRequestApp = () => {
   // Prepare media items for the gallery
   const galleryItems = transformToMediaItems(filteredResults);
 
+  // Handle canvas size selection
+  const handleCanvasSizeChange = (size) => {
+    setSelectedCanvasSize(size);
+  };
+
+  // Canvas size options
+  const canvasSizes = [
+    { id: "square", label: "Square", size: "1080 x 1080" },
+    { id: "portraitTall", label: "Portrait", size: "1080 x 1920" },
+    { id: "portrait", label: "Portrait", size: "1080 x 1350" },
+    { id: "landscape", label: "Landscape", size: "1280 x 720" },
+  ];
+
   return (
     <div className="space-y-6 flex flex-col items-center w-full">
       <div className="w-full max-w-md">
@@ -169,11 +183,45 @@ const CreateAdRequestApp = () => {
             <div className="w-8 h-8 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
           </div>
         ) : galleryItems.length > 0 ? (
-          <InteractiveBentoGallery
-            mediaItems={galleryItems}
-            title="Select Your Ideal Ad Style"
-            description="Browse and choose the ad style that best matches your desired outcome"
-          />
+          <>
+            <InteractiveBentoGallery
+              mediaItems={galleryItems}
+              title="Select Your Ideal Ad Style"
+              description="Browse and choose the ad style that best matches your desired outcome"
+            />
+
+            <div className="mt-12 w-full max-w-4xl mx-auto">
+              <div className="space-y-4">
+                <p className="text-lg font-medium text-center">Select a canvas size to proceed</p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {canvasSizes.map((item) => (
+                    <div
+                      key={item.id}
+                      className={`cursor-pointer border-2 rounded-md p-4 flex flex-col items-center justify-center ${selectedCanvasSize === item.id ? "border-primary" : "border-gray-200"
+                        }`}
+                      onClick={() => handleCanvasSizeChange(item.id)}
+                    >
+                      {/* Shape preview that matches the aspect ratio */}
+                      {item.id === "square" && (
+                        <div className="w-12 h-12 border-2 border-gray-300 rounded-sm mb-2" />
+                      )}
+                      {item.id === "portraitTall" && (
+                        <div className="w-8 h-14 border-2 border-gray-300 rounded-sm mb-2" />
+                      )}
+                      {item.id === "portrait" && (
+                        <div className="w-9 h-12 border-2 border-gray-300 rounded-sm mb-2" />
+                      )}
+                      {item.id === "landscape" && (
+                        <div className="w-14 h-8 border-2 border-gray-300 rounded-sm mb-2" />
+                      )}
+                      <div className="font-semibold">{item.label}</div>
+                      <div className="text-sm text-gray-500">{item.size}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </>
         ) : (
           <div className="text-center my-12 p-8 bg-gray-50 rounded-lg">
             <p className="text-gray-500 text-lg">No ad examples found. Try adjusting your filters.</p>
