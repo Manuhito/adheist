@@ -1,0 +1,16 @@
+{% extends "web/app/app_base.html" %}
+{% load static %}
+
+{% block extra_js %}
+{{ block.super }}
+<script src="{% static 'js/create-adrequest-bundle.js' %}" defer></script>
+{% endblock %}
+
+{% block app %}
+<div class="container mx-auto px-4 py-8">
+  <h1 class="text-2xl font-bold mb-6">Create Ad Request</h1>
+  
+  <!-- React app mount point -->
+  <div id="create-adrequest-app"></div>
+</div>
+{% endblock %}

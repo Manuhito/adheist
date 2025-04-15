@@ -14,4 +14,5 @@ urlpatterns = [
     path("tags/", views.get_all_tags, name="get_all_tags"),
     path("adlibraries/", views.get_adlibrary_filters, name="get_adlibrary_filters"),
     path("companies/", views.get_adlibrary_company_list, name="get_adlibrary_company_list"),
+    path("create/", views.create_adrequest_page, name="create_adrequest_page"),
 ]
