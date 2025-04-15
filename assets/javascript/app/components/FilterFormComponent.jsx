@@ -53,8 +53,8 @@ export const FilterFormComponent = ({
     setIsLoading(true);
 
     // Cargar industrias y etiquetas en paralelo
-    const fetchIndustries = fetch('/ahbackend/industries/').then(res => res.json());
-    const fetchTags = fetch('/ahbackend/tags/').then(res => res.json());
+    const fetchIndustries = fetch('/ads/industries/').then(res => res.json());
+    const fetchTags = fetch('/ads/tags/').then(res => res.json());
 
     Promise.all([fetchIndustries, fetchTags])
       .then(([industriesData, tagsData]) => {

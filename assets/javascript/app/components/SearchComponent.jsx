@@ -23,7 +23,7 @@ export const SearchComponent = ({ selectedCompany, onCompanyChange }) => {
   useEffect(() => {
     setIsLoading(true);
 
-    fetch('/ahbackend/companies/')
+    fetch('/ads/companies/')
       .then(response => response.json())
       .then(data => {
         const companyList = data.companies || [];

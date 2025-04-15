@@ -19,8 +19,8 @@ PAGINATE_BY = 4
 
 @login_required
 def home(request):
-    template = "ahbackend/ahbackend_home.html"
-    return TemplateResponse(request, template, {"active_tab": "ahbackend"})
+    template = "ads/ads_home.html"
+    return TemplateResponse(request, template, {"active_tab": "ads"})
 
 
 def get_all_industries(request):
@@ -443,5 +443,5 @@ def create_adrequest_page(request):
     """
     Render the create ad request page with React components.
     """
-    template = "ahbackend/create_adrequest_page.html"
+    template = "ads/create_adrequest_page.html"
     return TemplateResponse(request, template, {"active_tab": "create_adrequest"})

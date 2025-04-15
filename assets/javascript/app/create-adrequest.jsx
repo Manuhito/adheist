@@ -45,7 +45,7 @@ const CreateAdRequestApp = () => {
     }
 
     // Always call the API, even when no filters are selected
-    fetch(`/ahbackend/adlibraries/?${params.toString()}`)
+    fetch(`/ads/adlibraries/?${params.toString()}`)
       .then(response => response.json())
       .then(data => {
         // Verify data structure
@@ -176,7 +176,7 @@ const CreateAdRequestApp = () => {
       formData.append('canvas_size', selectedCanvasSize);
 
       // Send POST request to create ad request
-      const response = await fetch('/ahbackend/adrequest/create/', {
+      const response = await fetch('/ads/adrequest/create/', {
         method: 'POST',
         body: formData,
         headers: {
@@ -193,7 +193,7 @@ const CreateAdRequestApp = () => {
       }
 
       // Redirect to the created ad request
-      //window.location.href = `/ahbackend/adrequest/${data.id}/`;
+      //window.location.href = `/ads/adrequest/${data.id}/`;
     } catch (error) {
       console.error('Error creating ad request:', error);
       setSubmitError(error.message || 'An unexpected error occurred');

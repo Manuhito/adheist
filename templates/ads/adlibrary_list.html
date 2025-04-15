@@ -6,7 +6,7 @@
 <div id="page-content">
   <nav class="mb-2" aria-label="breadcrumbs">
     <ol class="pg-breadcrumbs">
-      <li><a href="{% url 'ahbackend:ahbackend_home' %}">{% translate "Ahbackend" %}</a></li>
+      <li><a href="{% url 'ads:ads_home' %}">{% translate "ads" %}</a></li>
       <li class="pg-breadcrumb-active" aria-current="page">{% translate "All AdLibraries" %}</li>
     </ol>
   </nav>
@@ -62,7 +62,7 @@
       {% endif %}
     </div>
     <div class="mt-2">
-      <a class="pg-button-secondary" href="{% url 'ahbackend:adlibrary_create' %}">
+      <a class="pg-button-secondary" href="{% url 'ads:adlibrary_create' %}">
         <span class="pg-icon"><i class="fa fa-plus"></i></span>
         <span>{% translate "Add AdLibrary" %}</span>
       </a>

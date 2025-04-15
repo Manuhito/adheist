@@ -56,7 +56,7 @@ class AdRequestVersionAdmin(admin.ModelAdmin):
     list_display = ["ad_request", "status", "user_admin_assigned", "created_at", "updated_at"]
     search_fields = ["ad_request__ad_library__company_name", "status"]
     list_filter = ["status", "user_admin_assigned"]
-    readonly_fields = ["user_admin_assigned", "ad_request", "generated_prompt_with_copy", "status", "download_overrides_button"]
+    readonly_fields = ["user_admin_assigned", "generated_prompt_with_copy", "status", "download_overrides_button"]
     # readonly_fields = ["ad_request", "generated_prompt", "status", "download_overrides_button"]
     exclude = ["user_prompt", "generated_prompt"]
     actions = ["assign_to_me"]
@@ -67,14 +67,14 @@ class AdRequestVersionAdmin(admin.ModelAdmin):
             path(
                 '<int:version_id>/download-overrides/',
                 self.admin_site.admin_view(self.download_overrides),
-                name='ahbackend_adrequestversion_download_overrides',
+                name='ads_adrequestversion_download_overrides',
             ),
         ]
         return custom_urls + urls
     
     def download_overrides_button(self, obj):
         if obj.pk and obj.ad_request:
-            url = reverse('admin:ahbackend_adrequestversion_download_overrides', args=[obj.pk])
+            url = reverse('admin:ads_adrequestversion_download_overrides', args=[obj.pk])
             return mark_safe(f'''
             <a class="button" href="{url}" target="_blank">
                 Download Images

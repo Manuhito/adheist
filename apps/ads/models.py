@@ -14,7 +14,7 @@ class IndustryList(BaseModel):
         return self.name
 
     def get_absolute_url(self):
-        return reverse("ahbackend:industrylist_detail", kwargs={"pk": self.pk})
+        return reverse("ads:industrylist_detail", kwargs={"pk": self.pk})
 
 
 class TagList(BaseModel):
@@ -24,7 +24,7 @@ class TagList(BaseModel):
         return self.name
 
     def get_absolute_url(self):
-        return reverse("ahbackend:taglist_detail", kwargs={"pk": self.pk})
+        return reverse("ads:taglist_detail", kwargs={"pk": self.pk})
 
 
 class AdLibrary(BaseModel):
@@ -37,7 +37,7 @@ class AdLibrary(BaseModel):
         return self.company_name
 
     def get_absolute_url(self):
-        return reverse("ahbackend:adlibrary_detail", kwargs={"pk": self.pk})
+        return reverse("ads:adlibrary_detail", kwargs={"pk": self.pk})
 
 
 class AdRequestAssets(BaseModel):

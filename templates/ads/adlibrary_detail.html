@@ -13,8 +13,8 @@
    @keydown.escape.window="closeModal()">
     <nav class="mb-2" aria-label="breadcrumbs">
       <ol class="pg-breadcrumbs">
-        <li><a href="{% url 'ahbackend:ahbackend_home' %}">{% translate "Ahbackend" %}</a></li>
-        <li><a href="{% url 'ahbackend:adlibrary_list' %}">{% translate "AdLibraries" %}</a></li>
+        <li><a href="{% url 'ads:ads_home' %}">{% translate "ads" %}</a></li>
+        <li><a href="{% url 'ads:adlibrary_list' %}">{% translate "AdLibraries" %}</a></li>
         <li class="pg-breadcrumb-active" aria-current="page">{{ object.company_name }}</li>
       </ol>
     </nav>
@@ -48,7 +48,7 @@
         {% endif %}
       </div>
       <div class="mt-2">
-        <a href="{% url 'ahbackend:adlibrary_update' object.pk %}" class="pg-button-secondary">
+        <a href="{% url 'ads:adlibrary_update' object.pk %}" class="pg-button-secondary">
           <span class="pg-icon"><i class="fa fa-pencil"></i></span>
           <span>{% translate "Edit" %}</span>
         </a>
@@ -70,7 +70,7 @@
           {% endblocktranslate %}
         </p>
         <div class="mt-2">
-          <form method="post" action="{% url 'ahbackend:adlibrary_delete' object.pk %}">
+          <form method="post" action="{% url 'ads:adlibrary_delete' object.pk %}">
             {% csrf_token %}
             <button class="pg-button-danger" type="submit">{% translate "Delete" %}</button>
             <button class="pg-button-secondary" type="button" @click="closeModal()">{% translate "Cancel" %}</button>

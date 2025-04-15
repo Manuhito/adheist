@@ -1,10 +1,10 @@
 from django.urls import path
 from . import views
 
-app_name = "ahbackend"
+app_name = "ads"
 
 urlpatterns = [
-    path("", views.home, name="ahbackend_home"),
+    path("", views.home, name="ads_home"),
     path("adrequest/create/", views.adrequest_create, name="adrequest_create"),
     # Split adrequest_detail into separate GET and POST endpoints
     path("adrequest/<int:pk>/get/", views.adrequest_get, name="adrequest_get"),

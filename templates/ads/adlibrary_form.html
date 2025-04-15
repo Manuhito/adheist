@@ -7,9 +7,9 @@
 <div id="page-content">
   <nav class="mb-2" aria-label="breadcrumbs">
     <ol class="pg-breadcrumbs">
-      <li><a href="{% url 'ahbackend:ahbackend_home' %}">{% translate "Ahbackend" %}</a></li>
+      <li><a href="{% url 'ads:ads_home' %}">{% translate "ads" %}</a></li>
       <li>
-        <a href="{% url 'ahbackend:adlibrary_list' %}">{% translate "AdLibraries" %}</a>
+        <a href="{% url 'ads:adlibrary_list' %}">{% translate "AdLibraries" %}</a>
       </li>
       {% if object %}
         <li>
@@ -29,7 +29,7 @@
         {% translate "New AdLibrary" %}
       {% endif %}
     </h3>
-    <form method="post" action="{% if object %}{% url 'ahbackend:adlibrary_update' object.id %}{% else %}{% url 'ahbackend:adlibrary_create' %}{% endif %}" enctype="multipart/form-data">
+    <form method="post" action="{% if object %}{% url 'ads:adlibrary_update' object.id %}{% else %}{% url 'ads:adlibrary_create' %}{% endif %}" enctype="multipart/form-data">
       {% csrf_token %}
       {% if form.non_field_errors %}
         {{ form.non_field_errors }}

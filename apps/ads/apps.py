@@ -1,11 +1,11 @@
 from django.apps import AppConfig
 
 
-class AhbackendConfig(AppConfig):
+class adsConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "apps.ahbackend"
-    label = "ahbackend"
+    name = "apps.ads"
+    label = "ads"
     
     def ready(self):
         # Import signals to register signal handlers
-        import apps.ahbackend.signals
+        import apps.ads.signals
