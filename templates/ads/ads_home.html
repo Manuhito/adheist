@@ -1,0 +1,45 @@
+{% extends "web/app/app_base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block app %}
+<div id="page-content">
+  <div class="app-card">
+    <h1 class="pg-title">Welcome to the ads app!</h1>
+    <div class="pg-content">
+      <h2>Your Ad Requests</h2>
+      
+      {% if ad_requests %}
+        <ul>
+          {% for request in ad_requests %}
+            <li>
+              ID: {{ request.ad_request_id }} - 
+              Library: {{ request.ad_library_name }} - 
+              Status: {{ request.status }} - 
+              Created: {{ request.created_at|date:"Y-m-d H:i" }} - 
+              Updated: {{ request.updated_at|date:"Y-m-d H:i" }} - 
+              Canvas Size: {{ request.canvas_size }}
+              <br>
+              <strong>Tags:</strong> 
+              {% if request.tags %}
+                {{ request.tags|join:", " }}
+              {% else %}
+                No tags
+              {% endif %}
+              <br>
+              <strong>Industries:</strong> 
+              {% if request.industries %}
+                {{ request.industries|join:", " }}
+              {% else %}
+                No industries
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>You don't have any ad requests yet.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

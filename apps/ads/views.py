@@ -20,7 +20,37 @@ PAGINATE_BY = 4
 @login_required
 def home(request):
     template = "ads/ads_home.html"
-    return TemplateResponse(request, template, {"active_tab": "ads"})
+    
+    # Get ad requests for the current user
+    ad_requests = AdRequest.objects.filter(user=request.user).order_by('-updated_at')
+    
+    # Prepare data for template
+    requests_data = []
+    for req in ad_requests:
+        # Get tags and industries if ad_library exists
+        tags = []
+        industries = []
+        if req.ad_library:
+            tags = [tag.name for tag in req.ad_library.tags.all()]
+            industries = [industry.name for industry in req.ad_library.industries.all()]
+        
+        # Create request data dictionary
+        request_data = {
+            'ad_request_id': req.id,
+            'ad_library_name': req.ad_library.company_name if req.ad_library else 'No library',
+            'status': req.status,
+            'created_at': req.created_at,
+            'updated_at': req.updated_at,
+            'canvas_size': req.canvas_size,
+            'tags': tags,
+            'industries': industries,
+        }
+        requests_data.append(request_data)
+    
+    return TemplateResponse(request, template, {
+        "active_tab": "ads",
+        "ad_requests": requests_data
+    })
 
 
 def get_all_industries(request):
