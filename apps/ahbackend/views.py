@@ -97,27 +97,28 @@ def get_adlibrary_filters(request):
     # Start with all AdLibrary objects
     adlibraries = AdLibrary.objects.all()
     
-    # Apply filters if provided
+    # Apply company name filter if provided (AND logic)
     if company_name:
         adlibraries = adlibraries.filter(company_name__icontains=company_name)
     
-    # Filter by multiple industries (OR logic - must have at least one of the specified industries)
+    # Create combined query for industries and tags (OR logic between them)
+    combined_query = Q()
+    
+    # Add industry conditions to combined query
     if industries:
-        industry_query = Q()
         for industry in industries:
             if industry:
-                industry_query |= Q(industries__name=industry)
-        if industry_query:
-            adlibraries = adlibraries.filter(industry_query)
+                combined_query |= Q(industries__name=industry)
     
-    # Filter by multiple tags (OR logic - must have at least one of the specified tags)
+    # Add tag conditions to combined query
     if tags:
-        tag_query = Q()
         for tag in tags:
             if tag:
-                tag_query |= Q(tags__name=tag)
-        if tag_query:
-            adlibraries = adlibraries.filter(tag_query)
+                combined_query |= Q(tags__name=tag)
+    
+    # Apply the combined filter if any conditions exist
+    if combined_query:
+        adlibraries = adlibraries.filter(combined_query).distinct()
     
     # Convert to list of dictionaries with all required fields
     adlibrary_list = []
