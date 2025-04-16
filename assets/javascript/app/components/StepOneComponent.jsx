@@ -17,7 +17,22 @@ const StepOneComponent = ({ onComplete, initialData = {} }) => {
   const [selectedTags, setSelectedTags] = useState([]);
   const [filteredResults, setFilteredResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedCanvasSize, setSelectedCanvasSize] = useState(initialData.canvas_size || null);
+  // Map initialData.canvas_size to canvas size ID if needed
+  const getCanvasSizeId = (sizeValue) => {
+    if (!sizeValue) return null;
+    
+    // Map size values to IDs
+    const sizeMap = {
+      '1080x1080': 'square',
+      '1080x1920': 'portraitTall',
+      '1080x1350': 'portrait',
+      '1280x720': 'landscape'
+    };
+    
+    return sizeMap[sizeValue] || sizeValue;
+  };
+  
+  const [selectedCanvasSize, setSelectedCanvasSize] = useState(getCanvasSizeId(initialData.canvas_size) || null);
   const [selectedAdLibrary, setSelectedAdLibrary] = useState(initialData.ad_library_id || null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
