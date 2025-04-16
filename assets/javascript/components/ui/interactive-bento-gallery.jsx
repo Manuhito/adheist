@@ -213,11 +213,9 @@ const InteractiveBentoGallery = ({
                         layoutId={`media-${item.id}`}
                         className={`relative overflow-hidden rounded-xl shadow-md hover:shadow-lg transition-shadow ${item.span} ${selectedItemId === item.id ? 'ring-2 ring-primary ring-offset-2' : ''}`}
                         onClick={() => {
+                            // Only open the modal, don't select the item yet
                             setSelectedItem(item);
-                            // If external selection handler is provided, call it
-                            if (onItemSelect && typeof onItemSelect === 'function') {
-                                onItemSelect(item);
-                            }
+                            // Selection will happen only when clicking the "Select This Ad Style" button
                         }}
                         variants={{
                             hidden: { y: 20, opacity: 0 },
