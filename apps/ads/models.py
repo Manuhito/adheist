@@ -292,3 +292,52 @@ class AdRequestVersion(BaseModel):
         
         # Send email
         send_mail(subject, message, from_email, [to_email], fail_silently=False)
+
+
+# apps/ads/models.py
+class AdRequestUsage(BaseModel):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    billing_period_start = models.DateTimeField()
+    billing_period_end = models.DateTimeField()
+    usage_count = models.PositiveIntegerField(default=0)
+    
+    class Meta:
+        unique_together = ('user', 'billing_period_start')
+        
+    @classmethod
+    def get_current_usage(cls, user):
+        """Get or create usage record for current billing period"""
+        from django.utils import timezone
+        
+        # For users with active subscriptions, get billing period from subscription
+        if user.has_active_subscription():
+            sub = user.active_stripe_subscription
+            # Get current period from subscription
+            period_start = timezone.make_aware(
+                datetime.fromtimestamp(sub.current_period_start)
+            )
+            period_end = timezone.make_aware(
+                datetime.fromtimestamp(sub.current_period_end)
+            )
+        else:
+            # For free users, use calendar month
+            today = timezone.now()
+            period_start = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            next_month = today.month + 1 if today.month < 12 else 1
+            next_month_year = today.year if today.month < 12 else today.year + 1
+            period_end = today.replace(
+                year=next_month_year, 
+                month=next_month, 
+                day=1, 
+                hour=0, minute=0, second=0, microsecond=0
+            ) - timezone.timedelta(microseconds=1)
+            
+        usage, created = cls.objects.get_or_create(
+            user=user,
+            billing_period_start=period_start,
+            defaults={
+                'billing_period_end': period_end,
+                'usage_count': 0
+            }
+        )
+        return usage

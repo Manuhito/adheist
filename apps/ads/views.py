@@ -226,6 +226,14 @@ def adrequest_create(request):
     
     Returns: JSON with the AdRequest instance ID
     """
+    # Check if user can create more ad requests
+    if not can_create_ad_request(request.user):
+        messages.error(
+            request, 
+            "You've reached your monthly limit for ad requests. Please upgrade your plan to create more."
+        )
+        return redirect('subscription_plans')  # Redirect to plans page
+
     try:
         # Check if the user already has an AdRequestAssets instance
         user_assets = AdRequestAssets.objects.filter(user=request.user).first()
@@ -261,6 +269,9 @@ def adrequest_create(request):
         
         # Create the AdRequest with all fields at once
         ad_request = AdRequest.objects.create(**create_params)
+        
+        # Increment usage counter
+        increment_usage(request.user)
         
         # Return the AdRequest instance ID
         return JsonResponse({'id': ad_request.id}, status=201)
