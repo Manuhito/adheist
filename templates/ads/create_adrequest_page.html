@@ -10,7 +10,16 @@
 <div class="container mx-auto px-4 py-8">
   <h1 class="text-2xl font-bold mb-6">Create Ad Request</h1>
   
-  <!-- React app mount point -->
-  <div id="create-adrequest-app"></div>
+  <!-- React app mount point with data attributes -->
+  <div 
+    id="create-adrequest-app" 
+    data-adrequest-id="{{ adrequest_id }}" 
+    data-status="{{ adrequest_data.status|default:'NEW' }}"
+  ></div>
+  
+  <!-- Pass AdRequest data as JSON -->
+  {% if adrequest_data %}
+    {{ adrequest_data|json_script:"adrequest-data" }}
+  {% endif %}
 </div>
 {% endblock %}
