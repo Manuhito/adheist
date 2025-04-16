@@ -94,8 +94,14 @@ def get_adlibrary_filters(request):
     if not tags and request.GET.get('tag'):
         tags = [request.GET.get('tag')]
     
-    # Start with all AdLibrary objects
-    adlibraries = AdLibrary.objects.all()
+    # Check if any filter parameters are provided
+    has_filters = company_name or industries or tags
+    
+    # Start with all AdLibrary objects or just favorites if no filters
+    if has_filters:
+        adlibraries = AdLibrary.objects.all()
+    else:
+        adlibraries = AdLibrary.objects.filter(is_fav=True)
     
     # Apply company name filter if provided (AND logic)
     if company_name:
@@ -134,6 +140,7 @@ def get_adlibrary_filters(request):
             'industries': industry_names,
             'tags': tag_names,
             'ad_image': adlibrary.ad_image.url if adlibrary.ad_image else None,
+            'is_fav': adlibrary.is_fav,
         }
         adlibrary_list.append(adlibrary_data)
     

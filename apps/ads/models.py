@@ -32,6 +32,7 @@ class AdLibrary(BaseModel):
     industries = models.ManyToManyField(IndustryList, related_name="adlibraries")
     tags = models.ManyToManyField(TagList, related_name="adlibraries")
     ad_image = models.ImageField(upload_to="adlibrary/", null=True, blank=True)
+    is_fav = models.BooleanField(default=False)
 
     def __str__(self):
         return self.company_name
