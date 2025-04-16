@@ -10,7 +10,7 @@ import { cn } from "../../lib/utils";
 export function CompanyLogoUpload({ onUpload, className, ...props }) {
   return (
     <div className={cn("w-full h-full flex flex-col p-6", className)}>
-      <div className="w-full max-w-lg mx-auto">
+      <div className="w-full">
         <h3 className="text-lg font-medium mb-2">Company Branding</h3>
         <p className="text-sm text-muted-foreground mb-4">
           Upload your company logo to enhance your ad campaign's brand identity

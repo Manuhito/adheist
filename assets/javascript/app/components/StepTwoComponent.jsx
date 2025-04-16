@@ -66,18 +66,18 @@ const StepTwoComponent = ({ onComplete, initialData = {} }) => {
     <div className="flex flex-col min-h-[80vh] space-y-8">
       {/* Main content area with company logo upload, website URL, and color picker */}
       <div className="flex-grow container mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Company Logo Upload - Takes 7/12 columns on large screens */}
-          <div className="lg:col-span-7 bg-card rounded-xl overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Company Logo Upload - Takes 6/12 columns on large screens */}
+          <div className="lg:col-span-6 bg-card rounded-xl overflow-hidden">
             <CompanyLogoUpload 
               onUpload={handleImageUpload} 
               className="h-full"
             />
           </div>
           
-          {/* Form Fields Container - Takes 5/12 columns on large screens */}
-          <div className="lg:col-span-5 space-y-6">
-            <div className="bg-card p-6">
+          {/* Form Fields Container - Takes 6/12 columns on large screens */}
+          <div className="lg:col-span-6 space-y-6">
+            <div className="bg-card p-6 rounded-xl overflow-hidden h-full">
               {/* Section Title */}
               <h3 className="text-lg font-medium mb-4">Campaign Details</h3>
               
