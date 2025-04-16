@@ -173,8 +173,8 @@ const StepOneComponent = ({ onComplete, initialData = {} }) => {
   // Check if any filters are active
   const hasActiveFilters = selectedCompany || selectedIndustries.length > 0 || selectedTags.length > 0;
 
-  // Handle creating a new ad request
-  const handleCreateAdRequest = async () => {
+  // Handle next step (create or update ad request)
+  const handleNextStep = async () => {
     // Validate required fields
     if (!selectedAdLibrary || !selectedCanvasSize) {
       setSubmitError('Please select both an ad style and canvas size');
@@ -185,45 +185,67 @@ const StepOneComponent = ({ onComplete, initialData = {} }) => {
     setSubmitError(null);
 
     try {
-      // Log the values to ensure they're correctly set
-      console.log('Creating ad request with:', { selectedAdLibrary, selectedCanvasSize });
-
       // Prepare form data
       const formData = new FormData();
       formData.append('ad_library', selectedAdLibrary);
       formData.append('canvas_size', selectedCanvasSize);
+      formData.append('status', 'DRAFT'); // Set status to DRAFT to advance to next step
 
-      // Send POST request to create ad request
-      const response = await fetch('/ads/adrequest/create/', {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'X-CSRFToken': getCsrfToken(),
-        },
-      });
+      let response;
+      let data;
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create ad request');
-      } else {
-        console.log('Ad request created successfully:', data);
+      // Check if we're updating an existing AdRequest or creating a new one
+      if (initialData && initialData.id) {
+        // Update existing AdRequest
+        console.log('Updating ad request with ID:', initialData.id);
         
-        // Call the onComplete callback with the created ad request data
-        if (onComplete) {
-          onComplete({
-            id: data.id,
-            status: data.status || 'DRAFT',
-            ad_library_id: selectedAdLibrary,
-            canvas_size: selectedCanvasSize
-          });
+        response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-CSRFToken': getCsrfToken(),
+          },
+        });
+
+        data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to update ad request');
+        } else {
+          console.log('Ad request updated successfully:', data);
+        }
+      } else {
+        // Create new AdRequest
+        console.log('Creating new ad request with:', { selectedAdLibrary, selectedCanvasSize });
+        
+        response = await fetch('/ads/adrequest/create/', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-CSRFToken': getCsrfToken(),
+          },
+        });
+
+        data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to create ad request');
+        } else {
+          console.log('Ad request created successfully:', data);
         }
       }
-
-      // Redirect to the created ad request
-      //window.location.href = `/ads/adrequest/${data.id}/`;
+      
+      // Call the onComplete callback with the updated ad request data
+      if (onComplete) {
+        onComplete({
+          id: data.id,
+          status: 'DRAFT', // Force status to DRAFT to ensure we move to step 2
+          ad_library_id: selectedAdLibrary,
+          canvas_size: selectedCanvasSize
+        });
+      }
     } catch (error) {
-      console.error('Error creating ad request:', error);
+      console.error('Error processing ad request:', error);
       setSubmitError(error.message || 'An unexpected error occurred');
       setIsSubmitting(false);
     }
@@ -333,7 +355,7 @@ const StepOneComponent = ({ onComplete, initialData = {} }) => {
               {/* Next button */}
               <div className="mt-8 flex justify-center">
                 <NextButton
-                  onClick={handleCreateAdRequest}
+                  onClick={handleNextStep}
                   disabled={!selectedAdLibrary || !selectedCanvasSize || isSubmitting}
                   isLoading={isSubmitting}
                   className="min-w-[150px]"
