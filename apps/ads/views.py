@@ -515,3 +515,29 @@ def create_adrequest_page(request, adrequest_id=None):
             context["adrequest_data"] = adrequest_data
     
     return TemplateResponse(request, template, context)
+
+
+@login_required
+def adrequest_details_page(request, adrequest_id):
+    """
+    Render the adrequest details page for completed ad requests.
+    This view is used for ad requests with status COMPLETE.
+    """
+    # Get the AdRequest and check permissions
+    result = _get_user_adrequest(request, adrequest_id)
+    
+    # If result is a JsonResponse, it's an error
+    if isinstance(result, JsonResponse):
+        return result
+    
+    ad_request = result
+    
+    # Render the adlibrary_detail.html template with the ad_request as the object
+    template = "ads/adlibrary_detail.html"
+    context = {
+        "active_tab": "my_requests",
+        "object": ad_request.ad_library if ad_request.ad_library else None,
+        "ad_request": ad_request
+    }
+    
+    return TemplateResponse(request, template, context)

@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import ReactDOM from "react-dom/client";
 import { BentoGrid, BentoItem } from "../components/ui/bento-grid";
 import { ButtonColorful } from "../components/ui/button-colorful";
+import { AlertNotification } from "../components/ui/alert-notification";
 import { cn } from "../lib/utils";
 
 // Debug log
@@ -55,6 +56,26 @@ function formatDate(dateString: string): string {
 
 // Function to convert AdRequest to BentoItem
 function adRequestToBentoItem(adRequest: AdRequest): BentoItem {
+    // Determine the appropriate URL based on status
+    const getRedirectUrl = (status: string, id: number): string | null => {
+        // For DRAFT, NEW, FILLED statuses, redirect to create_adrequest_page
+        if (['DRAFT', 'NEW', 'FILLED'].includes(status)) {
+            return `/ads/create/${id}/`;
+        }
+        // For COMPLETE status, redirect to the details page
+        else if (status === 'COMPLETED') {
+            return `/ads/request/${id}/details/`;
+        }
+        // For SUBMITTED or REOPENED, don't redirect, show notification instead
+        else if (['SUBMITTED', 'REOPENED'].includes(status)) {
+            return null; // No redirect
+        }
+        // Default fallback (for other statuses not yet implemented)
+        else {
+            return `/ads/create/${id}/`;
+        }
+    };
+
     return {
         title: adRequest.ad_library_name,
         meta: `${adRequest.canvas_size}`,
@@ -67,9 +88,59 @@ function adRequestToBentoItem(adRequest: AdRequest): BentoItem {
         cta: "View details",
         hasPersistentHover: false,
         id: adRequest.ad_request_id,
-        onClick: () => {
-            // Navigate to the create_adrequest_page with the ID as a URL parameter
-            window.location.href = `/ads/create/${adRequest.ad_request_id}/`;
+        onClick: async () => {
+            try {
+                // First, get the latest status from the server
+                const response = await fetch(`/ads/adrequest/${adRequest.ad_request_id}/get/`);
+                
+                if (!response.ok) {
+                    throw new Error(`Error fetching ad request: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('Latest ad request data:', data);
+                
+                // Check if the status is SUBMITTED or REOPENED
+                if (['SUBMITTED', 'REOPENED'].includes(data.status)) {
+                    // Create a notification element
+                    const notificationContainer = document.createElement('div');
+                    notificationContainer.id = 'ad-request-notification-container';
+                    document.body.appendChild(notificationContainer);
+                    
+                    // Render the notification
+                    const notificationRoot = ReactDOM.createRoot(notificationContainer);
+                    const message = `This ad request is currently in ${data.status.toLowerCase()} status. Please wait for it to be processed.`;
+                    
+                    notificationRoot.render(
+                        React.createElement(AlertNotification, {
+                            message: message,
+                            variant: "info" as "info" | "warning" | "error" | "success",
+                            duration: 5000,
+                            onClose: () => {
+                                // Remove the notification container when closed
+                                if (notificationContainer.parentNode) {
+                                    notificationContainer.parentNode.removeChild(notificationContainer);
+                                }
+                            }
+                        })
+                    );
+                    return; // Don't redirect
+                }
+                
+                // Get the appropriate URL based on the latest status
+                // Use the ID from the response data (data.id) instead of the original adRequest.ad_request_id
+                const redirectUrl = getRedirectUrl(data.status, data.id);
+                if (redirectUrl) {
+                    window.location.href = redirectUrl;
+                }
+            } catch (error) {
+                console.error('Error checking ad request status:', error);
+                // Fallback to using the status we already have
+                const redirectUrl = getRedirectUrl(adRequest.status, adRequest.ad_request_id);
+                if (redirectUrl) {
+                    window.location.href = redirectUrl;
+                }
+            }
         }
     };
 }
@@ -121,6 +192,9 @@ async function createNewAdRequest() {
 
 // Main component
 function AdRequestsGrid() {
+    // State for notification
+    const [notification, setNotification] = useState<{ message: string; variant: "warning" | "error" | "success" | "info" } | null>(null);
+
     // Get data from script element with id "ad-requests-data"
     const dataElement = document.getElementById("ad-requests-data");
     console.log("Data element:", dataElement);
@@ -142,6 +216,15 @@ function AdRequestsGrid() {
 
     return (
         <div className="ad-requests-container">
+            {/* Notification */}
+            {notification && (
+                React.createElement(AlertNotification, {
+                    message: notification.message,
+                    variant: notification.variant,
+                    onClose: () => setNotification(null)
+                })
+            )}
+            
             {/* Create new ad request button */}
             <div className="flex justify-center my-4">
                 <ButtonColorful 
