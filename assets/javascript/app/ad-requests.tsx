@@ -105,8 +105,14 @@ async function createNewAdRequest() {
         const data = await response.json();
         console.log('New ad request created:', data);
         
-        // Reload the page to show the new ad request
-        window.location.reload();
+        // Redirect to the create_adrequest_page with the ID as a URL parameter
+        if (data && data.id) {
+            window.location.href = `/ads/create/${data.id}/`;
+        } else {
+            console.error('No ID returned from create ad request API');
+            // Fallback to reload if no ID is returned
+            window.location.reload();
+        }
     } catch (error) {
         console.error('Error creating ad request:', error);
         alert('Error creating ad request. Please try again.');
