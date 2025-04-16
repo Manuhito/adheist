@@ -2,34 +2,36 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BentoGrid, BentoItem } from "../components/ui/bento-grid";
 
-// Log para depuración
+// Debug log
 console.log("Ad Requests script loaded");
 import {
     CheckCircle,
     AlertCircle,
     Clock,
-    FileText,
     PenTool,
     ThumbsUp,
     Undo,
+    PencilRuler,
+    CircleCheckBig,
 } from "lucide-react";
 
-// Mapeo de estados a iconos y colores
+// Mapping of statuses to icons and colors
 const statusIconMap = {
-    NEW: <FileText className="w-4 h-4 text-blue-500" />,
-    DRAFT: <PenTool className="w-4 h-4 text-orange-500" />,
-    FILLED: <CheckCircle className="w-4 h-4 text-emerald-500" />,
+    NEW: <PencilRuler className="w-4 h-4 text-orange-500" />,
+    DRAFT: <PencilRuler className="w-4 h-4 text-orange-500" />,
+    FILLED: <PencilRuler className="w-4 h-4 text-orange-500" />,
     SUBMITTED: <Clock className="w-4 h-4 text-purple-500" />,
-    COMPLETED: <ThumbsUp className="w-4 h-4 text-green-500" />,
-    REOPENED: <Undo className="w-4 h-4 text-red-500" />,
+    COMPLETED: <CircleCheckBig className="w-4 h-4 text-green-500" />,
+    REOPENED: <Clock className="w-4 h-4 text-purple-500" />,
     DEFAULT: <AlertCircle className="w-4 h-4 text-gray-500" />,
 };
 
-// Interfaz para los datos de ad_requests recibidos del backend
+// Interface for ad_requests data received from the backend
 interface AdRequest {
     ad_request_id: number;
     ad_library_name: string;
     status: string;
+    display_status: string;
     created_at: string;
     updated_at: string;
     canvas_size: string;
@@ -37,36 +39,36 @@ interface AdRequest {
     industries: string[];
 }
 
-// Función para formatear la fecha
+// Function to format the date
 function formatDate(dateString: string): string {
     if (!dateString) return "";
     const date = new Date(dateString);
-    return date.toLocaleDateString("es-ES", {
+    return date.toLocaleDateString("en-US", {
         year: "numeric",
         month: "short",
         day: "numeric",
     });
 }
 
-// Función para convertir AdRequest a BentoItem
+// Function to convert AdRequest to BentoItem
 function adRequestToBentoItem(adRequest: AdRequest): BentoItem {
     return {
         title: adRequest.ad_library_name,
-        meta: `ID: ${adRequest.ad_request_id}`,
+        meta: `${adRequest.canvas_size}`,
         description: adRequest.industries.length > 0 
-            ? `Industrias: ${adRequest.industries.join(", ")}` 
-            : "Sin industrias asociadas",
+            ? `Industries: ${adRequest.industries.join(", ")}` 
+            : "No associated industries",
         icon: statusIconMap[adRequest.status] || statusIconMap.DEFAULT,
-        status: adRequest.status,
+        status: adRequest.display_status,  // Use display_status instead of status
         tags: adRequest.tags,
-        cta: "Ver detalles",
+        cta: "View details",
         hasPersistentHover: false,
     };
 }
 
-// Componente principal
+// Main component
 function AdRequestsGrid() {
-    // Obtener los datos del elemento script con id "ad-requests-data"
+    // Get data from script element with id "ad-requests-data"
     const dataElement = document.getElementById("ad-requests-data");
     console.log("Data element:", dataElement);
     
@@ -81,7 +83,7 @@ function AdRequestsGrid() {
     console.log("Parsed ad requests:", adRequests);
     console.log("Number of ad requests:", adRequests.length);
     
-    // Convertir los datos a formato BentoItem
+    // Convert data to BentoItem format
     const bentoItems = adRequests.map(adRequestToBentoItem);
     console.log("Bento items:", bentoItems);
 
@@ -92,7 +94,7 @@ function AdRequestsGrid() {
     );
 }
 
-// Función para inicializar el componente React
+// Function to initialize the React component
 function initAdRequestsGrid() {
     console.log("Initializing Ad Requests Grid");
     const container = document.getElementById("ad-requests-grid");
@@ -111,12 +113,12 @@ function initAdRequestsGrid() {
     }
 }
 
-// Intentar renderizar inmediatamente si el DOM ya está listo
+// Try to render immediately if the DOM is already ready
 if (document.readyState === "complete" || document.readyState === "interactive") {
     console.log("DOM already ready, initializing immediately");
-    setTimeout(initAdRequestsGrid, 100); // Pequeño retraso para asegurar que todo esté cargado
+    setTimeout(initAdRequestsGrid, 100); // Small delay to ensure everything is loaded
 } else {
-    // Si no, esperar a que el DOM esté listo
+    // Otherwise, wait for the DOM to be ready
     console.log("Waiting for DOMContentLoaded");
     document.addEventListener("DOMContentLoaded", initAdRequestsGrid);
 }

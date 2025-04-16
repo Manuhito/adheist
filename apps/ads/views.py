@@ -34,11 +34,23 @@ def home(request):
             tags = [tag.name for tag in req.ad_library.tags.all()]
             industries = [industry.name for industry in req.ad_library.industries.all()]
         
+        # Map status to display status
+        status_mapping = {
+            'NEW': 'Draft',
+            'DRAFT': 'Draft',
+            'FILLED': 'Draft',
+            'SUBMITTED': 'Generating...',
+            'COMPLETED': 'Done',
+            'REOPENED': 'Generating...'
+        }
+        display_status = status_mapping.get(req.status, req.status)
+        
         # Create request data dictionary
         request_data = {
             'ad_request_id': req.id,
             'ad_library_name': req.ad_library.company_name if req.ad_library else 'No library',
             'status': req.status,
+            'display_status': display_status,
             'created_at': req.created_at.isoformat() if req.created_at else None,
             'updated_at': req.updated_at.isoformat() if req.updated_at else None,
             'canvas_size': req.canvas_size,
