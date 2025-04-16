@@ -1,0 +1,80 @@
+{% extends "web/app/app_base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block extra_head %}
+{{ block.super }}
+{% endblock %}
+
+{% block app %}
+<div id="page-content">
+  <div class="app-card">
+        
+    <!-- Script con los datos JSON para React -->
+    <script id="ad-requests-data" type="application/json">
+      {{ ad_requests_json|safe }}
+    </script>
+    
+    <!-- Contenedor para el componente React -->
+    <div id="ad-requests-grid" class="w-full"></div>
+    
+    <!-- Versión fallback en caso de que React no cargue -->
+    <noscript>
+      <div class="pg-content">
+        <h2>Your Ad Requests</h2>
+        
+        {% if ad_requests %}
+          <ul>
+            {% for request in ad_requests %}
+              <li>
+                ID: {{ request.ad_request_id }} - 
+                Library: {{ request.ad_library_name }} - 
+                Status: {{ request.status }} - 
+                Created: {{ request.created_at|date:"Y-m-d H:i" }} - 
+                Updated: {{ request.updated_at|date:"Y-m-d H:i" }} - 
+                Canvas Size: {{ request.canvas_size }}
+                <br>
+                <strong>Tags:</strong> 
+                {% if request.tags %}
+                  {{ request.tags|join:", " }}
+                {% else %}
+                  No tags
+                {% endif %}
+                <br>
+                <strong>Industries:</strong> 
+                {% if request.industries %}
+                  {{ request.industries|join:", " }}
+                {% else %}
+                  No industries
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p>You don't have any ad requests yet.</p>
+        {% endif %}
+      </div>
+    </noscript>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+  // Asegurarnos de que el script se carga correctamente
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM fully loaded');
+    // Cargar el script de React dinámicamente
+    var script = document.createElement('script');
+    script.src = "{% static 'js/ad-requests-bundle.js' %}";
+    script.onload = function() {
+      console.log('Script loaded successfully');
+    };
+    script.onerror = function() {
+      console.error('Error loading script');
+    };
+    document.body.appendChild(script);
+  });
+</script>
+{% endblock %}

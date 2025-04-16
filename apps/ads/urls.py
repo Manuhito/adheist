@@ -16,4 +16,5 @@ urlpatterns = [
     path("adlibraries/", views.get_adlibrary_filters, name="get_adlibrary_filters"),
     path("companies/", views.get_adlibrary_company_list, name="get_adlibrary_company_list"),
     path("create/", views.create_adrequest_page, name="create_adrequest_page"),
+    path("create/<int:adrequest_id>/", views.create_adrequest_page, name="create_adrequest_page_with_id"),
 ]
