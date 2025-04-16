@@ -3,7 +3,7 @@ import { SearchComponent } from './SearchComponent';
 import { FilterFormComponent } from './FilterFormComponent';
 import InteractiveBentoGallery from '../../components/ui/interactive-bento-gallery.jsx';
 import { Building, X } from 'lucide-react';
-import { GetStartedButton } from '../../components/ui/get-started-button.jsx';
+import { NextButton } from '../../components/ui/next-button.jsx';
 
 /**
  * Step One Component for the Create Ad Request flow
@@ -332,20 +332,12 @@ const StepOneComponent = ({ onComplete, initialData = {} }) => {
 
               {/* Next button */}
               <div className="mt-8 flex justify-center">
-                <GetStartedButton
+                <NextButton
                   onClick={handleCreateAdRequest}
                   disabled={!selectedAdLibrary || !selectedCanvasSize || isSubmitting}
+                  isLoading={isSubmitting}
                   className="min-w-[150px]"
-                >
-                  {isSubmitting ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                      <span>Creating...</span>
-                    </div>
-                  ) : (
-                    "Next"
-                  )}
-                </GetStartedButton>
+                />
               </div>
 
               {/* Error message */}

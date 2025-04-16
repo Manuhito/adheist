@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { GetStartedButton } from '../../components/ui/get-started-button.jsx';
+import { NextButton } from '../../components/ui/next-button.jsx';
 
 /**
  * Step Three Component for the Create Ad Request flow
@@ -124,7 +124,7 @@ const StepThreeComponent = ({ onComplete, initialData = {} }) => {
       </div>
       
       <div className="flex justify-end">
-        <GetStartedButton 
+        <NextButton 
           onClick={handleSubmit}
           isLoading={isSubmitting}
           text="Submit Ad Request"
