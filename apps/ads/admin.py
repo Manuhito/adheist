@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from django.urls import path, reverse
 from django.utils.safestring import mark_safe
 from django.core.files.storage import default_storage
+from django import forms
 import json
 import zipfile
 import io
@@ -192,6 +193,21 @@ class AdRequestVersionAdmin(admin.ModelAdmin):
         
         return mark_safe(html)
     generated_prompt_with_copy.short_description = "Generated Prompt"
+    
+    # Custom form for AdRequestVersion admin
+    class AdRequestVersionForm(forms.ModelForm):
+        class Meta:
+            model = AdRequestVersion
+            fields = '__all__'
+        
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            # Make generated_image required in the form
+            if 'generated_image' in self.fields:
+                self.fields['generated_image'].required = True
+    
+    # Use the custom form
+    form = AdRequestVersionForm
     
     def assign_to_me(self, request, queryset):
         """Admin action to assign selected AdRequestVersion objects to the logged-in user"""
