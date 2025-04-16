@@ -132,7 +132,7 @@ class AdRequestVersionAdmin(admin.ModelAdmin):
             safe_email = ''.join(c if c.isalnum() or c in '._-' else '_' for c in user_email)
             
             # Create filename in the requested format
-            filename = f'{safe_email}_request_{ad_request.id}.zip'
+            filename = f'{safe_email}_request_{version.id}.zip'
             
             response = HttpResponse(zip_buffer.read(), content_type='application/zip')
             response['Content-Disposition'] = f'attachment; filename="{filename}"'
