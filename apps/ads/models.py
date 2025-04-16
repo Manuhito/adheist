@@ -197,10 +197,21 @@ class AdRequestVersion(BaseModel):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_UNASSIGNED)
     
     def save(self, *args, **kwargs):
-        """Override save method to update generated_prompt if needed"""
+        """Override save method to update generated_prompt if needed and send email notifications"""
         # Check if this is a new instance or if generated_prompt is empty
         is_new = self.pk is None
         force_regenerate = kwargs.pop('regenerate_prompt', False)
+        
+        # Check if generated_image was just filled (for email notification)
+        if not is_new and self.pk:
+            # Get the current state from the database
+            try:
+                old_instance = AdRequestVersion.objects.get(pk=self.pk)
+                had_image = bool(old_instance.generated_image)
+            except AdRequestVersion.DoesNotExist:
+                had_image = False
+        else:
+            had_image = False
         
         # First save the model to ensure it has an ID
         super().save(*args, **kwargs)
@@ -211,7 +222,36 @@ class AdRequestVersion(BaseModel):
             self.generated_prompt = generate_prompt(self)
             # Save again to store the generated prompt
             super().save(update_fields=['generated_prompt'])
+        
+        # Send email notification if generated_image is filled and wasn't before
+        has_image_now = bool(self.generated_image)
+        if has_image_now and not had_image:
+            # Update status to COMPLETED
+            self.status = self.STATUS_COMPLETED
+            super().save(update_fields=['status'])
+            
+            # Send email notification
+            self.send_completion_email()
     
     def regenerate_prompt(self):
         """Regenerate the prompt for this version"""
         self.save(regenerate_prompt=True)
+        
+    def send_completion_email(self):
+        """Send email notification when ad is completed"""
+        from django.core.mail import send_mail
+        from django.conf import settings
+        
+        # Get the user email
+        user = self.ad_request.user
+        if not user.email:
+            return
+        
+        # Create simple email message
+        subject = "[AdHeist] - Your Ad is Ready!"
+        message = "Congrats! Your new Ad has been created"
+        from_email = settings.DEFAULT_FROM_EMAIL
+        to_email = user.email
+        
+        # Send email
+        send_mail(subject, message, from_email, [to_email], fail_silently=False)

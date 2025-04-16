@@ -324,21 +324,15 @@ FORMS_URLFIELD_ASSUME_HTTPS = True
 
 # default email used by your server
 SERVER_EMAIL = env("SERVER_EMAIL", default="noreply@localhost:8000")
-DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="manuhito@gmail.com")
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="hey@adheist.ai")
 
 # The default value will print emails to the console, but you can change that here
 # and in your environment.
 EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
-
-# Most production backends will require further customization. The below example uses Mailgun.
-# ANYMAIL = {
-#     "MAILGUN_API_KEY": env("MAILGUN_API_KEY", default=None),
-#     "MAILGUN_SENDER_DOMAIN": env("MAILGUN_SENDER_DOMAIN", default=None),
-# }
-
-# use in production
-# see https://github.com/anymail/django-anymail for more details/examples
-# EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"
+ANYMAIL = {
+    "RESEND_API_KEY": env("RESEND_API_KEY", default=None),
+    "RESEND_API_URL": env("RESEND_API_URL", default="https://api.resend.com"),
+}
 
 EMAIL_SUBJECT_PREFIX = "[AdHeist] "
 
