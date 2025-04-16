@@ -17,5 +17,5 @@ urlpatterns = [
     path("companies/", views.get_adlibrary_company_list, name="get_adlibrary_company_list"),
     path("create/", views.create_adrequest_page, name="create_adrequest_page"),
     path("create/<int:adrequest_id>/", views.create_adrequest_page, name="create_adrequest_page_with_id"),
-    path("request/<int:adrequest_id>/details/", views.adrequest_details_page, name="adrequest_details_page"),
+    path("<int:adrequest_id>/details/", views.adrequest_details_page, name="adrequest_details_page"),
 ]

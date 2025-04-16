@@ -64,7 +64,7 @@ function adRequestToBentoItem(adRequest: AdRequest): BentoItem {
         }
         // For COMPLETE status, redirect to the details page
         else if (status === 'COMPLETED') {
-            return `/ads/request/${id}/details/`;
+            return `/ads/${id}/details/`;
         }
         // For SUBMITTED or REOPENED, don't redirect, show notification instead
         else if (['SUBMITTED', 'REOPENED'].includes(status)) {
