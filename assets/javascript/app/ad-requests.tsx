@@ -1,6 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BentoGrid, BentoItem } from "../components/ui/bento-grid";
+import { ButtonColorful } from "../components/ui/button-colorful";
+import { cn } from "../lib/utils";
 
 // Debug log
 console.log("Ad Requests script loaded");
@@ -13,10 +15,11 @@ import {
     Undo,
     PencilRuler,
     CircleCheckBig,
+    ArrowUpRight,
 } from "lucide-react";
 
 // Mapping of statuses to icons and colors
-const statusIconMap = {
+const statusIconMap: Record<string, React.ReactElement> = {
     NEW: <PencilRuler className="w-4 h-4 text-orange-500" />,
     DRAFT: <PencilRuler className="w-4 h-4 text-orange-500" />,
     FILLED: <PencilRuler className="w-4 h-4 text-orange-500" />,
@@ -66,6 +69,45 @@ function adRequestToBentoItem(adRequest: AdRequest): BentoItem {
     };
 }
 
+// Function to create a new ad request
+async function createNewAdRequest() {
+    try {
+        // Get the CSRF token from the cookie
+        const csrfToken = document.cookie
+            .split('; ')
+            .find(row => row.startsWith('csrftoken='))
+            ?.split('=')[1];
+
+        if (!csrfToken) {
+            console.error('CSRF token not found');
+            return;
+        }
+
+        // Make the POST request to create a new ad request
+        const response = await fetch('/ads/adrequest/create/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+            },
+            credentials: 'same-origin',
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error creating ad request: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('New ad request created:', data);
+        
+        // Reload the page to show the new ad request
+        window.location.reload();
+    } catch (error) {
+        console.error('Error creating ad request:', error);
+        alert('Error creating ad request. Please try again.');
+    }
+}
+
 // Main component
 function AdRequestsGrid() {
     // Get data from script element with id "ad-requests-data"
@@ -89,6 +131,14 @@ function AdRequestsGrid() {
 
     return (
         <div className="ad-requests-container">
+            {/* Create new ad request button */}
+            <div className="flex justify-center my-4">
+                <ButtonColorful 
+                    label="Create New Ad Request"
+                    onClick={createNewAdRequest}
+                />
+            </div>
+            
             <BentoGrid items={bentoItems} />
         </div>
     );
