@@ -488,4 +488,30 @@ def create_adrequest_page(request, adrequest_id=None):
         "active_tab": "create_adrequest",
         "adrequest_id": adrequest_id
     }
+    
+    # If adrequest_id is provided, get the AdRequest information
+    if adrequest_id:
+        # Get the AdRequest and check permissions
+        result = _get_user_adrequest(request, adrequest_id)
+
+        # If result is not a JsonResponse (error), it's the ad_request object
+        if not isinstance(result, JsonResponse):
+            ad_request = result
+            
+            # Create a dictionary with the AdRequest data (similar to what adrequest_get would return)
+            adrequest_data = {
+                'id': ad_request.id,
+                'user_id': ad_request.user.id,
+                'ad_library_id': ad_request.ad_library.id if ad_request.ad_library else None,
+                'ad_library_name': ad_request.ad_library.company_name if ad_request.ad_library else None,
+                'canvas_size': ad_request.canvas_size,
+                'status': ad_request.status,
+                'created_at': ad_request.created_at.isoformat() if ad_request.created_at else None,
+                'updated_at': ad_request.updated_at.isoformat() if ad_request.updated_at else None,
+                'asset_overrides': ad_request.asset_overrides
+            }
+            
+            # Add the AdRequest data to the context
+            context["adrequest_data"] = adrequest_data
+    
     return TemplateResponse(request, template, context)
