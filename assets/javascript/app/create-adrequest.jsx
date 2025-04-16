@@ -107,8 +107,9 @@ const CreateAdRequestApp = () => {
       {/* Progress indicator */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
+          {/* Step 1: Select Ad Style */}
           <div className="flex items-center">
-            <div className={`rounded-full h-8 w-8 flex items-center justify-center ${adRequestData.status === 'NEW' ? 'bg-blue-500 text-white' : 'bg-green-500 text-white'}`}>
+            <div className={`rounded-full h-8 w-8 flex items-center justify-center ${adRequestData.status === 'NEW' ? 'bg-primary text-white' : 'bg-green-500 text-white'}`}>
               1
             </div>
             <div className="ml-2 text-sm font-medium">
@@ -118,8 +119,10 @@ const CreateAdRequestApp = () => {
           <div className="flex-1 mx-4 h-1 bg-gray-200">
             <div className={`h-full ${adRequestData.status !== 'NEW' ? 'bg-green-500' : 'bg-gray-200'}`} style={{ width: adRequestData.status === 'NEW' ? '0%' : '100%' }}></div>
           </div>
+          
+          {/* Step 2: Configure Ad */}
           <div className="flex items-center">
-            <div className={`rounded-full h-8 w-8 flex items-center justify-center ${adRequestData.status === 'FILLED' ? 'bg-blue-500 text-white' : (adRequestData.status === 'NEW' ? 'bg-gray-300 text-gray-600' : 'bg-green-500 text-white')}`}>
+            <div className={`rounded-full h-8 w-8 flex items-center justify-center ${adRequestData.status === 'DRAFT' ? 'bg-primary text-white' : (adRequestData.status === 'NEW' ? 'bg-gray-300 text-gray-600' : 'bg-green-500 text-white')}`}>
               2
             </div>
             <div className="ml-2 text-sm font-medium">
@@ -127,10 +130,12 @@ const CreateAdRequestApp = () => {
             </div>
           </div>
           <div className="flex-1 mx-4 h-1 bg-gray-200">
-            <div className={`h-full ${adRequestData.status === 'SUBMITTED' || adRequestData.status === 'COMPLETED' || adRequestData.status === 'REOPENED' ? 'bg-green-500' : 'bg-gray-200'}`} style={{ width: adRequestData.status === 'SUBMITTED' || adRequestData.status === 'COMPLETED' || adRequestData.status === 'REOPENED' ? '100%' : '0%' }}></div>
+            <div className={`h-full ${adRequestData.status === 'FILLED' ? 'bg-green-500' : 'bg-gray-200'}`} style={{ width: adRequestData.status === 'FILLED' ? '100%' : '0%' }}></div>
           </div>
+          
+          {/* Step 3: Review & Submit */}
           <div className="flex items-center">
-            <div className={`rounded-full h-8 w-8 flex items-center justify-center ${adRequestData.status === 'SUBMITTED' || adRequestData.status === 'COMPLETED' || adRequestData.status === 'REOPENED' ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-600'}`}>
+            <div className={`rounded-full h-8 w-8 flex items-center justify-center ${adRequestData.status === 'FILLED' ? 'bg-primary text-white' : 'bg-gray-300 text-gray-600'}`}>
               3
             </div>
             <div className="ml-2 text-sm font-medium">
