@@ -478,9 +478,14 @@ def adrequest_version_create(request):
 
 
 @login_required
-def create_adrequest_page(request):
+def create_adrequest_page(request, adrequest_id=None):
     """
     Render the create ad request page with React components.
+    If adrequest_id is provided, it will be passed to the template for editing.
     """
     template = "ads/create_adrequest_page.html"
-    return TemplateResponse(request, template, {"active_tab": "create_adrequest"})
+    context = {
+        "active_tab": "create_adrequest",
+        "adrequest_id": adrequest_id
+    }
+    return TemplateResponse(request, template, context)

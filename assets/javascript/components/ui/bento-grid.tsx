@@ -19,6 +19,8 @@ export interface BentoItem {
     cta?: string;
     colSpan?: number;
     hasPersistentHover?: boolean;
+    id?: number | string;
+    onClick?: () => void;
 }
 
 interface BentoGridProps {
@@ -74,6 +76,7 @@ function BentoGrid({ items = itemsSample }: BentoGridProps) {
                 return (
                     <div
                         key={index}
+                        onClick={item.onClick}
                         className={cn(
                             "group relative p-4 rounded-xl overflow-hidden transition-all duration-300",
                             "border border-gray-100/80 dark:border-white/10 bg-white dark:bg-black",
@@ -86,7 +89,8 @@ function BentoGrid({ items = itemsSample }: BentoGridProps) {
                                     item.hasPersistentHover,
                                 "dark:shadow-[0_2px_12px_rgba(255,255,255,0.03)]":
                                     item.hasPersistentHover
-                            }
+                            },
+                            item.onClick && "cursor-pointer"
                         )}
                     >
                         <div

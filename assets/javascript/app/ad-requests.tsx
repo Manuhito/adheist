@@ -66,6 +66,11 @@ function adRequestToBentoItem(adRequest: AdRequest): BentoItem {
         tags: adRequest.tags,
         cta: "View details",
         hasPersistentHover: false,
+        id: adRequest.ad_request_id,
+        onClick: () => {
+            // Navigate to the create_adrequest_page with the ID as a URL parameter
+            window.location.href = `/ads/create/${adRequest.ad_request_id}/`;
+        }
     };
 }
 
