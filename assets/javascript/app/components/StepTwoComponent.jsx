@@ -489,20 +489,6 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
                 initialImage={initialData.logo_override}
               />
             </div>
-            {/* Key Benefits Input Section */}
-            <div className="bg-card rounded-xl overflow-hidden p-6">
-              <h3 className="text-sm font-medium mb-2">Key Benefits</h3>
-              <p className="text-xs text-muted-foreground mb-3">Add the key benefits of your product or service</p>
-              <div>
-                <Input
-                  id={keyBenefitsId}
-                  type="text"
-                  placeholder="E.g. Fast delivery, 24/7 support..."
-                  value={keyBenefits}
-                  onChange={handleKeyBenefitsChange}
-                />
-              </div>
-            </div>
           </div>
           {/* Form Fields Container - Takes 6/12 columns on large screens */}
           <div className="lg:col-span-6 space-y-6">
@@ -526,7 +512,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
                 />
               </div>
               {/* Brand Color Input */}
-              <div className="w-full">
+              <div className="w-full mb-6">
                 <h3 className="text-sm font-medium mb-2">Brand Color</h3>
                 <p className="text-xs text-muted-foreground mb-3">Enter a hex color that represents your brand identity</p>
                 <div>
@@ -555,6 +541,20 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
                       <span className="text-xs">{selectedColor}</span>
                     </div>
                   )}
+                </div>
+              </div>
+              {/* Key Benefits Input Section */}
+              <div className="w-full">
+                <h3 className="text-sm font-medium mb-2">Key Benefits</h3>
+                <p className="text-xs text-muted-foreground mb-3">Add the key benefits of your product or service</p>
+                <div>
+                  <Input
+                    id={keyBenefitsId}
+                    type="text"
+                    placeholder="E.g. Fast delivery, 24/7 support..."
+                    value={keyBenefits}
+                    onChange={handleKeyBenefitsChange}
+                  />
                 </div>
               </div>
             </div>
