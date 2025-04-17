@@ -11,6 +11,7 @@ export function ImageUpload({
   customTitle = "Image Upload",
   customDescription = "Supported formats: JPG, PNG, GIF",
   customPlaceholderText = "Click to select",
+  initialImage = null,
   ...props 
 }) {
   const {
@@ -22,6 +23,7 @@ export function ImageUpload({
     handleRemove,
   } = useImageUpload({
     onUpload: onUpload,
+    initialImage: initialImage,
   });
 
   const [isDragging, setIsDragging] = useState(false);

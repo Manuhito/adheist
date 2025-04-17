@@ -134,6 +134,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
               <CompanyLogoUpload 
                 onUpload={handleLogoUpload} 
                 className="h-full"
+                initialImage={initialData.logo_override}
               />
             </div>
             {/* Key Benefits Input Section */}
