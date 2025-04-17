@@ -22,7 +22,7 @@ const Tag = ({ text, onRemove }: Tag) => {
         ease: "circInOut",
         type: "spring",
       }}
-      className="bg-card text-foreground border border-primary/20 px-2 py-1 rounded-xl text-sm flex items-center gap-1 shadow-sm"
+      className="bg-card text-foreground border px-2 py-1 rounded-xl text-sm flex items-center gap-1 shadow-sm"
     >
       {text}
       <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
@@ -83,7 +83,7 @@ const InputWithTags = ({
           placeholder={placeholder || "Type something and press Enter..."}
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.99 }}
-          className="w-full px-4 py-2 bg-card text-foreground border border-primary/20 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed outline-none ring-0"
+          className="w-full px-4 py-2 bg-card text-foreground border rounded-xl disabled:opacity-50 disabled:cursor-not-allowed outline-none ring-0"
           disabled={limit ? tags.length >= limit : false}
         />
       </motion.div>

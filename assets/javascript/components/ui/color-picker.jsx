@@ -47,7 +47,9 @@ export const ColorPicker = ({
   const [alpha, setAlpha] = useState(
     selectedColor.alpha() * 100 || defaultColor.alpha() * 100
   );
-  const [mode, setMode] = useState('hex');
+  // Forzar modo hex únicamente
+  const [mode] = useState('hex');
+  const setMode = () => {}; // Función vacía ya que no permitimos cambiar el modo
 
   // Update color when controlled value changes
   useEffect(() => {
@@ -268,21 +270,14 @@ export const ColorPickerOutput = ({
   className,
   ...props
 }) => {
-  const { mode, setMode } = useColorPicker();
-
+  // Mostrar HEX de forma estática (no dropdown)
   return (
-    <Select value={mode} onValueChange={setMode}>
-      <SelectTrigger className="h-8 w-[4.5rem] shrink-0 text-xs" {...props}>
-        <SelectValue placeholder="Mode" />
-      </SelectTrigger>
-      <SelectContent>
-        {formats.map((format) => (
-          <SelectItem key={format} value={format} className="text-xs">
-            {format.toUpperCase()}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <div 
+      className={cn("h-8 w-[4.5rem] shrink-0 text-xs flex items-center justify-center bg-card border rounded-md px-2", className)} 
+      {...props}
+    >
+      <span className="font-medium">HEX</span>
+    </div>
   );
 };
 
@@ -293,7 +288,7 @@ const PercentageInput = ({ className, ...props }) => {
         type="text"
         {...props}
         className={cn(
-          'h-8 w-[3.25rem] rounded-l-none bg-slate-100 px-2 text-xs shadow-none',
+          'h-8 w-[3.25rem] rounded-l-none bg-card text-foreground px-2 text-xs shadow-none',
           className
         )}
       />
@@ -352,7 +347,7 @@ export const ColorPickerFormat = ({
           type="text"
           value={hex.replace('#', '')}
           onChange={handleChange}
-          className="h-8 rounded-r-none bg-slate-100 px-2 pl-6 text-xs shadow-none"
+          className="h-8 rounded-r-none bg-card text-foreground px-2 pl-6 text-xs shadow-none"
         />
         <PercentageInput value={Math.round(alpha)} readOnly />
       </div>
@@ -397,7 +392,7 @@ export const ColorPickerFormat = ({
       <div className={cn('w-full shadow-sm', className)} {...props}>
         <Input
           type="text"
-          className="h-8 w-full bg-slate-100 px-2 text-xs shadow-none"
+          className="h-8 w-full bg-card text-foreground px-2 text-xs shadow-none"
           value={`rgba(${rgb.join(', ')}, ${alpha / 100})`}
           readOnly
         />

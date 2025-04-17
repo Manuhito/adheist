@@ -21,7 +21,7 @@ export function CompanyLogoUpload({ onUpload, className, ...props }) {
           customTitle="Company Logo"
           customDescription="Upload a high-quality logo (PNG or SVG preferred)"
           customPlaceholderText="Add your company logo"
-          className="w-full border-primary/20"
+          className="w-full border"
           {...props}
         />
       </div>

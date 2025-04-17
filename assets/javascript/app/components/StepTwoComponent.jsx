@@ -127,12 +127,6 @@ const StepTwoComponent = ({ onComplete, initialData = {} }) => {
                   </div>
                 </ColorPicker>
               </div>
-              {/* Key Benefits Input Section */}
-              <div className="mt-6">
-                <h3 className="text-sm font-medium mb-2">Key Benefits</h3>
-                <p className="text-xs text-muted-foreground mb-3">Add up to 5 key benefits of your product or service</p>
-                <InputWithTags limit={5} placeholder="E.g. Fast delivery, 24/7 support..." />
-              </div>
             </div>
           </div>
         </div>
