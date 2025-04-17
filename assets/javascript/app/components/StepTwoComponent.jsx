@@ -2,6 +2,9 @@ import React, { useId, useState } from 'react';
 import { NextButton } from '../../components/ui/next-button.jsx';
 import { BackButton } from '../../components/ui/back-button.jsx';
 import { CompanyLogoUpload } from './CompanyLogoUpload.jsx';
+import { ProductImageUpload } from './ProductImageUpload.jsx';
+import { AppScreenshotUpload } from './AppScreenshotUpload.jsx';
+import { ProductTypeSelect } from './ProductTypeSelect.jsx';
 import { Input } from '../../components/ui/input.jsx';
 import {
   ColorPicker,
@@ -22,6 +25,7 @@ const StepTwoComponent = ({ onComplete, initialData = {} }) => {
   const websiteUrlId = useId();
   const [websiteUrl, setWebsiteUrl] = useState(initialData.websiteUrl || '');
   const [selectedColor, setSelectedColor] = useState(initialData.brandColor || '#3B82F6');
+  const [productType, setProductType] = useState(initialData.productType || '');
   
   // Placeholder functions for navigation buttons
   const handleBack = () => {
@@ -31,19 +35,48 @@ const StepTwoComponent = ({ onComplete, initialData = {} }) => {
 
   const handleNext = () => {
     console.log('Next button clicked');
-    // Pass the image, website URL, and selected color to the next step
+    
+    // Validate that a product type has been selected
+    if (!productType) {
+      console.log('No product type selected');
+      return;
+    }
+    
+    // Pass the data to the next step
     if (onComplete) {
       onComplete({ 
         websiteUrl, 
-        brandColor: selectedColor 
+        brandColor: selectedColor,
+        productType,
+        // Add product images or app screenshots based on product type
+        productImages: productType === 'physical' ? {} : undefined, // Will be populated with actual image data
+        appScreenshots: productType === 'software' ? {} : undefined // Will be populated with actual screenshot data
       });
     }
   };
 
-  // Placeholder function for image upload
-  const handleImageUpload = (url) => {
-    console.log('Image uploaded:', url);
+  // Handle logo image upload
+  const handleLogoUpload = (url) => {
+    console.log('Logo uploaded:', url);
     // Image processing logic will be added later
+  };
+
+  // Handle product image upload
+  const handleProductImageUpload = (imageData) => {
+    console.log('Product image uploaded:', imageData);
+    // Store both primary and secondary product images
+  };
+
+  // Handle app screenshot upload
+  const handleAppScreenshotUpload = (imageData) => {
+    console.log('App screenshot uploaded:', imageData);
+    // Store both primary and secondary screenshots
+  };
+  
+  // Handle product type selection
+  const handleProductTypeChange = (type) => {
+    console.log('Product type selected:', type);
+    setProductType(type);
   };
 
   // Handle website URL input change
@@ -72,7 +105,7 @@ const StepTwoComponent = ({ onComplete, initialData = {} }) => {
           <div className="lg:col-span-6 flex flex-col gap-6">
             <div className="bg-card rounded-xl overflow-hidden">
               <CompanyLogoUpload 
-                onUpload={handleImageUpload} 
+                onUpload={handleLogoUpload} 
                 className="h-full"
               />
             </div>
@@ -131,6 +164,36 @@ const StepTwoComponent = ({ onComplete, initialData = {} }) => {
           </div>
         </div>
       </div>
+      
+      {/* Navigation buttons at the bottom */}
+      {/* Product Type Selection */}
+      <div className="container mx-auto px-4 mb-8">
+        <ProductTypeSelect 
+          value={productType}
+          onChange={handleProductTypeChange}
+        />
+      </div>
+      
+      {/* Conditional rendering based on product type */}
+      {productType === 'physical' && (
+        <div className="container mx-auto px-4 mb-8">
+          <div className="bg-card rounded-xl overflow-hidden">
+            <ProductImageUpload 
+              onUpload={handleProductImageUpload}
+            />
+          </div>
+        </div>
+      )}
+      
+      {productType === 'software' && (
+        <div className="container mx-auto px-4">
+          <div className="bg-card rounded-xl overflow-hidden">
+            <AppScreenshotUpload 
+              onUpload={handleAppScreenshotUpload}
+            />
+          </div>
+        </div>
+      )}
       
       {/* Navigation buttons at the bottom */}
       <div className="flex justify-center gap-4 pb-8">
