@@ -323,7 +323,15 @@ def adrequest_get(request, pk):
         'status': ad_request.status,
         'created_at': ad_request.created_at.isoformat(),
         'updated_at': ad_request.updated_at.isoformat(),
-        'asset_overrides': ad_request.asset_overrides
+        'asset_overrides': ad_request.asset_overrides,
+        'logo_override': ad_request.logo_override,
+        'product_image_1_override': ad_request.product_image_1_override,
+        'product_image_2_override': ad_request.product_image_2_override,
+        'app_image_1_override': ad_request.app_image_1_override,
+        'app_image_2_override': ad_request.app_image_2_override,
+        'marketing_image_1_override': ad_request.marketing_image_1_override,
+        'marketing_image_2_override': ad_request.marketing_image_2_override,
+        'marketing_image_3_override': ad_request.marketing_image_3_override
     })
 
 
