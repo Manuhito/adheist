@@ -401,17 +401,17 @@ WAGTAILADMIN_BASE_URL = "http://localhost:8000"
 # replace any values below with specifics for your project
 PROJECT_METADATA = {
     "NAME": gettext_lazy("AdHeist"),
-    "URL": "http://localhost:8000",
+    "URL": "https://adheist.ai",
     "DESCRIPTION": gettext_lazy("AdHeist description"),
-    "IMAGE": "https://upload.wikimedia.org/wikipedia/commons/2/20/PEO-pegasus_black.svg",
-    "KEYWORDS": "SaaS, django",
-    "CONTACT_EMAIL": "manuhito@gmail.com",
+    "IMAGE": "{{STATIC_URL}}images/web/logo-adheist.png",
+    "KEYWORDS": "AI, Ads, SaaS, AdHeist",
+    "CONTACT_EMAIL": "hey@adheist.ai",
 }
 
 # set this to True in production to have URLs generated with https instead of http
 USE_HTTPS_IN_ABSOLUTE_URLS = env.bool("USE_HTTPS_IN_ABSOLUTE_URLS", default=False)
 
-ADMINS = [("Manuel", "manuhito@gmail.com")]
+ADMINS = [("AdHeist", "info@adheist.ai")]
 
 # Add your google analytics ID to the environment to connect to Google Analytics
 GOOGLE_ANALYTICS_ID = env("GOOGLE_ANALYTICS_ID", default="")
