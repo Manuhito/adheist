@@ -41,7 +41,9 @@ class TagListAdmin(admin.ModelAdmin):
 
 @admin.register(AdRequest)
 class AdRequestAdmin(admin.ModelAdmin):
-    list_display = ["user", "ad_library", "status", "canvas_size", "created_at", "updated_at"]
+    def get_version_id(self, obj):
+        return f"Ad Request #{obj.id}"
+    list_display = ["get_version_id", "user", "ad_library", "status", "created_at", "updated_at"]
     search_fields = ["user__email", "ad_library__company_name"]
     list_filter = ["status", "canvas_size"]
 

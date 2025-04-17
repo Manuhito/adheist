@@ -334,24 +334,39 @@ def adrequest_get(request, pk):
     ad_request = result
     
     # Return the AdRequest with minimal processing
+    def safe_get(obj, attr, default=None):
+        return getattr(obj, attr, default) if obj is not None else default
+    
+    def safe_image_url(image_field):
+        """Convert an ImageFieldFile to its URL string or return None if not available."""
+        if image_field and hasattr(image_field, 'url'):
+            return image_field.url
+        return None
+
+    ad_library = safe_get(ad_request, 'ad_library')
+    user = safe_get(ad_request, 'user')
+
+    created_at = safe_get(ad_request, 'created_at')
+    updated_at = safe_get(ad_request, 'updated_at')
+
     return JsonResponse({
-        'id': ad_request.id,
-        'user_id': ad_request.user.id,
-        'ad_library_id': ad_request.ad_library.id,
-        'ad_library_name': ad_request.ad_library.company_name,
-        'canvas_size': ad_request.canvas_size,
-        'status': ad_request.status,
-        'created_at': ad_request.created_at.isoformat(),
-        'updated_at': ad_request.updated_at.isoformat(),
-        'asset_overrides': ad_request.asset_overrides,
-        'logo_override': ad_request.logo_override,
-        'product_image_1_override': ad_request.product_image_1_override,
-        'product_image_2_override': ad_request.product_image_2_override,
-        'app_image_1_override': ad_request.app_image_1_override,
-        'app_image_2_override': ad_request.app_image_2_override,
-        'marketing_image_1_override': ad_request.marketing_image_1_override,
-        'marketing_image_2_override': ad_request.marketing_image_2_override,
-        'marketing_image_3_override': ad_request.marketing_image_3_override
+        'id': safe_get(ad_request, 'id'),
+        'user_id': safe_get(user, 'id'),
+        'ad_library_id': safe_get(ad_library, 'id'),
+        'ad_library_name': safe_get(ad_library, 'company_name'),
+        'canvas_size': safe_get(ad_request, 'canvas_size'),
+        'status': safe_get(ad_request, 'status'),
+        'created_at': created_at.isoformat() if created_at else None,
+        'updated_at': updated_at.isoformat() if updated_at else None,
+        'asset_overrides': safe_get(ad_request, 'asset_overrides'),
+        'logo_override': safe_image_url(safe_get(ad_request, 'logo_override')),
+        'product_image_1_override': safe_image_url(safe_get(ad_request, 'product_image_1_override')),
+        'product_image_2_override': safe_image_url(safe_get(ad_request, 'product_image_2_override')),
+        'app_image_1_override': safe_image_url(safe_get(ad_request, 'app_image_1_override')),
+        'app_image_2_override': safe_image_url(safe_get(ad_request, 'app_image_2_override')),
+        'marketing_image_1_override': safe_image_url(safe_get(ad_request, 'marketing_image_1_override')),
+        'marketing_image_2_override': safe_image_url(safe_get(ad_request, 'marketing_image_2_override')),
+        'marketing_image_3_override': safe_image_url(safe_get(ad_request, 'marketing_image_3_override')),
     })
 
 
