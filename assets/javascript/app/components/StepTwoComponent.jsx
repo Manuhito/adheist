@@ -16,7 +16,6 @@ import {
   ColorPickerEyeDropper,
   ColorPickerFormat
 } from '../../components/ui/color-picker.jsx';
-import { InputWithTags } from '@/components/ui/input-with-tags';
 
 /**
  * Step Two Component for the Create Ad Request flow
@@ -24,6 +23,8 @@ import { InputWithTags } from '@/components/ui/input-with-tags';
  */
 const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const websiteUrlId = useId();
+  const keyBenefitsId = useId();
+  
   const [websiteUrl, setWebsiteUrl] = useState(
     // Check for company_website in asset_overrides first
     (initialData.asset_overrides?.company_website) ||
@@ -32,11 +33,22 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     // Finally default to empty string
     ''
   );
+  
+  const [keyBenefits, setKeyBenefits] = useState(
+    // Check for key_benefits in asset_overrides first
+    (initialData.asset_overrides?.key_benefits) ||
+    // Then fallback to keyBenefits if it exists
+    initialData.keyBenefits ||
+    // Finally default to empty string
+    ''
+  );
+  
   const [selectedColor, setSelectedColor] = useState(initialData.brandColor || '#3B82F6');
   const [productType, setProductType] = useState(initialData.productType || '');
 
-  // Debounce timer for website URL updates
+  // Debounce timers
   const websiteUrlUpdateTimer = useRef(null);
+  const keyBenefitsUpdateTimer = useRef(null);
 
   // Solo refrescar datos si es necesario (por ejemplo, al recargar la página directamente)
   // No hacemos la llamada automáticamente para evitar duplicación con handleStepComplete
@@ -54,12 +66,15 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     window.scrollTo(0, 0);
   }, []);
 
-  // Clean up debounce timer when component unmounts
+  // Clean up debounce timers when component unmounts
   useEffect(() => {
     return () => {
       // Clear any pending debounce timers
       if (websiteUrlUpdateTimer.current) {
         clearTimeout(websiteUrlUpdateTimer.current);
+      }
+      if (keyBenefitsUpdateTimer.current) {
+        clearTimeout(keyBenefitsUpdateTimer.current);
       }
     };
   }, []);
@@ -79,6 +94,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     if (onComplete) {
       onComplete({
         websiteUrl,
+        keyBenefits,
         brandColor: selectedColor,
         productType,
         // Add product images or app screenshots based on product type
@@ -217,6 +233,24 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
     console.log('Website URL updated locally:', newValue);
   };
+  
+  // Handle key benefits input change with debouncing
+  const handleKeyBenefitsChange = (e) => {
+    const newValue = e.target.value;
+    setKeyBenefits(newValue);
+
+    // Clear any existing timer
+    if (keyBenefitsUpdateTimer.current) {
+      clearTimeout(keyBenefitsUpdateTimer.current);
+    }
+
+    // Set a new timer to update the database after 2 seconds of inactivity
+    keyBenefitsUpdateTimer.current = setTimeout(() => {
+      updateKeyBenefits(newValue);
+    }, 2000);
+
+    console.log('Key Benefits updated locally:', newValue);
+  };
 
   // Function to update website URL in the database
   const updateWebsiteUrl = async (url) => {
@@ -270,6 +304,56 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       console.error('Error saving website URL:', error);
     }
   };
+  
+  // Function to update key benefits in the database
+  const updateKeyBenefits = async (benefits) => {
+    // Only proceed if we have an ID
+    if (!initialData.id) return;
+
+    try {
+      // Get CSRF token from cookies
+      const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken='))
+        ?.split('=')[1];
+
+      if (!csrfToken) {
+        console.error('CSRF token not found');
+        return;
+      }
+
+      // Create a FormData object for the request
+      const formData = new FormData();
+
+      // Add the key_benefits field directly
+      formData.append('key_benefits', benefits);
+
+      // Make the API call to update the key benefits
+      const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrfToken
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error updating key benefits: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Key benefits updated in database:', data);
+
+      // If we have a refreshData function, call it to update the UI
+      if (refreshData) {
+        // We don't need to refresh data here as it would reset the input field
+        // and potentially disrupt the user's typing
+        // refreshData();
+      }
+    } catch (error) {
+      console.error('Error saving key benefits:', error);
+    }
+  };
 
   // Handle color change
   const handleColorChange = (rgbaArray) => {
@@ -306,8 +390,22 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
             {/* Key Benefits Input Section */}
             <div className="bg-card rounded-xl overflow-hidden p-6">
               <h3 className="text-sm font-medium mb-2">Key Benefits</h3>
-              <p className="text-xs text-muted-foreground mb-3">Add up to 5 key benefits of your product or service</p>
-              <InputWithTags limit={5} placeholder="E.g. Fast delivery, 24/7 support..." />
+              <p className="text-xs text-muted-foreground mb-3">Add the key benefits of your product or service</p>
+              <div className="group relative w-full">
+                <label
+                  htmlFor={keyBenefitsId}
+                  className="origin-start absolute top-1/2 block -translate-y-1/2 cursor-text px-1 text-sm text-muted-foreground/70 transition-all group-focus-within:pointer-events-none group-focus-within:top-0 group-focus-within:cursor-default group-focus-within:text-xs group-focus-within:font-medium group-focus-within:text-foreground has-[+input:not(:placeholder-shown)]:pointer-events-none has-[+input:not(:placeholder-shown)]:top-0 has-[+input:not(:placeholder-shown)]:cursor-default has-[+input:not(:placeholder-shown)]:text-xs has-[+input:not(:placeholder-shown)]:font-medium has-[+input:not(:placeholder-shown)]:text-foreground"
+                >
+                  <span className="inline-flex bg-card px-2">Key Benefits</span>
+                </label>
+                <Input
+                  id={keyBenefitsId}
+                  type="text"
+                  placeholder=""
+                  value={keyBenefits}
+                  onChange={handleKeyBenefitsChange}
+                />
+              </div>
             </div>
           </div>
           {/* Form Fields Container - Takes 6/12 columns on large screens */}
