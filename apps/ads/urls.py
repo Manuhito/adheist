@@ -18,4 +18,5 @@ urlpatterns = [
     path("create/", views.create_adrequest_page, name="create_adrequest_page"),
     path("create/<int:adrequest_id>/", views.create_adrequest_page, name="create_adrequest_page_with_id"),
     path("<int:adrequest_id>/details/", views.adrequest_details_page, name="adrequest_details_page"),
+    path("billing/", views.billing_page, name="billing_page"),
 ]

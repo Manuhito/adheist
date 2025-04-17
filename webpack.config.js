@@ -20,6 +20,7 @@ module.exports = {
     'app-header': './assets/javascript/app-header.js',
     'create-adrequest': './assets/javascript/app/create-adrequest.jsx',
     'ad-requests': './assets/javascript/app/ad-requests.tsx',  // entry point para la página de ad_requests
+    'billing': './assets/javascript/pricing.js',  // entry point for the app billing page
   },
   output: {
     path: path.resolve(__dirname, './static'),

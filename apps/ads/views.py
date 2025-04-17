@@ -575,13 +575,13 @@ def adrequest_details_page(request, adrequest_id):
     """
     # Get the AdRequest and check permissions
     result = _get_user_adrequest(request, adrequest_id)
-    
+        
     # If result is a JsonResponse, it's an error
     if isinstance(result, JsonResponse):
         return result
     
     ad_request = result
-    
+        
     # Render the adlibrary_detail.html template with the ad_request as the object
     template = "ads/adlibrary_detail.html"
     context = {
@@ -589,5 +589,97 @@ def adrequest_details_page(request, adrequest_id):
         "object": ad_request.ad_library if ad_request.ad_library else None,
         "ad_request": ad_request
     }
-    
+        
     return TemplateResponse(request, template, context)
+
+
+@login_required
+def billing_page(request):
+    """
+    Render the billing page with pricing information.
+    """
+    # Pricing data to be passed to the React component
+    pricing_data = {
+        "title": "Pricing Plans",
+        "subtitle": "Choose the perfect plan for your needs",
+        "frequencies": ["monthly", "yearly"],
+        "tiers": [
+            {
+                "name": "Free",
+                "description": "Basic features for individuals",
+                "price": {
+                    "monthly": 0,
+                    "yearly": 0
+                },
+                "features": [
+                    "3 ad requests per month",
+                    "Basic templates",
+                    "Standard support"
+                ],
+                "cta": "Get Started",
+                "highlighted": False,
+                "popular": False
+            },
+            {
+                "name": "Pro",
+                "description": "Advanced features for professionals",
+                "price": {
+                    "monthly": 29,
+                    "yearly": 24
+                },
+                "features": [
+                    "20 ad requests per month",
+                    "Premium templates",
+                    "Priority support",
+                    "Custom branding"
+                ],
+                "cta": "Upgrade to Pro",
+                "highlighted": True,
+                "popular": True
+            },
+            {
+                "name": "Team",
+                "description": "For teams and businesses",
+                "price": {
+                    "monthly": 49,
+                    "yearly": 39
+                },
+                "features": [
+                    "50 ad requests per month",
+                    "All premium templates",
+                    "24/7 support",
+                    "Custom branding",
+                    "Team collaboration"
+                ],
+                "cta": "Upgrade to Team",
+                "highlighted": False,
+                "popular": False
+            },
+            {
+                "name": "Enterprise",
+                "description": "For large organizations",
+                "price": {
+                    "monthly": "Custom",
+                    "yearly": "Custom"
+                },
+                "features": [
+                    "Unlimited ad requests",
+                    "Custom templates",
+                    "Dedicated support",
+                    "API access",
+                    "Advanced analytics"
+                ],
+                "cta": "Contact Sales",
+                "highlighted": False,
+                "popular": False
+            }
+        ]
+    }
+        
+    # Convert pricing data to JSON for the React component
+    pricing_json = json.dumps(pricing_data)
+        
+    return render(request, 'ads/billing.html', {
+        "active_tab": "billing",
+        "pricing_data": pricing_json
+    })
