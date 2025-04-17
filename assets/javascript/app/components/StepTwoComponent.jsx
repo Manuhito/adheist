@@ -28,9 +28,13 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const [selectedColor, setSelectedColor] = useState(initialData.brandColor || '#3B82F6');
   const [productType, setProductType] = useState(initialData.productType || '');
   
-  // Fetch fresh data when component mounts
+  // Solo refrescar datos si es necesario (por ejemplo, al recargar la página directamente)
+  // No hacemos la llamada automáticamente para evitar duplicación con handleStepComplete
   useEffect(() => {
-    if (refreshData && initialData?.id) {
+    // Comprobamos si venimos de una recarga de página o navegación directa
+    const isDirectNavigation = !document.referrer.includes(window.location.host);
+    
+    if (refreshData && initialData?.id && isDirectNavigation) {
       refreshData();
     }
   }, []);
@@ -108,8 +112,15 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     const g = Math.round(rgbaArray[1]);
     const b = Math.round(rgbaArray[2]);
     const hexColor = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-    setSelectedColor(hexColor);
-    console.log('Brand color updated:', hexColor);
+    
+    // Solo actualizar y loguear si el color realmente cambió
+    if (hexColor !== selectedColor) {
+      setSelectedColor(hexColor);
+      // Solo en entorno de desarrollo para evitar logs innecesarios
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Brand color updated:', hexColor);
+      }
+    }
   };
 
   return (

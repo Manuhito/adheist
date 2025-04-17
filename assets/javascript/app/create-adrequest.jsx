@@ -47,7 +47,10 @@ const CreateAdRequestApp = () => {
       }
       
       const freshData = await response.json();
-      console.log('Fetched fresh data:', freshData);
+      // Solo mostrar logs en entorno de desarrollo
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Fetched fresh data:', freshData);
+      }
       setAdRequestData(freshData);
       return freshData;
     } catch (error) {
@@ -120,9 +123,12 @@ const CreateAdRequestApp = () => {
     }
   };
 
-  // Log current status for debugging
+  // Log current status for debugging (solo en desarrollo)
   useEffect(() => {
-    console.log('Current adRequestData:', adRequestData);
+    // Solo mostrar logs en entorno de desarrollo
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Current adRequestData:', adRequestData);
+    }
   }, [adRequestData]);
 
   // Helper function to get CSRF token from cookies
