@@ -195,12 +195,12 @@ AUTH_PASSWORD_VALIDATORS = [
 ACCOUNT_ADAPTER = "apps.users.adapter.EmailAsUsernameAdapter"
 ACCOUNT_AUTHENTICATION_METHOD = "email"
 ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_EMAIL_SUBJECT_PREFIX = ""
+ACCOUNT_EMAIL_SUBJECT_PREFIX = "[AdHeist] "
 ACCOUNT_EMAIL_UNKNOWN_ACCOUNTS = False  # don't send "forgot password" emails to unknown accounts
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = False
+ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = True
 ACCOUNT_SESSION_REMEMBER = True
 ACCOUNT_LOGOUT_ON_GET = True
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
@@ -244,6 +244,21 @@ SOCIALACCOUNT_PROVIDERS = {
         },
     },
 }
+
+# Email setup
+
+# default email used by your server
+SERVER_EMAIL = env("SERVER_EMAIL", default="noreply@localhost:8000")
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="hey@adheist.ai")
+
+# The default value will print emails to the console, but you can change that here
+# and in your environment.
+EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
+ANYMAIL = {
+    "RESEND_API_KEY": env("RESEND_API_KEY", default=None),
+    "RESEND_API_URL": env("RESEND_API_URL", default="https://api.resend.com"),
+}
+
 
 # For turnstile captchas
 TURNSTILE_KEY = env("TURNSTILE_KEY", default=None)
@@ -319,22 +334,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 # Removes deprecation warning for future compatibility.
 # see https://adamj.eu/tech/2023/12/07/django-fix-urlfield-assume-scheme-warnings/ for details.
 FORMS_URLFIELD_ASSUME_HTTPS = True
-
-# Email setup
-
-# default email used by your server
-SERVER_EMAIL = env("SERVER_EMAIL", default="noreply@localhost:8000")
-DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="hey@adheist.ai")
-
-# The default value will print emails to the console, but you can change that here
-# and in your environment.
-EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
-ANYMAIL = {
-    "RESEND_API_KEY": env("RESEND_API_KEY", default=None),
-    "RESEND_API_URL": env("RESEND_API_URL", default="https://api.resend.com"),
-}
-
-EMAIL_SUBJECT_PREFIX = "[AdHeist] "
 
 # Django sites
 
