@@ -35,6 +35,11 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     }
   }, []);
   
+  // Asegurar que el scroll esté al inicio de la página cuando el componente se monte
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+  
   // Placeholder functions for navigation buttons
   const handleBack = () => {
     console.log('Back button clicked');
@@ -44,11 +49,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const handleNext = () => {
     console.log('Next button clicked');
     
-    // Validate that a product type has been selected
-    if (!productType) {
-      console.log('No product type selected');
-      return;
-    }
+    // Ya no validamos que se haya seleccionado un tipo de producto, ya que no es obligatorio
     
     // Pass the data to the next step
     if (onComplete) {

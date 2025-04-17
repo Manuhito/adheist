@@ -53,11 +53,7 @@ export function ProductTypeSelect({ value, onChange, className }) {
         ))}
       </div>
       
-      {!value && (
-        <p className="text-sm text-amber-500 mt-4 text-center">
-          Please select a product type to continue
-        </p>
-      )}
+      {/* Mensaje de validación eliminado ya que el campo no es obligatorio */}
     </div>
   );
 }
