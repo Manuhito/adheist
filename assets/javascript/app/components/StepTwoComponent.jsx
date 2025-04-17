@@ -7,15 +7,6 @@ import { AppScreenshotUpload } from './AppScreenshotUpload.jsx';
 import { ProductTypeSelect } from './ProductTypeSelect.jsx';
 import { MarketingMaterialUpload } from './MarketingMaterialUpload.jsx';
 import { Input } from '../../components/ui/input.jsx';
-import {
-  ColorPicker,
-  ColorPickerSelection,
-  ColorPickerHue,
-  ColorPickerAlpha,
-  ColorPickerOutput,
-  ColorPickerEyeDropper,
-  ColorPickerFormat
-} from '../../components/ui/color-picker.jsx';
 
 /**
  * Step Two Component for the Create Ad Request flow
@@ -24,6 +15,7 @@ import {
 const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const websiteUrlId = useId();
   const keyBenefitsId = useId();
+  const brandColorId = useId();
   
   const [websiteUrl, setWebsiteUrl] = useState(
     // Check for company_website in asset_overrides first
@@ -43,12 +35,21 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     ''
   );
   
-  const [selectedColor, setSelectedColor] = useState(initialData.brandColor || '#3B82F6');
+  const [selectedColor, setSelectedColor] = useState(
+    // Check for main_hex_color in asset_overrides first
+    (initialData.asset_overrides?.main_hex_color) ||
+    // Then fallback to brandColor if it exists
+    initialData.brandColor ||
+    // Finally default to a blue color
+    '#3B82F6'
+  );
+  
   const [productType, setProductType] = useState(initialData.productType || '');
 
   // Debounce timers
   const websiteUrlUpdateTimer = useRef(null);
   const keyBenefitsUpdateTimer = useRef(null);
+  const colorUpdateTimer = useRef(null);
 
   // Solo refrescar datos si es necesario (por ejemplo, al recargar la página directamente)
   // No hacemos la llamada automáticamente para evitar duplicación con handleStepComplete
@@ -75,6 +76,9 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       }
       if (keyBenefitsUpdateTimer.current) {
         clearTimeout(keyBenefitsUpdateTimer.current);
+      }
+      if (colorUpdateTimer.current) {
+        clearTimeout(colorUpdateTimer.current);
       }
     };
   }, []);
@@ -355,21 +359,119 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     }
   };
 
-  // Handle color change
-  const handleColorChange = (rgbaArray) => {
-    // Convert RGBA array to hex string
-    const r = Math.round(rgbaArray[0]);
-    const g = Math.round(rgbaArray[1]);
-    const b = Math.round(rgbaArray[2]);
-    const hexColor = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-
-    // Solo actualizar y loguear si el color realmente cambió
-    if (hexColor !== selectedColor) {
-      setSelectedColor(hexColor);
-      // Solo en entorno de desarrollo para evitar logs innecesarios
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Brand color updated:', hexColor);
+  // Function to determine if a color is light or dark
+  const isLightColor = (hexColor) => {
+    // Default to dark if invalid color
+    if (!hexColor || hexColor === '#') return false;
+    
+    // Remove the # if present
+    const hex = hexColor.replace('#', '');
+    
+    // Convert hex to RGB
+    let r, g, b;
+    if (hex.length === 3) {
+      // For 3-digit hex codes like #FFF
+      r = parseInt(hex.charAt(0) + hex.charAt(0), 16);
+      g = parseInt(hex.charAt(1) + hex.charAt(1), 16);
+      b = parseInt(hex.charAt(2) + hex.charAt(2), 16);
+    } else if (hex.length === 6) {
+      // For 6-digit hex codes like #FFFFFF
+      r = parseInt(hex.substring(0, 2), 16);
+      g = parseInt(hex.substring(2, 4), 16);
+      b = parseInt(hex.substring(4, 6), 16);
+    } else {
+      // Invalid hex, default to dark
+      return false;
+    }
+    
+    // Calculate perceived brightness using the formula
+    // (0.299*R + 0.587*G + 0.114*B)
+    const brightness = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    
+    // If brightness is greater than 0.5, color is considered light
+    return brightness > 0.5;
+  };
+  
+  // State for color validation
+  const [colorError, setColorError] = useState(false);
+  
+  // Handle color change with debouncing
+  const handleColorChange = (e) => {
+    let newValue = e.target.value;
+    
+    // Allow editing without the # prefix in the input
+    if (newValue) {
+      // Add the # for internal state
+      newValue = newValue.startsWith('#') ? newValue : `#${newValue}`;
+    }
+    
+    // Always update the state to allow editing
+    setSelectedColor(newValue);
+    
+    // Basic validation for hex color format
+    const hexColorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+    const isValidHex = hexColorRegex.test(newValue) || newValue === '#' || newValue === '';
+    
+    // Update error state
+    setColorError(!isValidHex);
+    
+    // Clear any existing timer
+    if (colorUpdateTimer.current) {
+      clearTimeout(colorUpdateTimer.current);
+    }
+    
+    // Only update if we have a valid hex color or empty string
+    if (isValidHex && newValue !== '#') {
+      // Set a new timer to update the database after 2 seconds of inactivity
+      colorUpdateTimer.current = setTimeout(() => {
+        updateBrandColor(newValue);
+      }, 2000);
+      
+      console.log('Brand color updated locally:', newValue);
+    }
+  };
+  
+  // Function to update brand color in the database
+  const updateBrandColor = async (color) => {
+    // Only proceed if we have an ID
+    if (!initialData.id) return;
+    
+    try {
+      // Get CSRF token from cookies
+      const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken='))
+        ?.split('=')[1];
+        
+      if (!csrfToken) {
+        console.error('CSRF token not found');
+        return;
       }
+      
+      // Create a FormData object for the request
+      const formData = new FormData();
+      
+      // Add the main_hex_color field directly
+      formData.append('main_hex_color', color);
+      
+      // Make the API call to update the color
+      const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrfToken
+        },
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error updating brand color: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log('Brand color updated in database:', data);
+      
+    } catch (error) {
+      console.error('Error saving brand color:', error);
     }
   };
 
@@ -391,17 +493,11 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
             <div className="bg-card rounded-xl overflow-hidden p-6">
               <h3 className="text-sm font-medium mb-2">Key Benefits</h3>
               <p className="text-xs text-muted-foreground mb-3">Add the key benefits of your product or service</p>
-              <div className="group relative w-full">
-                <label
-                  htmlFor={keyBenefitsId}
-                  className="origin-start absolute top-1/2 block -translate-y-1/2 cursor-text px-1 text-sm text-muted-foreground/70 transition-all group-focus-within:pointer-events-none group-focus-within:top-0 group-focus-within:cursor-default group-focus-within:text-xs group-focus-within:font-medium group-focus-within:text-foreground has-[+input:not(:placeholder-shown)]:pointer-events-none has-[+input:not(:placeholder-shown)]:top-0 has-[+input:not(:placeholder-shown)]:cursor-default has-[+input:not(:placeholder-shown)]:text-xs has-[+input:not(:placeholder-shown)]:font-medium has-[+input:not(:placeholder-shown)]:text-foreground"
-                >
-                  <span className="inline-flex bg-card px-2">Key Benefits</span>
-                </label>
+              <div>
                 <Input
                   id={keyBenefitsId}
                   type="text"
-                  placeholder=""
+                  placeholder="E.g. Fast delivery, 24/7 support..."
                   value={keyBenefits}
                   onChange={handleKeyBenefitsChange}
                 />
@@ -414,43 +510,52 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
               {/* Section Title */}
               <h3 className="text-lg font-medium mb-4">Campaign Details</h3>
               {/* Website URL input field */}
-              <div className="group relative w-full mb-6">
+              <div className="mb-6">
                 <label
                   htmlFor={websiteUrlId}
-                  className="origin-start absolute top-1/2 block -translate-y-1/2 cursor-text px-1 text-sm text-muted-foreground/70 transition-all group-focus-within:pointer-events-none group-focus-within:top-0 group-focus-within:cursor-default group-focus-within:text-xs group-focus-within:font-medium group-focus-within:text-foreground has-[+input:not(:placeholder-shown)]:pointer-events-none has-[+input:not(:placeholder-shown)]:top-0 has-[+input:not(:placeholder-shown)]:cursor-default has-[+input:not(:placeholder-shown)]:text-xs has-[+input:not(:placeholder-shown)]:font-medium has-[+input:not(:placeholder-shown)]:text-foreground"
+                  className="block text-sm font-medium mb-2"
                 >
-                  <span className="inline-flex bg-card px-2">Website URL</span>
+                  Website URL
                 </label>
                 <Input
                   id={websiteUrlId}
                   type="url"
-                  placeholder=""
+                  placeholder="Enter your website URL"
                   value={websiteUrl}
                   onChange={handleWebsiteUrlChange}
                 />
               </div>
-              {/* Color Picker */}
+              {/* Brand Color Input */}
               <div className="w-full">
                 <h3 className="text-sm font-medium mb-2">Brand Color</h3>
-                <p className="text-xs text-muted-foreground mb-3">Choose a color that represents your brand identity</p>
-                <ColorPicker
-                  className="w-full rounded-md border bg-card p-4 shadow-sm"
-                  defaultValue={selectedColor}
-                  onChange={handleColorChange}
-                >
-                  <ColorPickerSelection />
-                  <div className="flex items-center gap-4 mt-4">
-                    <ColorPickerEyeDropper />
-                    <div className="w-full grid gap-1">
-                      <ColorPickerHue />
-                      <ColorPickerAlpha />
+                <p className="text-xs text-muted-foreground mb-3">Enter a hex color that represents your brand identity</p>
+                <div>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                      <span className="text-gray-500">#</span>
                     </div>
+                    <Input
+                      id={brandColorId}
+                      type="text"
+                      placeholder="Enter hex color (e.g. FF5500)"
+                      value={selectedColor.replace('#', '')}
+                      onChange={handleColorChange}
+                      className={`pl-6 ${colorError ? 'border-red-500' : ''}`}
+                    />
                   </div>
-                  <div className="flex items-center gap-2 mt-4">
-                    <ColorPickerOutput />
-                    <ColorPickerFormat />
-                  </div>
-                </ColorPicker>
+                  {colorError && (
+                    <p className="text-xs text-red-500 mt-1">Please enter a valid hex color code (e.g. FF5500)</p>
+                  )}
+                  {selectedColor && !colorError && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <div 
+                        className="h-6 w-6 rounded-md border" 
+                        style={{ backgroundColor: selectedColor }}
+                      />
+                      <span className="text-xs">{selectedColor}</span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
