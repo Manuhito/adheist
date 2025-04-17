@@ -4,7 +4,7 @@ from apps.subscriptions.metadata import ACTIVE_PRODUCTS_BY_ID
 def get_ad_request_limit(user):
     """Get the AdRequest limit for a user based on their subscription"""
     # Default limit for free users
-    default_limit = 1
+    default_limit = 5
     
     if not user.has_active_subscription():
         return default_limit

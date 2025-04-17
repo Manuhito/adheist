@@ -16,15 +16,24 @@ from .models import (
     AdRequest,
     AdRequestAssets,
     AdRequestVersion,
+    AdRequestUsage,
 )
 
 
 @admin.register(AdLibrary)
 class AdLibraryAdmin(admin.ModelAdmin):
-    list_display = ["company_name", "created_at", "updated_at"]
+    list_display = ["company_name", "is_fav", "get_industries", "get_tags", "created_at", "updated_at"]
     search_fields = ["company_name"]
     list_filter = ["industries", "tags"]
     filter_horizontal = ["industries", "tags"]
+    
+    def get_industries(self, obj):
+        return ", ".join([i.name for i in obj.industries.all()])
+    get_industries.short_description = "Industries"
+    
+    def get_tags(self, obj):
+        return ", ".join([t.name for t in obj.tags.all()])
+    get_tags.short_description = "Tags"
 
 
 @admin.register(IndustryList)
@@ -201,15 +210,15 @@ class AdRequestVersionAdmin(admin.ModelAdmin):
         class Meta:
             model = AdRequestVersion
             fields = '__all__'
-        
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            # Make generated_image required in the form
-            if 'generated_image' in self.fields:
-                self.fields['generated_image'].required = True
-    
-    # Use the custom form
-    form = AdRequestVersionForm
+
+
+@admin.register(AdRequestUsage)
+class AdRequestUsageAdmin(admin.ModelAdmin):
+    list_display = ["user", "usage_count", "is_free_tier", "billing_period_start", "billing_period_end", "created_at"]
+    search_fields = ["user__email"]
+    list_filter = ["is_free_tier"]
+    # readonly_fields = ["user", "usage_count", "billing_period_start", "billing_period_end", "is_free_tier"]
+    readonly_fields = ["user", "billing_period_start", "billing_period_end", "is_free_tier"]
     
     def assign_to_me(self, request, queryset):
         """Admin action to assign selected AdRequestVersion objects to the logged-in user"""
