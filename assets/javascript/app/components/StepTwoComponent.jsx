@@ -1,4 +1,4 @@
-import React, { useId, useState, useEffect } from 'react';
+import React, { useId, useState, useEffect, useRef } from 'react';
 import { NextButton } from '../../components/ui/next-button.jsx';
 import { BackButton } from '../../components/ui/back-button.jsx';
 import { CompanyLogoUpload } from './CompanyLogoUpload.jsx';
@@ -24,9 +24,19 @@ import { InputWithTags } from '@/components/ui/input-with-tags';
  */
 const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const websiteUrlId = useId();
-  const [websiteUrl, setWebsiteUrl] = useState(initialData.websiteUrl || '');
+  const [websiteUrl, setWebsiteUrl] = useState(
+    // Check for company_website in asset_overrides first
+    (initialData.asset_overrides?.company_website) || 
+    // Then fallback to websiteUrl if it exists
+    initialData.websiteUrl || 
+    // Finally default to empty string
+    ''
+  );
   const [selectedColor, setSelectedColor] = useState(initialData.brandColor || '#3B82F6');
   const [productType, setProductType] = useState(initialData.productType || '');
+  
+  // Debounce timer for website URL updates
+  const websiteUrlUpdateTimer = useRef(null);
   
   // Solo refrescar datos si es necesario (por ejemplo, al recargar la página directamente)
   // No hacemos la llamada automáticamente para evitar duplicación con handleStepComplete
@@ -42,6 +52,16 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   // Asegurar que el scroll esté al inicio de la página cuando el componente se monte
   useEffect(() => {
     window.scrollTo(0, 0);
+  }, []);
+  
+  // Clean up debounce timer when component unmounts
+  useEffect(() => {
+    return () => {
+      // Clear any pending debounce timers
+      if (websiteUrlUpdateTimer.current) {
+        clearTimeout(websiteUrlUpdateTimer.current);
+      }
+    };
   }, []);
   
   // Placeholder functions for navigation buttons
@@ -70,9 +90,56 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   };
 
   // Handle logo image upload
-  const handleLogoUpload = (url) => {
+  const handleLogoUpload = async (url) => {
     console.log('Logo uploaded:', url);
-    // Image processing logic will be added later
+    
+    // Only proceed if we have an ID and URL
+    if (!initialData.id || !url) return;
+    
+    try {
+      // Get CSRF token from cookies
+      const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken='))
+        ?.split('=')[1];
+      
+      if (!csrfToken) {
+        console.error('CSRF token not found');
+        return;
+      }
+      
+      // Create a FormData object for the request
+      const formData = new FormData();
+      
+      // Add the logo field directly
+      // The Django view expects fields directly in request.POST
+      formData.append('logo', url);
+      
+      // Make the API call to update the logo
+      const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrfToken
+          // Don't set Content-Type header for FormData
+          // The browser will set it automatically with the correct boundary
+        },
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error updating logo: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log('Logo updated successfully:', data);
+      
+      // If we have a refreshData function, call it to update the UI
+      if (refreshData) {
+        refreshData();
+      }
+    } catch (error) {
+      console.error('Error saving logo:', error);
+    }
   };
 
   // Handle product image upload
@@ -99,10 +166,77 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     // Store marketing materials images
   };
 
-  // Handle website URL input change
+  // This ref is now defined at the top of the component
+  
+  // Handle website URL input change with debouncing
   const handleWebsiteUrlChange = (e) => {
-    setWebsiteUrl(e.target.value);
-    console.log('Website URL updated:', e.target.value);
+    const newValue = e.target.value;
+    setWebsiteUrl(newValue);
+    
+    // Clear any existing timer
+    if (websiteUrlUpdateTimer.current) {
+      clearTimeout(websiteUrlUpdateTimer.current);
+    }
+    
+    // Set a new timer to update the database after 2 seconds of inactivity
+    websiteUrlUpdateTimer.current = setTimeout(() => {
+      updateWebsiteUrl(newValue);
+    }, 2000);
+    
+    console.log('Website URL updated locally:', newValue);
+  };
+  
+  // Function to update website URL in the database
+  const updateWebsiteUrl = async (url) => {
+    // Only proceed if we have an ID
+    if (!initialData.id) return;
+    
+    try {
+      // Get CSRF token from cookies
+      const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken='))
+        ?.split('=')[1];
+      
+      if (!csrfToken) {
+        console.error('CSRF token not found');
+        return;
+      }
+      
+      // Create a FormData object for the request
+      const formData = new FormData();
+      
+      // Add the company_website field directly
+      // The Django view expects fields directly in request.POST
+      formData.append('company_website', url);
+      
+      // Make the API call to update the website URL
+      const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrfToken
+          // Don't set Content-Type header for FormData
+          // The browser will set it automatically with the correct boundary
+        },
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error updating website URL: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log('Website URL updated in database:', data);
+      
+      // If we have a refreshData function, call it to update the UI
+      if (refreshData) {
+        // We don't need to refresh data here as it would reset the input field
+        // and potentially disrupt the user's typing
+        // refreshData();
+      }
+    } catch (error) {
+      console.error('Error saving website URL:', error);
+    }
   };
 
   // Handle color change
