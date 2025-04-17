@@ -1,12 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NextButton } from '../../components/ui/next-button.jsx';
 
 /**
  * Step Three Component for the Create Ad Request flow
  * Handles final submission of the ad request
  */
-const StepThreeComponent = ({ onComplete, initialData = {} }) => {
+const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Fetch fresh data when component mounts
+  useEffect(() => {
+    if (refreshData && initialData?.id) {
+      refreshData();
+    }
+  }, []);
   
   const handleSubmit = async () => {
     setIsSubmitting(true);

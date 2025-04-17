@@ -1,4 +1,4 @@
-import React, { useId, useState } from 'react';
+import React, { useId, useState, useEffect } from 'react';
 import { NextButton } from '../../components/ui/next-button.jsx';
 import { BackButton } from '../../components/ui/back-button.jsx';
 import { CompanyLogoUpload } from './CompanyLogoUpload.jsx';
@@ -22,11 +22,18 @@ import { InputWithTags } from '@/components/ui/input-with-tags';
  * Step Two Component for the Create Ad Request flow
  * Handles image upload, color selection, and navigation
  */
-const StepTwoComponent = ({ onComplete, initialData = {} }) => {
+const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const websiteUrlId = useId();
   const [websiteUrl, setWebsiteUrl] = useState(initialData.websiteUrl || '');
   const [selectedColor, setSelectedColor] = useState(initialData.brandColor || '#3B82F6');
   const [productType, setProductType] = useState(initialData.productType || '');
+  
+  // Fetch fresh data when component mounts
+  useEffect(() => {
+    if (refreshData && initialData?.id) {
+      refreshData();
+    }
+  }, []);
   
   // Placeholder functions for navigation buttons
   const handleBack = () => {

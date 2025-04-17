@@ -7,9 +7,10 @@ import StepThreeComponent from './components/StepThreeComponent';
 /**
  * Main container component for the Create Ad Request flow
  * Handles conditional rendering of different steps based on status
+ * Ensures fresh data at each step by fetching from the server
  */
 const CreateAdRequestApp = () => {
-  // Get initial data from the DOM
+  // Get initial data from the DOM as fallback
   const getInitialData = () => {
     try {
       // Check if we have adrequest data in the page
@@ -32,13 +33,50 @@ const CreateAdRequestApp = () => {
   
   // Initialize state with data from the DOM
   const [adRequestData, setAdRequestData] = useState(getInitialData());
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Handle completion of a step
-  const handleStepComplete = (updatedData) => {
+  // Function to fetch fresh data from the server
+  const fetchFreshData = async (id) => {
+    if (!id) return null;
+    
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/ads/adrequest/${id}/get/`);
+      if (!response.ok) {
+        throw new Error(`Error fetching ad request: ${response.statusText}`);
+      }
+      
+      const freshData = await response.json();
+      console.log('Fetched fresh data:', freshData);
+      setAdRequestData(freshData);
+      return freshData;
+    } catch (error) {
+      console.error('Error fetching fresh data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+    return null;
+  };
+  
+  // Fetch fresh data when component mounts
+  useEffect(() => {
+    if (adRequestData?.id) {
+      fetchFreshData(adRequestData.id);
+    }
+  }, []);
+
+  // Handle completion of a step with fresh data
+  const handleStepComplete = async (updatedData) => {
+    // First update with the data we have
     setAdRequestData(prevData => ({
       ...prevData,
       ...updatedData
     }));
+    
+    // Then fetch fresh data if we have an ID
+    if (updatedData?.id) {
+      await fetchFreshData(updatedData.id);
+    }
   };
 
   // Determine which step to show based on status
@@ -50,29 +88,33 @@ const CreateAdRequestApp = () => {
       case 'NEW':
         return (
           <StepOneComponent 
-          onComplete={handleStepComplete} 
-          initialData={adRequestData} 
+            onComplete={handleStepComplete} 
+            initialData={adRequestData}
+            refreshData={() => fetchFreshData(adRequestData.id)}
           />
         );
       case 'DRAFT':
         return (
           <StepTwoComponent 
-          onComplete={handleStepComplete} 
-          initialData={adRequestData} 
+            onComplete={handleStepComplete} 
+            initialData={adRequestData}
+            refreshData={() => fetchFreshData(adRequestData.id)}
           />
         );
       case 'FILLED':
         return (
           <StepThreeComponent 
             onComplete={handleStepComplete} 
-            initialData={adRequestData} 
+            initialData={adRequestData}
+            refreshData={() => fetchFreshData(adRequestData.id)}
           />
         );
       default:
         return (
           <StepOneComponent 
             onComplete={handleStepComplete} 
-            initialData={adRequestData} 
+            initialData={adRequestData}
+            refreshData={() => fetchFreshData(adRequestData.id)}
           />
         );
     }
