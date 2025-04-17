@@ -292,3 +292,79 @@ class AdRequestVersion(BaseModel):
         
         # Send email
         send_mail(subject, message, from_email, [to_email], fail_silently=False)
+
+
+# apps/ads/models.py
+class AdRequestUsage(BaseModel):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    billing_period_start = models.DateTimeField()
+    billing_period_end = models.DateTimeField()
+    usage_count = models.PositiveIntegerField(default=0)
+    
+    class Meta:
+        unique_together = ('user', 'billing_period_start')
+        
+    @classmethod
+    def get_current_usage(cls, user):
+        """Get or create usage record for current billing period"""
+        from django.utils import timezone
+    # For paid users: tracks usage within a billing period
+    billing_period_start = models.DateTimeField(null=True, blank=True)
+    billing_period_end = models.DateTimeField(null=True, blank=True)
+    usage_count = models.PositiveIntegerField(default=0)
+    # For free users: tracks lifetime usage
+    is_free_tier = models.BooleanField(default=False)
+    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'billing_period_start'],
+                condition=models.Q(is_free_tier=False),
+                name='unique_paid_user_period'
+            ),
+            models.UniqueConstraint(
+                fields=['user'],
+                condition=models.Q(is_free_tier=True),
+                name='unique_free_user'
+            )
+        ]
+        
+    @classmethod
+    def get_current_usage(cls, user):
+        """Get or create usage record based on subscription status"""
+        from django.utils import timezone
+        from datetime import datetime
+        
+        # For users with active subscriptions, get billing period from subscription
+        if user.has_active_subscription():
+            sub = user.active_stripe_subscription
+            # Get current period from subscription
+            period_start = timezone.make_aware(
+                datetime.fromtimestamp(sub.current_period_start)
+            )
+            period_end = timezone.make_aware(
+                datetime.fromtimestamp(sub.current_period_end)
+            )
+            
+            usage, created = cls.objects.get_or_create(
+                user=user,
+                billing_period_start=period_start,
+                is_free_tier=False,
+                defaults={
+                    'billing_period_end': period_end,
+                    'usage_count': 0
+                }
+            )
+            return usage
+        else:
+            # For free users, use a lifetime record (no billing period)
+            usage, created = cls.objects.get_or_create(
+                user=user,
+                is_free_tier=True,
+                defaults={
+                    'billing_period_start': None,
+                    'billing_period_end': None,
+            'usage_count': 0
+        }
+        )
+        return usage
