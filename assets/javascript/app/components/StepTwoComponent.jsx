@@ -12,6 +12,7 @@ import {
   ColorPickerEyeDropper,
   ColorPickerFormat
 } from '../../components/ui/color-picker.jsx';
+import { InputWithTags } from '@/components/ui/input-with-tags';
 
 /**
  * Step Two Component for the Create Ad Request flow
@@ -68,19 +69,25 @@ const StepTwoComponent = ({ onComplete, initialData = {} }) => {
       <div className="flex-grow container mx-auto px-4 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Company Logo Upload - Takes 6/12 columns on large screens */}
-          <div className="lg:col-span-6 bg-card rounded-xl overflow-hidden">
-            <CompanyLogoUpload 
-              onUpload={handleImageUpload} 
-              className="h-full"
-            />
+          <div className="lg:col-span-6 flex flex-col gap-6">
+            <div className="bg-card rounded-xl overflow-hidden">
+              <CompanyLogoUpload 
+                onUpload={handleImageUpload} 
+                className="h-full"
+              />
+            </div>
+            {/* Key Benefits Input Section */}
+            <div className="bg-card rounded-xl overflow-hidden p-6">
+              <h3 className="text-sm font-medium mb-2">Key Benefits</h3>
+              <p className="text-xs text-muted-foreground mb-3">Add up to 5 key benefits of your product or service</p>
+              <InputWithTags limit={5} placeholder="E.g. Fast delivery, 24/7 support..." />
+            </div>
           </div>
-          
           {/* Form Fields Container - Takes 6/12 columns on large screens */}
           <div className="lg:col-span-6 space-y-6">
             <div className="bg-card p-6 rounded-xl overflow-hidden h-full">
               {/* Section Title */}
               <h3 className="text-lg font-medium mb-4">Campaign Details</h3>
-              
               {/* Website URL input field */}
               <div className="group relative w-full mb-6">
                 <label
@@ -97,8 +104,7 @@ const StepTwoComponent = ({ onComplete, initialData = {} }) => {
                   onChange={handleWebsiteUrlChange}
                 />
               </div>
-              
-              {/* Color Picker */}
+                            {/* Color Picker */}
               <div className="w-full">
                 <h3 className="text-sm font-medium mb-2">Brand Color</h3>
                 <p className="text-xs text-muted-foreground mb-3">Choose a color that represents your brand identity</p>
@@ -120,6 +126,12 @@ const StepTwoComponent = ({ onComplete, initialData = {} }) => {
                     <ColorPickerFormat />
                   </div>
                 </ColorPicker>
+              </div>
+              {/* Key Benefits Input Section */}
+              <div className="mt-6">
+                <h3 className="text-sm font-medium mb-2">Key Benefits</h3>
+                <p className="text-xs text-muted-foreground mb-3">Add up to 5 key benefits of your product or service</p>
+                <InputWithTags limit={5} placeholder="E.g. Fast delivery, 24/7 support..." />
               </div>
             </div>
           </div>
