@@ -1,7 +1,8 @@
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http.response import HttpResponseRedirect, JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.views.decorators.http import require_POST, require_http_methods
@@ -9,6 +10,7 @@ import json
 
 from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion
 from .forms import AdLibraryForm
+from .services import can_create_ad_request, increment_usage
 
 # A reasonable value for pagination would be 10 or 20 entries per page.
 # Here we use 4 (a very low value), so we can show off the pagination using fewer items
@@ -228,10 +230,17 @@ def adrequest_create(request):
     """
     # Check if user can create more ad requests
     if not can_create_ad_request(request.user):
-        messages.error(
-            request, 
-            "You've reached your monthly limit for ad requests. Please upgrade your plan to create more."
-        )
+        # Different message for free vs paid users
+        if not request.user.has_active_subscription():
+            messages.error(
+                request, 
+                "You've reached your lifetime limit for free ad requests. Please upgrade your plan to create more."
+            )
+        else:
+            messages.error(
+                request, 
+                "You've reached your monthly limit for ad requests. Please upgrade your plan to create more."
+            )
         return redirect('subscription_plans')  # Redirect to plans page
 
     try:

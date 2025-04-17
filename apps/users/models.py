@@ -40,10 +40,21 @@ class CustomUser(SubscriptionModelBase, AbstractUser):
         limit = get_ad_request_limit(self)
         usage = AdRequestUsage.get_current_usage(self).usage_count
         
+        # For free users, show it as a lifetime limit
+        if not self.has_active_subscription():
+            return {
+                'limit': limit,
+                'usage': usage,
+                'remaining': max(0, limit - usage),
+                'is_lifetime': True
+            }
+        
+        # For paid users, show as a monthly limit
         return {
             'limit': limit,
             'usage': usage,
-            'remaining': max(0, limit - usage)
+            'remaining': max(0, limit - usage),
+            'is_lifetime': False
         }
 
     @property

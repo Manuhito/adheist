@@ -308,6 +308,32 @@ class AdRequestUsage(BaseModel):
     def get_current_usage(cls, user):
         """Get or create usage record for current billing period"""
         from django.utils import timezone
+    # For paid users: tracks usage within a billing period
+    billing_period_start = models.DateTimeField(null=True, blank=True)
+    billing_period_end = models.DateTimeField(null=True, blank=True)
+    usage_count = models.PositiveIntegerField(default=0)
+    # For free users: tracks lifetime usage
+    is_free_tier = models.BooleanField(default=False)
+    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'billing_period_start'],
+                condition=models.Q(is_free_tier=False),
+                name='unique_paid_user_period'
+            ),
+            models.UniqueConstraint(
+                fields=['user'],
+                condition=models.Q(is_free_tier=True),
+                name='unique_free_user'
+            )
+        ]
+        
+    @classmethod
+    def get_current_usage(cls, user):
+        """Get or create usage record based on subscription status"""
+        from django.utils import timezone
+        from datetime import datetime
         
         # For users with active subscriptions, get billing period from subscription
         if user.has_active_subscription():
@@ -319,25 +345,26 @@ class AdRequestUsage(BaseModel):
             period_end = timezone.make_aware(
                 datetime.fromtimestamp(sub.current_period_end)
             )
-        else:
-            # For free users, use calendar month
-            today = timezone.now()
-            period_start = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-            next_month = today.month + 1 if today.month < 12 else 1
-            next_month_year = today.year if today.month < 12 else today.year + 1
-            period_end = today.replace(
-                year=next_month_year, 
-                month=next_month, 
-                day=1, 
-                hour=0, minute=0, second=0, microsecond=0
-            ) - timezone.timedelta(microseconds=1)
             
-        usage, created = cls.objects.get_or_create(
-            user=user,
-            billing_period_start=period_start,
-            defaults={
-                'billing_period_end': period_end,
-                'usage_count': 0
-            }
+            usage, created = cls.objects.get_or_create(
+                user=user,
+                billing_period_start=period_start,
+                is_free_tier=False,
+                defaults={
+                    'billing_period_end': period_end,
+                    'usage_count': 0
+                }
+            )
+            return usage
+        else:
+            # For free users, use a lifetime record (no billing period)
+            usage, created = cls.objects.get_or_create(
+                user=user,
+                is_free_tier=True,
+                defaults={
+                    'billing_period_start': None,
+                    'billing_period_end': None,
+            'usage_count': 0
+        }
         )
         return usage

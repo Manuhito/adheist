@@ -32,6 +32,7 @@ class ProductMetadata:
     price_displays: Dict[str:str] = field(default_factory=dict)
     description: str = ""
     is_default: bool = False
+    limits: Dict[str, int] = field(default_factory=dict)
 
     @classmethod
     def from_stripe_product(cls, stripe_product: Product, **kwargs) -> ProductMetadata:
@@ -57,6 +58,7 @@ class ProductMetadata:
                 "price_displays": serializers.DictField(child=serializers.CharField()),
                 "description": serializers.CharField(),
                 "is_default": serializers.BooleanField(),
+                "limits": serializers.DictField(child=serializers.IntegerField()),
             },
         )
 
@@ -182,10 +184,35 @@ ACTIVE_PLAN_INTERVALS = [
 
 # These are the products that will be shown to users in the UI and allowed to be associated
 # with plans on your side
+# ACTIVE_PRODUCTS = [
+#     ProductMetadata(stripe_id='prod_S6Y9GHqE8v13lD', slug='enterprise', name='Enterprise', features=['Enterprise Feature 1', 'Enterprise Feature 2', 'Enterprise Feature 3'], price_displays={}, description='The Enterprise plan', is_default=True),
+#     ProductMetadata(stripe_id='prod_S6Cf3s6eD62XZQ', slug='pro', name='Pro', features=['Pro Feature 1', 'Pro Feature 2', 'Pro Feature 3'], price_displays={}, description='The Pro plan', is_default=False),
+#     ProductMetadata(stripe_id='prod_S6CeGCh0HYEO4k', slug='starter', name='Starter', features=['Starter Feature 1', 'Starter Feature 2', 'Starter Feature 3'], price_displays={}, description='The Starter plan', is_default=False),
+# ]
+
+# apps/subscriptions/metadata.py
 ACTIVE_PRODUCTS = [
-    ProductMetadata(stripe_id='prod_S6Y9GHqE8v13lD', slug='enterprise', name='Enterprise', features=['Enterprise Feature 1', 'Enterprise Feature 2', 'Enterprise Feature 3'], price_displays={}, description='The Enterprise plan', is_default=True),
-    ProductMetadata(stripe_id='prod_S6Cf3s6eD62XZQ', slug='pro', name='Pro', features=['Pro Feature 1', 'Pro Feature 2', 'Pro Feature 3'], price_displays={}, description='The Pro plan', is_default=False),
-    ProductMetadata(stripe_id='prod_S6CeGCh0HYEO4k', slug='starter', name='Starter', features=['Starter Feature 1', 'Starter Feature 2', 'Starter Feature 3'], price_displays={}, description='The Starter plan', is_default=False),
+    ProductMetadata(
+        stripe_id='prod_S6Cf3s6eD62XZQ', 
+        slug='pro', 
+        name='Pro', 
+        features=['Pro Feature 1', 'Pro Feature 2', 'Pro Feature 3', '50 AdRequests per month'],
+        price_displays={}, 
+        description='The Pro plan', 
+        is_default=False,
+        # Add this field to store limits
+        limits={'ad_requests_per_month': 3}
+    ),
+    ProductMetadata(
+        stripe_id='prod_S6CeGCh0HYEO4k', 
+        slug='starter', 
+        name='Starter', 
+        features=['Starter Feature 1', 'Starter Feature 2', 'Starter Feature 3', '10 AdRequests per month'],
+        price_displays={}, 
+        description='The Starter plan', 
+        is_default=False,
+        limits={'ad_requests_per_month': 1}
+    ),
 ]
 
 # apps/subscriptions/metadata.py
