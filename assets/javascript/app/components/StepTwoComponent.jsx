@@ -26,34 +26,34 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const websiteUrlId = useId();
   const [websiteUrl, setWebsiteUrl] = useState(
     // Check for company_website in asset_overrides first
-    (initialData.asset_overrides?.company_website) || 
+    (initialData.asset_overrides?.company_website) ||
     // Then fallback to websiteUrl if it exists
-    initialData.websiteUrl || 
+    initialData.websiteUrl ||
     // Finally default to empty string
     ''
   );
   const [selectedColor, setSelectedColor] = useState(initialData.brandColor || '#3B82F6');
   const [productType, setProductType] = useState(initialData.productType || '');
-  
+
   // Debounce timer for website URL updates
   const websiteUrlUpdateTimer = useRef(null);
-  
+
   // Solo refrescar datos si es necesario (por ejemplo, al recargar la página directamente)
   // No hacemos la llamada automáticamente para evitar duplicación con handleStepComplete
   useEffect(() => {
     // Comprobamos si venimos de una recarga de página o navegación directa
     const isDirectNavigation = !document.referrer.includes(window.location.host);
-    
+
     if (refreshData && initialData?.id && isDirectNavigation) {
       refreshData();
     }
   }, []);
-  
+
   // Asegurar que el scroll esté al inicio de la página cuando el componente se monte
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-  
+
   // Clean up debounce timer when component unmounts
   useEffect(() => {
     return () => {
@@ -63,7 +63,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       }
     };
   }, []);
-  
+
   // Placeholder functions for navigation buttons
   const handleBack = () => {
     console.log('Back button clicked');
@@ -72,13 +72,13 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
   const handleNext = () => {
     console.log('Next button clicked');
-    
+
     // Ya no validamos que se haya seleccionado un tipo de producto, ya que no es obligatorio
-    
+
     // Pass the data to the next step
     if (onComplete) {
-      onComplete({ 
-        websiteUrl, 
+      onComplete({
+        websiteUrl,
         brandColor: selectedColor,
         productType,
         // Add product images or app screenshots based on product type
@@ -92,28 +92,61 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   // Handle logo image upload
   const handleLogoUpload = async (url) => {
     console.log('Logo uploaded:', url);
-    
+
     // Only proceed if we have an ID and URL
     if (!initialData.id || !url) return;
-    
+
     try {
       // Get CSRF token from cookies
       const csrfToken = document.cookie
         .split('; ')
         .find(row => row.startsWith('csrftoken='))
         ?.split('=')[1];
-      
+
       if (!csrfToken) {
         console.error('CSRF token not found');
         return;
       }
-      
-      // Create a FormData object for the request
+
+      // Create a FormData object
       const formData = new FormData();
       
-      // Add the logo field directly
-      // The Django view expects fields directly in request.POST
-      formData.append('logo', url);
+      // Check if this is a blob URL (from a new upload) or a server URL (from initialData)
+      if (url.startsWith('blob:')) {
+        console.log('Processing blob URL...');
+        
+        // Convert the blob URL to an actual file
+        const blobResponse = await fetch(url);
+        const blob = await blobResponse.blob();
+        
+        // Create a file from the blob
+        // Use a descriptive filename with timestamp to avoid caching issues
+        const filename = `company_logo_${Date.now()}.${blob.type.split('/')[1] || 'png'}`;
+        const file = new File([blob], filename, { type: blob.type });
+        
+        console.log('Created file:', file.name, 'type:', file.type, 'size:', file.size);
+        
+        // Add the file to the FormData with the field name 'logo'
+        // This matches what the Django view expects in request.FILES
+        formData.append('logo', file);
+        console.log('Added logo file to FormData');
+      } else {
+        // This is a server URL (from initialData)
+        console.log('Processing server URL...');
+        
+        // For server URLs, we'll send the URL directly
+        // The server already has this image, so we don't need to upload it again
+        formData.append('logo_override_url', url);
+        console.log('Added logo_override_url to FormData');
+      }
+      
+      // Log all form data entries
+      console.log('FormData entries:');
+      for (let pair of formData.entries()) {
+        console.log(pair[0] + ':', pair[1] instanceof File ? 
+          `File: ${pair[1].name}, type: ${pair[1].type}, size: ${pair[1].size}` : 
+          pair[1]);
+      }
       
       // Make the API call to update the logo
       const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
@@ -121,18 +154,17 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
         headers: {
           'X-CSRFToken': csrfToken
           // Don't set Content-Type header for FormData
-          // The browser will set it automatically with the correct boundary
         },
         body: formData
       });
-      
+
       if (!response.ok) {
         throw new Error(`Error updating logo: ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       console.log('Logo updated successfully:', data);
-      
+
       // If we have a refreshData function, call it to update the UI
       if (refreshData) {
         refreshData();
@@ -153,13 +185,13 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     console.log('App screenshot uploaded:', imageData);
     // Store both primary and secondary screenshots
   };
-  
+
   // Handle product type selection
   const handleProductTypeChange = (type) => {
     console.log('Product type selected:', type);
     setProductType(type);
   };
-  
+
   // Handle marketing material uploads
   const handleMarketingMaterialUpload = (imageData) => {
     console.log('Marketing material uploaded:', imageData);
@@ -167,49 +199,49 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   };
 
   // This ref is now defined at the top of the component
-  
+
   // Handle website URL input change with debouncing
   const handleWebsiteUrlChange = (e) => {
     const newValue = e.target.value;
     setWebsiteUrl(newValue);
-    
+
     // Clear any existing timer
     if (websiteUrlUpdateTimer.current) {
       clearTimeout(websiteUrlUpdateTimer.current);
     }
-    
+
     // Set a new timer to update the database after 2 seconds of inactivity
     websiteUrlUpdateTimer.current = setTimeout(() => {
       updateWebsiteUrl(newValue);
     }, 2000);
-    
+
     console.log('Website URL updated locally:', newValue);
   };
-  
+
   // Function to update website URL in the database
   const updateWebsiteUrl = async (url) => {
     // Only proceed if we have an ID
     if (!initialData.id) return;
-    
+
     try {
       // Get CSRF token from cookies
       const csrfToken = document.cookie
         .split('; ')
         .find(row => row.startsWith('csrftoken='))
         ?.split('=')[1];
-      
+
       if (!csrfToken) {
         console.error('CSRF token not found');
         return;
       }
-      
+
       // Create a FormData object for the request
       const formData = new FormData();
-      
+
       // Add the company_website field directly
       // The Django view expects fields directly in request.POST
       formData.append('company_website', url);
-      
+
       // Make the API call to update the website URL
       const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
         method: 'POST',
@@ -220,14 +252,14 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
         },
         body: formData
       });
-      
+
       if (!response.ok) {
         throw new Error(`Error updating website URL: ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       console.log('Website URL updated in database:', data);
-      
+
       // If we have a refreshData function, call it to update the UI
       if (refreshData) {
         // We don't need to refresh data here as it would reset the input field
@@ -246,7 +278,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     const g = Math.round(rgbaArray[1]);
     const b = Math.round(rgbaArray[2]);
     const hexColor = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-    
+
     // Solo actualizar y loguear si el color realmente cambió
     if (hexColor !== selectedColor) {
       setSelectedColor(hexColor);
@@ -265,8 +297,8 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
           {/* Company Logo Upload - Takes 6/12 columns on large screens */}
           <div className="lg:col-span-6 flex flex-col gap-6">
             <div className="bg-card rounded-xl overflow-hidden">
-              <CompanyLogoUpload 
-                onUpload={handleLogoUpload} 
+              <CompanyLogoUpload
+                onUpload={handleLogoUpload}
                 className="h-full"
                 initialImage={initialData.logo_override}
               />
@@ -291,20 +323,20 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
                 >
                   <span className="inline-flex bg-card px-2">Website URL</span>
                 </label>
-                <Input 
-                  id={websiteUrlId} 
-                  type="url" 
-                  placeholder="" 
+                <Input
+                  id={websiteUrlId}
+                  type="url"
+                  placeholder=""
                   value={websiteUrl}
                   onChange={handleWebsiteUrlChange}
                 />
               </div>
-                            {/* Color Picker */}
+              {/* Color Picker */}
               <div className="w-full">
                 <h3 className="text-sm font-medium mb-2">Brand Color</h3>
                 <p className="text-xs text-muted-foreground mb-3">Choose a color that represents your brand identity</p>
-                <ColorPicker 
-                  className="w-full rounded-md border bg-card p-4 shadow-sm" 
+                <ColorPicker
+                  className="w-full rounded-md border bg-card p-4 shadow-sm"
                   defaultValue={selectedColor}
                   onChange={handleColorChange}
                 >
@@ -326,52 +358,52 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
           </div>
         </div>
       </div>
-      
+
       {/* Navigation buttons at the bottom */}
       {/* Product Type Selection */}
       <div className="container mx-auto px-4 mb-8">
-        <ProductTypeSelect 
+        <ProductTypeSelect
           value={productType}
           onChange={handleProductTypeChange}
         />
       </div>
-      
+
       {/* Conditional rendering based on product type */}
       {productType === 'physical' && (
         <div className="container mx-auto px-4 mb-8">
           <div className="bg-card rounded-xl overflow-hidden">
-            <ProductImageUpload 
+            <ProductImageUpload
               onUpload={handleProductImageUpload}
             />
           </div>
         </div>
       )}
-      
+
       {productType === 'software' && (
         <div className="container mx-auto px-4">
           <div className="bg-card rounded-xl overflow-hidden">
-            <AppScreenshotUpload 
+            <AppScreenshotUpload
               onUpload={handleAppScreenshotUpload}
             />
           </div>
         </div>
       )}
-      
+
       {/* Marketing Materials Section - Always visible */}
       <div className="container mx-auto px-4 my-8">
         <div className="bg-card rounded-xl overflow-hidden">
-          <MarketingMaterialUpload 
+          <MarketingMaterialUpload
             onUpload={handleMarketingMaterialUpload}
           />
         </div>
       </div>
-      
+
       {/* Navigation buttons at the bottom */}
       <div className="flex justify-center gap-4 pb-8">
-        <BackButton 
+        <BackButton
           onClick={handleBack}
         />
-        <NextButton 
+        <NextButton
           onClick={handleNext}
         />
       </div>
