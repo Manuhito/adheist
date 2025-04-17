@@ -5,6 +5,7 @@ import { CompanyLogoUpload } from './CompanyLogoUpload.jsx';
 import { ProductImageUpload } from './ProductImageUpload.jsx';
 import { AppScreenshotUpload } from './AppScreenshotUpload.jsx';
 import { ProductTypeSelect } from './ProductTypeSelect.jsx';
+import { MarketingMaterialUpload } from './MarketingMaterialUpload.jsx';
 import { Input } from '../../components/ui/input.jsx';
 import {
   ColorPicker,
@@ -50,7 +51,8 @@ const StepTwoComponent = ({ onComplete, initialData = {} }) => {
         productType,
         // Add product images or app screenshots based on product type
         productImages: productType === 'physical' ? {} : undefined, // Will be populated with actual image data
-        appScreenshots: productType === 'software' ? {} : undefined // Will be populated with actual screenshot data
+        appScreenshots: productType === 'software' ? {} : undefined, // Will be populated with actual screenshot data
+        marketingMaterials: {} // Will be populated with additional marketing images
       });
     }
   };
@@ -77,6 +79,12 @@ const StepTwoComponent = ({ onComplete, initialData = {} }) => {
   const handleProductTypeChange = (type) => {
     console.log('Product type selected:', type);
     setProductType(type);
+  };
+  
+  // Handle marketing material uploads
+  const handleMarketingMaterialUpload = (imageData) => {
+    console.log('Marketing material uploaded:', imageData);
+    // Store marketing materials images
   };
 
   // Handle website URL input change
@@ -194,6 +202,15 @@ const StepTwoComponent = ({ onComplete, initialData = {} }) => {
           </div>
         </div>
       )}
+      
+      {/* Marketing Materials Section - Always visible */}
+      <div className="container mx-auto px-4 my-8">
+        <div className="bg-card rounded-xl overflow-hidden">
+          <MarketingMaterialUpload 
+            onUpload={handleMarketingMaterialUpload}
+          />
+        </div>
+      </div>
       
       {/* Navigation buttons at the bottom */}
       <div className="flex justify-center gap-4 pb-8">
