@@ -159,8 +159,13 @@ class AdRequest(BaseModel):
             
             for field_name in image_fields:
                 override_field = f"{field_name}_override"
-                if hasattr(self, override_field) and getattr(self, override_field):
-                    setattr(self.base_assets, field_name, getattr(self, override_field))
+                if hasattr(self, override_field):
+                    # Check if the field is explicitly set (even if empty)
+                    if field_name + '_override' in self.__dict__:
+                        # If override is empty/None, set base_assets field to None (remove image)
+                        # Otherwise, update with the override value
+                        override_value = getattr(self, override_field)
+                        setattr(self.base_assets, field_name, override_value)
             
             # Save the updated base_assets
             self.base_assets.save()
