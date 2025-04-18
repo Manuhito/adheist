@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 interface UseImageUploadProps {
-  onUpload?: (url: string) => void;
+  onUpload?: (url: string | null) => void;
   initialImage?: string | null;
 }
 
@@ -39,7 +39,9 @@ export function useImageUpload({ onUpload, initialImage }: UseImageUploadProps =
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
-  }, [previewUrl]);
+    // Call onUpload with null to indicate the image should be deleted
+    onUpload?.(null);
+  }, [previewUrl, onUpload]);
 
   // Initialize with initialImage if provided
   useEffect(() => {

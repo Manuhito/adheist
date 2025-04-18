@@ -111,10 +111,14 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
   // Handle logo image upload
   const handleLogoUpload = async (url) => {
-    console.log('Logo uploaded:', url);
+    console.log('Logo uploaded or deleted:', url);
 
-    // Only proceed if we have an ID and URL
-    if (!initialData.id || !url) return;
+    // Only proceed if we have an ID
+    if (!initialData.id) return;
+    
+    // If url is explicitly null, it means the image should be deleted
+    // If url is undefined, it means no action should be taken
+    if (url === undefined) return;
 
     try {
       // Get CSRF token from cookies
@@ -131,8 +135,15 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       // Create a FormData object
       const formData = new FormData();
       
+      // If url is null, it means we want to delete the image
+      if (url === null) {
+        console.log('Deleting logo image...');
+        // The backend expects the field name to be in POST data but not in FILES data
+        // to trigger deletion of the corresponding override field
+        formData.append('logo', ''); // Send empty value for the logo field
+      }
       // Check if this is a blob URL (from a new upload) or a server URL (from initialData)
-      if (url.startsWith('blob:')) {
+      else if (url.startsWith('blob:')) {
         console.log('Processing blob URL...');
         
         // Convert the blob URL to an actual file
@@ -196,10 +207,16 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
   // Handle product image upload
   const handleProductImageUpload = async (imageData) => {
-    console.log('Product image uploaded:', imageData);
+    console.log('Product image uploaded or deleted:', imageData);
     
-    // Only proceed if we have an ID and URL
-    if (!initialData.id || !imageData?.url) return;
+    // Only proceed if we have an ID
+    if (!initialData.id) return;
+    
+    // If imageData is undefined, it means no action should be taken
+    if (imageData === undefined) return;
+    
+    // If imageData.url is null, it means the image should be deleted
+    const isDeleteOperation = imageData?.url === null;
     
     try {
       // Get CSRF token from cookies
@@ -216,8 +233,19 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       // Create a FormData object
       const formData = new FormData();
       
+      // Handle image deletion
+      if (isDeleteOperation) {
+        console.log('Deleting product image:', imageData.type);
+        // The backend expects the field name to be in POST data but not in FILES data
+        // to trigger deletion of the corresponding override field
+        if (imageData.type === 'primary') {
+          formData.append('product_image_1', ''); // Send empty value for the field
+        } else if (imageData.type === 'secondary') {
+          formData.append('product_image_2', ''); // Send empty value for the field
+        }
+      }
       // Check if this is a blob URL (from a new upload) or a server URL (from initialData)
-      if (imageData.url.startsWith('blob:')) {
+      else if (imageData.url.startsWith('blob:')) {
         console.log('Processing blob URL for product image...');
         
         // Convert the blob URL to an actual file
@@ -276,10 +304,16 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
   // Handle app screenshot upload
   const handleAppScreenshotUpload = async (imageData) => {
-    console.log('App screenshot uploaded:', imageData);
+    console.log('App screenshot uploaded or deleted:', imageData);
     
-    // Only proceed if we have an ID and URL
-    if (!initialData.id || !imageData?.url) return;
+    // Only proceed if we have an ID
+    if (!initialData.id) return;
+    
+    // If imageData is undefined, it means no action should be taken
+    if (imageData === undefined) return;
+    
+    // If imageData.url is null, it means the image should be deleted
+    const isDeleteOperation = imageData?.url === null;
     
     try {
       // Get CSRF token from cookies
@@ -296,8 +330,18 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       // Create a FormData object
       const formData = new FormData();
       
+      // Handle image deletion
+      if (isDeleteOperation) {
+        console.log('Deleting app screenshot:', imageData.type);
+        // The backend expects the field name to be in POST data but not in FILES data
+        if (imageData.type === 'primary') {
+          formData.append('app_image_1', ''); // Send empty value for the field
+        } else if (imageData.type === 'secondary') {
+          formData.append('app_image_2', ''); // Send empty value for the field
+        }
+      }
       // Check if this is a blob URL (from a new upload) or a server URL (from initialData)
-      if (imageData.url.startsWith('blob:')) {
+      else if (imageData.url.startsWith('blob:')) {
         console.log('Processing blob URL for app screenshot...');
         
         // Convert the blob URL to an actual file
@@ -357,10 +401,16 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
   // Handle marketing material uploads
   const handleMarketingMaterialUpload = async (imageData) => {
-    console.log('Marketing material uploaded:', imageData);
+    console.log('Marketing material uploaded or deleted:', imageData);
     
-    // Only proceed if we have an ID and URL
-    if (!initialData.id || !imageData?.url) return;
+    // Only proceed if we have an ID
+    if (!initialData.id) return;
+    
+    // If imageData is undefined, it means no action should be taken
+    if (imageData === undefined) return;
+    
+    // If imageData.url is null, it means the image should be deleted
+    const isDeleteOperation = imageData?.url === null;
     
     try {
       // Get CSRF token from cookies
@@ -377,8 +427,14 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       // Create a FormData object
       const formData = new FormData();
       
+      // Handle image deletion
+      if (isDeleteOperation) {
+        console.log('Deleting marketing material:', imageData.position);
+        // The backend expects the field name to be in POST data but not in FILES data
+        formData.append(`marketing_image_${imageData.position}`, ''); // Send empty value for the field
+      }
       // Check if this is a blob URL (from a new upload) or a server URL (from initialData)
-      if (imageData.url.startsWith('blob:')) {
+      else if (imageData.url.startsWith('blob:')) {
         console.log('Processing blob URL for marketing material...');
         
         // Convert the blob URL to an actual file
