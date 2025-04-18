@@ -612,8 +612,8 @@ def billing_page(request):
             'popular': True
         },
         'starter': {
-            'display_name': 'Team',
-            'cta': 'Upgrade to Team',
+            'display_name': 'Starter',
+            'cta': 'Upgrade to Starter',
             'highlighted': False,
             'popular': False
         }
@@ -705,8 +705,8 @@ def billing_page(request):
     }
     pricing_data["tiers"].append(enterprise_plan)
     
-    # Sort tiers in the correct order: Free, Pro, Team, Enterprise
-    tier_order = ["Free", "Pro", "Team", "Enterprise"]
+    # Sort tiers in the correct order: Free, Starter, Pro, Enterprise
+    tier_order = ["Free", "Starter", "Pro", "Enterprise"]
     pricing_data["tiers"] = sorted(
         pricing_data["tiers"], 
         key=lambda x: tier_order.index(x["name"]) if x["name"] in tier_order else 999

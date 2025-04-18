@@ -43,7 +43,7 @@ export function PricingCard({
               value={price}
               className="text-4xl font-medium" />
             <p className="-mt-2 text-xs text-muted-foreground">
-              Per month/user
+              Per month
             </p>
           </>
         ) : (

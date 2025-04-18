@@ -29,7 +29,7 @@ export function Tab({
         <Badge
           variant="secondary"
           className={cn("relative z-10 whitespace-nowrap shadow-none", selected && "bg-muted")}>
-          Save 35%
+          Save 20%
         </Badge>
       )}
     </button>
