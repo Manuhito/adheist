@@ -573,6 +573,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
         <div className="bg-card rounded-xl overflow-hidden">
           <MarketingMaterialUpload
             onUpload={handleMarketingMaterialUpload}
+            initialData={initialData}
           />
         </div>
       </div>
