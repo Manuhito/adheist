@@ -65,7 +65,7 @@ export function ImageUpload({
   );
 
   return (
-    <div className={cn("w-full rounded-xl border border-border bg-card p-4 md:p-6 shadow-sm", className)} {...props}>
+    <div className={cn("w-full rounded-xl border border-border bg-card p-4 md:p-6 shadow-sm", className)} style={{ maxWidth: "250px", margin: "0 auto" }} {...props}>
       <div className="space-y-2 mb-4">
         <h3 className="text-lg font-medium">{customTitle}</h3>
         <p className="text-sm text-muted-foreground">
