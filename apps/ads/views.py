@@ -598,7 +598,34 @@ def billing_page(request):
     """
     Render the billing page with pricing information.
     """
-    # Pricing data to be passed to the React component
+    from apps.subscriptions.metadata import get_active_products_with_metadata, PlanInterval
+    
+    # Get products from the metadata system
+    products_with_metadata = list(get_active_products_with_metadata())
+    
+    # Map product slugs to tier names and CTAs
+    product_mapping = {
+        'pro': {
+            'display_name': 'Pro',
+            'cta': 'Upgrade to Pro',
+            'highlighted': True,
+            'popular': True
+        },
+        'starter': {
+            'display_name': 'Team',
+            'cta': 'Upgrade to Team',
+            'highlighted': False,
+            'popular': False
+        },
+        'enterprise': {
+            'display_name': 'Enterprise',
+            'cta': 'Contact Sales',
+            'highlighted': False,
+            'popular': False
+        }
+    }
+    
+    # Initialize pricing data with Free plan
     pricing_data = {
         "title": "Pricing Plans",
         "subtitle": "Choose the perfect plan for your needs",
@@ -619,62 +646,55 @@ def billing_page(request):
                 "cta": "Get Started",
                 "highlighted": False,
                 "popular": False
-            },
-            {
-                "name": "Pro",
-                "description": "Advanced features for professionals",
-                "price": {
-                    "monthly": 29,
-                    "yearly": 24
-                },
-                "features": [
-                    "20 ad requests per month",
-                    "Premium templates",
-                    "Priority support",
-                    "Custom branding"
-                ],
-                "cta": "Upgrade to Pro",
-                "highlighted": True,
-                "popular": True
-            },
-            {
-                "name": "Team",
-                "description": "For teams and businesses",
-                "price": {
-                    "monthly": 49,
-                    "yearly": 39
-                },
-                "features": [
-                    "50 ad requests per month",
-                    "All premium templates",
-                    "24/7 support",
-                    "Custom branding",
-                    "Team collaboration"
-                ],
-                "cta": "Upgrade to Team",
-                "highlighted": False,
-                "popular": False
-            },
-            {
-                "name": "Enterprise",
-                "description": "For large organizations",
-                "price": {
-                    "monthly": "Custom",
-                    "yearly": "Custom"
-                },
-                "features": [
-                    "Unlimited ad requests",
-                    "Custom templates",
-                    "Dedicated support",
-                    "API access",
-                    "Advanced analytics"
-                ],
-                "cta": "Contact Sales",
-                "highlighted": False,
-                "popular": False
             }
         ]
     }
+    
+    # Add tiers from metadata
+    for product in products_with_metadata:
+        slug = product.metadata.slug
+        if slug in product_mapping:
+            # Get prices
+            monthly_price = product._get_price(PlanInterval.month, fail_hard=False)
+            yearly_price = product._get_price(PlanInterval.year, fail_hard=False)
+            
+            # Format price display
+            price_data = {}
+            if monthly_price:
+                try:
+                    price_data["monthly"] = int(monthly_price.unit_amount / 100)
+                except (TypeError, ValueError):
+                    price_data["monthly"] = product.get_price_display(monthly_price)
+            else:
+                price_data["monthly"] = "Custom"
+                
+            if yearly_price:
+                try:
+                    price_data["yearly"] = int(yearly_price.unit_amount / 100)
+                except (TypeError, ValueError):
+                    price_data["yearly"] = product.get_price_display(yearly_price)
+            else:
+                price_data["yearly"] = "Custom"
+            
+            # Create tier data
+            tier = {
+                "name": product_mapping[slug]['display_name'],
+                "description": product.metadata.description or f"For {product_mapping[slug]['display_name']} users",
+                "price": price_data,
+                "features": product.metadata.features,
+                "cta": product_mapping[slug]['cta'],
+                "highlighted": product_mapping[slug]['highlighted'],
+                "popular": product_mapping[slug]['popular']
+            }
+            
+            pricing_data["tiers"].append(tier)
+    
+    # Sort tiers in the correct order: Free, Pro, Team, Enterprise
+    tier_order = ["Free", "Pro", "Team", "Enterprise"]
+    pricing_data["tiers"] = sorted(
+        pricing_data["tiers"], 
+        key=lambda x: tier_order.index(x["name"]) if x["name"] in tier_order else 999
+    )
         
     # Convert pricing data to JSON for the React component
     pricing_json = json.dumps(pricing_data)
