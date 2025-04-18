@@ -44,7 +44,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     '#3B82F6'
   );
   
-  const [productType, setProductType] = useState(initialData.productType || '');
+  // We no longer need to track product type selection as both containers are always visible
 
   // Debounce timers
   const websiteUrlUpdateTimer = useRef(null);
@@ -206,11 +206,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     // Store both primary and secondary screenshots
   };
 
-  // Handle product type selection
-  const handleProductTypeChange = (type) => {
-    console.log('Product type selected:', type);
-    setProductType(type);
-  };
+  // Product type selection is no longer needed as both containers are always visible
 
   // Handle marketing material uploads
   const handleMarketingMaterialUpload = (imageData) => {
@@ -563,34 +559,13 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       </div>
 
       {/* Navigation buttons at the bottom */}
-      {/* Product Type Selection */}
+      {/* Product Type Containers with Image Uploads */}
       <div className="container mx-auto px-4 mb-8">
         <ProductTypeSelect
-          value={productType}
-          onChange={handleProductTypeChange}
+          onProductImageUpload={handleProductImageUpload}
+          onAppScreenshotUpload={handleAppScreenshotUpload}
         />
       </div>
-
-      {/* Conditional rendering based on product type */}
-      {productType === 'physical' && (
-        <div className="container mx-auto px-4 mb-8">
-          <div className="bg-card rounded-xl overflow-hidden">
-            <ProductImageUpload
-              onUpload={handleProductImageUpload}
-            />
-          </div>
-        </div>
-      )}
-
-      {productType === 'software' && (
-        <div className="container mx-auto px-4">
-          <div className="bg-card rounded-xl overflow-hidden">
-            <AppScreenshotUpload
-              onUpload={handleAppScreenshotUpload}
-            />
-          </div>
-        </div>
-      )}
 
       {/* Marketing Materials Section - Always visible */}
       <div className="container mx-auto px-4 my-8">
