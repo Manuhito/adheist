@@ -616,13 +616,8 @@ def billing_page(request):
             'cta': 'Upgrade to Team',
             'highlighted': False,
             'popular': False
-        },
-        'enterprise': {
-            'display_name': 'Enterprise',
-            'cta': 'Contact Sales',
-            'highlighted': False,
-            'popular': False
         }
+        # Enterprise plan will be added manually
     }
     
     # Initialize pricing data with Free plan
@@ -688,6 +683,27 @@ def billing_page(request):
             }
             
             pricing_data["tiers"].append(tier)
+    
+    # Add Enterprise plan with original values
+    enterprise_plan = {
+        "name": "Enterprise",
+        "description": "For large organizations",
+        "price": {
+            "monthly": "Custom",
+            "yearly": "Custom"
+        },
+        "features": [
+            "Unlimited ad requests",
+            "Custom templates",
+            "Dedicated support",
+            "API access",
+            "Advanced analytics"
+        ],
+        "cta": "Contact Sales",
+        "highlighted": False,
+        "popular": False
+    }
+    pricing_data["tiers"].append(enterprise_plan)
     
     # Sort tiers in the correct order: Free, Pro, Team, Enterprise
     tier_order = ["Free", "Pro", "Team", "Enterprise"]
