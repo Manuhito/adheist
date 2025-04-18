@@ -89,10 +89,57 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     // Navigation logic will be added later
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     console.log('Next button clicked');
 
     // Ya no validamos que se haya seleccionado un tipo de producto, ya que no es obligatorio
+
+    // First update the status to 'filled' in the backend
+    if (initialData.id) {
+      try {
+        // Get CSRF token from cookies
+        const csrfToken = document.cookie
+          .split('; ')
+          .find(row => row.startsWith('csrftoken='))
+          ?.split('=')[1];
+
+        if (!csrfToken) {
+          console.error('CSRF token not found');
+          return;
+        }
+
+        // Create a FormData object for the request
+        const formData = new FormData();
+
+        // Add the status field to update to 'filled'
+        formData.append('status', 'FILLED');
+
+        // Make the API call to update the status
+        const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrfToken
+            // Don't set Content-Type header for FormData
+            // The browser will set it automatically with the correct boundary
+          },
+          body: formData
+        });
+
+        if (!response.ok) {
+          throw new Error(`Error updating status: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('Status updated to filled successfully:', data);
+
+        // If we have a refreshData function, call it to update the UI
+        if (refreshData) {
+          refreshData();
+        }
+      } catch (error) {
+        console.error('Error updating status to filled:', error);
+      }
+    }
 
     // Pass the data to the next step
     if (onComplete) {
