@@ -5,8 +5,9 @@ import { cn } from "../../lib/utils";
 /**
  * Component for product image uploads
  * Provides two image upload fields for different views of a physical product
+ * Can be preloaded with initial image data
  */
-export function ProductImageUpload({ onUpload, className, ...props }) {
+export function ProductImageUpload({ onUpload, className, initialData, ...props }) {
   // Handle uploads for each image separately
   const handleFirstImageUpload = (url) => {
     onUpload?.({ type: 'primary', url });
@@ -15,6 +16,10 @@ export function ProductImageUpload({ onUpload, className, ...props }) {
   const handleSecondImageUpload = (url) => {
     onUpload?.({ type: 'secondary', url });
   };
+  
+  // Extract initial image URLs from initialData if available
+  const primaryImageUrl = initialData?.product_image_1_override || null;
+  const secondaryImageUrl = initialData?.product_image_2_override || null;
 
   return (
     <div className={cn("w-full h-full flex flex-col p-6", className)}>
@@ -27,19 +32,21 @@ export function ProductImageUpload({ onUpload, className, ...props }) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <ImageUpload 
             onUpload={handleFirstImageUpload}
-            customTitle="Primary Product Image"
+            customTitle="Primary Product"
             customDescription="Front view or main product shot"
             customPlaceholderText="Add primary image"
             className="w-full border"
+            initialImage={primaryImageUrl}
             {...props}
           />
           
           <ImageUpload 
             onUpload={handleSecondImageUpload}
-            customTitle="Secondary Product Image"
+            customTitle="Secondary Product"
             customDescription="Side view or product in use"
             customPlaceholderText="Add secondary image"
             className="w-full border"
+            initialImage={secondaryImageUrl}
             {...props}
           />
         </div>

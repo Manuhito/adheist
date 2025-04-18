@@ -8,7 +8,7 @@ import { AppScreenshotUpload } from "./AppScreenshotUpload.jsx";
  * Component for displaying both physical product and software/service sections
  * Each section contains its respective image upload components
  */
-export function ProductTypeSelect({ className, onProductImageUpload, onAppScreenshotUpload }) {
+export function ProductTypeSelect({ className, onProductImageUpload, onAppScreenshotUpload, initialData }) {
   const productTypeOptions = [
     {
       id: "physical",
@@ -53,6 +53,7 @@ export function ProductTypeSelect({ className, onProductImageUpload, onAppScreen
           <div className="flex-grow">
             <ProductImageUpload 
               onUpload={onProductImageUpload}
+              initialData={initialData}
             />
           </div>
         </div>
@@ -92,6 +93,7 @@ export function ProductTypeSelect({ className, onProductImageUpload, onAppScreen
           <div className="flex-grow">
             <AppScreenshotUpload 
               onUpload={onAppScreenshotUpload}
+              initialData={initialData}
             />
           </div>
         </div>

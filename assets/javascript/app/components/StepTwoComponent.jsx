@@ -564,6 +564,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
         <ProductTypeSelect
           onProductImageUpload={handleProductImageUpload}
           onAppScreenshotUpload={handleAppScreenshotUpload}
+          initialData={initialData}
         />
       </div>
 
