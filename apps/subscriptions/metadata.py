@@ -215,31 +215,6 @@ ACTIVE_PRODUCTS = [
     ),
 ]
 
-# apps/subscriptions/metadata.py
-ACTIVE_PRODUCTS = [
-    ProductMetadata(
-        stripe_id='prod_S6Cf3s6eD62XZQ', 
-        slug='pro', 
-        name='Pro', 
-        features=['Pro Feature 1', 'Pro Feature 2', 'Pro Feature 3', '50 AdRequests per month'],
-        price_displays={}, 
-        description='The Pro plan', 
-        is_default=False,
-        # Add this field to store limits
-        limits={'ad_requests_per_month': 50}
-    ),
-    ProductMetadata(
-        stripe_id='prod_S6CeGCh0HYEO4k', 
-        slug='starter', 
-        name='Starter', 
-        features=['Starter Feature 1', 'Starter Feature 2', 'Starter Feature 3', '10 AdRequests per month'],
-        price_displays={}, 
-        description='The Starter plan', 
-        is_default=False,
-        limits={'ad_requests_per_month': 10}
-    ),
-]
-
 ACTIVE_PRODUCTS_BY_ID = {p.stripe_id: p for p in ACTIVE_PRODUCTS}
 
 
