@@ -195,23 +195,235 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   };
 
   // Handle product image upload
-  const handleProductImageUpload = (imageData) => {
+  const handleProductImageUpload = async (imageData) => {
     console.log('Product image uploaded:', imageData);
-    // Store both primary and secondary product images
+    
+    // Only proceed if we have an ID and URL
+    if (!initialData.id || !imageData?.url) return;
+    
+    try {
+      // Get CSRF token from cookies
+      const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken='))
+        ?.split('=')[1];
+
+      if (!csrfToken) {
+        console.error('CSRF token not found');
+        return;
+      }
+
+      // Create a FormData object
+      const formData = new FormData();
+      
+      // Check if this is a blob URL (from a new upload) or a server URL (from initialData)
+      if (imageData.url.startsWith('blob:')) {
+        console.log('Processing blob URL for product image...');
+        
+        // Convert the blob URL to an actual file
+        const blobResponse = await fetch(imageData.url);
+        const blob = await blobResponse.blob();
+        
+        // Create a file from the blob with a descriptive filename
+        const filename = `product_image_${imageData.type}_${Date.now()}.${blob.type.split('/')[1] || 'png'}`;
+        const file = new File([blob], filename, { type: blob.type });
+        
+        console.log('Created file:', file.name, 'type:', file.type, 'size:', file.size);
+        
+        // Add the file to the FormData with the field name based on image type
+        // This matches what the Django view expects in request.FILES
+        if (imageData.type === 'primary') {
+          formData.append('product_image_1', file);
+        } else if (imageData.type === 'secondary') {
+          formData.append('product_image_2', file);
+        }
+      } else {
+        // This is a server URL (from initialData)
+        console.log('Processing server URL for product image...');
+        
+        // For server URLs, we'll send the URL directly
+        if (imageData.type === 'primary') {
+          formData.append('product_image_1_override_url', imageData.url);
+        } else if (imageData.type === 'secondary') {
+          formData.append('product_image_2_override_url', imageData.url);
+        }
+      }
+      
+      // Make the API call to update the product image
+      const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrfToken
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error updating product image: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Product image updated successfully:', data);
+
+      // If we have a refreshData function, call it to update the UI
+      if (refreshData) {
+        refreshData();
+      }
+    } catch (error) {
+      console.error('Error saving product image:', error);
+    }
   };
 
   // Handle app screenshot upload
-  const handleAppScreenshotUpload = (imageData) => {
+  const handleAppScreenshotUpload = async (imageData) => {
     console.log('App screenshot uploaded:', imageData);
-    // Store both primary and secondary screenshots
+    
+    // Only proceed if we have an ID and URL
+    if (!initialData.id || !imageData?.url) return;
+    
+    try {
+      // Get CSRF token from cookies
+      const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken='))
+        ?.split('=')[1];
+
+      if (!csrfToken) {
+        console.error('CSRF token not found');
+        return;
+      }
+
+      // Create a FormData object
+      const formData = new FormData();
+      
+      // Check if this is a blob URL (from a new upload) or a server URL (from initialData)
+      if (imageData.url.startsWith('blob:')) {
+        console.log('Processing blob URL for app screenshot...');
+        
+        // Convert the blob URL to an actual file
+        const blobResponse = await fetch(imageData.url);
+        const blob = await blobResponse.blob();
+        
+        // Create a file from the blob with a descriptive filename
+        const filename = `app_image_${imageData.type}_${Date.now()}.${blob.type.split('/')[1] || 'png'}`;
+        const file = new File([blob], filename, { type: blob.type });
+        
+        console.log('Created file:', file.name, 'type:', file.type, 'size:', file.size);
+        
+        // Add the file to the FormData with the field name based on image type
+        if (imageData.type === 'primary') {
+          formData.append('app_image_1', file);
+        } else if (imageData.type === 'secondary') {
+          formData.append('app_image_2', file);
+        }
+      } else {
+        // This is a server URL (from initialData)
+        console.log('Processing server URL for app screenshot...');
+        
+        // For server URLs, we'll send the URL directly
+        if (imageData.type === 'primary') {
+          formData.append('app_image_1_override_url', imageData.url);
+        } else if (imageData.type === 'secondary') {
+          formData.append('app_image_2_override_url', imageData.url);
+        }
+      }
+      
+      // Make the API call to update the app screenshot
+      const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrfToken
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error updating app screenshot: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('App screenshot updated successfully:', data);
+
+      // If we have a refreshData function, call it to update the UI
+      if (refreshData) {
+        refreshData();
+      }
+    } catch (error) {
+      console.error('Error saving app screenshot:', error);
+    }
   };
 
   // Product type selection is no longer needed as both containers are always visible
 
   // Handle marketing material uploads
-  const handleMarketingMaterialUpload = (imageData) => {
+  const handleMarketingMaterialUpload = async (imageData) => {
     console.log('Marketing material uploaded:', imageData);
-    // Store marketing materials images
+    
+    // Only proceed if we have an ID and URL
+    if (!initialData.id || !imageData?.url) return;
+    
+    try {
+      // Get CSRF token from cookies
+      const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken='))
+        ?.split('=')[1];
+
+      if (!csrfToken) {
+        console.error('CSRF token not found');
+        return;
+      }
+
+      // Create a FormData object
+      const formData = new FormData();
+      
+      // Check if this is a blob URL (from a new upload) or a server URL (from initialData)
+      if (imageData.url.startsWith('blob:')) {
+        console.log('Processing blob URL for marketing material...');
+        
+        // Convert the blob URL to an actual file
+        const blobResponse = await fetch(imageData.url);
+        const blob = await blobResponse.blob();
+        
+        // Create a file from the blob with a descriptive filename
+        const filename = `marketing_image_${imageData.position}_${Date.now()}.${blob.type.split('/')[1] || 'png'}`;
+        const file = new File([blob], filename, { type: blob.type });
+        
+        console.log('Created file:', file.name, 'type:', file.type, 'size:', file.size);
+        
+        // Add the file to the FormData with the field name based on position
+        formData.append(`marketing_image_${imageData.position}`, file);
+      } else {
+        // This is a server URL (from initialData)
+        console.log('Processing server URL for marketing material...');
+        
+        // For server URLs, we'll send the URL directly
+        formData.append(`marketing_image_${imageData.position}_override_url`, imageData.url);
+      }
+      
+      // Make the API call to update the marketing material
+      const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrfToken
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error updating marketing material: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Marketing material updated successfully:', data);
+
+      // If we have a refreshData function, call it to update the UI
+      if (refreshData) {
+        refreshData();
+      }
+    } catch (error) {
+      console.error('Error saving marketing material:', error);
+    }
   };
 
   // This ref is now defined at the top of the component
