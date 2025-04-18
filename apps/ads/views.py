@@ -394,23 +394,6 @@ def adrequest_update(request, pk):
     # Otherwise, result is the ad_request object
     ad_request = result
     
-    # Log request information for debugging
-    print("\n\n==== ADREQUEST UPDATE DEBUG ====")
-    print(f"Request method: {request.method}")
-    print(f"Content type: {request.content_type}")
-    print(f"POST data keys: {list(request.POST.keys())}")
-    print(f"FILES data keys: {list(request.FILES.keys())}")
-    
-    # If there's JSON data in the request body, try to parse it
-    if request.content_type == 'application/json':
-        import json
-        try:
-            body_unicode = request.body.decode('utf-8')
-            body_data = json.loads(body_unicode)
-            print(f"JSON body data: {body_data}")
-        except Exception as e:
-            print(f"Error parsing JSON body: {e}")
-    
     try:
         # Update basic fields
         if 'canvas_size' in request.POST:
@@ -442,30 +425,6 @@ def adrequest_update(request, pk):
         # Save the updated overrides
         ad_request.asset_overrides = current_overrides
         
-        # Check for special logo_override_url field
-        print(f"Checking for logo_override_url in POST data")
-        if 'logo_override_url' in request.POST:
-            logo_url = request.POST.get('logo_override_url')
-            print(f"Found logo_override_url: {logo_url}")
-            # Directly set the logo_override field with the URL
-            ad_request.logo_override = logo_url
-            print(f"Set ad_request.logo_override to: {ad_request.logo_override}")
-        else:
-            print("logo_override_url not found in POST data")
-            
-        # Check if we have logo_override in JSON data
-        if request.content_type == 'application/json':
-            try:
-                body_unicode = request.body.decode('utf-8')
-                body_data = json.loads(body_unicode)
-                if 'logo_override' in body_data:
-                    logo_url = body_data['logo_override']
-                    print(f"Found logo_override in JSON: {logo_url}")
-                    ad_request.logo_override = logo_url
-                    print(f"Set ad_request.logo_override from JSON to: {ad_request.logo_override}")
-            except Exception as e:
-                print(f"Error processing JSON for logo_override: {e}")
-        
         # Update image override fields
         image_fields = [
             'logo', 'product_image_1', 'product_image_2', 
@@ -482,13 +441,8 @@ def adrequest_update(request, pk):
             elif field in request.FILES:
                 setattr(ad_request, override_field, request.FILES[field])
         
-        # Log the final state before saving
-        print(f"Final logo_override value: {ad_request.logo_override}")
-        print(f"Final asset_overrides value: {ad_request.asset_overrides}")
-        
         # Save the updated AdRequest
         ad_request.save()
-        print("AdRequest saved successfully")
         
         # Return success response
         return JsonResponse({
