@@ -1,6 +1,6 @@
 import * as React from "react"
-import { PricingCard } from "@/components/ui/pricing-card";
-import { Tab } from "@/components/ui/pricing-tab"
+import { PricingCard } from "@/shadcn/components/ui/pricing-card";
+import { Tab } from "@/shadcn/components/ui/pricing-tab"
 
 export function PricingSection({
   title,
