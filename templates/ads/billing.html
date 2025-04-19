@@ -1,11 +1,19 @@
 {% extends "web/app/app_base.html" %}
 {% load static %}
 
+{% block extra_head %}
+{{ block.super }}
+<!-- Add Stripe public key as meta tag for secure access in JavaScript -->
+<meta name="stripe-public-key" content="{{ stripe_public_key }}">
+{% endblock %}
+
 {% block extra_js %}
 {{ block.super }}
 <script>
   // Pass pricing data to the React component
   window.__PRICING_DATA__ = {{ pricing_data|safe }};
+  // Log pricing data for debugging
+  console.log('Pricing data:', window.__PRICING_DATA__);
 </script>
 <script src="{% static 'js/billing-bundle.js' %}" defer></script>
 {% endblock %}

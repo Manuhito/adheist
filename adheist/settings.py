@@ -425,10 +425,10 @@ DARK_THEME = "dark"
 # modeled to be the same as https://github.com/dj-stripe/dj-stripe
 # Note: don"t edit these values here - edit them in your .env file or environment variables!
 # The defaults are provided to prevent crashes if your keys don"t match the expected format.
-STRIPE_LIVE_PUBLIC_KEY = env("STRIPE_LIVE_PUBLIC_KEY", default="pk_live_***")
-STRIPE_LIVE_SECRET_KEY = env("STRIPE_LIVE_SECRET_KEY", default="sk_live_***")
-STRIPE_TEST_PUBLIC_KEY = env("STRIPE_TEST_PUBLIC_KEY", default="pk_test_***")
-STRIPE_TEST_SECRET_KEY = env("STRIPE_TEST_SECRET_KEY", default="sk_test_***")
+STRIPE_LIVE_PUBLIC_KEY = env("STRIPE_LIVE_PUBLIC_KEY", default=None)
+STRIPE_LIVE_SECRET_KEY = env("STRIPE_LIVE_SECRET_KEY", default=None)
+STRIPE_TEST_PUBLIC_KEY = env("STRIPE_TEST_PUBLIC_KEY", default=None)
+STRIPE_TEST_SECRET_KEY = env("STRIPE_TEST_SECRET_KEY", default=None)
 # Change to True in production
 STRIPE_LIVE_MODE = env.bool("STRIPE_LIVE_MODE", False)
 

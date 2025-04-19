@@ -653,29 +653,38 @@ def billing_page(request):
             monthly_price = product._get_price(PlanInterval.month, fail_hard=False)
             yearly_price = product._get_price(PlanInterval.year, fail_hard=False)
             
-            # Format price display
+            # Format price display and get price IDs
             price_data = {}
+            price_id_data = {}
+            
             if monthly_price:
                 try:
                     price_data["monthly"] = int(monthly_price.unit_amount / 100)
+                    price_id_data["monthly"] = monthly_price.id
                 except (TypeError, ValueError):
                     price_data["monthly"] = product.get_price_display(monthly_price)
+                    price_id_data["monthly"] = monthly_price.id if monthly_price else ""
             else:
                 price_data["monthly"] = "Custom"
+                price_id_data["monthly"] = ""
                 
             if yearly_price:
                 try:
                     price_data["yearly"] = int(yearly_price.unit_amount / 100)
+                    price_id_data["yearly"] = yearly_price.id
                 except (TypeError, ValueError):
                     price_data["yearly"] = product.get_price_display(yearly_price)
+                    price_id_data["yearly"] = yearly_price.id if yearly_price else ""
             else:
                 price_data["yearly"] = "Custom"
+                price_id_data["yearly"] = ""
             
             # Create tier data
             tier = {
                 "name": product_mapping[slug]['display_name'],
                 "description": product.metadata.description or f"For {product_mapping[slug]['display_name']} users",
                 "price": price_data,
+                "priceId": price_id_data,  # Add price IDs for Stripe Elements
                 "features": product.metadata.features,
                 "cta": product_mapping[slug]['cta'],
                 "highlighted": product_mapping[slug]['highlighted'],
@@ -712,10 +721,15 @@ def billing_page(request):
         key=lambda x: tier_order.index(x["name"]) if x["name"] in tier_order else 999
     )
         
+    # Get Stripe public key from settings
+    from django.conf import settings
+    stripe_public_key = settings.STRIPE_LIVE_PUBLIC_KEY if not settings.STRIPE_LIVE_MODE else settings.STRIPE_TEST_PUBLIC_KEY
+    
     # Convert pricing data to JSON for the React component
     pricing_json = json.dumps(pricing_data)
         
     return render(request, 'ads/billing.html', {
         "active_tab": "billing",
-        "pricing_data": pricing_json
+        "pricing_data": pricing_json,
+        "stripe_public_key": stripe_public_key
     })

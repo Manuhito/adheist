@@ -25,4 +25,7 @@ urlpatterns = [
         name="api_create_checkout_session",
     ),
     path("stripe/api/create-portal-session/", views.CreatePortalSession.as_view(), name="api_create_portal_session"),
+    path("api/create-payment-intent/", views.CreatePaymentIntent.as_view(), name="api_create_payment_intent"),
+    # stripe elements success page
+    path("billing/success/", views.payment_success, name="payment_success"),
 ]

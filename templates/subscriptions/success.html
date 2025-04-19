@@ -1,0 +1,76 @@
+{% extends "web/app/app_base.html" %}
+{% load static %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+  // This script handles the redirect after successful payment
+  document.addEventListener('DOMContentLoaded', function() {
+    // Check if payment was successful
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentIntent = urlParams.get('payment_intent');
+    const paymentIntentClientSecret = urlParams.get('payment_intent_client_secret');
+    
+    if (paymentIntent && paymentIntentClientSecret) {
+      // Show success message
+      document.getElementById('payment-success').classList.remove('hidden');
+      
+      // Redirect to dashboard after a delay
+      setTimeout(() => {
+        window.location.href = '/dashboard/';
+      }, 5000);
+    } else {
+      // Show error message
+      document.getElementById('payment-error').classList.remove('hidden');
+    }
+  });
+</script>
+{% endblock %}
+
+{% block app %}
+<div class="container mx-auto py-12">
+  <div class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl p-8">
+    <div id="payment-success" class="hidden">
+      <div class="text-center mb-6">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-4">
+          <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-900">Payment Successful!</h2>
+        <p class="mt-2 text-gray-600">Thank you for your subscription. Your account has been upgraded.</p>
+      </div>
+      
+      <div class="mt-8">
+        <p class="text-sm text-gray-500 text-center">You will be redirected to your dashboard in a few seconds...</p>
+        <div class="mt-4 flex justify-center">
+          <a href="/dashboard/" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+            Go to Dashboard
+          </a>
+        </div>
+      </div>
+    </div>
+    
+    <div id="payment-error" class="hidden">
+      <div class="text-center mb-6">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mb-4">
+          <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-900">Payment Error</h2>
+        <p class="mt-2 text-gray-600">There was an issue processing your payment. Please try again or contact support.</p>
+      </div>
+      
+      <div class="mt-8 flex justify-center space-x-4">
+        <a href="/billing/" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+          Try Again
+        </a>
+        <a href="/contact/" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+          Contact Support
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

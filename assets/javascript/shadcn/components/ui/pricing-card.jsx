@@ -7,14 +7,39 @@ import { cn } from "@/utilities/shadcn"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { StripeCheckoutModal } from "@/components/ui/stripe-checkout-modal"
 
 export function PricingCard({
   tier,
   paymentFrequency
 }) {
+  const [isCheckoutOpen, setIsCheckoutOpen] = React.useState(false)
   const price = tier.price[paymentFrequency]
   const isHighlighted = tier.highlighted
   const isPopular = tier.popular
+  
+  // Free tier doesn't need checkout
+  const isFree = tier.name === "Free" || (typeof price === "number" && price === 0)
+  
+  // Get the price ID from the tier metadata if available
+  const priceId = tier.priceId?.[paymentFrequency] || ""
+  
+  const handleSubscribe = () => {
+    if (isFree) {
+      // For free tier, just redirect to the dashboard or show a message
+      window.location.href = "/dashboard/"
+      return
+    }
+    
+    if (tier.name === "Enterprise") {
+      // For enterprise, redirect to contact page
+      window.location.href = "/contact/"
+      return
+    }
+    
+    // For paid plans, open the checkout modal
+    setIsCheckoutOpen(true)
+  }
 
   return (
     <Card
@@ -43,7 +68,7 @@ export function PricingCard({
               value={price}
               className="text-4xl font-medium" />
             <p className="-mt-2 text-xs text-muted-foreground">
-              Per month
+              Per {paymentFrequency === "monthly" ? "month" : "year"}
             </p>
           </>
         ) : (
@@ -66,10 +91,25 @@ export function PricingCard({
           ))}
         </ul>
       </div>
-      <Button variant={isHighlighted ? "secondary" : "default"} className="w-full">
+      <Button 
+        variant={isHighlighted ? "secondary" : "default"} 
+        className="w-full"
+        onClick={handleSubscribe}
+      >
         {tier.cta}
         <ArrowRight className="ml-2 h-4 w-4" />
       </Button>
+      
+      {/* Stripe Checkout Modal */}
+      {!isFree && tier.name !== "Enterprise" && (
+        <StripeCheckoutModal
+          isOpen={isCheckoutOpen}
+          onClose={() => setIsCheckoutOpen(false)}
+          priceId={priceId}
+          planName={tier.name}
+          frequency={paymentFrequency}
+        />
+      )}
     </Card>
   );
 }
