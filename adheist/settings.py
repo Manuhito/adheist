@@ -137,6 +137,8 @@ TEMPLATES = [
                 "apps.web.context_processors.project_meta",
                 # this line can be removed if not using google analytics
                 "apps.web.context_processors.google_analytics_id",
+                # Stripe public key for all templates
+                "apps.subscriptions.context_processors.stripe_context",
             ],
             "loaders": _DEFAULT_LOADERS if DEBUG else _CACHED_LOADERS,
         },

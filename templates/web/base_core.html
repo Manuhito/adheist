@@ -56,6 +56,11 @@
   {# Extra CSS #}
   {% block extra_css %}{% endblock %}
 
+  {# Stripe Integration #}
+  {% if stripe_public_key %}
+  <meta name="stripe-public-key" content="{{ stripe_public_key }}">
+  {% endif %}
+
   {# Page Head #}
   {% block page_head %}{% endblock %}
 </head>
