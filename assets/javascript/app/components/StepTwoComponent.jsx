@@ -41,8 +41,8 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     (initialData.asset_overrides?.main_hex_color) ||
     // Then fallback to brandColor if it exists
     initialData.brandColor ||
-    // Finally default to a blue color
-    '#3B82F6'
+    // Finally default to a white color
+    '#FFFFFF'
   );
   
   // We no longer need to track product type selection as both containers are always visible
