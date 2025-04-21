@@ -227,12 +227,6 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
                 })()}
               </div>
               <div>
-                <p className="text-sm text-gray-500">Created At</p>
-                <p className="font-medium">
-                  {initialData.created_at 
-                    ? new Date(initialData.created_at).toLocaleString() 
-                    : 'Not available'}
-                </p>
                 {/* Brand Color Display */}
                 <div className="mt-4">
                   <p className="text-sm text-gray-500 mb-1">Brand Color</p>
@@ -248,6 +242,32 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
                     </div>
                   ) : (
                     <span className="text-xs text-gray-400">No brand color</span>
+                  )}
+                </div>
+                {/* Company Website Display */}
+                <div className="mt-4">
+                  <p className="text-sm text-gray-500 mb-1">Company Website</p>
+                  {initialData.asset_overrides?.company_website ? (
+                    <a
+                      href={initialData.asset_overrides.company_website}
+                      className="text-xs text-blue-600 underline break-all"
+                      target="_blank" rel="noopener noreferrer"
+                    >
+                      {initialData.asset_overrides.company_website}
+                    </a>
+                  ) : (
+                    <span className="text-xs text-gray-400">No company website</span>
+                  )}
+                </div>
+                {/* Key Benefits Display */}
+                <div className="mt-4">
+                  <p className="text-sm text-gray-500 mb-1">Key Benefits</p>
+                  {initialData.asset_overrides?.key_benefits ? (
+                    <span className="text-xs">
+                      {initialData.asset_overrides.key_benefits}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-gray-400">No key benefits</span>
                   )}
                 </div>
               </div>
