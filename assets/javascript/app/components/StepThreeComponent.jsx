@@ -274,7 +274,25 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
             </div>
           </div>
         </div>
-        
+
+        {/* Logo Section */}
+        <div className="mt-8">
+          <div className="mb-2 text-center font-semibold text-primary text-lg">Company Logo</div>
+          <div className="flex justify-center">
+            <div className="group relative w-64 h-64 rounded-lg overflow-hidden shadow border bg-white">
+              {initialData.logo_override ? (
+                <img
+                  src={initialData.logo_override}
+                  alt="Logo Preview"
+                  className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
+                />
+              ) : (
+                <div className="flex items-center justify-center w-full h-full text-gray-400">No logo</div>
+              )}
+            </div>
+          </div>
+        </div>
+
         <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
           <div className="flex">
             <div className="flex-shrink-0">
