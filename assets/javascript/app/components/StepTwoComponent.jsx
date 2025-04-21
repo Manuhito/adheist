@@ -42,7 +42,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     // Then fallback to brandColor if it exists
     initialData.brandColor ||
     // Finally default to a white color
-    '#FFFFFF'
+    ''
   );
   
   // We no longer need to track product type selection as both containers are always visible
