@@ -343,33 +343,27 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
                 <p className="text-sm text-gray-500 mb-1">Canvas Size</p>
                 {(() => {
                   const canvasSizes = [
-                    { id: 'square', label: 'Square', size: '1080x1080' },
-                    { id: 'portraitTall', label: 'Portrait Tall', size: '1080x1920' },
-                    { id: 'portrait', label: 'Portrait', size: '1080x1350' },
-                    { id: 'landscape', label: 'Landscape', size: '1280x720' },
+                    { id: '1080x1080', label: 'Square', size: '1080x1080' },
+                    { id: '1080x1920', label: 'Portrait Tall', size: '1080x1920' },
+                    { id: '1080x1350', label: 'Portrait', size: '1080x1350' },
+                    { id: '1280x720', label: 'Landscape', size: '1280x720' },
                   ];
-                  const sizeIdMap = {
-                    '1080x1080': 'square',
-                    '1080x1920': 'portraitTall',
-                    '1080x1350': 'portrait',
-                    '1280x720': 'landscape',
-                  };
-                  const sizeId = sizeIdMap[initialData.canvas_size] || initialData.canvas_size;
-                  const item = canvasSizes.find(c => c.id === sizeId);
+                  // Use the canvas size value directly as the ID
+                  const item = canvasSizes.find(c => c.id === initialData.canvas_size);
                   if (item) {
                     return (
                       <div className="flex flex-col">
                         {/* Aspect ratio box */}
-                        {item.id === "square" && (
+                        {item.id === "1080x1080" && (
                           <div className="w-8 h-8 border-2 border-gray-300 rounded-sm mb-2" />
                         )}
-                        {item.id === "portraitTall" && (
+                        {item.id === "1080x1920" && (
                           <div className="w-6 h-10 border-2 border-gray-300 rounded-sm mb-2" />
                         )}
-                        {item.id === "portrait" && (
+                        {item.id === "1080x1350" && (
                           <div className="w-7 h-9 border-2 border-gray-300 rounded-sm mb-2" />
                         )}
-                        {item.id === "landscape" && (
+                        {item.id === "1280x720" && (
                           <div className="w-12 h-6 border-2 border-gray-300 rounded-sm mb-2" />
                         )}
                         <span className="font-semibold text-xs">{item.label}</span>

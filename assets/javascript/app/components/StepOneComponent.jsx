@@ -17,22 +17,8 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const [selectedTags, setSelectedTags] = useState([]);
   const [filteredResults, setFilteredResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  // Map initialData.canvas_size to canvas size ID if needed
-  const getCanvasSizeId = (sizeValue) => {
-    if (!sizeValue) return null;
-    
-    // Map size values to IDs
-    const sizeMap = {
-      '1080x1080': 'square',
-      '1080x1920': 'portraitTall',
-      '1080x1350': 'portrait',
-      '1280x720': 'landscape'
-    };
-    
-    return sizeMap[sizeValue] || sizeValue;
-  };
-  
-  const [selectedCanvasSize, setSelectedCanvasSize] = useState(getCanvasSizeId(initialData.canvas_size) || null);
+  // Initialize selected canvas size directly with the size value from initialData
+  const [selectedCanvasSize, setSelectedCanvasSize] = useState(initialData.canvas_size || null);
   const [selectedAdLibrary, setSelectedAdLibrary] = useState(initialData.ad_library_id || null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
@@ -176,12 +162,12 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
     setSelectedCanvasSize(size);
   };
 
-  // Canvas size options
+  // Canvas size options - using actual size values as IDs
   const canvasSizes = [
-    { id: "square", label: "Square", size: "1080 x 1080" },
-    { id: "portraitTall", label: "Portrait", size: "1080 x 1920" },
-    { id: "portrait", label: "Portrait", size: "1080 x 1350" },
-    { id: "landscape", label: "Landscape", size: "1280 x 720" },
+    { id: "1080x1080", label: "Square", size: "1080 x 1080" },
+    { id: "1080x1920", label: "Portrait", size: "1080 x 1920" },
+    { id: "1080x1350", label: "Portrait", size: "1080 x 1350" },
+    { id: "1280x720", label: "Landscape", size: "1280 x 720" },
   ];
 
   // Function to clear all filters
@@ -355,16 +341,16 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
                       onClick={() => handleCanvasSizeChange(item.id)}
                     >
                       {/* Shape preview that matches the aspect ratio */}
-                      {item.id === "square" && (
+                      {item.id === "1080x1080" && (
                         <div className="w-12 h-12 border-2 border-gray-300 rounded-sm mb-2" />
                       )}
-                      {item.id === "portraitTall" && (
+                      {item.id === "1080x1920" && (
                         <div className="w-8 h-14 border-2 border-gray-300 rounded-sm mb-2" />
                       )}
-                      {item.id === "portrait" && (
+                      {item.id === "1080x1350" && (
                         <div className="w-9 h-12 border-2 border-gray-300 rounded-sm mb-2" />
                       )}
-                      {item.id === "landscape" && (
+                      {item.id === "1280x720" && (
                         <div className="w-14 h-8 border-2 border-gray-300 rounded-sm mb-2" />
                       )}
                       <div className="font-semibold">{item.label}</div>
