@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { NextButton } from '../../components/ui/next-button.jsx';
 import { BackButton } from '../../components/ui/back-button.jsx';
+import { Button } from '../../components/ui/button.tsx';
+import { Sparkles } from "lucide-react";
 
 /**
  * Step Three Component for the Create Ad Request flow
@@ -9,6 +11,9 @@ import { BackButton } from '../../components/ui/back-button.jsx';
 const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isBackSubmitting, setIsBackSubmitting] = useState(false);
+
+  // Prompt state (solo visual, no guardar)
+  const [userPrompt, setUserPrompt] = useState("");
 
   // Estado para los datos completos del adlibrary
   const [adLibraryData, setAdLibraryData] = useState(null);
@@ -364,6 +369,29 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
             </div>
           );
         })()}
+
+        {/* Nueva sección: Prompt del usuario (solo visual) */}
+        <div className="flex flex-col items-center justify-center mb-8">
+          <div className="space-y-2 w-full min-w-[300px] max-w-2xl">
+            <label htmlFor="user-prompt" className="block text-lg font-medium text-primary mb-2 text-center">
+              What message do you want to transmit or additional instructions?
+            </label>
+            <textarea
+              id="user-prompt"
+              value={userPrompt}
+              onChange={e => setUserPrompt(e.target.value)}
+              rows={5}
+              className="w-full min-h-[120px] rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 text-base text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 shadow-sm focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-200 dark:focus-visible:ring-blue-800 transition resize-y mb-2"
+              placeholder="Write your prompt..."
+            />
+            <div className="flex justify-end">
+              <Button variant="outline" className="group">
+                <Sparkles className="w-4 h-4 mr-1 text-yellow-400 dark:text-yellow-300 group-hover:text-yellow-500 transition-colors duration-200" strokeWidth={2.2} />
+                Generate
+              </Button>
+            </div>
+          </div>
+        </div>
 
         <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
           <div className="flex">
