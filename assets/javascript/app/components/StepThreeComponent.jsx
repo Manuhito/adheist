@@ -9,6 +9,28 @@ import { BackButton } from '../../components/ui/back-button.jsx';
 const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isBackSubmitting, setIsBackSubmitting] = useState(false);
+
+  // Estado para los datos completos del adlibrary
+  const [adLibraryData, setAdLibraryData] = useState(null);
+  const [isAdLibraryLoading, setIsAdLibraryLoading] = useState(false);
+
+  // Fetch adlibrary info cuando tengamos el nombre
+  useEffect(() => {
+    if (!initialData.ad_library_name) return;
+    setIsAdLibraryLoading(true);
+    fetch(`/ads/adlibraries/?company_name=${encodeURIComponent(initialData.ad_library_name)}`)
+      .then(res => res.json())
+      .then(data => {
+        // Puede venir como array directa, results, o adlibraries
+        let found = null;
+        if (Array.isArray(data) && data.length > 0) found = data[0];
+        else if (Array.isArray(data?.results) && data.results.length > 0) found = data.results[0];
+        else if (Array.isArray(data?.adlibraries) && data.adlibraries.length > 0) found = data.adlibraries[0];
+        setAdLibraryData(found);
+      })
+      .catch(() => setAdLibraryData(null))
+      .finally(() => setIsAdLibraryLoading(false));
+  }, [initialData.ad_library_name]);
   
   // Fetch fresh data when component mounts
   useEffect(() => {
@@ -122,31 +144,52 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
         {/* Summary of the ad request */}
         <div className="bg-gray-50 p-4 rounded-md mb-6">
           <h3 className="font-medium text-gray-900 mb-2">Ad Request Summary</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-gray-500">Ad Library</p>
-              <p className="font-medium">{initialData.ad_library_name || 'Not specified'}</p>
+          <div className="flex flex-col md:flex-row gap-6 items-start">
+            {/* Contenedor exclusivo para título + imagen */}
+            <div className="flex flex-col items-center">
+              <div className="mb-2 text-center font-semibold text-primary text-lg">Ideal Ad Style selected</div>
+              <div className="group relative w-64 h-64 rounded-lg overflow-hidden shadow border bg-white">
+                {isAdLibraryLoading ? (
+                  <div className="flex items-center justify-center w-full h-full text-gray-400 animate-pulse">Loading...</div>
+                ) : adLibraryData ? (
+                  <>
+                    <img
+                      src={adLibraryData.ad_image || 'https://images.unsplash.com/photo-1557804506-669a67965ba0'}
+                      alt={adLibraryData.company_name || initialData.ad_library_name || 'Ad Preview'}
+                      className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
+                    />
+                    {/* Overlay info on hover */}
+                    <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center items-center text-white p-4">
+                      <h4 className="text-lg font-semibold mb-2">{adLibraryData.company_name || initialData.ad_library_name || 'No name'}</h4>
+                      {adLibraryData.industries && adLibraryData.industries.length > 0 && (
+                        <p className="text-sm mb-2 text-center">
+                          {adLibraryData.industries.join(', ')}
+                        </p>
+                      )}
+                      {adLibraryData.tags && adLibraryData.tags.length > 0 && (
+                        <p className="text-xs text-blue-200">{adLibraryData.tags.join(', ')}</p>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex items-center justify-center w-full h-full text-gray-400">No image</div>
+                )}
+              </div>
             </div>
-            
-            <div>
-              <p className="text-sm text-gray-500">Canvas Size</p>
-              <p className="font-medium">{initialData.canvas_size || 'Not specified'}</p>
-            </div>
-            
-            {/* Additional fields would be displayed here */}
-            <div>
-              <p className="text-sm text-gray-500">Status</p>
-              <p className="font-medium">{initialData.status || 'FILLED'}</p>
-            </div>
-            
-            <div>
-              <p className="text-sm text-gray-500">Created At</p>
-              <p className="font-medium">
-                {initialData.created_at 
-                  ? new Date(initialData.created_at).toLocaleString() 
-                  : 'Not available'}
-              </p>
+            {/* Details */}
+            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+              <div>
+                <p className="text-sm text-gray-500">Canvas Size</p>
+                <p className="font-medium">{initialData.canvas_size || 'Not specified'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Created At</p>
+                <p className="font-medium">
+                  {initialData.created_at 
+                    ? new Date(initialData.created_at).toLocaleString() 
+                    : 'Not available'}
+                </p>
+              </div>
             </div>
           </div>
         </div>
