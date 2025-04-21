@@ -134,9 +134,9 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
   return (
     <div className="space-y-8">
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
         <h2 className="text-xl font-semibold mb-4">Step 3: Review and Submit</h2>
-        <p className="text-gray-600 mb-4">
+        <p className="text-gray-600 dark:text-gray-300 mb-4">
           This is the final step of the ad request creation process.
           Review your ad details before submitting.
         </p>
@@ -318,6 +318,52 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
             </div>
           </div>
         </div>
+
+        {/* Responsive Informative Images Section */}
+        {(() => {
+          const imageKeys = [
+            'product_image_1_override',
+            'product_image_2_override',
+            'app_image_1_override',
+            'app_image_2_override',
+            'marketing_image_1_override',
+            'marketing_image_2_override',
+            'marketing_image_3_override',
+          ];
+          const labelMap = {
+            'product_image_1_override': 'product image',
+            'product_image_2_override': 'product image',
+            'app_image_1_override': 'service image',
+            'app_image_2_override': 'service image',
+            'marketing_image_1_override': 'marketing image',
+            'marketing_image_2_override': 'marketing image',
+            'marketing_image_3_override': 'marketing image',
+          };
+          const images = imageKeys
+            .map(key => initialData[key] ? { url: initialData[key], key } : null)
+            .filter(Boolean);
+          if (images.length === 0) return null;
+          return (
+            <div className="mb-8">
+              <div className="mb-2 text-sm font-semibold text-primary">Marketing Images</div>
+              <div className="flex flex-wrap gap-x-4 gap-y-2 justify-center md:justify-start bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+                {images.map(img => (
+                  <div key={img.key} className="flex flex-col items-center">
+                    <img
+                      src={img.url}
+                      alt={labelMap[img.key] + ' preview'}
+                      className="w-20 h-20 object-cover rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm"
+                      loading="lazy"
+                    />
+                    <span className="mt-1 text-xs text-gray-500 dark:text-gray-400 truncate max-w-[5rem] text-center">
+                      {labelMap[img.key]}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
 
         <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
           <div className="flex">
