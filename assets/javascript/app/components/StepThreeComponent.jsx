@@ -177,55 +177,6 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
             </div>
             {/* Details */}
             <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-              <div className="flex flex-col items-center">
-                <div className="mb-2 text-center font-semibold text-primary text-lg">Canvas Size selected</div>
-                {/* Canvas Size Preview, label, and value as in StepOneComponent */}
-                {(() => {
-                  const canvasSizes = [
-                    { id: 'square', label: 'Square', size: '1080x1080' },
-                    { id: 'portraitTall', label: 'Portrait Tall', size: '1080x1920' },
-                    { id: 'portrait', label: 'Portrait', size: '1080x1350' },
-                    { id: 'landscape', label: 'Landscape', size: '1280x720' },
-                  ];
-                  const sizeIdMap = {
-                    '1080x1080': 'square',
-                    '1080x1920': 'portraitTall',
-                    '1080x1350': 'portrait',
-                    '1280x720': 'landscape',
-                  };
-                  const sizeId = sizeIdMap[initialData.canvas_size] || initialData.canvas_size;
-                  const item = canvasSizes.find(c => c.id === sizeId);
-                  if (item) {
-                    return (
-                      <div className="flex flex-col items-center justify-center p-4">
-                        {/* Aspect ratio box */}
-                        {item.id === "square" && (
-                          <div className="w-12 h-12 border-2 border-gray-300 rounded-sm mb-2" />
-                        )}
-                        {item.id === "portraitTall" && (
-                          <div className="w-8 h-14 border-2 border-gray-300 rounded-sm mb-2" />
-                        )}
-                        {item.id === "portrait" && (
-                          <div className="w-9 h-12 border-2 border-gray-300 rounded-sm mb-2" />
-                        )}
-                        {item.id === "landscape" && (
-                          <div className="w-14 h-8 border-2 border-gray-300 rounded-sm mb-2" />
-                        )}
-                        <div className="font-semibold">{item.label}</div>
-                        <div className="text-sm text-gray-500">{item.size}</div>
-                      </div>
-                    );
-                  }
-                  // Fallback if unknown
-                  return (
-                    <div className="flex flex-col items-center justify-center p-4">
-                      <div className="w-12 h-12 border-2 border-dashed border-gray-200 rounded-sm mb-2 flex items-center justify-center text-xs text-gray-400">?</div>
-                      <div className="font-semibold text-gray-400">Unknown</div>
-                      <div className="text-sm text-gray-400">{initialData.canvas_size || 'Not specified'}</div>
-                    </div>
-                  );
-                })()}
-              </div>
               <div>
                 {/* Brand Color Display */}
                 <div className="mt-4">
@@ -269,6 +220,55 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
                   ) : (
                     <span className="text-xs text-gray-400">No key benefits</span>
                   )}
+                </div>
+                {/* Canvas Size Display (compact, with small title) */}
+                <div className="mt-4">
+                  <p className="text-sm text-gray-500 mb-1">Canvas Size</p>
+                  {(() => {
+                    const canvasSizes = [
+                      { id: 'square', label: 'Square', size: '1080x1080' },
+                      { id: 'portraitTall', label: 'Portrait Tall', size: '1080x1920' },
+                      { id: 'portrait', label: 'Portrait', size: '1080x1350' },
+                      { id: 'landscape', label: 'Landscape', size: '1280x720' },
+                    ];
+                    const sizeIdMap = {
+                      '1080x1080': 'square',
+                      '1080x1920': 'portraitTall',
+                      '1080x1350': 'portrait',
+                      '1280x720': 'landscape',
+                    };
+                    const sizeId = sizeIdMap[initialData.canvas_size] || initialData.canvas_size;
+                    const item = canvasSizes.find(c => c.id === sizeId);
+                    if (item) {
+                      return (
+                        <div className="flex flex-col">
+                          {/* Aspect ratio box */}
+                          {item.id === "square" && (
+                            <div className="w-8 h-8 border-2 border-gray-300 rounded-sm mb-2" />
+                          )}
+                          {item.id === "portraitTall" && (
+                            <div className="w-6 h-10 border-2 border-gray-300 rounded-sm mb-2" />
+                          )}
+                          {item.id === "portrait" && (
+                            <div className="w-7 h-9 border-2 border-gray-300 rounded-sm mb-2" />
+                          )}
+                          {item.id === "landscape" && (
+                            <div className="w-12 h-6 border-2 border-gray-300 rounded-sm mb-2" />
+                          )}
+                          <span className="font-semibold text-xs">{item.label}</span>
+                          <span className="text-xs text-gray-500">{item.size}</span>
+                        </div>
+                      );
+                    }
+                    // Fallback if unknown
+                    return (
+                      <div className="flex flex-col items-center">
+                        <div className="w-8 h-8 border-2 border-dashed border-gray-200 rounded-sm mb-2 flex items-center justify-center text-xs text-gray-400">?</div>
+                        <span className="font-semibold text-xs text-gray-400">Unknown</span>
+                        <span className="text-xs text-gray-400">{initialData.canvas_size || 'Not specified'}</span>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
