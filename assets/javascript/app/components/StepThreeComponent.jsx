@@ -142,12 +142,12 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
         </p>
         
         {/* Summary of the ad request */}
-        <div className="bg-gray-50 p-4 rounded-md mb-6">
+        <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 rounded-md mb-6">
           <div className="flex flex-col md:flex-row gap-6 items-start">
             {/* Contenedor exclusivo para título + imagen */}
             <div className="flex flex-col items-center">
               <div className="mb-2 text-center font-semibold text-primary text-lg">Ideal Ad Style selected</div>
-              <div className="group relative w-64 h-64 rounded-lg overflow-hidden shadow border bg-white">
+              <div className="group relative w-64 h-64 rounded-lg overflow-hidden shadow border bg-white dark:bg-gray-800">
                 {isAdLibraryLoading ? (
                   <div className="flex items-center justify-center w-full h-full text-gray-400 animate-pulse">Loading...</div>
                 ) : adLibraryData ? (
@@ -176,119 +176,145 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
               </div>
             </div>
             {/* Details */}
-            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-              <div>
-                {/* Brand Color Display */}
-                <div className="mt-4">
-                  <p className="text-sm text-gray-500 mb-1">Brand Color</p>
-                  {initialData.asset_overrides?.main_hex_color ? (
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="h-6 w-6 rounded-md border"
-                        style={{ backgroundColor: initialData.asset_overrides.main_hex_color }}
-                      />
-                      <span className="text-xs">
-                        {initialData.asset_overrides.main_hex_color}
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="text-xs text-gray-400">No brand color</span>
-                  )}
-                </div>
-                {/* Company Website Display */}
-                <div className="mt-4">
-                  <p className="text-sm text-gray-500 mb-1">Company Website</p>
-                  {initialData.asset_overrides?.company_website ? (
-                    <a
-                      href={initialData.asset_overrides.company_website}
-                      className="text-xs text-blue-600 underline break-all"
-                      target="_blank" rel="noopener noreferrer"
-                    >
-                      {initialData.asset_overrides.company_website}
-                    </a>
-                  ) : (
-                    <span className="text-xs text-gray-400">No company website</span>
-                  )}
-                </div>
-                {/* Key Benefits Display */}
-                <div className="mt-4">
-                  <p className="text-sm text-gray-500 mb-1">Key Benefits</p>
-                  {initialData.asset_overrides?.key_benefits ? (
-                    <span className="text-xs">
-                      {initialData.asset_overrides.key_benefits}
-                    </span>
-                  ) : (
-                    <span className="text-xs text-gray-400">No key benefits</span>
-                  )}
-                </div>
-                {/* Canvas Size Display (compact, with small title) */}
-                <div className="mt-4">
-                  <p className="text-sm text-gray-500 mb-1">Canvas Size</p>
-                  {(() => {
-                    const canvasSizes = [
-                      { id: 'square', label: 'Square', size: '1080x1080' },
-                      { id: 'portraitTall', label: 'Portrait Tall', size: '1080x1920' },
-                      { id: 'portrait', label: 'Portrait', size: '1080x1350' },
-                      { id: 'landscape', label: 'Landscape', size: '1280x720' },
-                    ];
-                    const sizeIdMap = {
-                      '1080x1080': 'square',
-                      '1080x1920': 'portraitTall',
-                      '1080x1350': 'portrait',
-                      '1280x720': 'landscape',
-                    };
-                    const sizeId = sizeIdMap[initialData.canvas_size] || initialData.canvas_size;
-                    const item = canvasSizes.find(c => c.id === sizeId);
-                    if (item) {
-                      return (
-                        <div className="flex flex-col">
-                          {/* Aspect ratio box */}
-                          {item.id === "square" && (
-                            <div className="w-8 h-8 border-2 border-gray-300 rounded-sm mb-2" />
-                          )}
-                          {item.id === "portraitTall" && (
-                            <div className="w-6 h-10 border-2 border-gray-300 rounded-sm mb-2" />
-                          )}
-                          {item.id === "portrait" && (
-                            <div className="w-7 h-9 border-2 border-gray-300 rounded-sm mb-2" />
-                          )}
-                          {item.id === "landscape" && (
-                            <div className="w-12 h-6 border-2 border-gray-300 rounded-sm mb-2" />
-                          )}
-                          <span className="font-semibold text-xs">{item.label}</span>
-                          <span className="text-xs text-gray-500">{item.size}</span>
-                        </div>
-                      );
-                    }
-                    // Fallback if unknown
-                    return (
-                      <div className="flex flex-col items-center">
-                        <div className="w-8 h-8 border-2 border-dashed border-gray-200 rounded-sm mb-2 flex items-center justify-center text-xs text-gray-400">?</div>
-                        <span className="font-semibold text-xs text-gray-400">Unknown</span>
-                        <span className="text-xs text-gray-400">{initialData.canvas_size || 'Not specified'}</span>
-                      </div>
-                    );
-                  })()}
-                </div>
+            <div className="flex-1 w-full">
+              <div className="mt-4">
+                <p className="text-sm text-gray-500 mb-1">Style Ad</p>
+                <span className="text-xs">
+                  {adLibraryData?.company_name || initialData.ad_library_name || '—'}
+                </span>
+              </div>
+              <div className="mt-4">
+                <p className="text-sm text-gray-500 mb-1">Industry</p>
+                <span className="text-xs">
+                  {adLibraryData?.industries && adLibraryData.industries.length > 0
+                    ? adLibraryData.industries.join(', ')
+                    : '—'}
+                </span>
+              </div>
+              <div className="mt-4">
+                <p className="text-sm text-gray-500 mb-1">Tags</p>
+                <span className="text-xs">
+                  {adLibraryData?.tags && adLibraryData.tags.length > 0
+                    ? adLibraryData.tags.join(', ')
+                    : '—'}
+                </span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Logo Section */}
-        <div className="mt-8">
-          <div className="mb-2 text-center font-semibold text-primary text-lg">Company Logo</div>
-          <div className="flex justify-center">
-            <div className="group relative w-64 h-64 rounded-lg overflow-hidden shadow border bg-white">
-              {initialData.logo_override ? (
-                <img
-                  src={initialData.logo_override}
-                  alt="Logo Preview"
-                  className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
-                />
-              ) : (
-                <div className="flex items-center justify-center w-full h-full text-gray-400">No logo</div>
-              )}
+        {/* Brand Details Section */}
+        <div className="mt-8 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-6 mb-8">
+          <div className="mb-4 text-sm font-semibold text-primary">Brand Details</div>
+          <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
+            {/* Logo Column */}
+            <div className="flex justify-center md:justify-start w-full md:w-64">
+              <div className="group relative w-48 h-48 rounded-lg overflow-hidden shadow border bg-white dark:bg-gray-800">
+                {initialData.logo_override ? (
+                  <img
+                    src={initialData.logo_override}
+                    alt="Logo Preview"
+                    className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center w-full h-full text-gray-400">No logo</div>
+                )}
+              </div>
+            </div>
+            {/* Details Column */}
+            <div className="flex-1 w-full">
+              {/* Brand Color Display */}
+              <div className="mb-4">
+                <p className="text-sm text-gray-500 mb-1">Brand Color</p>
+                {initialData.asset_overrides?.main_hex_color ? (
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="h-6 w-6 rounded-md border"
+                      style={{ backgroundColor: initialData.asset_overrides.main_hex_color }}
+                    />
+                    <span className="text-xs">
+                      {initialData.asset_overrides.main_hex_color}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-xs text-gray-400">No brand color</span>
+                )}
+              </div>
+              {/* Company Website Display */}
+              <div className="mb-4">
+                <p className="text-sm text-gray-500 mb-1">Company Website</p>
+                {initialData.asset_overrides?.company_website ? (
+                  <a
+                    href={initialData.asset_overrides.company_website}
+                    className="text-xs text-blue-600 underline break-all"
+                    target="_blank" rel="noopener noreferrer"
+                  >
+                    {initialData.asset_overrides.company_website}
+                  </a>
+                ) : (
+                  <span className="text-xs text-gray-400">No company website</span>
+                )}
+              </div>
+              {/* Key Benefits Display */}
+              <div className="mb-4">
+                <p className="text-sm text-gray-500 mb-1">Key Benefits</p>
+                {initialData.asset_overrides?.key_benefits ? (
+                  <span className="text-xs">
+                    {initialData.asset_overrides.key_benefits}
+                  </span>
+                ) : (
+                  <span className="text-xs text-gray-400">No key benefits</span>
+                )}
+              </div>
+              {/* Canvas Size Display (vertical) */}
+              <div className="mb-2">
+                <p className="text-sm text-gray-500 mb-1">Canvas Size</p>
+                {(() => {
+                  const canvasSizes = [
+                    { id: 'square', label: 'Square', size: '1080x1080' },
+                    { id: 'portraitTall', label: 'Portrait Tall', size: '1080x1920' },
+                    { id: 'portrait', label: 'Portrait', size: '1080x1350' },
+                    { id: 'landscape', label: 'Landscape', size: '1280x720' },
+                  ];
+                  const sizeIdMap = {
+                    '1080x1080': 'square',
+                    '1080x1920': 'portraitTall',
+                    '1080x1350': 'portrait',
+                    '1280x720': 'landscape',
+                  };
+                  const sizeId = sizeIdMap[initialData.canvas_size] || initialData.canvas_size;
+                  const item = canvasSizes.find(c => c.id === sizeId);
+                  if (item) {
+                    return (
+                      <div className="flex flex-col">
+                        {/* Aspect ratio box */}
+                        {item.id === "square" && (
+                          <div className="w-8 h-8 border-2 border-gray-300 rounded-sm mb-2" />
+                        )}
+                        {item.id === "portraitTall" && (
+                          <div className="w-6 h-10 border-2 border-gray-300 rounded-sm mb-2" />
+                        )}
+                        {item.id === "portrait" && (
+                          <div className="w-7 h-9 border-2 border-gray-300 rounded-sm mb-2" />
+                        )}
+                        {item.id === "landscape" && (
+                          <div className="w-12 h-6 border-2 border-gray-300 rounded-sm mb-2" />
+                        )}
+                        <span className="font-semibold text-xs">{item.label}</span>
+                        <span className="text-xs text-gray-500">{item.size}</span>
+                      </div>
+                    );
+                  }
+                  // Fallback if unknown
+                  return (
+                    <div className="flex flex-col items-center">
+                      <div className="w-8 h-8 border-2 border-dashed border-gray-200 rounded-sm mb-2 flex items-center justify-center text-xs text-gray-400">?</div>
+                      <span className="font-semibold text-xs text-gray-400">Unknown</span>
+                      <span className="text-xs text-gray-400">{initialData.canvas_size || 'Not specified'}</span>
+                    </div>
+                  );
+                })()}
+              </div>
             </div>
           </div>
         </div>
