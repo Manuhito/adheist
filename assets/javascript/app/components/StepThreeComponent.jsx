@@ -23,6 +23,34 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
       return;
     }
     setIsGenerating(true);
+    // First, update status to SUBMITED in the backend (like StepTwoComponent)
+    try {
+      // Get CSRF token from cookies
+      const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken='))
+        ?.split('=')[1];
+      if (!csrfToken) {
+        console.error('CSRF token not found');
+        setIsGenerating(false);
+        return;
+      }
+      const formData = new FormData();
+      formData.append('status', 'SUBMITTED');
+      const statusResponse = await fetch(`/ads/adrequest/${adRequestId}/update/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrfToken },
+        body: formData
+      });
+      if (!statusResponse.ok) {
+        const errorData = await statusResponse.json();
+        throw new Error(errorData.error || 'Failed to update status to SUBMITED');
+      }
+    } catch (err) {
+      console.error('Error updating status to SUBMITED:', err);
+      setIsGenerating(false);
+      return;
+    }
     try {
       const formData = new FormData();
       formData.append('ad_request', adRequestId);
