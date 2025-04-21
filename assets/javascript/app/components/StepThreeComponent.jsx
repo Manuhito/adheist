@@ -233,6 +233,23 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
                     ? new Date(initialData.created_at).toLocaleString() 
                     : 'Not available'}
                 </p>
+                {/* Brand Color Display */}
+                <div className="mt-4">
+                  <p className="text-sm text-gray-500 mb-1">Brand Color</p>
+                  {initialData.asset_overrides?.main_hex_color ? (
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="h-6 w-6 rounded-md border"
+                        style={{ backgroundColor: initialData.asset_overrides.main_hex_color }}
+                      />
+                      <span className="text-xs">
+                        {initialData.asset_overrides.main_hex_color}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-gray-400">No brand color</span>
+                  )}
+                </div>
               </div>
             </div>
           </div>
