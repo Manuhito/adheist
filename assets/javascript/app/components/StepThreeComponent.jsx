@@ -9,6 +9,45 @@ import { Sparkles } from "lucide-react";
  * Handles final submission of the ad request
  */
 const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  // Helper: get adRequestData.id if present, else fallback to initialData.id
+  const adRequestId = initialData?.id;
+
+  // ...rest of state/hooks
+
+  // Generate version handler
+  const handleGenerateVersion = async () => {
+    if (!adRequestId) {
+      console.error('No ad request ID available');
+      return;
+    }
+    setIsGenerating(true);
+    try {
+      const formData = new FormData();
+      formData.append('ad_request', adRequestId);
+      formData.append('user_prompt', userPrompt);
+      const response = await fetch('/ads/adrequest/version/create/', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-CSRFToken': getCsrfToken(),
+        },
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Error generating version');
+      }
+      // Guardar flag para mostrar alert en la home y redirigir
+      sessionStorage.setItem('ads_success_alert', '1');
+      window.location.href = '/ads/';
+    } catch (error) {
+      console.error('Error generating version:', error);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isBackSubmitting, setIsBackSubmitting] = useState(false);
 
@@ -385,10 +424,18 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
               placeholder="Write your prompt..."
             />
             <div className="flex justify-end">
-              <Button variant="outline" className="group">
-                <Sparkles className="w-4 h-4 mr-1 text-yellow-400 dark:text-yellow-300 group-hover:text-yellow-500 transition-colors duration-200" strokeWidth={2.2} />
-                Generate
-              </Button>
+              <Button
+                  variant="outline"
+                  className="group"
+                  onClick={handleGenerateVersion}
+                  disabled={isGenerating}
+                >
+                  {isGenerating ? (
+                    <span className="flex items-center"><Sparkles className="w-4 h-4 mr-1 animate-spin text-yellow-400 dark:text-yellow-300" strokeWidth={2.2} /> Generating...</span>
+                  ) : (
+                    <><Sparkles className="w-4 h-4 mr-1 text-yellow-400 dark:text-yellow-300 group-hover:text-yellow-500 transition-colors duration-200" strokeWidth={2.2} />Generate</>
+                  )}
+                </Button>
             </div>
           </div>
         </div>
@@ -409,13 +456,8 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
         </div>
       </div>
       
-      <div className="flex justify-center gap-4 pb-8">
+      <div className="flex justify-start gap-4 pb-8">
         <BackButton onClick={handleBack} isLoading={isBackSubmitting} />
-        <NextButton 
-          onClick={handleSubmit}
-          isLoading={isSubmitting}
-          text="Submit Ad Request"
-        />
       </div>
     </div>
   );

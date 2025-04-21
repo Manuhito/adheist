@@ -195,6 +195,17 @@ function AdRequestsGrid() {
     // State for notification
     const [notification, setNotification] = useState<{ message: string; variant: "warning" | "error" | "success" | "info" } | null>(null);
 
+    // Mostrar alert verde si el flag está presente
+    React.useEffect(() => {
+        if (sessionStorage.getItem('ads_success_alert')) {
+            setNotification({
+                message: 'Your ad request has been processed successfully! Your ad is being generated and may take a few minutes to be available.',
+                variant: 'success',
+            });
+            sessionStorage.removeItem('ads_success_alert');
+        }
+    }, []);
+
     // Get data from script element with id "ad-requests-data"
     const dataElement = document.getElementById("ad-requests-data");
     console.log("Data element:", dataElement);
