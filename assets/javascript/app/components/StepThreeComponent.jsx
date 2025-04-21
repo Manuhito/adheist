@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NextButton } from '../../components/ui/next-button.jsx';
+import { BackButton } from '../../components/ui/back-button.jsx';
 
 /**
  * Step Three Component for the Create Ad Request flow
@@ -7,6 +8,7 @@ import { NextButton } from '../../components/ui/next-button.jsx';
  */
 const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isBackSubmitting, setIsBackSubmitting] = useState(false);
   
   // Fetch fresh data when component mounts
   useEffect(() => {
@@ -56,6 +58,36 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
     }
   };
   
+  // Handle going back to step 2 (DRAFT)
+  const handleBack = async () => {
+    setIsBackSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append('status', 'DRAFT');
+
+      const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-CSRFToken': getCsrfToken(),
+        },
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update status to DRAFT');
+      }
+
+      if (onComplete) {
+        onComplete({ ...initialData, status: 'DRAFT' });
+      }
+    } catch (error) {
+      console.error('Error setting status to DRAFT:', error);
+    } finally {
+      setIsBackSubmitting(false);
+    }
+  };
+
   // Function to get CSRF token from cookies
   const getCsrfToken = () => {
     const name = 'csrftoken';
@@ -130,7 +162,8 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
         </div>
       </div>
       
-      <div className="flex justify-end">
+      <div className="flex justify-center gap-4 pb-8">
+        <BackButton onClick={handleBack} isLoading={isBackSubmitting} />
         <NextButton 
           onClick={handleSubmit}
           isLoading={isSubmitting}
