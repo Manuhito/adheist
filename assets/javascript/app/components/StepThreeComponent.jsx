@@ -16,6 +16,11 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
       refreshData();
     }
   }, []);
+
+  // Asegurar que el scroll esté al inicio de la página cuando el componente se monte
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   
   const handleSubmit = async () => {
     setIsSubmitting(true);
