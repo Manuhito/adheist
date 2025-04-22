@@ -6,7 +6,6 @@
 <script>
   // Pass pricing data to the React component
   window.__PRICING_DATA__ = {{ pricing_data|safe }};
-  console.log(window.__PRICING_DATA__);
 </script>
 <script src="{% static 'js/billing-bundle.js' %}" defer></script>
 {% endblock %}

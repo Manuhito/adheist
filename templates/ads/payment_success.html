@@ -3,6 +3,7 @@
 
 {% block content %}
 <div class="max-w-4xl mx-auto py-12 px-4">
+  {% if success %}
   <div class="text-center mb-8">
     <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-4">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -10,16 +11,71 @@
       </svg>
     </div>
     <h1 class="text-3xl font-bold">Payment Successful!</h1>
-    <p class="text-gray-600 mt-2">Thank you for your subscription.</p>
+    <p class="text-gray-600 dark:text-gray-300 mt-2">Thank you for your subscription.</p>
   </div>
   
-  <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+  <div class="bg-card dark:bg-card/90 rounded-lg shadow-md p-6 mb-8">
     <h2 class="text-xl font-semibold mb-4">Subscription Details</h2>
-    <div id="subscription-details">
-      <!-- Will be populated if payment data is available -->
-      <p class="text-gray-600">Your subscription has been activated. You now have access to all the features of your plan.</p>
+    <div id="subscription-details" class="space-y-4">
+      {% if product_name %}
+      <div class="flex justify-between border-b pb-2">
+        <span class="text-muted-foreground dark:text-muted-foreground/90">Plan:</span>
+        <span class="font-medium text-foreground dark:text-foreground/90">{{ product_name }}</span>
+      </div>
+      {% endif %}
+      
+      {% if subscription %}
+      <div class="flex justify-between border-b pb-2">
+        <span class="text-muted-foreground dark:text-muted-foreground/90">Status:</span>
+        <span class="font-medium text-foreground dark:text-foreground/90">{{ subscription.status }}</span>
+      </div>
+      
+      {% if subscription.current_period_end %}
+      <div class="flex justify-between border-b pb-2">
+        <span class="text-muted-foreground dark:text-muted-foreground/90">Current Period Ends:</span>
+        <span class="font-medium text-foreground dark:text-foreground/90">{{ subscription.current_period_end|date:"F j, Y" }}</span>
+      </div>
+      {% endif %}
+      {% else %}
+      <p class="text-foreground dark:text-foreground/90">Your subscription has been activated. You now have access to all the features of your plan.</p>
+      {% endif %}
     </div>
   </div>
+  {% else %}
+  <div class="text-center mb-8">
+    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mb-4">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+    </div>
+    <h1 class="text-3xl font-bold">Payment Issue</h1>
+    <p class="text-gray-600 dark:text-gray-300 mt-2">There was a problem processing your payment.</p>
+  </div>
+  
+  <div class="bg-card dark:bg-card/90 rounded-lg shadow-md p-6 mb-8">
+    <h2 class="text-xl font-semibold mb-4">Error Details</h2>
+    <div class="text-foreground dark:text-foreground/90">
+      {% if messages %}
+        {% for message in messages %}
+          <div class="{% if message.tags %}{{ message.tags }}{% endif %} p-4 mb-4 rounded-md {% if message.tags == 'error' %}bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400{% endif %}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% else %}
+        <p>An unknown error occurred. Please try again or contact support.</p>
+      {% endif %}
+      
+      {% if debug_info %}
+      <div class="mt-6 border-t pt-4">
+        <h3 class="text-lg font-medium mb-2">Debug Information</h3>
+        <div class="bg-gray-100 dark:bg-gray-800 p-3 rounded-md overflow-auto">
+          <pre class="text-xs text-gray-800 dark:text-gray-300">{{ debug_info }}</pre>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
   
   <div class="flex justify-center">
     <a href="/ads/billing/" class="bg-primary text-white py-2 px-6 rounded-md hover:bg-primary/90 transition-colors">
@@ -32,8 +88,6 @@
   document.addEventListener('DOMContentLoaded', function() {
     // Clear payment data from sessionStorage
     sessionStorage.removeItem('stripePaymentData');
-    
-    // Could fetch subscription details from backend here if needed
   });
 </script>
 {% endblock %}

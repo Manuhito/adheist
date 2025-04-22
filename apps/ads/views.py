@@ -80,9 +80,143 @@ def payment_page(request):
 @login_required
 def payment_success(request):
     """
-    Render the payment success page after a successful payment.
+    Handle successful payment and create subscription.
+    Expects payment_intent in the URL query parameters.
     """
-    return render(request, 'ads/payment_success.html')
+    import logging
+    from apps.utils.billing import get_stripe_module
+    from apps.subscriptions.helpers import provision_subscription
+    from django.contrib import messages
+    
+    logger = logging.getLogger('adheist.payment')
+    
+    # Debugging information
+    logger.info(f"Payment success view called with params: {request.GET}")
+    
+    # Get payment_intent_id from URL
+    payment_intent_id = request.GET.get('payment_intent')
+    if not payment_intent_id:
+        logger.error("No payment_intent found in URL parameters")
+        messages.error(
+            request,
+            "No payment information found. If you think this is an error, please contact support."
+        )
+        return render(request, 'ads/payment_success.html', {'success': False, 'debug_info': 'No payment_intent in URL'})
+    
+    try:
+        # Retrieve the payment intent from Stripe
+        stripe = get_stripe_module()
+        logger.info(f"Retrieving payment intent: {payment_intent_id}")
+        payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+        logger.info(f"Payment intent retrieved: {payment_intent.status}, metadata: {payment_intent.metadata}")
+        
+        # Verify payment status
+        if payment_intent.status != 'succeeded':
+            logger.error(f"Payment not completed. Status: {payment_intent.status}")
+            messages.error(
+                request,
+                f"Payment not completed. Status: {payment_intent.status}. Please try again or contact support."
+            )
+            return render(request, 'ads/payment_success.html', {
+                'success': False, 
+                'debug_info': f"Payment status: {payment_intent.status}"
+            })
+        
+        # For debugging purposes, let's check if we can create a simple subscription
+        # without all the validation
+        try:
+            # Get a default price for testing
+            logger.info("Attempting to list prices")
+            prices = stripe.Price.list(active=True, limit=1)
+            if not prices.data:
+                logger.error("No active prices found in Stripe")
+                messages.error(request, "No active subscription plans found. Please contact support.")
+                return render(request, 'ads/payment_success.html', {
+                    'success': False,
+                    'debug_info': 'No active prices found'
+                })
+            
+            default_price = prices.data[0]
+            logger.info(f"Using default price: {default_price.id}")
+            
+            # Get the product
+            product = stripe.Product.retrieve(default_price.product)
+            logger.info(f"Product retrieved: {product.name}")
+            
+            # Check if user has a customer ID
+            if not hasattr(request.user, 'customer') or not request.user.customer:
+                logger.info("User doesn't have a customer ID, creating one without payment method")
+                # Create a customer for the user if they don't have one (without payment method)
+                customer = stripe.Customer.create(
+                    email=request.user.email,
+                    name=request.user.get_full_name() or request.user.email,
+                    metadata={
+                        'user_id': request.user.id
+                    }
+                )
+                customer_id = customer.id
+                logger.info(f"Created customer: {customer_id}")
+            else:
+                customer_id = request.user.customer.id
+                logger.info(f"Using existing customer: {customer_id}")
+            
+            # Create a subscription with collection_method=send_invoice to avoid requiring a payment method
+            # This will create the subscription without requiring immediate payment
+            logger.info(f"Creating subscription with price: {default_price.id} for customer: {customer_id}")
+            subscription = stripe.Subscription.create(
+                customer=customer_id,
+                items=[
+                    {
+                        'price': default_price.id,
+                    },
+                ],
+                collection_method='send_invoice',  # Don't require payment method immediately
+                days_until_due=30,  # Give 30 days to add payment method
+                metadata={
+                    'user_id': request.user.id,
+                    'payment_intent_id': payment_intent_id,
+                }
+            )
+            logger.info(f"Subscription created: {subscription.id}, status: {subscription.status}")
+            
+            # Provision the subscription in your system
+            logger.info(f"Provisioning subscription: {subscription.id} for user: {request.user.id}")
+            djstripe_subscription = provision_subscription(request.user, subscription.id)
+            logger.info(f"Subscription provisioned: {djstripe_subscription.id}")
+            
+            # Success message
+            messages.success(
+                request,
+                f"You've successfully subscribed to {product.name}. Thank you for your support!"
+            )
+            
+            return render(request, 'ads/payment_success.html', {
+                'success': True,
+                'subscription': djstripe_subscription,
+                'product_name': product.name
+            })
+            
+        except Exception as e:
+            logger.exception(f"Error creating subscription: {str(e)}")
+            messages.error(
+                request,
+                f"Error creating subscription: {str(e)}. Please contact support."
+            )
+            return render(request, 'ads/payment_success.html', {
+                'success': False,
+                'debug_info': f"Subscription error: {str(e)}"
+            })
+            
+    except Exception as e:
+        logger.exception(f"Error processing payment: {str(e)}")
+        messages.error(
+            request,
+            f"Error processing payment: {str(e)}. Please contact support."
+        )
+        return render(request, 'ads/payment_success.html', {
+            'success': False,
+            'debug_info': f"Payment processing error: {str(e)}"
+        })
 
 
 @login_required
