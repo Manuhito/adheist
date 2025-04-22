@@ -21,6 +21,7 @@ module.exports = {
     'create-adrequest': './assets/javascript/app/create-adrequest.jsx',
     'ad-requests': './assets/javascript/app/ad-requests.tsx',  // entry point para la página de ad_requests
     'billing': './assets/javascript/pricing.js',  // entry point for the app billing page
+    'payment': './assets/javascript/payment.js',  // entry point for the payment page
   },
   output: {
     path: path.resolve(__dirname, './static'),
