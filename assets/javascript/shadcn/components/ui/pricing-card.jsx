@@ -10,11 +10,17 @@ import { Card } from "@/components/ui/card"
 
 export function PricingCard({
   tier,
-  paymentFrequency
+  paymentFrequency,
+  onSubscribe
 }) {
   const price = tier.price[paymentFrequency]
   const isHighlighted = tier.highlighted
   const isPopular = tier.popular
+  
+  // Get the correct Stripe price ID based on payment frequency
+  const priceId = paymentFrequency === 'monthly' 
+    ? tier.price?.monthlyPriceId 
+    : tier.price?.yearlyPriceId;
 
   return (
     <Card
@@ -66,7 +72,12 @@ export function PricingCard({
           ))}
         </ul>
       </div>
-      <Button variant={isHighlighted ? "secondary" : "default"} className="w-full">
+      <Button 
+        variant={isHighlighted ? "secondary" : "default"} 
+        className="w-full"
+        onClick={() => onSubscribe && onSubscribe(priceId)}
+        disabled={!onSubscribe || !priceId}
+      >
         {tier.cta}
         <ArrowRight className="ml-2 h-4 w-4" />
       </Button>

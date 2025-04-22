@@ -1,0 +1,136 @@
+{% extends "web/app/app_base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-12 px-4">
+  <h1 class="text-3xl font-bold mb-8">Complete Your Payment</h1>
+  
+  <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+    <div id="payment-details" class="mb-6">
+      <!-- Payment details will be populated by JavaScript -->
+      <div class="flex justify-between mb-2">
+        <span class="text-gray-600">Amount:</span>
+        <span id="payment-amount" class="font-medium"></span>
+      </div>
+    </div>
+    
+    <form id="payment-form" class="space-y-4">
+      <div class="mb-4">
+        <label for="payment-element" class="block text-sm font-medium text-gray-700 mb-2">
+          Payment details
+        </label>
+        <div id="payment-element" class="p-4 border rounded-md">
+          <!-- Stripe Elements will be inserted here -->
+        </div>
+      </div>
+      
+      <div id="error-message" class="text-red-500 text-sm mb-4 hidden"></div>
+      
+      <button id="submit-button" type="submit" class="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors">
+        <div class="spinner hidden" id="spinner"></div>
+        <span id="button-text">Pay now</span>
+      </button>
+    </form>
+  </div>
+</div>
+
+<style>
+  .spinner {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s ease-in-out infinite;
+  }
+  
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  
+  .hidden {
+    display: none;
+  }
+</style>
+
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Get payment data from sessionStorage
+    const paymentDataString = sessionStorage.getItem('stripePaymentData');
+    if (!paymentDataString) {
+      window.location.href = '/ads/billing/';
+      return;
+    }
+    
+    const paymentData = JSON.parse(paymentDataString);
+    const { clientSecret, publishableKey, amount, currency } = paymentData;
+    
+    // Display payment details
+    const formatter = new Intl.NumberFormat(undefined, {
+      style: 'currency',
+      currency: currency.toUpperCase()
+    });
+    document.getElementById('payment-amount').textContent = formatter.format(amount);
+    
+    // Initialize Stripe
+    const stripe = Stripe(publishableKey);
+    const elements = stripe.elements({
+      clientSecret,
+      appearance: {
+        theme: 'stripe',
+        variables: {
+          colorPrimary: '#0570de',
+        }
+      }
+    });
+    
+    // Create and mount the Payment Element
+    const paymentElement = elements.create('payment');
+    paymentElement.mount('#payment-element');
+    
+    // Handle form submission
+    const form = document.getElementById('payment-form');
+    const submitButton = document.getElementById('submit-button');
+    const spinner = document.getElementById('spinner');
+    const buttonText = document.getElementById('button-text');
+    const errorMessage = document.getElementById('error-message');
+    
+    form.addEventListener('submit', async function(event) {
+      event.preventDefault();
+      
+      // Disable the submit button and show spinner
+      setLoading(true);
+      
+      // Confirm the payment
+      const { error } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: window.location.origin + '/ads/payment-success/',
+        }
+      });
+      
+      if (error) {
+        // Show error message
+        errorMessage.textContent = error.message;
+        errorMessage.classList.remove('hidden');
+        setLoading(false);
+      }
+      // Otherwise, the page will redirect to the return_url
+    });
+    
+    function setLoading(isLoading) {
+      if (isLoading) {
+        submitButton.disabled = true;
+        spinner.classList.remove('hidden');
+        buttonText.classList.add('opacity-0');
+      } else {
+        submitButton.disabled = false;
+        spinner.classList.add('hidden');
+        buttonText.classList.remove('opacity-0');
+      }
+    }
+  });
+</script>
+{% endblock %}

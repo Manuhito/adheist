@@ -6,7 +6,8 @@ export function PricingSection({
   title,
   subtitle,
   tiers,
-  frequencies
+  frequencies,
+  onSubscribe
 }) {
   const [selectedFrequency, setSelectedFrequency] = React.useState(frequencies[0])
 
@@ -30,7 +31,12 @@ export function PricingSection({
       </div>
       <div className="grid w-full max-w-6xl gap-6 sm:grid-cols-2 xl:grid-cols-4">
         {tiers.map((tier) => (
-          <PricingCard key={tier.name} tier={tier} paymentFrequency={selectedFrequency} />
+          <PricingCard 
+            key={tier.name} 
+            tier={tier} 
+            paymentFrequency={selectedFrequency} 
+            onSubscribe={onSubscribe}
+          />
         ))}
       </div>
     </section>

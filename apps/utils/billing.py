@@ -11,7 +11,9 @@ def get_stripe_module():
     stripe.api_key = djstripe_settings.STRIPE_SECRET_KEY
     return stripe
 
-
+def get_stripe_publishable_key():
+    return djstripe_settings.STRIPE_PUBLIC_KEY
+    
 def create_stripe_api_keys_if_necessary() -> bool:
     key, created = APIKey.objects.get_or_create_by_api_key(djstripe_settings.STRIPE_SECRET_KEY)
     return created

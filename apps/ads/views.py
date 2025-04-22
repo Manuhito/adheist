@@ -1,9 +1,12 @@
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.contrib import messages
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http.response import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.template.response import TemplateResponse
+from django.views.decorators.http import require_POST
+from apps.subscriptions.helpers import create_stripe_checkout_session
 from django.urls import reverse
 from django.views.decorators.http import require_POST, require_http_methods
 import json
@@ -17,6 +20,69 @@ from .services import can_create_ad_request, increment_usage
 PAGINATE_BY = 4
 # For pagination, we use get_elided_page_range() to give a list of pages that always has some
 # pages at the beginning and end, and some on either side of current, with ellipsis where needed.
+
+
+@require_POST
+@login_required
+def create_payment_intent(request):
+    """
+    Create a Stripe PaymentIntent for the selected price and return the client secret.
+    Expects 'priceId' in POST data.
+    """
+    from apps.utils.billing import get_stripe_module, get_stripe_publishable_key
+    
+    stripe = get_stripe_module()
+    price_id = request.POST.get('priceId')
+    if not price_id:
+        return JsonResponse({'error': 'Missing priceId'}, status=400)
+    try:
+        # Retrieve the price object from Stripe
+        price = stripe.Price.retrieve(price_id)
+        amount = price.unit_amount
+        currency = price.currency
+        
+        # Handle customer association if available
+        customer_kwargs = {}
+        if hasattr(request.user, 'customer') and request.user.customer:
+            customer_kwargs["customer"] = request.user.customer.id
+        # Note: For PaymentIntent API, we can't use customer_email or customer_creation
+        # Customer association can happen during payment confirmation if needed
+        
+        # Create PaymentIntent
+        payment_intent = stripe.PaymentIntent.create(
+            amount=amount,
+            currency=currency,
+            automatic_payment_methods={"enabled": True},
+            metadata={
+                "user_id": request.user.id,
+                "price_id": price_id,
+            },
+            **customer_kwargs
+        )
+        
+        # Return data needed by the frontend
+        return JsonResponse({
+            "clientSecret": payment_intent.client_secret,
+            "publishableKey": get_stripe_publishable_key(),
+            "amount": amount / 100,  # Convert cents to dollars/euros
+            "currency": currency
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+@login_required
+def payment_page(request):
+    """
+    Render the payment page with Stripe Elements integration.
+    """
+    return render(request, 'ads/payment.html')
+
+@login_required
+def payment_success(request):
+    """
+    Render the payment success page after a successful payment.
+    """
+    return render(request, 'ads/payment_success.html')
 
 
 @login_required
@@ -592,7 +658,7 @@ def adrequest_details_page(request, adrequest_id):
         
     return TemplateResponse(request, template, context)
 
-
+@ensure_csrf_cookie
 @login_required
 def billing_page(request):
     """
@@ -671,6 +737,12 @@ def billing_page(request):
             else:
                 price_data["yearly"] = "Custom"
             
+            # Add price IDs to price data
+            if monthly_price:
+                price_data["monthlyPriceId"] = monthly_price.id
+            if yearly_price:
+                price_data["yearlyPriceId"] = yearly_price.id
+                
             # Create tier data
             tier = {
                 "name": product_mapping[slug]['display_name'],
