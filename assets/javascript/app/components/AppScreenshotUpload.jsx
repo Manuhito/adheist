@@ -5,8 +5,9 @@ import { cn } from "../../lib/utils";
 /**
  * Component for app screenshot uploads
  * Provides two image upload fields for different views of a software product
+ * Can be preloaded with initial image data
  */
-export function AppScreenshotUpload({ onUpload, className, ...props }) {
+export function AppScreenshotUpload({ onUpload, className, initialData, ...props }) {
   // Handle uploads for each screenshot separately
   const handleFirstScreenshotUpload = (url) => {
     onUpload?.({ type: 'primary', url });
@@ -15,6 +16,10 @@ export function AppScreenshotUpload({ onUpload, className, ...props }) {
   const handleSecondScreenshotUpload = (url) => {
     onUpload?.({ type: 'secondary', url });
   };
+  
+  // Extract initial image URLs from initialData if available
+  const primaryImageUrl = initialData?.app_image_1_override || null;
+  const secondaryImageUrl = initialData?.app_image_2_override || null;
 
   return (
     <div className={cn("w-full h-full flex flex-col p-6", className)}>
@@ -31,6 +36,7 @@ export function AppScreenshotUpload({ onUpload, className, ...props }) {
             customDescription="Main screen or dashboard view"
             customPlaceholderText="Add main screenshot"
             className="w-full border"
+            initialImage={primaryImageUrl}
             {...props}
           />
           
@@ -40,6 +46,7 @@ export function AppScreenshotUpload({ onUpload, className, ...props }) {
             customDescription="Key feature or functionality in action"
             customPlaceholderText="Add feature screenshot"
             className="w-full border"
+            initialImage={secondaryImageUrl}
             {...props}
           />
         </div>

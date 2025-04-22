@@ -10,7 +10,7 @@ import { NextButton } from '../../components/ui/next-button.jsx';
  * Handles selection of ad library and canvas size
  * Based on the original CreateAdRequestApp component
  */
-const StepOneComponent = ({ onComplete, initialData = {} }) => {
+const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
   // Centralized state for all filters
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [selectedIndustries, setSelectedIndustries] = useState([]);
@@ -147,6 +147,13 @@ const StepOneComponent = ({ onComplete, initialData = {} }) => {
   useEffect(() => {
     fetchFilteredResults();
   }, [selectedCompany, selectedIndustries, selectedTags]);
+  
+  // Fetch fresh data when component mounts
+  useEffect(() => {
+    if (refreshData && initialData?.id) {
+      refreshData();
+    }
+  }, []);
 
   // Handlers for each filter type
   const handleCompanyChange = (company) => {

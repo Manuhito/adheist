@@ -7,7 +7,7 @@ import { cn } from "../../lib/utils";
  * Extends the base ImageUpload component with specific text and styling for company logos
  * Responsive design that adapts to different screen sizes
  */
-export function CompanyLogoUpload({ onUpload, className, ...props }) {
+export function CompanyLogoUpload({ onUpload, className, initialImage, ...props }) {
   return (
     <div className={cn("w-full h-full flex flex-col p-6", className)}>
       <div className="w-full">
@@ -22,6 +22,7 @@ export function CompanyLogoUpload({ onUpload, className, ...props }) {
           customDescription="Upload a high-quality logo (PNG or SVG preferred)"
           customPlaceholderText="Add your company logo"
           className="w-full border"
+          initialImage={initialImage}
           {...props}
         />
       </div>

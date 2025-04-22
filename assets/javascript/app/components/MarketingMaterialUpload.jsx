@@ -5,8 +5,9 @@ import { cn } from "../../lib/utils";
 /**
  * Component for uploading additional marketing materials
  * Provides three image upload fields in a row for supplementary content
+ * Can be preloaded with initial image data
  */
-export function MarketingMaterialUpload({ onUpload, className, ...props }) {
+export function MarketingMaterialUpload({ onUpload, className, initialData, ...props }) {
   // Handle uploads for each image separately
   const handleFirstImageUpload = (url) => {
     onUpload?.({ position: 1, url });
@@ -19,6 +20,11 @@ export function MarketingMaterialUpload({ onUpload, className, ...props }) {
   const handleThirdImageUpload = (url) => {
     onUpload?.({ position: 3, url });
   };
+  
+  // Extract initial image URLs from initialData if available
+  const firstImageUrl = initialData?.marketing_image_1_override || null;
+  const secondImageUrl = initialData?.marketing_image_2_override || null;
+  const thirdImageUrl = initialData?.marketing_image_3_override || null;
 
   return (
     <div className={cn("w-full h-full flex flex-col p-6", className)}>
@@ -35,6 +41,7 @@ export function MarketingMaterialUpload({ onUpload, className, ...props }) {
             customDescription="Customer review or testimonial"
             customPlaceholderText="Add image"
             className="w-full border"
+            initialImage={firstImageUrl}
             {...props}
           />
           
@@ -44,6 +51,7 @@ export function MarketingMaterialUpload({ onUpload, className, ...props }) {
             customDescription="Show your product in action"
             customPlaceholderText="Add image"
             className="w-full border"
+            initialImage={secondImageUrl}
             {...props}
           />
           
@@ -53,6 +61,7 @@ export function MarketingMaterialUpload({ onUpload, className, ...props }) {
             customDescription="Any other relevant image"
             customPlaceholderText="Add image"
             className="w-full border"
+            initialImage={thirdImageUrl}
             {...props}
           />
         </div>
