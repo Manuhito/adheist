@@ -30,6 +30,7 @@ def create_payment_intent(request):
     Expects 'priceId' in POST data.
     """
     from apps.utils.billing import get_stripe_module, get_stripe_publishable_key
+    from djstripe.models import Customer as DjStripeCustomer
     
     stripe = get_stripe_module()
     price_id = request.POST.get('priceId')
@@ -41,12 +42,31 @@ def create_payment_intent(request):
         amount = price.unit_amount
         currency = price.currency
         
-        # Handle customer association if available
+        # Ensure the user has a customer before creating a payment intent
         customer_kwargs = {}
         if hasattr(request.user, 'customer') and request.user.customer:
+            # User already has a customer, use it
             customer_kwargs["customer"] = request.user.customer.id
-        # Note: For PaymentIntent API, we can't use customer_email or customer_creation
-        # Customer association can happen during payment confirmation if needed
+        else:
+            # Create a new customer for the user
+            try:
+                customer = stripe.Customer.create(
+                    email=request.user.email,
+                    name=request.user.get_full_name() or request.user.email,
+                    metadata={
+                        'user_id': request.user.id
+                    }
+                )
+                # Sync the customer to Django-Stripe
+                djstripe_customer = DjStripeCustomer.sync_from_stripe_data(customer)
+                # Associate the customer with the user
+                request.user.customer = djstripe_customer
+                request.user.save()
+                
+                customer_kwargs["customer"] = customer.id
+            except Exception as e:
+                # Log the error but continue - we'll create a payment intent without customer
+                print(f"Error creating customer: {str(e)}")
         
         # Create PaymentIntent with setup_future_usage to save payment method
         payment_intent = stripe.PaymentIntent.create(
@@ -172,11 +192,38 @@ def payment_success(request):
                 if payment_method.customer:
                     print(f"Payment method is already attached to customer: {payment_method.customer}")
                     if payment_method.customer != customer_id:
-                        print(f"Payment method is attached to a different customer. Creating a new payment method.")
-                        # We need to create a new payment method for this customer
-                        # This is a simplified approach - in production, you might want to ask the user for payment details again
-                        # or implement a more sophisticated payment method transfer
-                        pass
+                        print(f"Payment method is attached to a different customer. Updating user's customer.")
+                        # Instead of creating a new payment method, use the existing customer that has the payment method
+                        try:
+                            # Get the existing customer that has the payment method
+                            existing_customer = stripe.Customer.retrieve(payment_method.customer)
+                            print(f"Found existing customer: {existing_customer.id}")
+                            
+                            # Update the existing customer with the user's information if needed
+                            if existing_customer.email != request.user.email:
+                                existing_customer = stripe.Customer.modify(
+                                    existing_customer.id,
+                                    email=request.user.email,
+                                    name=request.user.get_full_name() or request.user.email,
+                                    metadata={
+                                        'user_id': request.user.id
+                                    }
+                                )
+                                print(f"Updated existing customer with user information")
+                            
+                            # Sync the customer to Django-Stripe
+                            from djstripe.models import Customer as DjStripeCustomer
+                            djstripe_customer = DjStripeCustomer.sync_from_stripe_data(existing_customer)
+                            
+                            # Update the user's customer reference
+                            request.user.customer = djstripe_customer
+                            request.user.save()
+                            
+                            # Update our customer_id to use this customer
+                            customer_id = existing_customer.id
+                            print(f"User's customer updated to: {customer_id}")
+                        except Exception as e:
+                            print(f"Error updating user's customer: {str(e)}")
                 else:
                     # Attach the payment method to our customer
                     print(f"Attaching payment method {payment_method_id} to customer {customer_id}")
@@ -184,16 +231,20 @@ def payment_success(request):
                         payment_method_id,
                         customer=customer_id,
                     )
-                    
-                    # Set it as the default payment method
-                    print(f"Setting payment method {payment_method_id} as default for customer {customer_id}")
+                
+                # Always set the payment method as default, regardless of whether it was already attached
+                # or we just attached it
+                print(f"Setting payment method {payment_method_id} as default for customer {customer_id}")
+                try:
                     stripe.Customer.modify(
                         customer_id,
                         invoice_settings={
                             'default_payment_method': payment_method_id,
                         }
                     )
-                    print("Payment method successfully attached and set as default")
+                    print("Payment method successfully set as default")
+                except Exception as e:
+                    print(f"Error setting default payment method: {str(e)}")
             except Exception as e:
                 print(f"Error attaching payment method: {str(e)}")
                 # Continue anyway, we'll try to create the subscription
