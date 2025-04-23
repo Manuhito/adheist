@@ -16,6 +16,7 @@ export function PricingCard({
   const price = tier.price[paymentFrequency]
   const isHighlighted = tier.highlighted
   const isPopular = tier.popular
+  const isCurrentPlan = tier.is_current_plan
   
   // Get the correct Stripe price ID based on payment frequency
   const priceId = paymentFrequency === 'monthly' 
@@ -31,7 +32,14 @@ export function PricingCard({
       {isPopular && <PopularBackground />}
       <h2 className="flex items-center gap-3 text-xl font-medium capitalize">
         {tier.name}
-        {isPopular && (
+        {isCurrentPlan ? (
+          <Badge 
+            variant={isHighlighted ? "secondary" : "outline"} 
+            className="mt-1 z-10"
+          >
+            Current Plan
+          </Badge>
+        ) : isPopular && (
           <Badge variant="secondary" className="mt-1 z-10">
             🔥 Most Popular
           </Badge>
@@ -76,10 +84,10 @@ export function PricingCard({
         variant={isHighlighted ? "secondary" : "default"} 
         className="w-full"
         onClick={() => onSubscribe && onSubscribe(priceId)}
-        disabled={!onSubscribe || !priceId}
+        disabled={!onSubscribe || !priceId || isCurrentPlan}
       >
-        {tier.cta}
-        <ArrowRight className="ml-2 h-4 w-4" />
+        {isCurrentPlan ? "Current Plan" : tier.cta}
+        {!isCurrentPlan && <ArrowRight className="ml-2 h-4 w-4" />}
       </Button>
     </Card>
   );

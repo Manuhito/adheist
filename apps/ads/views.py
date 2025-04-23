@@ -917,13 +917,15 @@ def billing_page(request):
             'display_name': 'Pro',
             'cta': 'Upgrade to Pro',
             'highlighted': True,
-            'popular': True
+            'popular': True,
+            "is_current_plan": False
         },
         'starter': {
             'display_name': 'Starter',
             'cta': 'Upgrade to Starter',
             'highlighted': False,
-            'popular': False
+            'popular': False,
+            "is_current_plan": False
         }
         # Enterprise plan will be added manually
     }
@@ -948,11 +950,15 @@ def billing_page(request):
                 ],
                 "cta": "Get Started",
                 "highlighted": False,
-                "popular": False
+                "popular": False,
+                "is_current_plan": False
             }
         ]
     }
-    
+    # Get current user's subscription plan ID if available
+    current_plan_id = None
+    if request.user.is_authenticated and request.user.has_active_subscription():
+        current_plan_id = request.user.active_stripe_subscription.plan.product.id
     # Add tiers from metadata
     for product in products_with_metadata:
         slug = product.metadata.slug
@@ -960,6 +966,9 @@ def billing_page(request):
             # Get prices
             monthly_price = product._get_price(PlanInterval.month, fail_hard=False)
             yearly_price = product._get_price(PlanInterval.year, fail_hard=False)
+            
+            # Check if this is the current plan
+            is_current_plan = current_plan_id == product.product.id
             
             # Format price display
             price_data = {}
@@ -991,9 +1000,10 @@ def billing_page(request):
                 "description": product.metadata.description or f"For {product_mapping[slug]['display_name']} users",
                 "price": price_data,
                 "features": product.metadata.features,
-                "cta": product_mapping[slug]['cta'],
-                "highlighted": product_mapping[slug]['highlighted'],
-                "popular": product_mapping[slug]['popular']
+                "cta": product_mapping[slug]["cta"],
+                "highlighted": product_mapping[slug]["highlighted"],
+                "popular": product_mapping[slug]["popular"],
+                "is_current_plan": is_current_plan
             }
             
             pricing_data["tiers"].append(tier)
