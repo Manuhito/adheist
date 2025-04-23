@@ -17,7 +17,7 @@ export function PricingCard({
   const isHighlighted = tier.highlighted
   const isPopular = tier.popular
   const isCurrentPlan = tier.is_current_plan
-  
+  console.log("Pricing card data:", { tier, paymentFrequency, onSubscribe })
   // Get the correct Stripe price ID based on payment frequency
   const priceId = paymentFrequency === 'monthly' 
     ? tier.price?.monthlyPriceId 

@@ -10,6 +10,7 @@ export function PricingSection({
   onSubscribe
 }) {
   const [selectedFrequency, setSelectedFrequency] = React.useState(frequencies[0])
+  console.log("data on ps:", { title, subtitle, tiers, frequencies, onSubscribe })
 
   return (
     <section className="flex flex-col items-center gap-10 py-10">
