@@ -140,25 +140,23 @@ def payment_success(request):
                 'debug_info': f"Payment status: {payment_intent.status}"
             })
         
-        # For debugging purposes, let's check if we can create a simple subscription
-        # without all the validation
+        # Get the price_id from the payment intent's metadata
         try:
-            # Get a default price for testing
-            print("Attempting to list prices")
-            prices = stripe.Price.list(active=True, limit=1)
-            if not prices.data:
-                print("No active prices found in Stripe")
-                messages.error(request, "No active subscription plans found. Please contact support.")
+            price_id = payment_intent.metadata.get('price_id')
+            if not price_id:
+                print("No price_id found in payment intent metadata")
+                messages.error(request, "No subscription plan selected. Please try again or contact support.")
                 return render(request, 'ads/payment_success.html', {
                     'success': False,
-                    'debug_info': 'No active prices found'
+                    'debug_info': 'No price_id in payment intent metadata'
                 })
             
-            default_price = prices.data[0]
-            print(f"Using default price: {default_price.id}")
+            # Retrieve the price object from Stripe
+            price = stripe.Price.retrieve(price_id)
+            print(f"Using price from payment intent metadata: {price_id}")
             
             # Get the product
-            product = stripe.Product.retrieve(default_price.product)
+            product = stripe.Product.retrieve(price.product)
             print(f"Product retrieved: {product.name}")
             
             # Check if user has a customer ID
@@ -250,7 +248,7 @@ def payment_success(request):
                 # Continue anyway, we'll try to create the subscription
             
             # Now create a subscription with the attached payment method
-            print(f"Creating subscription with price: {default_price.id} for customer: {customer_id}")
+            print(f"Creating subscription with price: {price_id} for customer: {customer_id}")
             
             try:
                 # Create subscription with standard billing
@@ -258,7 +256,7 @@ def payment_success(request):
                     customer=customer_id,
                     items=[
                         {
-                            'price': default_price.id,
+                            'price': price_id,
                         },
                     ],
                     metadata={
@@ -276,7 +274,7 @@ def payment_success(request):
                     customer=customer_id,
                     items=[
                         {
-                            'price': default_price.id,
+                            'price': price_id,
                         },
                     ],
                     collection_method='send_invoice',  # Fallback to invoice
@@ -1030,6 +1028,7 @@ def billing_page(request):
         
     # Convert pricing data to JSON for the React component
     pricing_json = json.dumps(pricing_data)
+    print(f"Pricing data: {pricing_json}")
         
     return render(request, 'ads/billing.html', {
         "active_tab": "billing",
