@@ -91,12 +91,14 @@ export default function PricingPage() {
   console.log("Pricing window data:", window.__PRICING_DATA__);
 
   return (
-    <PricingSection
-      title={pricingData.title}
-      subtitle={pricingData.subtitle}
-      tiers={pricingData.tiers}
-      frequencies={pricingData.frequencies}
-      onSubscribe={handleSubscribe}
-    />
+    <div className="container mx-auto py-8">
+      <PricingSection
+        title={pricingData.title}
+        subtitle={pricingData.subtitle}
+        tiers={pricingData.tiers}
+        frequencies={pricingData.frequencies}
+        onSubscribe={handleSubscribe}
+      />
+    </div>
   );
 }

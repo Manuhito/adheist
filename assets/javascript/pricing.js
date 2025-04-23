@@ -9,44 +9,10 @@ function getCookie(name) {
   if (parts.length === 2) return parts.pop().split(';').shift();
 }
 
-// Handler to create a Stripe PaymentIntent for a priceId
-async function handleCreatePaymentIntent(priceId) {
-  try {
-    const response = await fetch('/ads/create-payment-intent/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'X-CSRFToken': getCookie('csrftoken'),
-      },
-      body: `priceId=${encodeURIComponent(priceId)}`,
-      credentials: 'include',
-    });
-    const data = await response.json();
-    
-    if (response.ok && data.clientSecret) {
-      console.log('Payment intent created successfully:', {
-        clientSecret: data.clientSecret,
-        publishableKey: data.publishableKey,
-        amount: data.amount,
-        currency: data.currency
-      });
-      
-      // Store payment data in sessionStorage for the payment page
-      sessionStorage.setItem('stripePaymentData', JSON.stringify({
-        clientSecret: data.clientSecret,
-        publishableKey: data.publishableKey,
-        amount: data.amount,
-        currency: data.currency
-      }));
-      
-      // Navigate to payment page
-      window.location.href = '/ads/payment/';
-    } else {
-      alert('Error creating payment intent: ' + (data.error || 'Unknown error'));
-    }
-  } catch (err) {
-    alert('Network error: ' + err);
-  }
+// Handler para redireccionar a la página de billing
+function handleSubscribe(priceId) {
+  // Para usuarios no autenticados, redirigir a la página de billing
+  window.location.href = '/ads/billing/';
 }
 
 // Wait for DOM to be ready
@@ -139,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
         subtitle={pricingData.subtitle}
         tiers={pricingData.tiers}
         frequencies={pricingData.frequencies}
-        onSubscribe={handleCreatePaymentIntent}
+        onSubscribe={handleSubscribe}
       />
     );
   }
