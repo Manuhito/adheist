@@ -218,7 +218,7 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
           <div className="flex flex-col md:flex-row gap-6 items-start">
             {/* Column 1: Ad Style */}
             <div className="flex flex-col md:w-1/3">
-              <div className="mb-2 text-sm font-semibold text-primary text-center md:text-left">Ideal Ad Style</div>
+
               <div className="group relative w-32 h-32 rounded-lg overflow-hidden shadow border bg-white dark:bg-gray-800">
                 {isAdLibraryLoading ? (
                   <div className="flex items-center justify-center w-full h-full text-gray-400 animate-pulse">Loading...</div>
@@ -250,13 +250,13 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
             
             {/* Column 2: Brand Details */}
             <div className="flex flex-col md:w-1/3">
-              <div className="mb-2 text-sm font-semibold text-primary text-center md:text-left">Brand Details</div>
+
               
               {/* Details Content */}
               <div className="flex-1 w-full">
                 {/* Brand Color Display */}
                 <div className="mb-3">
-                  <p className="text-sm text-gray-500 mb-1">Brand Color</p>
+
                   {initialData.asset_overrides?.main_hex_color ? (
                     <div className="flex items-center gap-2">
                       <div
@@ -273,7 +273,7 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
                 </div>
                 {/* Company Website Display */}
                 <div className="mb-3">
-                  <p className="text-sm text-gray-500 mb-1">Company Website</p>
+
                   {initialData.asset_overrides?.company_website ? (
                     <a
                     href={initialData.asset_overrides.company_website}
@@ -288,7 +288,7 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
                 </div>
                 {/* Key Benefits Display */}
                 <div className="mb-3">
-                  <p className="text-sm text-gray-500 mb-1">Key Benefits</p>
+
                   {initialData.asset_overrides?.key_benefits ? (
                     <span className="text-xs">
                       {initialData.asset_overrides.key_benefits}
@@ -299,7 +299,7 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
                 </div>
                 {/* Canvas Size Display (vertical) */}
                 <div className="mb-2">
-                  <p className="text-sm text-gray-500 mb-1">Canvas Size</p>
+
                   {(() => {
                     const canvasSizes = [
                       { id: '1080x1080', label: 'Square', size: '1080x1080' },
@@ -345,14 +345,14 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
             
             {/* Column 3: Images */}
             <div className="flex flex-col md:w-1/3">
-              <div className="mb-2 text-sm font-semibold text-primary text-center md:text-left">Attached Images</div>
+
               
               {/* Images organized in 3 rows */}
               <div className="flex flex-col gap-4">
                 {/* Row 1: Logo */}
                 {initialData.logo_override && (
                   <div className="flex flex-col gap-1">
-                    <div className="text-xs text-gray-500">Logo</div>
+
                     <div className="flex justify-center md:justify-start">
                       <div className="group relative w-24 h-24 rounded-lg overflow-hidden shadow border bg-white dark:bg-gray-800">
                         <img
@@ -378,7 +378,7 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
                   
                   return (
                     <div className="flex flex-col gap-1">
-                      <div className="text-xs text-gray-500">Product / Service</div>
+
                       <div className="flex flex-wrap gap-2 justify-center md:justify-start">
                         {productServiceImages.map(img => (
                           <div key={img.key} className="flex flex-col items-center">
@@ -410,7 +410,7 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
                   
                   return (
                     <div className="flex flex-col gap-1">
-                      <div className="text-xs text-gray-500">Marketing</div>
+
                       <div className="flex flex-wrap gap-2 justify-center md:justify-start">
                         {marketingImages.map(img => (
                           <div key={img.key} className="flex flex-col items-center">
