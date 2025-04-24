@@ -158,8 +158,15 @@ const CreateAdRequestApp = () => {
     <>
       {/* Delete confirmation dialog - Fuera del contenedor principal para evitar problemas de espaciado */}
       {showDeleteConfirmation && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" style={{ margin: 0 }}>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" 
+          style={{ margin: 0 }}
+          onClick={() => setShowDeleteConfirmation(false)} // Cerrar al hacer clic fuera
+        >
+          <div 
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-md w-full mx-4"
+            onClick={(e) => e.stopPropagation()} // Evitar que los clics dentro del modal lo cierren
+          >
             <h2 className="text-xl font-semibold mb-4">Delete Ad Request</h2>
             <p className="text-gray-600 dark:text-gray-300 mb-6">
               Are you sure you want to permanently delete this ad request? This action cannot be undone.
