@@ -175,10 +175,40 @@ const CreateAdRequestApp = () => {
               <button
                 type="button"
                 className="px-4 py-2 text-white bg-red-500 hover:bg-red-600 rounded-md transition-colors"
-                onClick={() => {
-                  console.log('Delete confirmed');
-                  setShowDeleteConfirmation(false);
-                  // Aquí iría la lógica para eliminar el ad request
+                onClick={async () => {
+                  if (!adRequestData?.id) {
+                    console.error('No ad request ID available');
+                    setShowDeleteConfirmation(false);
+                    return;
+                  }
+                  
+                  try {
+                    // Get CSRF token from cookies
+                    const csrfToken = getCsrfToken();
+                    
+                    // Call the delete endpoint
+                    const response = await fetch(`/ads/adrequest/${adRequestData.id}/delete/`, {
+                      method: 'DELETE',
+                      headers: {
+                        'X-CSRFToken': csrfToken,
+                      }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                      throw new Error(data.error || 'Failed to delete ad request');
+                    }
+                    
+                    // Close the confirmation dialog
+                    setShowDeleteConfirmation(false);
+                    
+                    // Redirect to the ad requests list page
+                    window.location.href = '/ads/';
+                  } catch (error) {
+                    console.error('Error deleting ad request:', error);
+                    setShowDeleteConfirmation(false);
+                  }
                 }}
               >
                 Delete
