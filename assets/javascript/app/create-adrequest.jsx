@@ -35,6 +35,7 @@ const CreateAdRequestApp = () => {
   // Initialize state with data from the DOM
   const [adRequestData, setAdRequestData] = useState(getInitialData());
   const [isLoading, setIsLoading] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
 
   // Function to fetch fresh data from the server
   const fetchFreshData = async (id) => {
@@ -154,7 +155,40 @@ const CreateAdRequestApp = () => {
   // No additional configuration needed at this level
 
   return (
-    <div className="space-y-8">
+    <>
+      {/* Delete confirmation dialog - Fuera del contenedor principal para evitar problemas de espaciado */}
+      {showDeleteConfirmation && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" style={{ margin: 0 }}>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+            <h2 className="text-xl font-semibold mb-4">Delete Ad Request</h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              Are you sure you want to permanently delete this ad request? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                onClick={() => setShowDeleteConfirmation(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="px-4 py-2 text-white bg-red-500 hover:bg-red-600 rounded-md transition-colors"
+                onClick={() => {
+                  console.log('Delete confirmed');
+                  setShowDeleteConfirmation(false);
+                  // Aquí iría la lógica para eliminar el ad request
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <div className="space-y-8">
       {/* Header row with title and delete button */}
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Create Ad Request</h1>
@@ -162,12 +196,13 @@ const CreateAdRequestApp = () => {
           type="button" 
           className="p-2 text-gray-500 hover:text-red-500 transition-colors duration-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
           aria-label="Delete ad request"
-          // Por ahora sin funcionalidad
-          onClick={() => console.log('Delete button clicked')}
+          onClick={() => setShowDeleteConfirmation(true)}
         >
           <Trash2 className="w-5 h-5" />
         </button>
       </div>
+      
+
       
       {/* Progress indicator */}
       <div className="mb-8">
@@ -213,6 +248,7 @@ const CreateAdRequestApp = () => {
       {/* Current step component */}
       {renderCurrentStep()}
     </div>
+    </>
   );
 };
 
