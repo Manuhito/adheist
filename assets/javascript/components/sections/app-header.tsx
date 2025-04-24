@@ -112,7 +112,7 @@ export default function AppHeader() {
                     <div className="py-1" role="none">
                       <a href="/app/profile" className="block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem">Profile</a>
                       <a href="/app/settings" className="block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem">Settings</a>
-                      <a href="/app/billing" className="block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem">Billing</a>
+                      <a href="/ads/billing" className="block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem">Billing</a>
                       <a href="/accounts/logout" className="block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem">Log out</a>
                     </div>
                   </div>

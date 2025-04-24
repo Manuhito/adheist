@@ -201,7 +201,7 @@ ACTIVE_PRODUCTS = [
         description='The Pro plan', 
         is_default=False,
         # Add this field to store limits
-        limits={'ad_requests_per_month': 3}
+        limits={'ad_requests_per_month': 50}
     ),
     ProductMetadata(
         stripe_id='prod_S6CeGCh0HYEO4k', 
@@ -211,7 +211,7 @@ ACTIVE_PRODUCTS = [
         price_displays={}, 
         description='The Starter plan', 
         is_default=False,
-        limits={'ad_requests_per_month': 1}
+        limits={'ad_requests_per_month': 10}
     ),
 ]
 

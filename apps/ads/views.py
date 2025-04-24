@@ -1,9 +1,12 @@
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.contrib import messages
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http.response import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.template.response import TemplateResponse
+from django.views.decorators.http import require_POST
+from apps.subscriptions.helpers import create_stripe_checkout_session
 from django.urls import reverse
 from django.views.decorators.http import require_POST, require_http_methods
 import json
@@ -17,6 +20,311 @@ from .services import can_create_ad_request, increment_usage
 PAGINATE_BY = 4
 # For pagination, we use get_elided_page_range() to give a list of pages that always has some
 # pages at the beginning and end, and some on either side of current, with ellipsis where needed.
+
+
+@require_POST
+@login_required
+def create_payment_intent(request):
+    """
+    Create a Stripe PaymentIntent for the selected price and return the client secret.
+    Expects 'priceId' in POST data.
+    """
+    from apps.utils.billing import get_stripe_module, get_stripe_publishable_key
+    from djstripe.models import Customer as DjStripeCustomer
+    
+    stripe = get_stripe_module()
+    price_id = request.POST.get('priceId')
+    if not price_id:
+        return JsonResponse({'error': 'Missing priceId'}, status=400)
+    try:
+        # Retrieve the price object from Stripe
+        price = stripe.Price.retrieve(price_id)
+        amount = price.unit_amount
+        currency = price.currency
+        
+        # Ensure the user has a customer before creating a payment intent
+        customer_kwargs = {}
+        if hasattr(request.user, 'customer') and request.user.customer:
+            # User already has a customer, use it
+            customer_kwargs["customer"] = request.user.customer.id
+        else:
+            # Create a new customer for the user
+            try:
+                customer = stripe.Customer.create(
+                    email=request.user.email,
+                    name=request.user.get_full_name() or request.user.email,
+                    metadata={
+                        'user_id': request.user.id
+                    }
+                )
+                # Sync the customer to Django-Stripe
+                djstripe_customer = DjStripeCustomer.sync_from_stripe_data(customer)
+                # Associate the customer with the user
+                request.user.customer = djstripe_customer
+                request.user.save()
+                
+                customer_kwargs["customer"] = customer.id
+            except Exception as e:
+                # Log the error but continue - we'll create a payment intent without customer
+                print(f"Error creating customer: {str(e)}")
+        
+        # Create PaymentIntent with setup_future_usage to save payment method
+        payment_intent = stripe.PaymentIntent.create(
+            amount=amount,
+            currency=currency,
+            automatic_payment_methods={"enabled": True},
+            setup_future_usage="off_session",  # Save payment method for future use
+            metadata={
+                "user_id": request.user.id,
+                "price_id": price_id,
+            },
+            **customer_kwargs  # Associate with customer if available
+        )
+        
+        # Return data needed by the frontend
+        return JsonResponse({
+            "clientSecret": payment_intent.client_secret,
+            "publishableKey": get_stripe_publishable_key(),
+            "amount": amount / 100,  # Convert cents to dollars/euros
+            "currency": currency
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+@login_required
+def payment_page(request):
+    """
+    Render the payment page with Stripe Elements integration.
+    """
+    return render(request, 'ads/payment.html')
+
+@login_required
+def payment_success(request):
+    """
+    Handle successful payment and create subscription.
+    Expects payment_intent in the URL query parameters.
+    """
+    from apps.utils.billing import get_stripe_module
+    from apps.subscriptions.helpers import provision_subscription
+    from django.contrib import messages
+    
+    # Debugging information
+    print(f"Payment success view called with params: {request.GET}")
+    
+    # Get payment_intent_id from URL
+    payment_intent_id = request.GET.get('payment_intent')
+    if not payment_intent_id:
+        print("No payment_intent found in URL parameters")
+        messages.error(
+            request,
+            "No payment information found. If you think this is an error, please contact support."
+        )
+        return render(request, 'ads/payment_success.html', {'success': False, 'debug_info': 'No payment_intent in URL'})
+    
+    try:
+        # Retrieve the payment intent from Stripe
+        stripe = get_stripe_module()
+        print(f"Retrieving payment intent: {payment_intent_id}")
+        payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+        print(f"Payment intent retrieved: {payment_intent.status}, metadata: {payment_intent.metadata}")
+        
+        # Verify payment status
+        if payment_intent.status != 'succeeded':
+            print(f"Payment not completed. Status: {payment_intent.status}")
+            messages.error(
+                request,
+                f"Payment not completed. Status: {payment_intent.status}. Please try again or contact support."
+            )
+            return render(request, 'ads/payment_success.html', {
+                'success': False, 
+                'debug_info': f"Payment status: {payment_intent.status}"
+            })
+        
+        # Get the price_id from the payment intent's metadata
+        try:
+            price_id = payment_intent.metadata.get('price_id')
+            if not price_id:
+                print("No price_id found in payment intent metadata")
+                messages.error(request, "No subscription plan selected. Please try again or contact support.")
+                return render(request, 'ads/payment_success.html', {
+                    'success': False,
+                    'debug_info': 'No price_id in payment intent metadata'
+                })
+            
+            # Retrieve the price object from Stripe
+            price = stripe.Price.retrieve(price_id)
+            print(f"Using price from payment intent metadata: {price_id}")
+            
+            # Get the product
+            product = stripe.Product.retrieve(price.product)
+            print(f"Product retrieved: {product.name}")
+            
+            # Check if user has a customer ID
+            if not hasattr(request.user, 'customer') or not request.user.customer:
+                print("User doesn't have a customer ID, creating one")
+                # Create a customer for the user if they don't have one
+                customer = stripe.Customer.create(
+                    email=request.user.email,
+                    name=request.user.get_full_name() or request.user.email,
+                    metadata={
+                        'user_id': request.user.id
+                    }
+                )
+                customer_id = customer.id
+                print(f"Created customer: {customer_id}")
+            else:
+                customer_id = request.user.customer.id
+                print(f"Using existing customer: {customer_id}")
+            
+            # Get payment method from the payment intent
+            payment_method_id = payment_intent.payment_method
+            print(f"Payment method from intent: {payment_method_id}")
+            
+            # Explicitly attach the payment method to the customer
+            try:
+                # First, retrieve the payment method to check its details
+                payment_method = stripe.PaymentMethod.retrieve(payment_method_id)
+                print(f"Retrieved payment method: {payment_method_id}, type: {payment_method.type}")
+                
+                # Check if the payment method is already attached to another customer
+                if payment_method.customer:
+                    print(f"Payment method is already attached to customer: {payment_method.customer}")
+                    if payment_method.customer != customer_id:
+                        print(f"Payment method is attached to a different customer. Updating user's customer.")
+                        # Instead of creating a new payment method, use the existing customer that has the payment method
+                        try:
+                            # Get the existing customer that has the payment method
+                            existing_customer = stripe.Customer.retrieve(payment_method.customer)
+                            print(f"Found existing customer: {existing_customer.id}")
+                            
+                            # Update the existing customer with the user's information if needed
+                            if existing_customer.email != request.user.email:
+                                existing_customer = stripe.Customer.modify(
+                                    existing_customer.id,
+                                    email=request.user.email,
+                                    name=request.user.get_full_name() or request.user.email,
+                                    metadata={
+                                        'user_id': request.user.id
+                                    }
+                                )
+                                print(f"Updated existing customer with user information")
+                            
+                            # Sync the customer to Django-Stripe
+                            from djstripe.models import Customer as DjStripeCustomer
+                            djstripe_customer = DjStripeCustomer.sync_from_stripe_data(existing_customer)
+                            
+                            # Update the user's customer reference
+                            request.user.customer = djstripe_customer
+                            request.user.save()
+                            
+                            # Update our customer_id to use this customer
+                            customer_id = existing_customer.id
+                            print(f"User's customer updated to: {customer_id}")
+                        except Exception as e:
+                            print(f"Error updating user's customer: {str(e)}")
+                else:
+                    # Attach the payment method to our customer
+                    print(f"Attaching payment method {payment_method_id} to customer {customer_id}")
+                    stripe.PaymentMethod.attach(
+                        payment_method_id,
+                        customer=customer_id,
+                    )
+                
+                # Always set the payment method as default, regardless of whether it was already attached
+                # or we just attached it
+                print(f"Setting payment method {payment_method_id} as default for customer {customer_id}")
+                try:
+                    stripe.Customer.modify(
+                        customer_id,
+                        invoice_settings={
+                            'default_payment_method': payment_method_id,
+                        }
+                    )
+                    print("Payment method successfully set as default")
+                except Exception as e:
+                    print(f"Error setting default payment method: {str(e)}")
+            except Exception as e:
+                print(f"Error attaching payment method: {str(e)}")
+                # Continue anyway, we'll try to create the subscription
+            
+            # Now create a subscription with the attached payment method
+            print(f"Creating subscription with price: {price_id} for customer: {customer_id}")
+            
+            try:
+                # Create subscription with standard billing
+                subscription = stripe.Subscription.create(
+                    customer=customer_id,
+                    items=[
+                        {
+                            'price': price_id,
+                        },
+                    ],
+                    metadata={
+                        'user_id': request.user.id,
+                        'payment_intent_id': payment_intent_id,
+                    }
+                )
+                print(f"Subscription created successfully with ID: {subscription.id}")
+            except Exception as e:
+                print(f"Error creating subscription with standard billing: {str(e)}")
+                print("Falling back to invoice collection method")
+                
+                # Fallback to invoice collection method if standard billing fails
+                subscription = stripe.Subscription.create(
+                    customer=customer_id,
+                    items=[
+                        {
+                            'price': price_id,
+                        },
+                    ],
+                    collection_method='send_invoice',  # Fallback to invoice
+                    days_until_due=30,
+                    metadata={
+                        'user_id': request.user.id,
+                        'payment_intent_id': payment_intent_id,
+                    }
+                )
+                print(f"Subscription created with invoice collection method: {subscription.id}")
+            print(f"Subscription created: {subscription.id}, status: {subscription.status}")
+            
+            # Provision the subscription in your system
+            print(f"Provisioning subscription: {subscription.id} for user: {request.user.id}")
+            djstripe_subscription = provision_subscription(request.user, subscription.id)
+            print(f"Subscription provisioned: {djstripe_subscription.id}")
+            
+            # Success message
+            messages.success(
+                request,
+                f"You've successfully subscribed to {product.name}. Thank you for your support!"
+            )
+            
+            return render(request, 'ads/payment_success.html', {
+                'success': True,
+                'subscription': djstripe_subscription,
+                'product_name': product.name
+            })
+            
+        except Exception as e:
+            print(f"Error creating subscription: {str(e)}")
+            messages.error(
+                request,
+                f"Error creating subscription: {str(e)}. Please contact support."
+            )
+            return render(request, 'ads/payment_success.html', {
+                'success': False,
+                'debug_info': f"Subscription error: {str(e)}"
+            })
+            
+    except Exception as e:
+        print(f"Error processing payment: {str(e)}")
+        messages.error(
+            request,
+            f"Error processing payment: {str(e)}. Please contact support."
+        )
+        return render(request, 'ads/payment_success.html', {
+            'success': False,
+            'debug_info': f"Payment processing error: {str(e)}"
+        })
 
 
 @login_required
@@ -575,13 +883,13 @@ def adrequest_details_page(request, adrequest_id):
     """
     # Get the AdRequest and check permissions
     result = _get_user_adrequest(request, adrequest_id)
-    
+        
     # If result is a JsonResponse, it's an error
     if isinstance(result, JsonResponse):
         return result
     
     ad_request = result
-    
+        
     # Render the adlibrary_detail.html template with the ad_request as the object
     template = "ads/adlibrary_detail.html"
     context = {
@@ -589,5 +897,150 @@ def adrequest_details_page(request, adrequest_id):
         "object": ad_request.ad_library if ad_request.ad_library else None,
         "ad_request": ad_request
     }
-    
+        
     return TemplateResponse(request, template, context)
+
+@ensure_csrf_cookie
+@login_required
+def billing_page(request):
+    """
+    Render the billing page with pricing information.
+    """
+    from apps.subscriptions.metadata import get_active_products_with_metadata, PlanInterval
+    
+    # Get products from the metadata system
+    products_with_metadata = list(get_active_products_with_metadata())
+    
+    # Map product slugs to tier names and CTAs
+    product_mapping = {
+        'pro': {
+            'display_name': 'Pro',
+            'cta': 'Upgrade to Pro',
+            'highlighted': True,
+            'popular': True,
+            "is_current_plan": False
+        },
+        'starter': {
+            'display_name': 'Starter',
+            'cta': 'Upgrade to Starter',
+            'highlighted': False,
+            'popular': False,
+            "is_current_plan": False
+        }
+        # Enterprise plan will be added manually
+    }
+    
+    # Initialize pricing data with Free plan
+    pricing_data = {
+        "title": "Pricing Plans",
+        "subtitle": "Choose the perfect plan for your needs",
+        "frequencies": ["monthly", "yearly"],
+        "tiers": [
+            {
+                "name": "Free",
+                "description": "Basic features for individuals",
+                "price": {
+                    "monthly": 0,
+                    "yearly": 0
+                },
+                "features": [
+                    "3 ad requests per month",
+                    "Basic templates",
+                    "Standard support"
+                ],
+                "cta": "Get Started",
+                "highlighted": False,
+                "popular": False,
+                "is_current_plan": False
+            }
+        ]
+    }
+    # Get current user's subscription plan ID if available
+    current_plan_id = None
+    if request.user.is_authenticated and request.user.has_active_subscription():
+        current_plan_id = request.user.active_stripe_subscription.plan.product.id
+    # Add tiers from metadata
+    for product in products_with_metadata:
+        slug = product.metadata.slug
+        if slug in product_mapping:
+            # Get prices
+            monthly_price = product._get_price(PlanInterval.month, fail_hard=False)
+            yearly_price = product._get_price(PlanInterval.year, fail_hard=False)
+            
+            # Check if this is the current plan
+            is_current_plan = current_plan_id == product.product.id
+            
+            # Format price display
+            price_data = {}
+            if monthly_price:
+                try:
+                    price_data["monthly"] = int(monthly_price.unit_amount / 100)
+                except (TypeError, ValueError):
+                    price_data["monthly"] = product.get_price_display(monthly_price)
+            else:
+                price_data["monthly"] = "Custom"
+                
+            if yearly_price:
+                try:
+                    price_data["yearly"] = int(yearly_price.unit_amount / 100)
+                except (TypeError, ValueError):
+                    price_data["yearly"] = product.get_price_display(yearly_price)
+            else:
+                price_data["yearly"] = "Custom"
+            
+            # Add price IDs to price data
+            if monthly_price:
+                price_data["monthlyPriceId"] = monthly_price.id
+            if yearly_price:
+                price_data["yearlyPriceId"] = yearly_price.id
+                
+            # Create tier data
+            tier = {
+                "name": product_mapping[slug]['display_name'],
+                "description": product.metadata.description or f"For {product_mapping[slug]['display_name']} users",
+                "price": price_data,
+                "features": product.metadata.features,
+                "cta": product_mapping[slug]["cta"],
+                "highlighted": product_mapping[slug]["highlighted"],
+                "popular": product_mapping[slug]["popular"],
+                "is_current_plan": is_current_plan
+            }
+            
+            pricing_data["tiers"].append(tier)
+    
+    # Add Enterprise plan with original values
+    enterprise_plan = {
+        "name": "Enterprise",
+        "description": "For large organizations",
+        "price": {
+            "monthly": "Custom",
+            "yearly": "Custom"
+        },
+        "features": [
+            "Unlimited ad requests",
+            "Custom templates",
+            "Dedicated support",
+            "API access",
+            "Advanced analytics"
+        ],
+        "cta": "Contact Sales",
+        "highlighted": False,
+        "popular": False
+    }
+    pricing_data["tiers"].append(enterprise_plan)
+    
+    # Sort tiers in the correct order: Free, Starter, Pro, Enterprise
+    tier_order = ["Free", "Starter", "Pro", "Enterprise"]
+    pricing_data["tiers"] = sorted(
+        pricing_data["tiers"], 
+        key=lambda x: tier_order.index(x["name"]) if x["name"] in tier_order else 999
+    )
+        
+    # Convert pricing data to JSON for the React component
+    pricing_json = json.dumps(pricing_data)
+    print(f"Pricing data: {pricing_json}")
+        
+    return render(request, 'ads/billing.html', {
+        "active_tab": "billing",
+        "pricing_data": pricing_json
+    })

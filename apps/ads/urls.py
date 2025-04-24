@@ -18,4 +18,8 @@ urlpatterns = [
     path("create/", views.create_adrequest_page, name="create_adrequest_page"),
     path("create/<int:adrequest_id>/", views.create_adrequest_page, name="create_adrequest_page_with_id"),
     path("<int:adrequest_id>/details/", views.adrequest_details_page, name="adrequest_details_page"),
+    path("billing/", views.billing_page, name="billing_page"),
+    path("create-payment-intent/", views.create_payment_intent, name="create_payment_intent"),
+    path("payment/", views.payment_page, name="payment_page"),
+    path("payment-success/", views.payment_success, name="payment_success"),
 ]

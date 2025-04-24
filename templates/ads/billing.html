@@ -1,0 +1,17 @@
+{% extends "web/app/app_base.html" %}
+{% load static %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+  // Pass pricing data to the React component
+  window.__PRICING_DATA__ = {{ pricing_data|safe }};
+</script>
+<script src="{% static 'js/billing-bundle.js' %}" defer></script>
+{% endblock %}
+
+{% block app %}
+<div class="container mx-auto py-8">
+  <div id="pricing-section-container"></div>
+</div>
+{% endblock %}
