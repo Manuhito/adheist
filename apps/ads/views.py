@@ -876,6 +876,53 @@ def create_adrequest_page(request, adrequest_id=None):
 
 
 @login_required
+@require_http_methods(["DELETE"])
+def adrequest_delete(request, pk):
+    """
+    Delete an AdRequest instance.
+    
+    Args:
+        request: The HTTP request
+        pk: The primary key of the AdRequest to delete
+        
+    Returns:
+        JsonResponse with success or error message
+    """
+    # Get the AdRequest instance and check permissions
+    result = _get_user_adrequest(request, pk)
+    
+    # If result is a JsonResponse, it means there was an error
+    if isinstance(result, JsonResponse):
+        return result
+    
+    ad_request = result
+    
+    # Check if the AdRequest status is valid for deletion
+    allowed_statuses = ['NEW', 'DRAFT', 'FILLED']
+    if ad_request.status not in allowed_statuses:
+        return JsonResponse({
+            'error': f'Cannot delete ad request with status "{ad_request.status}". Only requests with status NEW, DRAFT, or FILLED can be deleted.'
+        }, status=403)
+    
+    try:
+        # Store the ID for the response
+        adrequest_id = ad_request.id
+        
+        # Delete the AdRequest
+        ad_request.delete()
+        
+        # Return success response
+        return JsonResponse({
+            'success': True,
+            'message': f'Ad request {adrequest_id} has been deleted successfully'
+        })
+    except Exception as e:
+        # Return error response
+        return JsonResponse({
+            'error': f'Failed to delete ad request: {str(e)}'
+        }, status=500)
+
+
 def adrequest_details_page(request, adrequest_id):
     """
     Render the adrequest details page for completed ad requests.

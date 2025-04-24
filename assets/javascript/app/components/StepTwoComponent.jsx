@@ -13,6 +13,7 @@ import { Input } from '../../components/ui/input.jsx';
  * Handles image upload, color selection, and navigation
  */
 const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
+  const [isBackSubmitting, setIsBackSubmitting] = useState(false);
   const websiteUrlId = useId();
   const keyBenefitsId = useId();
   const brandColorId = useId();
@@ -40,8 +41,8 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     (initialData.asset_overrides?.main_hex_color) ||
     // Then fallback to brandColor if it exists
     initialData.brandColor ||
-    // Finally default to a blue color
-    '#3B82F6'
+    // Finally default to a white color
+    ''
   );
   
   // We no longer need to track product type selection as both containers are always visible
@@ -83,10 +84,48 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     };
   }, []);
 
-  // Placeholder functions for navigation buttons
-  const handleBack = () => {
-    console.log('Back button clicked');
-    // Navigation logic will be added later
+  // Function to get CSRF token from cookies
+  const getCsrfToken = () => {
+    const name = 'csrftoken';
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  };
+
+  // Handle going back to step 1 (NEW)
+  const handleBack = async () => {
+    setIsBackSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append('status', 'NEW');
+      const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-CSRFToken': getCsrfToken(),
+        },
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update status to NEW');
+      }
+      if (onComplete) {
+        onComplete({ ...initialData, status: 'NEW' });
+      }
+    } catch (error) {
+      console.error('Error setting status to NEW:', error);
+    } finally {
+      setIsBackSubmitting(false);
+    }
   };
 
   const handleNext = async () => {
@@ -147,10 +186,8 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
         websiteUrl,
         keyBenefits,
         brandColor: selectedColor,
-        productType,
-        // Add product images or app screenshots based on product type
-        productImages: productType === 'physical' ? {} : undefined, // Will be populated with actual image data
-        appScreenshots: productType === 'software' ? {} : undefined, // Will be populated with actual screenshot data
+        productImages: {}, // Will be populated with actual image data
+        appScreenshots: {}, // Will be populated with actual screenshot data
         marketingMaterials: {} // Will be populated with additional marketing images
       });
     }
@@ -306,7 +343,6 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
         console.log('Created file:', file.name, 'type:', file.type, 'size:', file.size);
         
         // Add the file to the FormData with the field name based on image type
-        // This matches what the Django view expects in request.FILES
         if (imageData.type === 'primary') {
           formData.append('product_image_1', file);
         } else if (imageData.type === 'secondary') {
@@ -381,6 +417,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       if (isDeleteOperation) {
         console.log('Deleting app screenshot:', imageData.type);
         // The backend expects the field name to be in POST data but not in FILES data
+        // to trigger deletion of the corresponding override field
         if (imageData.type === 'primary') {
           formData.append('app_image_1', ''); // Send empty value for the field
         } else if (imageData.type === 'secondary') {
@@ -443,8 +480,6 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       console.error('Error saving app screenshot:', error);
     }
   };
-
-  // Product type selection is no longer needed as both containers are always visible
 
   // Handle marketing material uploads
   const handleMarketingMaterialUpload = async (imageData) => {
@@ -529,7 +564,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     }
   };
 
-  // This ref is now defined at the top of the component
+  // Product type selection is no longer needed as both containers are always visible
 
   // Handle website URL input change with debouncing
   const handleWebsiteUrlChange = (e) => {
@@ -758,7 +793,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
         console.error('CSRF token not found');
         return;
       }
-      
+
       // Create a FormData object for the request
       const formData = new FormData();
       
@@ -897,6 +932,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       <div className="flex justify-center gap-4 pb-8">
         <BackButton
           onClick={handleBack}
+          isLoading={isBackSubmitting}
         />
         <NextButton
           onClick={handleNext}

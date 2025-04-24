@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
+import { Trash2 } from 'lucide-react';
 import StepOneComponent from './components/StepOneComponent';
 import StepTwoComponent from './components/StepTwoComponent';
 import StepThreeComponent from './components/StepThreeComponent';
@@ -18,34 +19,35 @@ const CreateAdRequestApp = () => {
       if (dataElement) {
         return JSON.parse(dataElement.textContent);
       }
-      
+
       // If no data element, check for data attributes
       const container = document.getElementById('create-adrequest-app');
       const adRequestId = container?.dataset?.adRequestId;
       const status = container?.dataset?.status || 'NEW';
-      
+
       return { id: adRequestId, status };
     } catch (error) {
       console.error('Error parsing initial data:', error);
       return { status: 'NEW' };
     }
   };
-  
+
   // Initialize state with data from the DOM
   const [adRequestData, setAdRequestData] = useState(getInitialData());
   const [isLoading, setIsLoading] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
 
   // Function to fetch fresh data from the server
   const fetchFreshData = async (id) => {
     if (!id) return null;
-    
+
     setIsLoading(true);
     try {
       const response = await fetch(`/ads/adrequest/${id}/get/`);
       if (!response.ok) {
         throw new Error(`Error fetching ad request: ${response.statusText}`);
       }
-      
+
       const freshData = await response.json();
       // Solo mostrar logs en entorno de desarrollo
       if (process.env.NODE_ENV === 'development') {
@@ -60,7 +62,7 @@ const CreateAdRequestApp = () => {
     }
     return null;
   };
-  
+
   // Fetch fresh data when component mounts
   useEffect(() => {
     if (adRequestData?.id) {
@@ -75,47 +77,49 @@ const CreateAdRequestApp = () => {
       ...prevData,
       ...updatedData
     }));
-    
+
     // Then fetch fresh data if we have an ID
     if (updatedData?.id) {
       await fetchFreshData(updatedData.id);
     }
   };
 
+
+
   // Determine which step to show based on status
   const renderCurrentStep = () => {
     const status = adRequestData.status || 'NEW';
-    
+
     // Map status to step components
     switch (status) {
       case 'NEW':
         return (
-          <StepOneComponent 
-            onComplete={handleStepComplete} 
+          <StepOneComponent
+            onComplete={handleStepComplete}
             initialData={adRequestData}
             refreshData={() => fetchFreshData(adRequestData.id)}
           />
         );
       case 'DRAFT':
         return (
-          <StepTwoComponent 
-            onComplete={handleStepComplete} 
+          <StepTwoComponent
+            onComplete={handleStepComplete}
             initialData={adRequestData}
             refreshData={() => fetchFreshData(adRequestData.id)}
           />
         );
       case 'FILLED':
         return (
-          <StepThreeComponent 
-            onComplete={handleStepComplete} 
+          <StepThreeComponent
+            onComplete={handleStepComplete}
             initialData={adRequestData}
             refreshData={() => fetchFreshData(adRequestData.id)}
           />
         );
       default:
         return (
-          <StepOneComponent 
-            onComplete={handleStepComplete} 
+          <StepOneComponent
+            onComplete={handleStepComplete}
             initialData={adRequestData}
             refreshData={() => fetchFreshData(adRequestData.id)}
           />
@@ -151,7 +155,92 @@ const CreateAdRequestApp = () => {
   // No additional configuration needed at this level
 
   return (
-    <div className="space-y-8">
+    <>
+      {/* Delete confirmation dialog - Fuera del contenedor principal para evitar problemas de espaciado */}
+      {showDeleteConfirmation && (
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" 
+          style={{ margin: 0 }}
+          onClick={() => setShowDeleteConfirmation(false)} // Cerrar al hacer clic fuera
+        >
+          <div 
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-md w-full mx-4"
+            onClick={(e) => e.stopPropagation()} // Evitar que los clics dentro del modal lo cierren
+          >
+            <h2 className="text-xl font-semibold mb-4">Delete Ad Request</h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              Are you sure you want to permanently delete this ad request? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                onClick={() => setShowDeleteConfirmation(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="px-4 py-2 text-white bg-red-500 hover:bg-red-600 rounded-md transition-colors"
+                onClick={async () => {
+                  if (!adRequestData?.id) {
+                    console.error('No ad request ID available');
+                    setShowDeleteConfirmation(false);
+                    return;
+                  }
+                  
+                  try {
+                    // Get CSRF token from cookies
+                    const csrfToken = getCsrfToken();
+                    
+                    // Call the delete endpoint
+                    const response = await fetch(`/ads/adrequest/${adRequestData.id}/delete/`, {
+                      method: 'DELETE',
+                      headers: {
+                        'X-CSRFToken': csrfToken,
+                      }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                      throw new Error(data.error || 'Failed to delete ad request');
+                    }
+                    
+                    // Close the confirmation dialog
+                    setShowDeleteConfirmation(false);
+                    
+                    // Redirect to the ad requests list page
+                    window.location.href = '/ads/';
+                  } catch (error) {
+                    console.error('Error deleting ad request:', error);
+                    setShowDeleteConfirmation(false);
+                  }
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <div className="space-y-8">
+      {/* Header row with title and delete button */}
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Create Ad Request</h1>
+        <button 
+          type="button" 
+          className="p-2 text-gray-500 hover:text-red-500 transition-colors duration-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+          aria-label="Delete ad request"
+          onClick={() => setShowDeleteConfirmation(true)}
+        >
+          <Trash2 className="w-5 h-5" />
+        </button>
+      </div>
+      
+
+      
       {/* Progress indicator */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
@@ -167,7 +256,7 @@ const CreateAdRequestApp = () => {
           <div className="flex-1 mx-4 h-1 bg-gray-200">
             <div className={`h-full ${adRequestData.status !== 'NEW' ? 'bg-green-500' : 'bg-gray-200'}`} style={{ width: adRequestData.status === 'NEW' ? '0%' : '100%' }}></div>
           </div>
-          
+
           {/* Step 2: Configure Ad */}
           <div className="flex items-center">
             <div className={`rounded-full h-8 w-8 flex items-center justify-center ${adRequestData.status === 'DRAFT' ? 'bg-primary text-white' : (adRequestData.status === 'NEW' ? 'bg-gray-300 text-gray-600' : 'bg-green-500 text-white')}`}>
@@ -180,7 +269,7 @@ const CreateAdRequestApp = () => {
           <div className="flex-1 mx-4 h-1 bg-gray-200">
             <div className={`h-full ${adRequestData.status === 'FILLED' ? 'bg-green-500' : 'bg-gray-200'}`} style={{ width: adRequestData.status === 'FILLED' ? '100%' : '0%' }}></div>
           </div>
-          
+
           {/* Step 3: Review & Submit */}
           <div className="flex items-center">
             <div className={`rounded-full h-8 w-8 flex items-center justify-center ${adRequestData.status === 'FILLED' ? 'bg-primary text-white' : 'bg-gray-300 text-gray-600'}`}>
@@ -192,10 +281,11 @@ const CreateAdRequestApp = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Current step component */}
       {renderCurrentStep()}
     </div>
+    </>
   );
 };
 
@@ -208,7 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Get adrequest_id from data attribute if available
     const adRequestId = container.getAttribute('data-adrequest-id');
     const status = container.getAttribute('data-status') || 'NEW';
-    
+
     // Set data attributes for the container
     if (adRequestId) {
       container.dataset.adRequestId = adRequestId;
@@ -216,7 +306,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (status) {
       container.dataset.status = status;
     }
-    
+
     const root = createRoot(container);
     root.render(<CreateAdRequestApp />);
   } else {
