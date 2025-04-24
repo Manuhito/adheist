@@ -216,10 +216,10 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
         {/* Summary of the ad request */}
         <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 rounded-md mb-6">
           <div className="flex flex-col md:flex-row gap-6 items-start">
-            {/* Contenedor exclusivo para título + imagen */}
-            <div className="flex flex-col items-center">
-              <div className="mb-2 text-center font-semibold text-primary text-lg">Ideal Ad Style selected</div>
-              <div className="group relative w-64 h-64 rounded-lg overflow-hidden shadow border bg-white dark:bg-gray-800">
+            {/* Column 1: Ad Style */}
+            <div className="flex flex-col md:w-1/3">
+              <div className="mb-2 text-sm font-semibold text-primary text-center md:text-left">Ideal Ad Style</div>
+              <div className="group relative w-32 h-32 rounded-lg overflow-hidden shadow border bg-white dark:bg-gray-800">
                 {isAdLibraryLoading ? (
                   <div className="flex items-center justify-center w-full h-full text-gray-400 animate-pulse">Loading...</div>
                 ) : adLibraryData ? (
@@ -230,10 +230,10 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
                       className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
                     />
                     {/* Overlay info on hover */}
-                    <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center items-center text-white p-4">
-                      <h4 className="text-lg font-semibold mb-2">{adLibraryData.company_name || initialData.ad_library_name || 'No name'}</h4>
+                    <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center items-center text-white p-2">
+                      <h4 className="text-sm font-semibold mb-1">{adLibraryData.company_name || initialData.ad_library_name || 'No name'}</h4>
                       {adLibraryData.industries && adLibraryData.industries.length > 0 && (
-                        <p className="text-sm mb-2 text-center">
+                        <p className="text-xs mb-1 text-center">
                           {adLibraryData.industries.join(', ')}
                         </p>
                       )}
@@ -247,136 +247,185 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
                 )}
               </div>
             </div>
-            {/* Details */}
-            <div className="flex-1 w-full">
-              <div className="mt-4">
-                <p className="text-sm text-gray-500 mb-1">Style Ad</p>
-                <span className="text-xs">
-                  {adLibraryData?.company_name || initialData.ad_library_name || '—'}
-                </span>
-              </div>
-              <div className="mt-4">
-                <p className="text-sm text-gray-500 mb-1">Industry</p>
-                <span className="text-xs">
-                  {adLibraryData?.industries && adLibraryData.industries.length > 0
-                    ? adLibraryData.industries.join(', ')
-                    : '—'}
-                </span>
-              </div>
-              <div className="mt-4">
-                <p className="text-sm text-gray-500 mb-1">Tags</p>
-                <span className="text-xs">
-                  {adLibraryData?.tags && adLibraryData.tags.length > 0
-                    ? adLibraryData.tags.join(', ')
-                    : '—'}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Brand Details Section */}
-        <div className="mt-8 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-6 mb-8">
-          <div className="mb-4 text-sm font-semibold text-primary">Brand Details</div>
-          <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
-            {/* Logo Column */}
-            <div className="flex justify-center md:justify-start w-full md:w-64">
-              <div className="group relative w-48 h-48 rounded-lg overflow-hidden shadow border bg-white dark:bg-gray-800">
-                {initialData.logo_override ? (
-                  <img
-                    src={initialData.logo_override}
-                    alt="Logo Preview"
-                    className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center w-full h-full text-gray-400">No logo</div>
-                )}
-              </div>
-            </div>
-            {/* Details Column */}
-            <div className="flex-1 w-full">
-              {/* Brand Color Display */}
-              <div className="mb-4">
-                <p className="text-sm text-gray-500 mb-1">Brand Color</p>
-                {initialData.asset_overrides?.main_hex_color ? (
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="h-6 w-6 rounded-md border"
-                      style={{ backgroundColor: initialData.asset_overrides.main_hex_color }}
-                    />
-                    <span className="text-xs">
-                      {initialData.asset_overrides.main_hex_color}
-                    </span>
-                  </div>
-                ) : (
-                  <span className="text-xs text-gray-400">No brand color</span>
-                )}
-              </div>
-              {/* Company Website Display */}
-              <div className="mb-4">
-                <p className="text-sm text-gray-500 mb-1">Company Website</p>
-                {initialData.asset_overrides?.company_website ? (
-                  <a
+            
+            {/* Column 2: Brand Details */}
+            <div className="flex flex-col md:w-1/3">
+              <div className="mb-2 text-sm font-semibold text-primary text-center md:text-left">Brand Details</div>
+              
+              {/* Details Content */}
+              <div className="flex-1 w-full">
+                {/* Brand Color Display */}
+                <div className="mb-3">
+                  <p className="text-sm text-gray-500 mb-1">Brand Color</p>
+                  {initialData.asset_overrides?.main_hex_color ? (
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="h-6 w-6 rounded-md border"
+                        style={{ backgroundColor: initialData.asset_overrides.main_hex_color }}
+                        />
+                      <span className="text-xs">
+                        {initialData.asset_overrides.main_hex_color}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-gray-400">No brand color</span>
+                  )}
+                </div>
+                {/* Company Website Display */}
+                <div className="mb-3">
+                  <p className="text-sm text-gray-500 mb-1">Company Website</p>
+                  {initialData.asset_overrides?.company_website ? (
+                    <a
                     href={initialData.asset_overrides.company_website}
                     className="text-xs text-blue-600 underline break-all"
                     target="_blank" rel="noopener noreferrer"
-                  >
-                    {initialData.asset_overrides.company_website}
-                  </a>
-                ) : (
-                  <span className="text-xs text-gray-400">No company website</span>
-                )}
-              </div>
-              {/* Key Benefits Display */}
-              <div className="mb-4">
-                <p className="text-sm text-gray-500 mb-1">Key Benefits</p>
-                {initialData.asset_overrides?.key_benefits ? (
-                  <span className="text-xs">
-                    {initialData.asset_overrides.key_benefits}
-                  </span>
-                ) : (
-                  <span className="text-xs text-gray-400">No key benefits</span>
-                )}
-              </div>
-              {/* Canvas Size Display (vertical) */}
-              <div className="mb-2">
-                <p className="text-sm text-gray-500 mb-1">Canvas Size</p>
-                {(() => {
-                  const canvasSizes = [
-                    { id: '1080x1080', label: 'Square', size: '1080x1080' },
-                    { id: '1080x1920', label: 'Portrait Tall', size: '1080x1920' },
-                    { id: '1080x1350', label: 'Portrait', size: '1080x1350' },
-                    { id: '1280x720', label: 'Landscape', size: '1280x720' },
-                  ];
-                  // Use the canvas size value directly as the ID
-                  const item = canvasSizes.find(c => c.id === initialData.canvas_size);
-                  if (item) {
+                    >
+                      {initialData.asset_overrides.company_website}
+                    </a>
+                  ) : (
+                    <span className="text-xs text-gray-400">No company website</span>
+                  )}
+                </div>
+                {/* Key Benefits Display */}
+                <div className="mb-3">
+                  <p className="text-sm text-gray-500 mb-1">Key Benefits</p>
+                  {initialData.asset_overrides?.key_benefits ? (
+                    <span className="text-xs">
+                      {initialData.asset_overrides.key_benefits}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-gray-400">No key benefits</span>
+                  )}
+                </div>
+                {/* Canvas Size Display (vertical) */}
+                <div className="mb-2">
+                  <p className="text-sm text-gray-500 mb-1">Canvas Size</p>
+                  {(() => {
+                    const canvasSizes = [
+                      { id: '1080x1080', label: 'Square', size: '1080x1080' },
+                      { id: '1080x1920', label: 'Portrait Tall', size: '1080x1920' },
+                      { id: '1080x1350', label: 'Portrait', size: '1080x1350' },
+                      { id: '1280x720', label: 'Landscape', size: '1280x720' },
+                    ];
+                    // Use the canvas size value directly as the ID
+                    const item = canvasSizes.find(c => c.id === initialData.canvas_size);
+                    if (item) {
+                      return (
+                        <div className="flex flex-col">
+                          {/* Aspect ratio box */}
+                          {item.id === "1080x1080" && (
+                            <div className="w-8 h-8 border-2 border-gray-300 rounded-sm mb-2" />
+                          )}
+                          {item.id === "1080x1920" && (
+                            <div className="w-6 h-10 border-2 border-gray-300 rounded-sm mb-2" />
+                          )}
+                          {item.id === "1080x1350" && (
+                            <div className="w-7 h-9 border-2 border-gray-300 rounded-sm mb-2" />
+                          )}
+                          {item.id === "1280x720" && (
+                            <div className="w-12 h-6 border-2 border-gray-300 rounded-sm mb-2" />
+                          )}
+                          <span className="font-semibold text-xs">{item.label}</span>
+                          <span className="text-xs text-gray-500">{item.size}</span>
+                        </div>
+                      );
+                    }
+                    // Fallback if unknown
                     return (
-                      <div className="flex flex-col">
-                        {/* Aspect ratio box */}
-                        {item.id === "1080x1080" && (
-                          <div className="w-8 h-8 border-2 border-gray-300 rounded-sm mb-2" />
-                        )}
-                        {item.id === "1080x1920" && (
-                          <div className="w-6 h-10 border-2 border-gray-300 rounded-sm mb-2" />
-                        )}
-                        {item.id === "1080x1350" && (
-                          <div className="w-7 h-9 border-2 border-gray-300 rounded-sm mb-2" />
-                        )}
-                        {item.id === "1280x720" && (
-                          <div className="w-12 h-6 border-2 border-gray-300 rounded-sm mb-2" />
-                        )}
-                        <span className="font-semibold text-xs">{item.label}</span>
-                        <span className="text-xs text-gray-500">{item.size}</span>
+                      <div className="flex flex-col items-center">
+                        <div className="w-8 h-8 border-2 border-dashed border-gray-200 rounded-sm mb-2 flex items-center justify-center text-xs text-gray-400">?</div>
+                        <span className="font-semibold text-xs text-gray-400">Unknown</span>
+                        <span className="text-xs text-gray-400">{initialData.canvas_size || 'Not specified'}</span>
                       </div>
                     );
-                  }
-                  // Fallback if unknown
+                  })()}
+                </div>
+              </div>
+            </div>
+            
+            {/* Column 3: Images */}
+            <div className="flex flex-col md:w-1/3">
+              <div className="mb-2 text-sm font-semibold text-primary text-center md:text-left">Attached Images</div>
+              
+              {/* Images organized in 3 rows */}
+              <div className="flex flex-col gap-4">
+                {/* Row 1: Logo */}
+                {initialData.logo_override && (
+                  <div className="flex flex-col gap-1">
+                    <div className="text-xs text-gray-500">Logo</div>
+                    <div className="flex justify-center md:justify-start">
+                      <div className="group relative w-24 h-24 rounded-lg overflow-hidden shadow border bg-white dark:bg-gray-800">
+                        <img
+                          src={initialData.logo_override}
+                          alt="Logo Preview"
+                          className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Row 2: Product and Service Images */}
+                {(() => {
+                  const productServiceImages = [
+                    { key: 'product_image_1_override', label: 'Product 1' },
+                    { key: 'product_image_2_override', label: 'Product 2' },
+                    { key: 'app_image_1_override', label: 'Service 1' },
+                    { key: 'app_image_2_override', label: 'Service 2' },
+                  ].filter(img => initialData[img.key]);
+                  
+                  if (productServiceImages.length === 0) return null;
+                  
                   return (
-                    <div className="flex flex-col items-center">
-                      <div className="w-8 h-8 border-2 border-dashed border-gray-200 rounded-sm mb-2 flex items-center justify-center text-xs text-gray-400">?</div>
-                      <span className="font-semibold text-xs text-gray-400">Unknown</span>
-                      <span className="text-xs text-gray-400">{initialData.canvas_size || 'Not specified'}</span>
+                    <div className="flex flex-col gap-1">
+                      <div className="text-xs text-gray-500">Product / Service</div>
+                      <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                        {productServiceImages.map(img => (
+                          <div key={img.key} className="flex flex-col items-center">
+                            <img
+                              src={initialData[img.key]}
+                              alt={img.label}
+                              className="w-16 h-16 object-cover rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm"
+                              loading="lazy"
+                            />
+                            <span className="mt-1 text-xs text-gray-500 dark:text-gray-400 truncate max-w-[4rem] text-center">
+                              {img.label}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+                
+                {/* Row 3: Marketing Images */}
+                {(() => {
+                  const marketingImages = [
+                    { key: 'marketing_image_1_override', label: 'Marketing 1' },
+                    { key: 'marketing_image_2_override', label: 'Marketing 2' },
+                    { key: 'marketing_image_3_override', label: 'Marketing 3' },
+                  ].filter(img => initialData[img.key]);
+                  
+                  if (marketingImages.length === 0) return null;
+                  
+                  return (
+                    <div className="flex flex-col gap-1">
+                      <div className="text-xs text-gray-500">Marketing</div>
+                      <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                        {marketingImages.map(img => (
+                          <div key={img.key} className="flex flex-col items-center">
+                            <img
+                              src={initialData[img.key]}
+                              alt={img.label}
+                              className="w-16 h-16 object-cover rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm"
+                              loading="lazy"
+                            />
+                            <span className="mt-1 text-xs text-gray-500 dark:text-gray-400 truncate max-w-[4rem] text-center">
+                              {img.label}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   );
                 })()}
@@ -385,51 +434,7 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
           </div>
         </div>
 
-        {/* Responsive Informative Images Section */}
-        {(() => {
-          const imageKeys = [
-            'product_image_1_override',
-            'product_image_2_override',
-            'app_image_1_override',
-            'app_image_2_override',
-            'marketing_image_1_override',
-            'marketing_image_2_override',
-            'marketing_image_3_override',
-          ];
-          const labelMap = {
-            'product_image_1_override': 'product image',
-            'product_image_2_override': 'product image',
-            'app_image_1_override': 'service image',
-            'app_image_2_override': 'service image',
-            'marketing_image_1_override': 'marketing image',
-            'marketing_image_2_override': 'marketing image',
-            'marketing_image_3_override': 'marketing image',
-          };
-          const images = imageKeys
-            .map(key => initialData[key] ? { url: initialData[key], key } : null)
-            .filter(Boolean);
-          if (images.length === 0) return null;
-          return (
-            <div className="mb-8">
-              <div className="mb-2 text-sm font-semibold text-primary">Marketing Images</div>
-              <div className="flex flex-wrap gap-x-4 gap-y-2 justify-center md:justify-start bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
-                {images.map(img => (
-                  <div key={img.key} className="flex flex-col items-center">
-                    <img
-                      src={img.url}
-                      alt={labelMap[img.key] + ' preview'}
-                      className="w-20 h-20 object-cover rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm"
-                      loading="lazy"
-                    />
-                    <span className="mt-1 text-xs text-gray-500 dark:text-gray-400 truncate max-w-[5rem] text-center">
-                      {labelMap[img.key]}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          );
-        })()}
+        {/* We've removed the separate images section since they're now in the right column */}
 
         {/* Nueva sección: Prompt del usuario (solo visual) */}
         <div className="flex flex-col items-center justify-center mb-8">
