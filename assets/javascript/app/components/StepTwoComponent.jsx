@@ -41,7 +41,6 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     (initialData.asset_overrides?.main_hex_color) ||
     // Then fallback to brandColor if it exists
     initialData.brandColor ||
-    // Finally default to a white color
     ''
   );
   
@@ -929,7 +928,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       </div>
 
       {/* Navigation buttons at the bottom */}
-      <div className="flex justify-center gap-4 pb-8">
+      <div className="w-full px-4 flex justify-between pb-8">
         <BackButton
           onClick={handleBack}
           isLoading={isBackSubmitting}

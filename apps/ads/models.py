@@ -344,12 +344,26 @@ class AdRequestUsage(BaseModel):
         if user.has_active_subscription():
             sub = user.active_stripe_subscription
             # Get current period from subscription
-            period_start = timezone.make_aware(
-                datetime.fromtimestamp(sub.current_period_start)
-            )
-            period_end = timezone.make_aware(
-                datetime.fromtimestamp(sub.current_period_end)
-            )
+            # Handle both timestamp integers and datetime objects
+            if isinstance(sub.current_period_start, int):
+                period_start = timezone.make_aware(
+                    datetime.fromtimestamp(sub.current_period_start)
+                )   
+            else:
+                # Already a datetime object
+                period_start = sub.current_period_start
+                if timezone.is_naive(period_start):
+                    period_start = timezone.make_aware(period_start)
+            
+            if isinstance(sub.current_period_end, int):
+                period_end = timezone.make_aware(
+                    datetime.fromtimestamp(sub.current_period_end)
+                )
+            else:
+                # Already a datetime object
+                period_end = sub.current_period_end
+                if timezone.is_naive(period_end):
+                    period_end = timezone.make_aware(period_end)
             
             usage, created = cls.objects.get_or_create(
                 user=user,
