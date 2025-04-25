@@ -3,6 +3,7 @@ import { SearchComponent } from './SearchComponent';
 import { FilterFormComponent } from './FilterFormComponent';
 import InteractiveBentoGallery from '../../components/ui/interactive-bento-gallery.jsx';
 import { Building, X } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../shadcn/components/ui/tooltip';
 import { NextButton } from '../../components/ui/next-button.jsx';
 
 /**
@@ -361,24 +362,37 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
                   ))}
                 </div>
               </div>
-
-              {/* Next button */}
-              <div className="mt-8 flex justify-center">
-                <NextButton
-                  onClick={handleNextStep}
-                  disabled={!selectedAdLibrary || !selectedCanvasSize || isSubmitting}
-                  isLoading={isSubmitting}
-                  className="min-w-[150px]"
-                />
-              </div>
-
-              {/* Error message */}
-              {submitError && (
-                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm">
-                  {submitError}
-                </div>
-              )}
             </div>
+            
+            {/* Next button - in its own container */}
+            <div className="mt-8 w-full px-4 flex justify-end">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <NextButton
+                        onClick={handleNextStep}
+                        disabled={!selectedAdLibrary || !selectedCanvasSize || isSubmitting}
+                        isLoading={isSubmitting}
+                        className="min-w-[150px]"
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  {(!selectedAdLibrary || !selectedCanvasSize) && (
+                    <TooltipContent>
+                      <p>Please select an image and canvas size</p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+
+            {/* Error message */}
+            {submitError && (
+              <div className="mt-4 w-full max-w-4xl mx-auto p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm">
+                {submitError}
+              </div>
+            )}
           </>
         ) : (
           <div className="text-center my-12 p-8 bg-gray-50 rounded-lg">
