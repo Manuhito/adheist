@@ -99,21 +99,21 @@ export default function AppHeader() {
                   
                   <div 
                     id="user-dropdown"
-                    className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none hidden"
+                    className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white dark:bg-gray-900 shadow-lg dark:shadow-gray-900/80 ring-1 ring-black ring-opacity-5 dark:ring-gray-700 focus:outline-none hidden"
                     role="menu"
                     aria-orientation="vertical"
                     aria-labelledby="user-menu-button"
                     tabIndex={-1}
                   >
-                    <div className="py-1 px-4 border-b">
-                      <p className="text-sm font-medium">{user.name}</p>
-                      <p className="text-xs text-gray-500">{user.email}</p>
+                    <div className="py-1 px-4 border-b dark:border-gray-700">
+                      <p className="text-sm font-medium dark:text-gray-100">{user.name}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-300">{user.email}</p>
                     </div>
                     <div className="py-1" role="none">
-                      <a href="/app/profile" className="block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem">Profile</a>
-                      <a href="/app/settings" className="block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem">Settings</a>
-                      <a href="/ads/billing" className="block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem">Billing</a>
-                      <a href="/accounts/logout" className="block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem">Log out</a>
+                      <a href="/users/profile/" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800" role="menuitem">Profile</a>
+                      <a href="/app/settings" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800" role="menuitem">Settings</a>
+                      <a href="/ads/billing" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800" role="menuitem">Billing</a>
+                      <a href="/accounts/logout" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800" role="menuitem">Log out</a>
                     </div>
                   </div>
                 </div>

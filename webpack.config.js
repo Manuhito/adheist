@@ -22,6 +22,7 @@ module.exports = {
     'ad-requests': './assets/javascript/app/ad-requests.tsx',  // entry point para la página de ad_requests
     'billing': './assets/javascript/billing.js',  // entry point for the app billing page
     'payment': './assets/javascript/payment.js',  // entry point for the payment page
+    'profile': './assets/javascript/profile/index.js',  // entry point for the user profile page
   },
   output: {
     path: path.resolve(__dirname, './static'),
