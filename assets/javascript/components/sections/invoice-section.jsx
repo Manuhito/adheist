@@ -37,7 +37,7 @@ export function InvoiceSection() {
       setInvoices(data.invoices || []);
     } catch (err) {
       console.error('Error fetching invoices:', err);
-      setError('No se pudieron cargar las facturas. Por favor, inténtalo de nuevo más tarde.');
+      setError('Unable to load invoices. Please try again later.');
     } finally {
       setIsLoading(false);
     }
@@ -52,7 +52,7 @@ export function InvoiceSection() {
   const formatDate = (timestamp) => {
     if (!timestamp) return 'N/A';
     const date = new Date(timestamp * 1000);
-    return new Intl.DateTimeFormat('es-ES', {
+    return new Intl.DateTimeFormat('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
@@ -66,9 +66,9 @@ export function InvoiceSection() {
     // Convert from cents to dollars/euros
     const value = amount / 100;
     
-    return new Intl.NumberFormat('es-ES', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: currency || 'EUR'
+      currency: currency || 'USD'
     }).format(value);
   };
 
@@ -76,13 +76,13 @@ export function InvoiceSection() {
   const getStatusBadge = (status) => {
     switch (status) {
       case 'paid':
-        return <Badge className="bg-green-500">Pagada</Badge>;
+        return <Badge className="bg-green-500">Paid</Badge>;
       case 'open':
-        return <Badge className="bg-yellow-500">Pendiente</Badge>;
+        return <Badge className="bg-yellow-500">Pending</Badge>;
       case 'void':
-        return <Badge className="bg-gray-500">Anulada</Badge>;
+        return <Badge className="bg-gray-500">Void</Badge>;
       case 'draft':
-        return <Badge className="bg-blue-500">Borrador</Badge>;
+        return <Badge className="bg-blue-500">Draft</Badge>;
       default:
         return <Badge>{status}</Badge>;
     }
@@ -91,9 +91,9 @@ export function InvoiceSection() {
   return (
     <Card className="w-full mt-8">
       <CardHeader>
-        <CardTitle className="text-2xl">Historial de Facturas</CardTitle>
+        <CardTitle className="text-2xl">Invoice History</CardTitle>
         <CardDescription>
-          Descarga tus facturas de Stripe para tus registros financieros
+          Download your Stripe invoices for your financial records
         </CardDescription>
       </CardHeader>
       
@@ -121,24 +121,24 @@ export function InvoiceSection() {
               onClick={fetchInvoices}
             >
               <RefreshCwIcon className="mr-2 h-4 w-4" />
-              Reintentar
+              Retry
             </Button>
           </div>
         ) : invoices.length === 0 ? (
           // No invoices message
           <div className="text-center py-6 text-gray-500">
-            <p>No tienes facturas disponibles.</p>
+            <p>No invoices available.</p>
           </div>
         ) : (
           // Invoice table
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Número</TableHead>
-                <TableHead>Fecha</TableHead>
+                <TableHead>Number</TableHead>
+                <TableHead>Date</TableHead>
                 <TableHead>Total</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -161,7 +161,7 @@ export function InvoiceSection() {
                       disabled={!invoice.invoice_pdf}
                     >
                       <DownloadIcon className="mr-2 h-4 w-4" />
-                      Descargar
+                      Download
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -178,7 +178,7 @@ export function InvoiceSection() {
           disabled={isLoading}
         >
           <RefreshCwIcon className="mr-2 h-4 w-4" />
-          Actualizar
+          Refresh
         </Button>
       </CardFooter>
     </Card>
