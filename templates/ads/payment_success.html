@@ -1,7 +1,7 @@
 {% extends "web/app/app_base.html" %}
 {% load static %}
 
-{% block content %}
+{% block app %}
 <div class="max-w-4xl mx-auto py-12 px-4">
   {% if success %}
   <div class="text-center mb-8">
@@ -88,6 +88,14 @@
   document.addEventListener('DOMContentLoaded', function() {
     // Clear payment data from sessionStorage
     sessionStorage.removeItem('stripePaymentData');
+    
+    // Redirect to /ads/ after successful payment
+    {% if success %}
+      // Wait 3 seconds before redirecting to allow the user to see the success message
+      setTimeout(function() {
+        window.location.href = '/ads/';
+      }, 3000);
+    {% endif %}
   });
 </script>
 {% endblock %}

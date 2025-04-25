@@ -82,7 +82,7 @@ export function PricingCard({
       </div>
       <Button 
         variant={isHighlighted ? "secondary" : "default"} 
-        className="w-full"
+        className="w-full relative z-10"
         onClick={() => onSubscribe && onSubscribe(priceId)}
         disabled={!onSubscribe || !priceId || isCurrentPlan}
       >
