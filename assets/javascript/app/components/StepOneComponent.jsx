@@ -321,13 +321,15 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
           </div>
         ) : galleryItems.length > 0 ? (
           <>
-            <InteractiveBentoGallery
-              mediaItems={galleryItems}
-              title="Select Your Ideal Ad Style"
-              description="Browse and choose the ad style that best matches your desired outcome"
-              onItemSelect={(item) => setSelectedAdLibrary(item.id)}
-              selectedItemId={selectedAdLibrary}
-            />
+            <div className="overflow-y-auto max-h-[600px] border border-gray-200 rounded-lg shadow-sm">
+              <InteractiveBentoGallery
+                mediaItems={galleryItems}
+                title="Select Your Ideal Ad Style"
+                description="Browse and choose the ad style that best matches your desired outcome"
+                onItemSelect={(item) => setSelectedAdLibrary(item.id)}
+                selectedItemId={selectedAdLibrary}
+              />
+            </div>
 
             <div className="mt-12 w-full max-w-4xl mx-auto">
               <div className="space-y-4">
