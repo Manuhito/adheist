@@ -435,56 +435,55 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
         </div>
 
         {/* We've removed the separate images section since they're now in the right column */}
+      </div>
 
-        {/* Nueva sección: Prompt del usuario (solo visual) */}
-        <div className="flex flex-col items-center justify-center mb-8">
-          <div className="space-y-2 w-full min-w-[300px] max-w-2xl">
-            <label htmlFor="user-prompt" className="block text-lg font-medium text-primary mb-2 text-center">
-              What message do you want to transmit or additional instructions?
-            </label>
-            <textarea
-              id="user-prompt"
-              value={userPrompt}
-              onChange={e => setUserPrompt(e.target.value)}
-              rows={5}
-              className="w-full min-h-[120px] rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 text-base text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 shadow-sm focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-200 dark:focus-visible:ring-blue-800 transition resize-y mb-2"
-              placeholder="Write your prompt..."
-            />
-            <div className="flex justify-end">
-              <Button
-                  variant="outline"
-                  className="group"
-                  onClick={handleGenerateVersion}
-                  disabled={isGenerating}
-                >
-                  {isGenerating ? (
-                    <span className="flex items-center"><Sparkles className="w-4 h-4 mr-1 animate-spin text-yellow-400 dark:text-yellow-300" strokeWidth={2.2} /> Generating...</span>
-                  ) : (
-                    <><Sparkles className="w-4 h-4 mr-1 text-yellow-400 dark:text-yellow-300 group-hover:text-yellow-500 transition-colors duration-200" strokeWidth={2.2} />Generate</>
-                  )}
-                </Button>
-            </div>
-          </div>
+      {/* Nueva sección: Prompt del usuario (solo visual) - outside the white background container */}
+      <div className="flex flex-col items-center justify-center mb-8">
+        <div className="space-y-2 w-full min-w-[300px] max-w-2xl">
+          <label htmlFor="user-prompt" className="block text-lg font-medium text-primary mb-2 text-center">
+            What message do you want to transmit or additional instructions?
+          </label>
+          <textarea
+            id="user-prompt"
+            value={userPrompt}
+            onChange={e => setUserPrompt(e.target.value)}
+            rows={5}
+            className="w-full min-h-[120px] rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 text-base text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 shadow-sm focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-200 dark:focus-visible:ring-blue-800 transition resize-y mb-2"
+            placeholder="Write your prompt..."
+          />
+          {/* Generate button moved to bottom */}
         </div>
+      </div>
 
-        <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-blue-700">
-                Once submitted, your ad request will be processed. This may take a few minutes.
-              </p>
-            </div>
+      <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
+        <div className="flex">
+          <div className="flex-shrink-0">
+            <svg className="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <div className="ml-3">
+            <p className="text-sm text-blue-700">
+              Once submitted, your ad request will be processed. This may take a few minutes.
+            </p>
           </div>
         </div>
       </div>
       
-      <div className="flex justify-start gap-4 pb-8">
+      <div className="flex justify-between items-center gap-4 pb-8">
         <BackButton onClick={handleBack} isLoading={isBackSubmitting} />
+        <Button
+          variant="outline"
+          className="group h-10 px-4 py-2 text-sm font-medium"
+          onClick={handleGenerateVersion}
+          disabled={isGenerating}
+        >
+          {isGenerating ? (
+            <span className="flex items-center"><Sparkles className="w-4 h-4 mr-1 animate-spin text-yellow-400 dark:text-yellow-300" strokeWidth={2.2} /> Generating...</span>
+          ) : (
+            <><Sparkles className="w-4 h-4 mr-1 text-yellow-400 dark:text-yellow-300 group-hover:text-yellow-500 transition-colors duration-200" strokeWidth={2.2} />Generate</>
+          )}
+        </Button>
       </div>
     </div>
   );
