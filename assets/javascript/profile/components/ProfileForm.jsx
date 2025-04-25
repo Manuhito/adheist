@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
+import { AlertNotification } from '../../components/ui/alert-notification';
 import { Button } from '../../shadcn/components/ui/button';
 import { Card } from '../../shadcn/components/ui/card';
+
+// Componente personalizado para mensajes de alerta con color personalizado
+const ColoredAlertMessage = ({ message, color }) => {
+  return <span className={`text-${color}-500`}>{message}</span>;
+};
 
 const ProfileForm = ({ userData, formData, currentTz, now }) => {
   // Inicializar el estado del formulario con los valores del usuario
@@ -18,6 +24,7 @@ const ProfileForm = ({ userData, formData, currentTz, now }) => {
   
   const [formState, setFormState] = useState(initialState);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [alertInfo, setAlertInfo] = useState({ show: false, message: '', variant: 'info' });
   const [message, setMessage] = useState(null);
   const [previewImage, setPreviewImage] = useState(userData.avatar_url);
 
@@ -93,7 +100,11 @@ const ProfileForm = ({ userData, formData, currentTz, now }) => {
   };
 
   const uploadImage = async (file) => {
+    // Guardamos el contenido original del botón
     const uploadLabel = document.getElementById('profile-upload-label');
+    const originalContent = uploadLabel ? uploadLabel.innerHTML : '';
+    
+    // Indicador visual de carga
     if (uploadLabel) {
       uploadLabel.innerHTML = '<span class="pg-icon"><i class="fa fa-refresh"></i></span><span>Uploading...</span>';
       uploadLabel.classList.add('is-active');
@@ -112,25 +123,45 @@ const ProfileForm = ({ userData, formData, currentTz, now }) => {
 
       if (response.ok) {
         const text = await response.text();
+        // Mostrar mensaje de éxito como alerta con texto verde
+        setAlertInfo({
+          show: true,
+          message: <ColoredAlertMessage message={text || 'Image uploaded successfully!'} color="emerald" />,
+          variant: 'success'
+        });
+        // Restaurar el botón a su estado original
         if (uploadLabel) {
-          uploadLabel.innerHTML = '<span class="pg-icon"><i class="fa fa-check"></i></span><span>' + text + '</span>';
-          uploadLabel.classList.remove('is-active');
-          uploadLabel.classList.add('pg-text-success');
+          uploadLabel.innerHTML = originalContent;
+          uploadLabel.classList.remove('is-active', 'pg-text-success', 'pg-text-danger');
         }
       } else {
         const errorResponse = await response.json();
         console.error(errorResponse);
         const errorText = errorResponse.errors;
+        // Mostrar mensaje de error como alerta
+        setAlertInfo({
+          show: true,
+          message: errorText,
+          variant: 'error'
+        });
+        // Restaurar el botón a su estado original
         if (uploadLabel) {
-          uploadLabel.innerHTML = '<span title="' + errorText + '" ><span class="pg-icon"><i class="fa fa-times"></i></span><span>Upload failed!</span></span>';
-          uploadLabel.classList.add('pg-text-danger');
+          uploadLabel.innerHTML = originalContent;
+          uploadLabel.classList.remove('is-active', 'pg-text-success', 'pg-text-danger');
         }
       }
     } catch (error) {
       console.error('Error uploading image:', error);
+      // Mostrar mensaje de error como alerta
+      setAlertInfo({
+        show: true,
+        message: 'Error uploading image. Please try again.',
+        variant: 'error'
+      });
+      // Restaurar el botón a su estado original
       if (uploadLabel) {
-        uploadLabel.innerHTML = '<span><span class="pg-icon"><i class="fa fa-times"></i></span><span>Upload failed!</span></span>';
-        uploadLabel.classList.add('pg-text-danger');
+        uploadLabel.innerHTML = originalContent;
+        uploadLabel.classList.remove('is-active', 'pg-text-success', 'pg-text-danger');
       }
     }
   };
@@ -143,7 +174,16 @@ const ProfileForm = ({ userData, formData, currentTz, now }) => {
   };
 
   return (
-    <div className="pg-columns">
+    <>
+      {alertInfo.show && (
+        <AlertNotification
+          message={alertInfo.message}
+          variant={alertInfo.variant}
+          duration={5000}
+          onClose={() => setAlertInfo({ ...alertInfo, show: false })}
+        />
+      )}
+      <div className="pg-columns">
       <div id="profile-picture" className="pg-column-one-quarter">
         <div className="flex flex-col items-center justify-center space-y-4 w-full">
           <img className="avatar mx-auto" src={previewImage} alt="Profile" />
@@ -271,6 +311,7 @@ const ProfileForm = ({ userData, formData, currentTz, now }) => {
         </form>
       </div>
     </div>
+    </>
   );
 };
 
