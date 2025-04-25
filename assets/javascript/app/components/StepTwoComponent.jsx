@@ -14,6 +14,10 @@ import { Input } from '../../components/ui/input.jsx';
  */
 const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const [isBackSubmitting, setIsBackSubmitting] = useState(false);
+  
+  // Estado para los datos completos del adlibrary
+  const [adLibraryData, setAdLibraryData] = useState(null);
+  const [isAdLibraryLoading, setIsAdLibraryLoading] = useState(false);
   const websiteUrlId = useId();
   const keyBenefitsId = useId();
   const brandColorId = useId();
@@ -66,6 +70,24 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+  
+  // Fetch adlibrary info cuando tengamos el nombre
+  useEffect(() => {
+    if (!initialData.ad_library_name) return;
+    setIsAdLibraryLoading(true);
+    fetch(`/ads/adlibraries/?company_name=${encodeURIComponent(initialData.ad_library_name)}`)
+      .then(res => res.json())
+      .then(data => {
+        // Puede venir como array directa, results, o adlibraries
+        let found = null;
+        if (Array.isArray(data) && data.length > 0) found = data[0];
+        else if (Array.isArray(data?.results) && data.results.length > 0) found = data.results[0];
+        else if (Array.isArray(data?.adlibraries) && data.adlibraries.length > 0) found = data.adlibraries[0];
+        setAdLibraryData(found);
+      })
+      .catch(() => setAdLibraryData(null))
+      .finally(() => setIsAdLibraryLoading(false));
+  }, [initialData.ad_library_name]);
 
   // Clean up debounce timers when component unmounts
   useEffect(() => {
@@ -821,7 +843,92 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   };
 
   return (
-    <div className="flex flex-col min-h-[80vh] space-y-8">
+    <div className="space-y-8">
+      {/* Summary section from Step One */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <h2 className="text-xl font-semibold mb-4">Summary</h2>
+        
+        {/* Summary of Step One selections */}
+        <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 rounded-md mb-6">
+          <div className="flex flex-col md:flex-row gap-6 items-center justify-center">
+            {/* Column 1: Ad Style */}
+            <div className="flex flex-col md:w-1/2 items-center text-center">
+              <div className="group relative w-32 h-32 rounded-lg overflow-hidden shadow border bg-white dark:bg-gray-800">
+                {isAdLibraryLoading ? (
+                  <div className="flex items-center justify-center w-full h-full text-gray-400 animate-pulse">Loading...</div>
+                ) : adLibraryData ? (
+                  <>
+                    <img
+                      src={adLibraryData.ad_image || 'https://images.unsplash.com/photo-1557804506-669a67965ba0'}
+                      alt={adLibraryData.company_name || initialData.ad_library_name || 'Ad Preview'}
+                      className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
+                    />
+                    {/* Overlay info on hover */}
+                    <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center items-center text-white p-2">
+                      <h4 className="text-sm font-semibold mb-1">{adLibraryData.company_name || initialData.ad_library_name || 'No name'}</h4>
+                      {adLibraryData.industries && adLibraryData.industries.length > 0 && (
+                        <p className="text-xs mb-1 text-center">
+                          {adLibraryData.industries.join(', ')}
+                        </p>
+                      )}
+                      {adLibraryData.tags && adLibraryData.tags.length > 0 && (
+                        <p className="text-xs text-blue-200">{adLibraryData.tags.join(', ')}</p>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex items-center justify-center w-full h-full text-gray-400">No image</div>
+                )}
+              </div>
+            </div>
+            
+            {/* Column 2: Canvas Size */}
+            <div className="flex flex-col md:w-1/2 items-center text-center">
+              <div className="mb-2">
+                {(() => {
+                  const canvasSizes = [
+                    { id: '1080x1080', label: 'Square', size: '1080x1080' },
+                    { id: '1080x1920', label: 'Portrait Tall', size: '1080x1920' },
+                    { id: '1080x1350', label: 'Portrait', size: '1080x1350' },
+                    { id: '1280x720', label: 'Landscape', size: '1280x720' },
+                  ];
+                  // Use the canvas size value directly as the ID
+                  const item = canvasSizes.find(c => c.id === initialData.canvas_size);
+                  if (item) {
+                    return (
+                      <div className="flex flex-col items-center">
+                        {/* Aspect ratio box */}
+                        {item.id === "1080x1080" && (
+                          <div className="w-8 h-8 border-2 border-gray-300 rounded-sm mb-2" />
+                        )}
+                        {item.id === "1080x1920" && (
+                          <div className="w-6 h-10 border-2 border-gray-300 rounded-sm mb-2" />
+                        )}
+                        {item.id === "1080x1350" && (
+                          <div className="w-7 h-9 border-2 border-gray-300 rounded-sm mb-2" />
+                        )}
+                        {item.id === "1280x720" && (
+                          <div className="w-12 h-6 border-2 border-gray-300 rounded-sm mb-2" />
+                        )}
+                        <span className="font-semibold text-xs">{item.label}</span>
+                        <span className="text-xs text-gray-500">{item.size}</span>
+                      </div>
+                    );
+                  }
+                  // Fallback if unknown
+                  return (
+                    <div className="flex flex-col items-center">
+                      <div className="w-8 h-8 border-2 border-dashed border-gray-200 rounded-sm mb-2 flex items-center justify-center text-xs text-gray-400">?</div>
+                      <span className="font-semibold text-xs text-gray-400">Unknown</span>
+                      <span className="text-xs text-gray-400">{initialData.canvas_size || 'Not specified'}</span>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       {/* Main content area with company logo upload, website URL, and color picker */}
       <div className="flex-grow container mx-auto px-4 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
