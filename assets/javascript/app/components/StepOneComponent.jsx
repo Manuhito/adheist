@@ -118,6 +118,14 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
       // Look for image URL in different possible properties
       const imageUrl = item.ad_image || item.image || item.url || item.image_url ||
         "https://images.unsplash.com/photo-1557804506-669a67965ba0";
+      
+      // Get industry information if available
+      let industry = "";
+      if (item.industry) {
+        industry = item.industry;
+      } else if (item.industries && Array.isArray(item.industries) && item.industries.length > 0) {
+        industry = item.industries.join(", ");
+      }
 
       return {
         id: item.id || index + 1,
@@ -125,6 +133,7 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
         title: title,
         desc: desc,
         url: imageUrl,
+        industry: industry,
         span: spans[index % spans.length]
       };
     });

@@ -86,6 +86,22 @@ const GalleryModal = ({ selectedItem, isOpen, onClose, onSelect }) => {
                             <p className="text-lg font-semibold">{selectedItem.title}</p>
                         </div>
 
+                        {selectedItem.industry && (
+                            <div className="mb-4">
+                                <h4 className="font-medium text-muted-foreground">Industry</h4>
+                                <div className="flex flex-wrap gap-2 mt-1">
+                                    {selectedItem.industry.split(', ').map((ind, i) => (
+                                        <span
+                                            key={i}
+                                            className="px-2 py-1 bg-muted rounded-full text-sm"
+                                        >
+                                            {ind}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
                         {selectedItem.desc && (
                             <div className="mb-4">
                                 <h4 className="font-medium text-muted-foreground">Tags</h4>
