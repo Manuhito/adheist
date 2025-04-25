@@ -1091,3 +1091,74 @@ def billing_page(request):
         "active_tab": "billing",
         "pricing_data": pricing_json
     })
+
+
+@login_required
+def get_user_invoices(request):
+    """
+    Obtiene las facturas del usuario desde Stripe y las devuelve como JSON.
+    """
+    from apps.utils.billing import get_stripe_module
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    
+    # Verificar si el usuario tiene un cliente en Stripe
+    if not hasattr(request.user, 'customer') or not request.user.customer:
+        return JsonResponse({
+            'invoices': [],
+            'message': 'No hay facturas disponibles.'
+        })
+    
+    try:
+        stripe = get_stripe_module()
+        
+        # Obtener todas las facturas del cliente desde Stripe (no solo las pagadas)
+        invoices = stripe.Invoice.list(
+            customer=request.user.customer.id,
+            limit=25  # Limitar a las 25 facturas más recientes
+        )
+        
+        # Formatear los datos de las facturas para el frontend de manera segura
+        invoice_data = []
+        for invoice in invoices.data:
+            try:
+                # Extraer datos básicos de la factura de manera segura
+                invoice_item = {
+                    'id': invoice.id,
+                    'number': getattr(invoice, 'number', invoice.id),
+                    'created': getattr(invoice, 'created', None),
+                    'period_start': getattr(invoice, 'period_start', None),
+                    'period_end': getattr(invoice, 'period_end', None),
+                    'total': getattr(invoice, 'total', 0),
+                    'currency': getattr(invoice, 'currency', 'eur'),
+                    'status': getattr(invoice, 'status', 'unknown'),
+                    'invoice_pdf': getattr(invoice, 'invoice_pdf', None),
+                    'hosted_invoice_url': getattr(invoice, 'hosted_invoice_url', None),
+                    'subscription_id': None  # Valor por defecto
+                }
+                
+                # Intentar obtener el ID de suscripción si existe
+                if hasattr(invoice, 'subscription'):
+                    # La suscripción puede ser un string (ID) o un objeto
+                    if isinstance(invoice.subscription, str):
+                        invoice_item['subscription_id'] = invoice.subscription
+                    else:
+                        # Es un objeto, intentar obtener su ID
+                        invoice_item['subscription_id'] = getattr(invoice.subscription, 'id', None)
+                
+                invoice_data.append(invoice_item)
+            except Exception as item_error:
+                # Registrar el error pero continuar con otras facturas
+                logger.error(f"Error procesando factura {invoice.id}: {str(item_error)}")
+                continue
+        
+        return JsonResponse({
+            'invoices': invoice_data
+        })
+    except Exception as e:
+        logger.error(f"Error obteniendo facturas: {str(e)}")
+        return JsonResponse({
+            'error': str(e),
+            'invoices': []
+        }, status=400)

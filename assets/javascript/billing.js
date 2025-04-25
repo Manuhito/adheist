@@ -1,6 +1,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { PricingSection } from './components/blocks/pricing-section';
+import { InvoiceSection } from './components/sections/invoice-section';
 
 // Helper to get CSRF token from cookie
 function getCookie(name) {
@@ -132,15 +133,24 @@ document.addEventListener('DOMContentLoaded', () => {
       ]
     };
 
+    // Verificar si el usuario tiene una suscripción activa
+    const hasActiveSubscription = pricingData.tiers.some(tier => tier.is_current_plan);
+    console.log("Has active subscription:", hasActiveSubscription);
+    
     const root = createRoot(container);
     root.render(
-      <PricingSection
-        title={pricingData.title}
-        subtitle={pricingData.subtitle}
-        tiers={pricingData.tiers}
-        frequencies={pricingData.frequencies}
-        onSubscribe={handleCreatePaymentIntent}
-      />
+      <div>
+        <PricingSection
+          title={pricingData.title}
+          subtitle={pricingData.subtitle}
+          tiers={pricingData.tiers}
+          frequencies={pricingData.frequencies}
+          onSubscribe={handleCreatePaymentIntent}
+        />
+        
+        {/* Solo mostrar la sección de facturas si el usuario tiene una suscripción activa */}
+        {hasActiveSubscription && <InvoiceSection />}
+      </div>
     );
   }
 });
