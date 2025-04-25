@@ -15,7 +15,6 @@
   {% with project_meta|get_description:page_description as description %}
   {% with project_meta|get_image_url:page_image as image %}
   <title>{% block page_title %}{{ title }}{% endblock %}</title>
-  <link rel="icon" type="image/svg+xml" href="{% static 'images/web/logo-adheist.png' %}">
   <meta name="description" content="{{ description }}">
   <meta name="keywords" content="{{ project_meta.KEYWORDS }}">
   <!-- Twitter Card data -->
@@ -36,6 +35,7 @@
   {% endwith %}
   {% endif %}
   {% endblock meta %}
+  {% include 'web/components/favicon.html' %}
 
   {# Fonts #}
   <link rel="preconnect" href="https://rsms.me/">

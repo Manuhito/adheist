@@ -207,11 +207,7 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
   return (
     <div className="space-y-8">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-semibold mb-4">Step 3: Review and Submit</h2>
-        <p className="text-gray-600 dark:text-gray-300 mb-4">
-          This is the final step of the ad request creation process.
-          Review your ad details before submitting.
-        </p>
+        <h2 className="text-xl font-semibold mb-4">Summary</h2>
         
         {/* Summary of the ad request */}
         <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 rounded-md mb-6">
