@@ -79,10 +79,32 @@ export default function AppHeader() {
                     id="user-menu-button"
                     aria-expanded="false"
                     aria-haspopup="true"
-                    onClick={() => {
+                    onMouseEnter={() => {
                       const dropdown = document.getElementById('user-dropdown');
                       if (dropdown) {
-                        dropdown.classList.toggle('hidden');
+                        dropdown.classList.remove('hidden');
+                      }
+                    }}
+                    onMouseLeave={(e: React.MouseEvent) => {
+                      // Verificar si el ratón se mueve hacia el menú
+                      const dropdown = document.getElementById('user-dropdown');
+                      if (dropdown) {
+                        const rect = dropdown.getBoundingClientRect();
+                        if (
+                          e.clientX >= rect.left &&
+                          e.clientX <= rect.right &&
+                          e.clientY >= rect.top &&
+                          e.clientY <= rect.bottom
+                        ) {
+                          return; // No ocultar si se mueve hacia el menú
+                        }
+                        
+                        // Añadir un pequeño retraso para permitir moverse al menú
+                        setTimeout(() => {
+                          if (!dropdown.matches(':hover')) {
+                            dropdown.classList.add('hidden');
+                          }
+                        }, 100);
                       }
                     }}
                   >
@@ -104,6 +126,18 @@ export default function AppHeader() {
                     aria-orientation="vertical"
                     aria-labelledby="user-menu-button"
                     tabIndex={-1}
+                    onMouseEnter={() => {
+                      const dropdown = document.getElementById('user-dropdown');
+                      if (dropdown) {
+                        dropdown.classList.remove('hidden');
+                      }
+                    }}
+                    onMouseLeave={() => {
+                      const dropdown = document.getElementById('user-dropdown');
+                      if (dropdown) {
+                        dropdown.classList.add('hidden');
+                      }
+                    }}
                   >
                     <div className="py-1 px-4 border-b dark:border-gray-700">
                       <p className="text-sm font-medium dark:text-gray-100">{user.name}</p>
@@ -111,7 +145,6 @@ export default function AppHeader() {
                     </div>
                     <div className="py-1" role="none">
                       <a href="/users/profile/" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800" role="menuitem">Profile</a>
-                      <a href="/app/settings" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800" role="menuitem">Settings</a>
                       <a href="/ads/billing" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800" role="menuitem">Billing</a>
                       <a href="/accounts/logout" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800" role="menuitem">Log out</a>
                     </div>
