@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Drawer from "@/components/drawer";
 import { Icons } from "@/components/icons";
+import { ThemeSwitch } from "@/components/theme-switch";
 import { buttonVariants, Button } from "@/components/ui/button";
 import { siteConfig } from "@/lib/config";
 import { cn } from "@/lib/utils";
@@ -148,7 +149,11 @@ export default function AppHeader() {
                     <div className="py-1" role="none">
                       <a href="/users/profile/" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800" role="menuitem">Profile</a>
                       <a href="/ads/billing" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800" role="menuitem">Billing</a>
-                      <a href="/accounts/logout" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800" role="menuitem">Log out</a>
+                      <div className="px-4 py-2 flex items-center justify-between border-t border-gray-200 dark:border-gray-700">
+                        <span className="text-sm text-gray-700 dark:text-gray-100">Theme</span>
+                        <ThemeSwitch />
+                      </div>
+                      <a href="/accounts/logout" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 border-t border-gray-200 dark:border-gray-700" role="menuitem">Log out</a>
                     </div>
                   </div>
                 </div>
