@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import Drawer from "@/components/drawer";
 import { Icons } from "@/components/icons";
-import Menu from "@/components/menu";
-import { buttonVariants } from "@/components/ui/button";
+import { ThemeSwitch } from "@/components/theme-switch";
+import { buttonVariants, Button } from "@/components/ui/button";
 import { siteConfig } from "@/lib/config";
 import { cn } from "@/lib/utils";
 
@@ -57,10 +57,17 @@ export default function AppHeader() {
 
         <div className="hidden lg:block">
           <div className="flex items-center">
-            <nav className="mr-10">
-              <Menu />
-            </nav>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4">
+              <a
+                href="/blog"
+                target="_arya"
+                className={cn(
+                  buttonVariants({ variant: "ghost", size: "sm" }),
+                  "font-medium"
+                )}
+              >
+                Blog
+              </a>
               <a
                 href="/pricing"
                 className={cn(
@@ -79,10 +86,32 @@ export default function AppHeader() {
                     id="user-menu-button"
                     aria-expanded="false"
                     aria-haspopup="true"
-                    onClick={() => {
+                    onMouseEnter={() => {
                       const dropdown = document.getElementById('user-dropdown');
                       if (dropdown) {
-                        dropdown.classList.toggle('hidden');
+                        dropdown.classList.remove('hidden');
+                      }
+                    }}
+                    onMouseLeave={(e: React.MouseEvent) => {
+                      // Verificar si el ratón se mueve hacia el menú
+                      const dropdown = document.getElementById('user-dropdown');
+                      if (dropdown) {
+                        const rect = dropdown.getBoundingClientRect();
+                        if (
+                          e.clientX >= rect.left &&
+                          e.clientX <= rect.right &&
+                          e.clientY >= rect.top &&
+                          e.clientY <= rect.bottom
+                        ) {
+                          return; // No ocultar si se mueve hacia el menú
+                        }
+                        
+                        // Añadir un pequeño retraso para permitir moverse al menú
+                        setTimeout(() => {
+                          if (!dropdown.matches(':hover')) {
+                            dropdown.classList.add('hidden');
+                          }
+                        }, 100);
                       }
                     }}
                   >
@@ -104,16 +133,27 @@ export default function AppHeader() {
                     aria-orientation="vertical"
                     aria-labelledby="user-menu-button"
                     tabIndex={-1}
+                    onMouseEnter={() => {
+                      const dropdown = document.getElementById('user-dropdown');
+                      if (dropdown) {
+                        dropdown.classList.remove('hidden');
+                      }
+                    }}
+                    onMouseLeave={() => {
+                      const dropdown = document.getElementById('user-dropdown');
+                      if (dropdown) {
+                        dropdown.classList.add('hidden');
+                      }
+                    }}
                   >
-                    <div className="py-1 px-4 border-b dark:border-gray-700">
-                      <p className="text-sm font-medium dark:text-gray-100">{user.name}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-300">{user.email}</p>
-                    </div>
                     <div className="py-1" role="none">
                       <a href="/users/profile/" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800" role="menuitem">Profile</a>
-                      <a href="/app/settings" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800" role="menuitem">Settings</a>
                       <a href="/ads/billing" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800" role="menuitem">Billing</a>
-                      <a href="/accounts/logout" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800" role="menuitem">Log out</a>
+                      <div className="px-4 py-2 flex items-center justify-between border-t border-gray-200 dark:border-gray-700">
+                        <span className="text-sm text-gray-700 dark:text-gray-100">Theme</span>
+                        <ThemeSwitch />
+                      </div>
+                      <a href="/accounts/logout" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 border-t border-gray-200 dark:border-gray-700" role="menuitem">Log out</a>
                     </div>
                   </div>
                 </div>
