@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Drawer from "@/components/drawer";
 import { Icons } from "@/components/icons";
-import Menu from "@/components/menu";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants, Button } from "@/components/ui/button";
 import { siteConfig } from "@/lib/config";
 import { cn } from "@/lib/utils";
 
@@ -57,10 +56,17 @@ export default function AppHeader() {
 
         <div className="hidden lg:block">
           <div className="flex items-center">
-            <nav className="mr-10">
-              <Menu />
-            </nav>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4">
+              <a
+                href="/blog"
+                target="_arya"
+                className={cn(
+                  buttonVariants({ variant: "ghost", size: "sm" }),
+                  "font-medium"
+                )}
+              >
+                Blog
+              </a>
               <a
                 href="/pricing"
                 className={cn(
@@ -139,10 +145,6 @@ export default function AppHeader() {
                       }
                     }}
                   >
-                    <div className="py-1 px-4 border-b dark:border-gray-700">
-                      <p className="text-sm font-medium dark:text-gray-100">{user.name}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-300">{user.email}</p>
-                    </div>
                     <div className="py-1" role="none">
                       <a href="/users/profile/" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800" role="menuitem">Profile</a>
                       <a href="/ads/billing" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800" role="menuitem">Billing</a>
