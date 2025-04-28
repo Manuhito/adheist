@@ -31,7 +31,6 @@ const BaseLayout = () => {
           <div id="page-content-mount" />
         </div>
         <Footer />
-        <ThemeToggle />
       </main>
     </ThemeProvider>
   );
