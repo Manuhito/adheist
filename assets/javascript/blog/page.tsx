@@ -2,15 +2,28 @@ import * as React from 'react';
 import BlogCard from "@/components/blog-card";
 import { siteConfig } from "@/lib/config";
 import { constructMetadata } from "@/lib/utils";
+import { useTranslation } from "@/lib/useTranslation";
 
 export const metadata = constructMetadata({
   title: "Blog",
   description: `Latest news and updates from ${siteConfig.name}.`,
 });
 
+// Definir la interfaz para window con nuestra propiedad personalizada
+interface CustomWindow extends Window {
+  __BLOG_DATA__?: any[];
+  __TRANSLATIONS__?: Record<string, string>;
+  baseLayoutReady?: boolean;
+}
+
+// Asignar el tipo personalizado a window
+declare const window: CustomWindow;
+
 export default function Blog() {
-  const blogDataElement = document.getElementById('blogData');
-  const blogData = blogDataElement ? JSON.parse(blogDataElement.textContent || '[]') : [];
+  const { t } = useTranslation();
+  
+  // Acceder a los datos a través de window.__BLOG_DATA__
+  const blogData = window.__BLOG_DATA__ || [];
   
   const articles = blogData.sort((a: any, b: any) => b.publishedAt.localeCompare(a.publishedAt));
 
@@ -19,10 +32,10 @@ export default function Blog() {
       <div className="mx-auto w-full max-w-screen-xl px-2.5 lg:px-20 mt-24">
         <div className="text-center py-16">
           <h1 className="text-3xl font-bold text-foreground sm:text-4xl">
-            Articles
+            {t('articles', 'Articles')}
           </h1>
           <p className="mt-4 text-xl text-muted-foreground">
-            Latest news and updates from {siteConfig.name}
+            {t('latest_news', 'Latest news and updates from')} {siteConfig.name}
           </p>
         </div>
       </div>

@@ -78,6 +78,10 @@ def translations(request):
             'already_have_account': _('Already have account?'),
             'go_to_sign_in': _('Go to sign in.'),
             
+            # Blog page translations
+            'articles': _('Articles'),
+            'latest_news': _('Latest news and updates from'),
+            
             # Add more translations as needed
         }
     }
