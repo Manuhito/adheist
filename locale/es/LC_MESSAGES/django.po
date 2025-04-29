@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-29 09:12+0000\n"
+"POT-Creation-Date: 2025-04-29 09:57+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,6 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? "
 "1 : 2;\n"
+
 #: adheist/settings.py:276 apps/web/context_processors.py:63
 msgid "English"
 msgstr ""
@@ -175,12 +176,12 @@ msgstr ""
 
 #: apps/users/forms.py:85
 msgid "Terms and Conditions"
-msgstr ""
+msgstr "Términos y Condiciones"
 
 #: apps/users/forms.py:87
 #, python-brace-format
 msgid "I agree to the {terms_link}"
-msgstr ""
+msgstr "Acepto los {terms_link}"
 
 #: apps/users/helpers.py:35
 #, python-brace-format
@@ -259,6 +260,25 @@ msgstr "Iniciar sesión"
 #: apps/web/context_processors.py:73 templates/account/login.html:47
 msgid "Mail me a sign-in code"
 msgstr "Envíame un código de acceso por correo"
+
+#: apps/web/context_processors.py:76 templates/account/signup.html:22
+msgid "Create your account"
+msgstr "Crea tu cuenta"
+
+#: apps/web/context_processors.py:77 templates/account/signup.html:49
+#: templates/socialaccount/signup.html:6 templates/socialaccount/signup.html:9
+#: templates/socialaccount/signup.html:21
+#: templates/web/components/top_nav.html:45
+msgid "Sign Up"
+msgstr "Regístrate"
+
+#: apps/web/context_processors.py:78 templates/account/signup.html:57
+msgid "Already have account?"
+msgstr "¿Ya tienes una cuenta?"
+
+#: apps/web/context_processors.py:79 templates/account/signup.html:59
+msgid "Go to sign in."
+msgstr "Ir a iniciar sesión."
 
 #: templates/400.html:4
 msgid "Shucks. That was a bad request."
@@ -379,7 +399,7 @@ msgstr ""
 
 #: templates/account/components/social/login_with_social_button.html:10
 msgid "Continue with"
-msgstr ""
+msgstr "Continuar con"
 
 #: templates/account/components/social/social_accounts.html:3
 msgid "Connected Accounts"
@@ -638,24 +658,6 @@ msgstr ""
 
 #: templates/account/password_set.html:8 templates/account/password_set.html:14
 msgid "Set Password"
-msgstr ""
-
-#: templates/account/signup.html:22
-msgid "Create your account"
-msgstr ""
-
-#: templates/account/signup.html:49 templates/socialaccount/signup.html:6
-#: templates/socialaccount/signup.html:9 templates/socialaccount/signup.html:21
-#: templates/web/components/top_nav.html:45
-msgid "Sign Up"
-msgstr ""
-
-#: templates/account/signup.html:57
-msgid "Already have account?"
-msgstr ""
-
-#: templates/account/signup.html:59
-msgid "Go to sign in."
 msgstr ""
 
 #: templates/account/signup_closed.html:4

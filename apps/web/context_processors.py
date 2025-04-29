@@ -72,6 +72,12 @@ def translations(request):
             'sign_in': _('Sign In'),
             'mail_signin_code': _('Mail me a sign-in code'),
             
+            # Signup page translations
+            'create_account': _('Create your account'),
+            'sign_up': _('Sign Up'),
+            'already_have_account': _('Already have account?'),
+            'go_to_sign_in': _('Go to sign in.'),
+            
             # Add more translations as needed
         }
     }
