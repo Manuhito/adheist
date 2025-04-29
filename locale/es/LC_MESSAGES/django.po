@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-29 21:36+0000\n"
+"POT-Creation-Date: 2025-04-29 22:01+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -691,7 +691,7 @@ msgstr "Configurar anuncio"
 msgid "Review & Submit"
 msgstr "Revisar y enviar"
 
-#: apps/web/context_processors.py:212
+#: apps/web/context_processors.py:212 apps/web/context_processors.py:360
 msgid "No ad request ID available"
 msgstr "No hay ID de solicitud de anuncio disponible"
 
@@ -738,14 +738,17 @@ msgid "Select a canvas size to proceed"
 msgstr "Selecciona un tamaño de imagen para continuar"
 
 #: apps/web/context_processors.py:225 apps/web/context_processors.py:262
+#: apps/web/context_processors.py:342
 msgid "Square"
 msgstr "Cuadrado"
 
 #: apps/web/context_processors.py:226 apps/web/context_processors.py:264
+#: apps/web/context_processors.py:344
 msgid "Portrait"
 msgstr "Vertical"
 
 #: apps/web/context_processors.py:227 apps/web/context_processors.py:265
+#: apps/web/context_processors.py:345
 msgid "Landscape"
 msgstr "Apaisajado"
 
@@ -833,27 +836,27 @@ msgstr "Cargando etiquetas..."
 msgid "No tags available"
 msgstr "No hay etiquetas disponibles"
 
-#: apps/web/context_processors.py:259
+#: apps/web/context_processors.py:259 apps/web/context_processors.py:334
 msgid "Summary"
 msgstr "Resumen"
 
-#: apps/web/context_processors.py:260
+#: apps/web/context_processors.py:260 apps/web/context_processors.py:335
 msgid "Loading..."
 msgstr "Cargando..."
 
-#: apps/web/context_processors.py:261
+#: apps/web/context_processors.py:261 apps/web/context_processors.py:336
 msgid "No image"
 msgstr "Sin imagen"
 
-#: apps/web/context_processors.py:263
+#: apps/web/context_processors.py:263 apps/web/context_processors.py:343
 msgid "Portrait Tall"
 msgstr "Vertical"
 
-#: apps/web/context_processors.py:266
+#: apps/web/context_processors.py:266 apps/web/context_processors.py:346
 msgid "Unknown"
 msgstr "Desconocido"
 
-#: apps/web/context_processors.py:267
+#: apps/web/context_processors.py:267 apps/web/context_processors.py:347
 msgid "Not specified"
 msgstr "No especificado"
 
@@ -965,8 +968,11 @@ msgid "App Screenshots"
 msgstr "Capturas de pantalla del app"
 
 #: apps/web/context_processors.py:300
-msgid "Upload high-quality screenshots of your software to showcase its features"
-msgstr "Sube capturas de pantalla de alta calidad de tu software para mostrar sus características"
+msgid ""
+"Upload high-quality screenshots of your software to showcase its features"
+msgstr ""
+"Sube capturas de pantalla de alta calidad de tu software para mostrar sus "
+"características"
 
 #: apps/web/context_processors.py:301
 msgid "Main Interface"
@@ -998,7 +1004,8 @@ msgstr "Materiales de marketing adicionales"
 
 #: apps/web/context_processors.py:310
 msgid "Upload supplementary images to enhance your ad campaign (optional)"
-msgstr "Sube imágenes adicionales para mejorar tu campaña de anuncios (opcional)"
+msgstr ""
+"Sube imágenes adicionales para mejorar tu campaña de anuncios (opcional)"
 
 #: apps/web/context_processors.py:311
 msgid "Testimonial"
@@ -1034,7 +1041,8 @@ msgstr "Marca personalizada"
 
 #: apps/web/context_processors.py:321
 msgid "Upload your company logo to enhance your ad campaign's brand identity"
-msgstr "Sube tu logo de empresa para mejorar la identidad de tu campaña de anuncios"
+msgstr ""
+"Sube tu logo de empresa para mejorar la identidad de tu campaña de anuncios"
 
 #: apps/web/context_processors.py:322
 msgid "Company Logo"
@@ -1059,6 +1067,100 @@ msgstr "Cargando..."
 #: apps/web/context_processors.py:331
 msgid "or drag and drop file here"
 msgstr "o arrastra y suelta el archivo aquí"
+
+#: apps/web/context_processors.py:337
+msgid "Ad Preview"
+msgstr "Vista previa del anuncio"
+
+#: apps/web/context_processors.py:338
+msgid "No name"
+msgstr "Sin nombre"
+
+#: apps/web/context_processors.py:339
+msgid "No brand color"
+msgstr "Sin color de la marca"
+
+#: apps/web/context_processors.py:340
+msgid "No company website"
+msgstr "Sin sitio web de empresa"
+
+#: apps/web/context_processors.py:341
+msgid "No key benefits"
+msgstr "Sin ventajas principales"
+
+#: apps/web/context_processors.py:348
+msgid "Product 1"
+msgstr "Producto 1"
+
+#: apps/web/context_processors.py:349
+msgid "Product 2"
+msgstr "Producto 2"
+
+#: apps/web/context_processors.py:350
+msgid "Service 1"
+msgstr "Servicio 1"
+
+#: apps/web/context_processors.py:351
+msgid "Service 2"
+msgstr "Servicio 2"
+
+#: apps/web/context_processors.py:352
+msgid "Marketing 1"
+msgstr "Marketing 1"
+
+#: apps/web/context_processors.py:353
+msgid "Marketing 2"
+msgstr "Marketing 2"
+
+#: apps/web/context_processors.py:354
+msgid "Marketing 3"
+msgstr "Marketing 3"
+
+#: apps/web/context_processors.py:355
+msgid "What message do you want to transmit or additional instructions?"
+msgstr "¿Qué mensaje deseas transmitir o instrucciones adicionales?"
+
+#: apps/web/context_processors.py:356
+msgid "Write your prompt..."
+msgstr "Escribe tu prompt..."
+
+#: apps/web/context_processors.py:357
+msgid "Once submitted, your ad request will be processed. This may take a few minutes."
+msgstr "Una vez enviado, tu solicitud de anuncio será procesada. Esto puede tomar unos minutos."
+
+#: apps/web/context_processors.py:358
+#, fuzzy
+#| msgid "Uploading..."
+msgid "Generating..."
+msgstr "Generando..."
+
+#: apps/web/context_processors.py:359
+msgid "Generate"
+msgstr "Generar"
+
+#: apps/web/context_processors.py:361
+msgid "CSRF token not found"
+msgstr "CSRF token no encontrado"
+
+#: apps/web/context_processors.py:362
+msgid "Failed to update status to SUBMITED"
+msgstr "Error al actualizar el estado a SUBMITED"
+
+#: apps/web/context_processors.py:363
+msgid "Error updating status to SUBMITED:"
+msgstr "Error al actualizar el estado a SUBMITED: "
+
+#: apps/web/context_processors.py:364
+msgid "Error generating version"
+msgstr "Error al generar la versión"
+
+#: apps/web/context_processors.py:365
+msgid "Failed to submit ad request"
+msgstr "Error al enviar la solicitud de anuncio"
+
+#: apps/web/context_processors.py:366
+msgid "Failed to update status to DRAFT"
+msgstr "Error al actualizar el estado a DRAFT"
 
 #: templates/400.html:4
 msgid "Shucks. That was a bad request."

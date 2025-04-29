@@ -330,6 +330,41 @@ def translations(request):
             # ImageUpload translations
             'image_upload.drag_drop': _('or drag and drop file here'),
             
+            # StepThreeComponent translations
+            'step_three.summary': _('Summary'),
+            'step_three.loading': _('Loading...'),
+            'step_three.no_image': _('No image'),
+            'step_three.ad_preview': _('Ad Preview'),
+            'step_three.no_name': _('No name'),
+            'step_three.no_brand_color': _('No brand color'),
+            'step_three.no_company_website': _('No company website'),
+            'step_three.no_key_benefits': _('No key benefits'),
+            'step_three.square': _('Square'),
+            'step_three.portrait_tall': _('Portrait Tall'),
+            'step_three.portrait': _('Portrait'),
+            'step_three.landscape': _('Landscape'),
+            'step_three.unknown': _('Unknown'),
+            'step_three.not_specified': _('Not specified'),
+            'step_three.product_1': _('Product 1'),
+            'step_three.product_2': _('Product 2'),
+            'step_three.service_1': _('Service 1'),
+            'step_three.service_2': _('Service 2'),
+            'step_three.marketing_1': _('Marketing 1'),
+            'step_three.marketing_2': _('Marketing 2'),
+            'step_three.marketing_3': _('Marketing 3'),
+            'step_three.prompt_label': _('What message do you want to transmit or additional instructions?'),
+            'step_three.prompt_placeholder': _('Write your prompt...'),
+            'step_three.processing_info': _('Once submitted, your ad request will be processed. This may take a few minutes.'),
+            'step_three.generating': _('Generating...'),
+            'step_three.generate': _('Generate'),
+            'step_three.no_request_id': _('No ad request ID available'),
+            'step_three.csrf_not_found': _('CSRF token not found'),
+            'step_three.update_status_failed': _('Failed to update status to SUBMITED'),
+            'step_three.update_status_error': _('Error updating status to SUBMITED:'),
+            'step_three.generate_version_error': _('Error generating version'),
+            'step_three.submit_request_failed': _('Failed to submit ad request'),
+            'step_three.update_draft_failed': _('Failed to update status to DRAFT'),
+            
             # Add more translations as needed
         }
     }
