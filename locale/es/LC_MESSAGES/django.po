@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-29 12:07+0000\n"
+"POT-Creation-Date: 2025-04-29 12:27+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -90,7 +90,7 @@ msgstr ""
 msgid "Daily"
 msgstr ""
 
-#: apps/subscriptions/metadata.py:155
+#: apps/subscriptions/metadata.py:155 apps/web/context_processors.py:146
 msgid "Custom"
 msgstr ""
 
@@ -353,6 +353,150 @@ msgstr "Optimización de flujos de trabajo"
 #: apps/web/context_processors.py:109
 msgid "Intelligent Scheduling"
 msgstr "Programación inteligente"
+
+#: apps/web/context_processors.py:112
+msgid "Pricing Plans"
+msgstr "Precios"
+
+#: apps/web/context_processors.py:113
+msgid "Choose the perfect plan for your needs"
+msgstr "Elija el plan perfecto para sus necesidades"
+
+#: apps/web/context_processors.py:114
+msgid "monthly"
+msgstr "mensual"
+
+#: apps/web/context_processors.py:115
+msgid "yearly"
+msgstr "anual"
+
+#: apps/web/context_processors.py:116
+msgid "Free"
+msgstr "Gratis"
+
+#: apps/web/context_processors.py:117
+msgid "Starter"
+msgstr "Basico"
+
+#: apps/web/context_processors.py:118
+msgid "Pro"
+msgstr "Pro"
+
+#: apps/web/context_processors.py:119
+msgid "Team"
+msgstr "Equipo"
+
+#: apps/web/context_processors.py:120
+msgid "Enterprise"
+msgstr "Empresa"
+
+#: apps/web/context_processors.py:121
+msgid "Basic features for individuals"
+msgstr "Funcionalidades básicas para individuos"
+
+#: apps/web/context_processors.py:122
+msgid "Advanced features for professionals"
+msgstr "Funcionalidades avanzadas para profesionales"
+
+#: apps/web/context_processors.py:123
+msgid "For teams and businesses"
+msgstr "Para equipos y empresas"
+
+#: apps/web/context_processors.py:124
+msgid "For large organizations"
+msgstr "Para grandes organizaciones"
+
+#: apps/web/context_processors.py:125
+msgid "3 ad requests per month"
+msgstr "3 peticiones de anuncios por mes"
+
+#: apps/web/context_processors.py:126
+msgid "Basic templates"
+msgstr "Plantillas básicas"
+
+#: apps/web/context_processors.py:127
+msgid "Standard support"
+msgstr "Soporte estándar"
+
+#: apps/web/context_processors.py:128
+msgid "20 ad requests per month"
+msgstr "20 peticiones de anuncios por mes"
+
+#: apps/web/context_processors.py:129
+msgid "Premium templates"
+msgstr "Plantillas premium"
+
+#: apps/web/context_processors.py:130
+msgid "Priority support"
+msgstr "Soporte prioritario"
+
+#: apps/web/context_processors.py:131 apps/web/context_processors.py:135
+msgid "Custom branding"
+msgstr "Marca personalizada"
+
+#: apps/web/context_processors.py:132
+msgid "50 ad requests per month"
+msgstr "50 peticiones de anuncios por mes"
+
+#: apps/web/context_processors.py:133
+msgid "All premium templates"
+msgstr "Todas las plantillas premium"
+
+#: apps/web/context_processors.py:134
+msgid "24/7 support"
+msgstr "Soporte 24/7"
+
+#: apps/web/context_processors.py:136
+msgid "Team collaboration"
+msgstr "Colaboración de equipos"
+
+#: apps/web/context_processors.py:137
+msgid "Unlimited ad requests"
+msgstr "Peticiones de anuncios ilimitadas"
+
+#: apps/web/context_processors.py:138
+msgid "Custom templates"
+msgstr "Plantillas personalizadas"
+
+#: apps/web/context_processors.py:139
+msgid "Dedicated support"
+msgstr "Soporte dedicado"
+
+#: apps/web/context_processors.py:140
+msgid "API access"
+msgstr "Acceso a API"
+
+#: apps/web/context_processors.py:141
+msgid "Advanced analytics"
+msgstr "Análisis avanzado"
+
+#: apps/web/context_processors.py:142
+msgid "Get Started"
+msgstr "Comenzar gratis"
+
+#: apps/web/context_processors.py:143
+msgid "Upgrade to Pro"
+msgstr "Subir a Pro"
+
+#: apps/web/context_processors.py:144
+msgid "Upgrade to Team"
+msgstr "Subir a Equipo"
+
+#: apps/web/context_processors.py:145
+msgid "Contact Sales"
+msgstr "Contactar al equipo de ventas"
+
+#: apps/web/context_processors.py:147
+msgid "Current Plan"
+msgstr "Plan actual"
+
+#: apps/web/context_processors.py:148
+msgid "🔥 Most Popular"
+msgstr "🔥 Más Popular"
+
+#: apps/web/context_processors.py:149
+msgid "Per month"
+msgstr "Por mes"
 
 #: templates/400.html:4
 msgid "Shucks. That was a bad request."
