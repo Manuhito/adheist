@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-29 14:32+0000\n"
+"POT-Creation-Date: 2025-04-29 17:38+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -509,6 +509,45 @@ msgstr ""
 msgid "Per month"
 msgstr ""
 
+#: apps/web/context_processors.py:161
+msgid "No library"
+msgstr ""
+
+#: apps/web/context_processors.py:162 templates/ads/adlibrary_form.html:40
+msgid "Industries"
+msgstr ""
+
+#: apps/web/context_processors.py:163
+msgid "No associated industries"
+msgstr ""
+
+#: apps/web/context_processors.py:164
+#, fuzzy
+#| msgid "My Details"
+msgid "View details"
+msgstr "Mes Details"
+
+#: apps/web/context_processors.py:165
+#, python-brace-format
+msgid ""
+"This ad request is currently in {status} status. Please wait for it to be "
+"processed."
+msgstr ""
+
+#: apps/web/context_processors.py:166
+msgid "Error creating ad request. Please try again."
+msgstr ""
+
+#: apps/web/context_processors.py:167
+msgid ""
+"Your ad request has been processed successfully! Your ad is being generated "
+"and may take a few minutes to be available."
+msgstr ""
+
+#: apps/web/context_processors.py:168
+msgid "Create New Ad Request"
+msgstr ""
+
 #: templates/400.html:4
 msgid "Shucks. That was a bad request."
 msgstr ""
@@ -950,10 +989,6 @@ msgstr ""
 msgid "New AdLibrary"
 msgstr ""
 
-#: templates/ads/adlibrary_form.html:40
-msgid "Industries"
-msgstr ""
-
 #: templates/ads/adlibrary_form.html:40 templates/ads/adlibrary_form.html:49
 msgid "Hold Ctrl/Cmd to select multiple"
 msgstr ""
@@ -1301,11 +1336,6 @@ msgstr ""
 #~| msgid "My Team"
 #~ msgid "My Teams"
 #~ msgstr "Mon Équipe"
-
-#, fuzzy
-#~| msgid "My Details"
-#~ msgid "View Details"
-#~ msgstr "Mes Details"
 
 #, fuzzy
 #~| msgid "My Team"

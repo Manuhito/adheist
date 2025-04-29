@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-29 14:32+0000\n"
+"POT-Creation-Date: 2025-04-29 17:38+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -500,6 +500,47 @@ msgstr "🔥 Más Popular"
 msgid "Per month"
 msgstr "Por mes"
 
+#: apps/web/context_processors.py:161
+msgid "No library"
+msgstr "No hay biblioteca"
+
+#: apps/web/context_processors.py:162 templates/ads/adlibrary_form.html:40
+msgid "Industries"
+msgstr "Industrias"
+
+#: apps/web/context_processors.py:163
+msgid "No associated industries"
+msgstr "No hay industrias asociadas"
+
+#: apps/web/context_processors.py:164
+msgid "View details"
+msgstr "Ver detalles"
+
+#: apps/web/context_processors.py:165
+#, python-brace-format
+msgid ""
+"This ad request is currently in {status} status. Please wait for it to be "
+"processed."
+msgstr ""
+"Este anuncio está actualmente en el estado {status}. Por favor, espera a que "
+"se procese."
+
+#: apps/web/context_processors.py:166
+msgid "Error creating ad request. Please try again."
+msgstr "Error al crear el pedido de anuncio. Por favor, intentalo de nuevo."
+
+#: apps/web/context_processors.py:167
+msgid ""
+"Your ad request has been processed successfully! Your ad is being generated "
+"and may take a few minutes to be available."
+msgstr ""
+"Tu solicitud de anuncio ha sido procesada exitosamente! Tu anuncio está "
+"siendo generado y puede tomar unos minutos para estar disponible."
+
+#: apps/web/context_processors.py:168
+msgid "Create New Ad Request"
+msgstr "Crear nuevo anuncio"
+
 #: templates/400.html:4
 msgid "Shucks. That was a bad request."
 msgstr ""
@@ -931,10 +972,6 @@ msgstr ""
 
 #: templates/ads/adlibrary_form.html:29
 msgid "New AdLibrary"
-msgstr ""
-
-#: templates/ads/adlibrary_form.html:40
-msgid "Industries"
 msgstr ""
 
 #: templates/ads/adlibrary_form.html:40 templates/ads/adlibrary_form.html:49

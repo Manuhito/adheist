@@ -157,6 +157,16 @@ def translations(request):
             'app_header.logout': _('Log out'),
             'app_header.login': _('Login'),
             
+            # Ad requests translations
+            'ad_requests.no_library': _('No library'),
+            'ad_requests.industries': _('Industries'),
+            'ad_requests.no_industries': _('No associated industries'),
+            'ad_requests.view_details': _('View details'),
+            'ad_requests.wait_processing': _('This ad request is currently in {status} status. Please wait for it to be processed.'),
+            'ad_requests.error_creating': _('Error creating ad request. Please try again.'),
+            'ad_requests.success_message': _('Your ad request has been processed successfully! Your ad is being generated and may take a few minutes to be available.'),
+            'ad_requests.create_new': _('Create New Ad Request'),
+            
             # Add more translations as needed
         }
     }
