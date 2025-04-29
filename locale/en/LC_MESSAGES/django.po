@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-29 11:17+0000\n"
+"POT-Creation-Date: 2025-04-29 12:07+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -207,7 +207,7 @@ msgstr ""
 msgid "Not Set"
 msgstr ""
 
-#: apps/web/context_processors.py:54
+#: apps/web/context_processors.py:54 apps/web/context_processors.py:93
 msgid "Login"
 msgstr ""
 
@@ -227,7 +227,8 @@ msgstr ""
 msgid "Upgrade"
 msgstr ""
 
-#: apps/web/context_processors.py:60 templates/web/components/top_nav.html:23
+#: apps/web/context_processors.py:60 apps/web/context_processors.py:105
+#: templates/web/components/top_nav.html:23
 #: templates/web/components/top_nav.html:37
 msgid "Blog"
 msgstr ""
@@ -299,6 +300,51 @@ msgstr ""
 
 #: apps/web/context_processors.py:90
 msgid "y ago"
+msgstr ""
+
+#: apps/web/context_processors.py:94
+msgid "Get Started for Free"
+msgstr ""
+
+#: apps/web/context_processors.py:97
+msgid "Copyright ©"
+msgstr ""
+
+#: apps/web/context_processors.py:98
+msgid "Privacy Policy"
+msgstr ""
+
+#: apps/web/context_processors.py:99
+msgid "Terms of Service"
+msgstr ""
+
+#: apps/web/context_processors.py:102
+msgid "Features"
+msgstr ""
+
+#: apps/web/context_processors.py:103
+msgid "Solutions"
+msgstr ""
+
+#: apps/web/context_processors.py:104
+#: templates/subscriptions/components/subscription_details.html:54
+msgid "Pricing"
+msgstr ""
+
+#: apps/web/context_processors.py:106
+msgid "AI-Powered Automation"
+msgstr ""
+
+#: apps/web/context_processors.py:107
+msgid "Task Automation"
+msgstr ""
+
+#: apps/web/context_processors.py:108
+msgid "Workflow Optimization"
+msgstr ""
+
+#: apps/web/context_processors.py:109
+msgid "Intelligent Scheduling"
 msgstr ""
 
 #: templates/400.html:4
@@ -881,10 +927,6 @@ msgid ""
 "\n"
 "          Expires: %(end_date)s\n"
 "          "
-msgstr ""
-
-#: templates/subscriptions/components/subscription_details.html:54
-msgid "Pricing"
 msgstr ""
 
 #: templates/subscriptions/components/subscription_details.html:59

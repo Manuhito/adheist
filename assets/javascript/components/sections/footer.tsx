@@ -4,8 +4,10 @@ import * as React from "react";
 import { Icons } from "@/components/icons";
 import { siteConfig } from "@/lib/config";
 import { ChevronRight } from "lucide-react";
+import { useTranslation } from "@/lib/useTranslation";
 
 export default function Footer() {
+  const { t } = useTranslation();
   return (
     <footer>
     <div className= "max-w-6xl mx-auto py-16 sm:px-10 px-5 pb-0" >
@@ -45,21 +47,20 @@ export default function Footer() {
 </div>
   < div className = "max-w-6xl mx-auto border-t py-2 grid md:grid-cols-2 h-full justify-between w-full grid-cols-1 gap-1" >
     <span className="text-sm tracking-tight text-foreground" >
-      Copyright © { new Date().getFullYear() } { " " }
+      {t('copyright', 'Copyright ©')} { new Date().getFullYear() } { " " }
 <a href="/" className = "cursor-pointer" >
   { siteConfig.name }
   </a>{" "}
-  - { siteConfig.description }
   </span>
   < ul className = "flex justify-start md:justify-end text-sm tracking-tight text-foreground" >
     <li className="mr-3 md:mx-4" >
       <a href="#" target = "_blank" rel = "noopener noreferrer" >
-        Privacy Policy
+        {t('privacy_policy', 'Privacy Policy')}
           </a>
           </li>
           < li className = "mr-3 md:mx-4" >
             <a href="#" target = "_blank" rel = "noopener noreferrer" >
-              Terms of Service
+              {t('terms_of_service', 'Terms of Service')}
                 </a>
                 </li>
                 </ul>

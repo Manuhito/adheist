@@ -4,8 +4,11 @@ import Footer from "@/components/sections/footer";
 import Header from "@/components/sections/header";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useTranslation } from "@/lib/useTranslation";
 
 const BaseLayout = () => {
+  // Inicializar el hook de traducción para que esté disponible en los componentes hijos
+  const { t } = useTranslation();
   useEffect(() => {
     // Si hay contenido Django, moverlo al mount point
     const djangoContent = document.getElementById('page-content');

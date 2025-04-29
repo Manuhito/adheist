@@ -13,8 +13,10 @@ import {
 } from "@/components/ui/navigation-menu";
 import { siteConfig } from "@/lib/config";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/useTranslation";
 
 export default function NavigationMenuDemo() {
+  const { t } = useTranslation();
   return (
     <NavigationMenu>
       <NavigationMenuList>
@@ -22,7 +24,7 @@ export default function NavigationMenuDemo() {
           <NavigationMenuItem key={index}>
             {item.trigger ? (
               <>
-                <NavigationMenuTrigger>{item.trigger}</NavigationMenuTrigger>
+                <NavigationMenuTrigger>{t(`menu.${item.trigger.toLowerCase().replace(/ /g, '_')}`, item.trigger)}</NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <ul
                     className={`grid gap-3 p-6 ${
@@ -40,10 +42,10 @@ export default function NavigationMenuDemo() {
                           >
                             {item.content.main.icon}
                             <div className="mb-2 mt-4 text-lg font-medium">
-                              {item.content.main.title}
+                              {t(`menu.${item.content.main.title.toLowerCase().replace(/ /g, '_')}`, item.content.main.title)}
                             </div>
                             <p className="text-sm leading-tight text-muted-foreground">
-                              {item.content.main.description}
+                              {t(`menu.${item.content.main.description.toLowerCase().replace(/[^a-zA-Z0-9]/g, '_')}`, item.content.main.description)}
                             </p>
                           </a>
                         </NavigationMenuLink>
@@ -53,10 +55,10 @@ export default function NavigationMenuDemo() {
                       <ListItem
                         key={subIndex}
                         href={subItem.href}
-                        title={subItem.title}
+                        title={t(`menu.${subItem.title.toLowerCase().replace(/ /g, '_')}`, subItem.title)}
                         className="hover:bg-primary/10"
                       >
-                        {subItem.description}
+                        {t(`menu.${subItem.description.toLowerCase().replace(/[^a-zA-Z0-9]/g, '_')}`, subItem.description)}
                       </ListItem>
                     ))}
                   </ul>
@@ -69,7 +71,7 @@ export default function NavigationMenuDemo() {
                   target="_arya"
                   className={navigationMenuTriggerStyle()}
                 >
-                  {item.label}
+                  {t(`menu.${item.label.toLowerCase().replace(/ /g, '_')}`, item.label)}
                 </a>
               </NavigationMenuLink>
             )}

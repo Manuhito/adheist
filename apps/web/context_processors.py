@@ -89,6 +89,25 @@ def translations(request):
             'months_ago': _('mo ago'),
             'years_ago': _('y ago'),
             
+            # Header translations
+            'login': _('Login'),
+            'get_started_free': _('Get Started for Free'),
+            
+            # Footer translations
+            'copyright': _('Copyright ©'),
+            'privacy_policy': _('Privacy Policy'),
+            'terms_of_service': _('Terms of Service'),
+            
+            # Menu translations
+            'menu.features': _('Features'),
+            'menu.solutions': _('Solutions'),
+            'menu.pricing': _('Pricing'),
+            'menu.blog': _('Blog'),
+            'menu.ai_powered_automation': _('AI-Powered Automation'),
+            'menu.task_automation': _('Task Automation'),
+            'menu.workflow_optimization': _('Workflow Optimization'),
+            'menu.intelligent_scheduling': _('Intelligent Scheduling'),
+            
             # Add more translations as needed
         }
     }
