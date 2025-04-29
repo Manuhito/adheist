@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-29 10:51+0000\n"
+"POT-Creation-Date: 2025-04-29 11:17+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -279,6 +279,26 @@ msgstr ""
 
 #: apps/web/context_processors.py:83
 msgid "Latest news and updates from"
+msgstr ""
+
+#: apps/web/context_processors.py:86
+msgid "Today"
+msgstr ""
+
+#: apps/web/context_processors.py:87
+msgid "d ago"
+msgstr ""
+
+#: apps/web/context_processors.py:88
+msgid "w ago"
+msgstr ""
+
+#: apps/web/context_processors.py:89
+msgid "mo ago"
+msgstr ""
+
+#: apps/web/context_processors.py:90
+msgid "y ago"
 msgstr ""
 
 #: templates/400.html:4

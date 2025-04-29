@@ -82,6 +82,13 @@ def translations(request):
             'articles': _('Articles'),
             'latest_news': _('Latest news and updates from'),
             
+            # Blog post translations
+            'today': _('Today'),
+            'days_ago': _('d ago'),
+            'weeks_ago': _('w ago'),
+            'months_ago': _('mo ago'),
+            'years_ago': _('y ago'),
+            
             # Add more translations as needed
         }
     }
