@@ -148,6 +148,15 @@ def translations(request):
             'pricing.most_popular': _('🔥 Most Popular'),
             'pricing.per_month': _('Per month'),
             
+            # App header translations
+            'app_header.blog': _('Blog'),
+            'app_header.upgrade': _('Upgrade'),
+            'app_header.profile': _('Profile'),
+            'app_header.billing': _('Billing'),
+            'app_header.theme': _('Theme'),
+            'app_header.logout': _('Log out'),
+            'app_header.login': _('Login'),
+            
             # Add more translations as needed
         }
     }

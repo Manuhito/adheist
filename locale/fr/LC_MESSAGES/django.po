@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-29 12:27+0000\n"
+"POT-Creation-Date: 2025-04-29 14:32+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -195,6 +195,7 @@ msgid "Profile successfully saved."
 msgstr ""
 
 #: apps/users/views.py:193 apps/web/context_processors.py:56
+#: apps/web/context_processors.py:154
 #: templates/web/components/app_nav_menu_items.html:37
 msgid "Profile"
 msgstr "Profil"
@@ -208,29 +209,30 @@ msgid "Not Set"
 msgstr ""
 
 #: apps/web/context_processors.py:54 apps/web/context_processors.py:93
+#: apps/web/context_processors.py:158
 msgid "Login"
 msgstr ""
 
-#: apps/web/context_processors.py:55
+#: apps/web/context_processors.py:55 apps/web/context_processors.py:157
 #, fuzzy
 #| msgid "Sign out"
 msgid "Log out"
 msgstr "Déconnexion"
 
-#: apps/web/context_processors.py:57
+#: apps/web/context_processors.py:57 apps/web/context_processors.py:155
 msgid "Billing"
 msgstr ""
 
-#: apps/web/context_processors.py:58
+#: apps/web/context_processors.py:58 apps/web/context_processors.py:156
 msgid "Theme"
 msgstr ""
 
-#: apps/web/context_processors.py:59
+#: apps/web/context_processors.py:59 apps/web/context_processors.py:153
 msgid "Upgrade"
 msgstr ""
 
 #: apps/web/context_processors.py:60 apps/web/context_processors.py:105
-#: templates/web/components/top_nav.html:23
+#: apps/web/context_processors.py:152 templates/web/components/top_nav.html:23
 #: templates/web/components/top_nav.html:37
 msgid "Blog"
 msgstr "Blog"
