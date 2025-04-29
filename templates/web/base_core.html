@@ -72,6 +72,13 @@
   <script src="{% static 'js/site-bundle.js' %}" defer></script>
   <script src="{% url 'javascript-catalog' %}" defer></script>
   <script>__cssFramework = 'tailwind';</script>
+  
+  {# Translations for React components #}
+  {% if translations_json %}
+  <script>
+    window.__TRANSLATIONS__ = {{ translations_json|safe }};
+  </script>
+  {% endif %}
 
   {# Dark Mode Script #}
   <script>

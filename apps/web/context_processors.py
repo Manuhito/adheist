@@ -1,6 +1,7 @@
 from copy import copy
 
 from django.conf import settings
+from django.utils.translation import gettext as _
 
 from .meta import absolute_url, get_server_root
 
@@ -40,3 +41,37 @@ def google_analytics_id(request):
         }
     else:
         return {}
+
+
+def translations(request):
+    """
+    Adds common translations to the context for use in templates and JavaScript.
+    Makes translations available to React components via window.__TRANSLATIONS__ object.
+    """
+    return {
+        'translations_json': {
+            # Common UI elements
+            'login': _('Login'),
+            'logout': _('Log out'),
+            'profile': _('Profile'),
+            'billing': _('Billing'),
+            'theme': _('Theme'),
+            'upgrade': _('Upgrade'),
+            'blog': _('Blog'),
+            
+            # Language names for the switcher
+            'english': _('English'),
+            'french': _('French'),
+            'spanish': _('Spanish'),
+            'language': _('Language'),
+            'language_switcher': _('Change language'),
+            
+            # Login page translations
+            'seconds_to_signup': _('Seconds to Sign up'),
+            'get_free_backlinks': _('Get 5 Free Backlinks'),
+            'sign_in': _('Sign In'),
+            'mail_signin_code': _('Mail me a sign-in code'),
+            
+            # Add more translations as needed
+        }
+    }
