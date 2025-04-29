@@ -200,6 +200,61 @@ def translations(request):
             'profile.manage_accounts': _('Manage Accounts'),
             'profile.add_password': _('Add a Password'),
             
+            # Create Ad Request translations
+            'create_adrequest.title': _('Create Ad Request'),
+            'create_adrequest.delete_title': _('Delete Ad Request'),
+            'create_adrequest.delete_confirm': _('Are you sure you want to permanently delete this ad request? This action cannot be undone.'),
+            'create_adrequest.cancel': _('Cancel'),
+            'create_adrequest.delete': _('Delete'),
+            'create_adrequest.step1': _('Select Ad Style'),
+            'create_adrequest.step2': _('Configure Ad'),
+            'create_adrequest.step3': _('Review & Submit'),
+            'create_adrequest.no_id': _('No ad request ID available'),
+            'create_adrequest.delete_failed': _('Failed to delete ad request'),
+            
+            # StepOneComponent translations
+            'step_one.validation_error': _('Please select both an ad style and canvas size'),
+            'step_one.update_failed': _('Failed to update ad request'),
+            'step_one.create_failed': _('Failed to create ad request'),
+            'step_one.unexpected_error': _('An unexpected error occurred'),
+            'step_one.company': _('Company'),
+            'step_one.clear_filters': _('Clear filters'),
+            'step_one.gallery_title': _('Select Your Ideal Ad Style'),
+            'step_one.gallery_description': _('Browse and choose the ad style that best matches your desired outcome'),
+            'step_one.select_canvas': _('Select a canvas size to proceed'),
+            'step_one.square': _('Square'),
+            'step_one.portrait': _('Portrait'),
+            'step_one.landscape': _('Landscape'),
+            'step_one.tooltip_validation': _('Please select an image and canvas size'),
+            'step_one.no_results': _('No ad examples found. Try adjusting your filters.'),
+            
+            # NextButton translations
+            'next_button.next': _('Next'),
+            'next_button.updating': _('Updating...'),
+            
+            # InteractiveBentoGallery translations
+            'bento_gallery.company': _('Company'),
+            'bento_gallery.industry': _('Industry'),
+            'bento_gallery.tags': _('Tags'),
+            'bento_gallery.select_style': _('Select This Ad Style'),
+            'bento_gallery.selected_style': _('Selected Style: {style}'),
+            
+            # SearchComponent translations
+            'search.select_company': _('Select Company'),
+            'search.search_company': _('Search company...'),
+            'search.loading_companies': _('Loading companies...'),
+            'search.no_companies': _('No companies found.'),
+            
+            # FilterFormComponent translations
+            'filter.industries': _('Industries'),
+            'filter.select_industries': _('Select industries'),
+            'filter.loading_industries': _('Loading industries...'),
+            'filter.no_industries': _('No industries available'),
+            'filter.tags': _('Tags'),
+            'filter.select_tags': _('Select tags'),
+            'filter.loading_tags': _('Loading tags...'),
+            'filter.no_tags': _('No tags available'),
+            
             # Add more translations as needed
         }
     }

@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-29 18:32+0000\n"
+"POT-Creation-Date: 2025-04-29 19:44+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -514,7 +514,8 @@ msgstr ""
 msgid "No library"
 msgstr ""
 
-#: apps/web/context_processors.py:162 templates/ads/adlibrary_form.html:40
+#: apps/web/context_processors.py:162 apps/web/context_processors.py:249
+#: templates/ads/adlibrary_form.html:40
 msgid "Industries"
 msgstr ""
 
@@ -660,6 +661,174 @@ msgstr "Mon Compte"
 #| msgid "Set Password"
 msgid "Add a Password"
 msgstr "Définir le mot de passe"
+
+#: apps/web/context_processors.py:204
+msgid "Create Ad Request"
+msgstr ""
+
+#: apps/web/context_processors.py:205
+msgid "Delete Ad Request"
+msgstr ""
+
+#: apps/web/context_processors.py:206
+msgid ""
+"Are you sure you want to permanently delete this ad request? This action "
+"cannot be undone."
+msgstr ""
+
+#: apps/web/context_processors.py:207
+msgid "Cancel"
+msgstr "Annuler"
+
+#: apps/web/context_processors.py:208
+msgid "Delete"
+msgstr ""
+
+#: apps/web/context_processors.py:209
+msgid "Select Ad Style"
+msgstr ""
+
+#: apps/web/context_processors.py:210
+msgid "Configure Ad"
+msgstr ""
+
+#: apps/web/context_processors.py:211
+msgid "Review & Submit"
+msgstr ""
+
+#: apps/web/context_processors.py:212
+msgid "No ad request ID available"
+msgstr ""
+
+#: apps/web/context_processors.py:213
+msgid "Failed to delete ad request"
+msgstr ""
+
+#: apps/web/context_processors.py:216
+msgid "Please select both an ad style and canvas size"
+msgstr ""
+
+#: apps/web/context_processors.py:217
+msgid "Failed to update ad request"
+msgstr ""
+
+#: apps/web/context_processors.py:218
+msgid "Failed to create ad request"
+msgstr ""
+
+#: apps/web/context_processors.py:219
+msgid "An unexpected error occurred"
+msgstr ""
+
+#: apps/web/context_processors.py:220 apps/web/context_processors.py:236
+msgid "Company"
+msgstr ""
+
+#: apps/web/context_processors.py:221
+msgid "Clear filters"
+msgstr ""
+
+#: apps/web/context_processors.py:222
+msgid "Select Your Ideal Ad Style"
+msgstr ""
+
+#: apps/web/context_processors.py:223
+msgid "Browse and choose the ad style that best matches your desired outcome"
+msgstr ""
+
+#: apps/web/context_processors.py:224
+msgid "Select a canvas size to proceed"
+msgstr ""
+
+#: apps/web/context_processors.py:225
+msgid "Square"
+msgstr ""
+
+#: apps/web/context_processors.py:226
+msgid "Portrait"
+msgstr ""
+
+#: apps/web/context_processors.py:227
+msgid "Landscape"
+msgstr ""
+
+#: apps/web/context_processors.py:228
+msgid "Please select an image and canvas size"
+msgstr ""
+
+#: apps/web/context_processors.py:229
+msgid "No ad examples found. Try adjusting your filters."
+msgstr ""
+
+#: apps/web/context_processors.py:232
+#: templates/web/components/paginator.html:18
+#: templates/web/components/paginator.html:22
+#: templates/web/components/paginator.html:74
+#: templates/web/components/paginator.html:81
+msgid "Next"
+msgstr ""
+
+#: apps/web/context_processors.py:233
+msgid "Updating..."
+msgstr ""
+
+#: apps/web/context_processors.py:237
+msgid "Industry"
+msgstr ""
+
+#: apps/web/context_processors.py:238 apps/web/context_processors.py:253
+#: templates/ads/adlibrary_form.html:49
+msgid "Tags"
+msgstr ""
+
+#: apps/web/context_processors.py:239
+msgid "Select This Ad Style"
+msgstr ""
+
+#: apps/web/context_processors.py:240
+#, python-brace-format
+msgid "Selected Style: {style}"
+msgstr ""
+
+#: apps/web/context_processors.py:243
+msgid "Select Company"
+msgstr ""
+
+#: apps/web/context_processors.py:244
+msgid "Search company..."
+msgstr ""
+
+#: apps/web/context_processors.py:245
+msgid "Loading companies..."
+msgstr ""
+
+#: apps/web/context_processors.py:246
+msgid "No companies found."
+msgstr ""
+
+#: apps/web/context_processors.py:250
+msgid "Select industries"
+msgstr ""
+
+#: apps/web/context_processors.py:251
+msgid "Loading industries..."
+msgstr ""
+
+#: apps/web/context_processors.py:252
+msgid "No industries available"
+msgstr ""
+
+#: apps/web/context_processors.py:254
+msgid "Select tags"
+msgstr ""
+
+#: apps/web/context_processors.py:255
+msgid "Loading tags..."
+msgstr ""
+
+#: apps/web/context_processors.py:256
+msgid "No tags available"
+msgstr ""
 
 #: templates/400.html:4
 msgid "Shucks. That was a bad request."
@@ -1052,10 +1221,6 @@ msgstr ""
 msgid "Hold Ctrl/Cmd to select multiple"
 msgstr ""
 
-#: templates/ads/adlibrary_form.html:49
-msgid "Tags"
-msgstr ""
-
 #: templates/ads/adlibrary_form.html:58
 msgid "Ad Image"
 msgstr ""
@@ -1319,13 +1484,6 @@ msgstr ""
 msgid "Previous"
 msgstr ""
 
-#: templates/web/components/paginator.html:18
-#: templates/web/components/paginator.html:22
-#: templates/web/components/paginator.html:74
-#: templates/web/components/paginator.html:81
-msgid "Next"
-msgstr ""
-
 #: templates/web/components/paginator.html:30
 #, python-format
 msgid ""
@@ -1429,9 +1587,6 @@ msgstr ""
 
 #~ msgid "I understand, permanently delete this team"
 #~ msgstr "Je comprends, supprimer définitivement cette équipe"
-
-#~ msgid "Cancel"
-#~ msgstr "Annuler"
 
 #~ msgid "Teams"
 #~ msgstr "Équipes"

@@ -4,6 +4,7 @@ import { Trash2 } from 'lucide-react';
 import StepOneComponent from './components/StepOneComponent';
 import StepTwoComponent from './components/StepTwoComponent';
 import StepThreeComponent from './components/StepThreeComponent';
+import { useTranslation } from '../lib/useTranslation';
 
 /**
  * Main container component for the Create Ad Request flow
@@ -11,6 +12,7 @@ import StepThreeComponent from './components/StepThreeComponent';
  * Ensures fresh data at each step by fetching from the server
  */
 const CreateAdRequestApp = () => {
+  const { t } = useTranslation();
   // Get initial data from the DOM as fallback
   const getInitialData = () => {
     try {
@@ -167,9 +169,9 @@ const CreateAdRequestApp = () => {
             className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-md w-full mx-4"
             onClick={(e) => e.stopPropagation()} // Evitar que los clics dentro del modal lo cierren
           >
-            <h2 className="text-xl font-semibold mb-4">Delete Ad Request</h2>
+            <h2 className="text-xl font-semibold mb-4">{t('create_adrequest.delete_title', 'Delete Ad Request')}</h2>
             <p className="text-gray-600 dark:text-gray-300 mb-6">
-              Are you sure you want to permanently delete this ad request? This action cannot be undone.
+              {t('create_adrequest.delete_confirm', 'Are you sure you want to permanently delete this ad request? This action cannot be undone.')}
             </p>
             <div className="flex justify-end gap-3">
               <button
@@ -177,14 +179,14 @@ const CreateAdRequestApp = () => {
                 className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
                 onClick={() => setShowDeleteConfirmation(false)}
               >
-                Cancel
+                {t('create_adrequest.cancel', 'Cancel')}
               </button>
               <button
                 type="button"
                 className="px-4 py-2 text-white bg-red-500 hover:bg-red-600 rounded-md transition-colors"
                 onClick={async () => {
                   if (!adRequestData?.id) {
-                    console.error('No ad request ID available');
+                    console.error(t('create_adrequest.no_id', 'No ad request ID available'));
                     setShowDeleteConfirmation(false);
                     return;
                   }
@@ -204,7 +206,7 @@ const CreateAdRequestApp = () => {
                     const data = await response.json();
                     
                     if (!response.ok) {
-                      throw new Error(data.error || 'Failed to delete ad request');
+                      throw new Error(data.error || t('create_adrequest.delete_failed', 'Failed to delete ad request'));
                     }
                     
                     // Close the confirmation dialog
@@ -218,7 +220,7 @@ const CreateAdRequestApp = () => {
                   }
                 }}
               >
-                Delete
+                {t('create_adrequest.delete', 'Delete')}
               </button>
             </div>
           </div>
@@ -228,7 +230,7 @@ const CreateAdRequestApp = () => {
       <div className="space-y-8">
       {/* Header row with title and delete button */}
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Create Ad Request</h1>
+        <h1 className="text-2xl font-bold">{t('create_adrequest.title', 'Create Ad Request')}</h1>
         <button 
           type="button" 
           className="p-2 text-gray-500 hover:text-red-500 transition-colors duration-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
@@ -250,7 +252,7 @@ const CreateAdRequestApp = () => {
               1
             </div>
             <div className="ml-2 text-sm font-medium">
-              Select Ad Style
+              {t('create_adrequest.step1', 'Select Ad Style')}
             </div>
           </div>
           <div className="flex-1 mx-4 h-1 bg-gray-200">
@@ -263,7 +265,7 @@ const CreateAdRequestApp = () => {
               2
             </div>
             <div className="ml-2 text-sm font-medium">
-              Configure Ad
+              {t('create_adrequest.step2', 'Configure Ad')}
             </div>
           </div>
           <div className="flex-1 mx-4 h-1 bg-gray-200">
@@ -276,7 +278,7 @@ const CreateAdRequestApp = () => {
               3
             </div>
             <div className="ml-2 text-sm font-medium">
-              Review & Submit
+              {t('create_adrequest.step3', 'Review & Submit')}
             </div>
           </div>
         </div>

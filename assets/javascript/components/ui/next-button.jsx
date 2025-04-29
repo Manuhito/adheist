@@ -1,8 +1,10 @@
 import React from "react";
 import { Button } from "./button";
 import { ArrowRight } from "lucide-react";
+import { useTranslation } from "../../lib/useTranslation";
 
 export function NextButton({ onClick, disabled, isLoading, className = "" }) {
+  const { t } = useTranslation();
   return (
     <Button 
       onClick={onClick} 
@@ -10,7 +12,7 @@ export function NextButton({ onClick, disabled, isLoading, className = "" }) {
       className={`group relative overflow-hidden ${className}`}
     >
       <span className="w-20 translate-x-[-0.5rem] transition-opacity duration-500 group-hover:opacity-0">
-        {isLoading ? "Updating..." : "Next"}
+        {isLoading ? t('next_button.updating', 'Updating...') : t('next_button.next', 'Next')}
       </span>
       <i className="absolute inset-0 z-10 grid w-1/4 place-items-center bg-primary-foreground/15 transition-all duration-500 group-hover:w-full" style={{ left: "auto", right: 0 }}>
         {isLoading ? (

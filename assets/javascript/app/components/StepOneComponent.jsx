@@ -5,6 +5,7 @@ import InteractiveBentoGallery from '../../components/ui/interactive-bento-galle
 import { Building, X } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../shadcn/components/ui/tooltip';
 import { NextButton } from '../../components/ui/next-button.jsx';
+import { useTranslation } from '../../lib/useTranslation';
 
 /**
  * Step One Component for the Create Ad Request flow
@@ -12,6 +13,7 @@ import { NextButton } from '../../components/ui/next-button.jsx';
  * Based on the original CreateAdRequestApp component
  */
 const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
+  const { t } = useTranslation();
   // Centralized state for all filters
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [selectedIndustries, setSelectedIndustries] = useState([]);
@@ -174,10 +176,10 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
   // Canvas size options - using actual size values as IDs
   const canvasSizes = [
-    { id: "1080x1080", label: "Square", size: "1080 x 1080" },
-    { id: "1080x1920", label: "Portrait", size: "1080 x 1920" },
-    { id: "1080x1350", label: "Portrait", size: "1080 x 1350" },
-    { id: "1280x720", label: "Landscape", size: "1280 x 720" },
+    { id: "1080x1080", label: t('step_one.square', 'Square'), size: "1080 x 1080" },
+    { id: "1080x1920", label: t('step_one.portrait', 'Portrait'), size: "1080 x 1920" },
+    { id: "1080x1350", label: t('step_one.portrait', 'Portrait'), size: "1080 x 1350" },
+    { id: "1280x720", label: t('step_one.landscape', 'Landscape'), size: "1280 x 720" },
   ];
 
   // Function to clear all filters
@@ -195,7 +197,7 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const handleNextStep = async () => {
     // Validate required fields
     if (!selectedAdLibrary || !selectedCanvasSize) {
-      setSubmitError('Please select both an ad style and canvas size');
+      setSubmitError(t('step_one.validation_error', 'Please select both an ad style and canvas size'));
       return;
     }
 
@@ -228,7 +230,7 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
         data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.error || 'Failed to update ad request');
+          throw new Error(data.error || t('step_one.update_failed', 'Failed to update ad request'));
         } else {
           console.log('Ad request updated successfully:', data);
         }
@@ -247,7 +249,7 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
         data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.error || 'Failed to create ad request');
+          throw new Error(data.error || t('step_one.create_failed', 'Failed to create ad request'));
         } else {
           console.log('Ad request created successfully:', data);
         }
@@ -264,7 +266,7 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
       }
     } catch (error) {
       console.error('Error processing ad request:', error);
-      setSubmitError(error.message || 'An unexpected error occurred');
+      setSubmitError(error.message || t('step_one.unexpected_error', 'An unexpected error occurred'));
       setIsSubmitting(false);
     }
   };
@@ -299,7 +301,7 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center">
             <Building className="h-4 w-4 mr-2" />
-            <h3 className="text-base font-medium">Company</h3>
+            <h3 className="text-base font-medium">{t('step_one.company', 'Company')}</h3>
           </div>
           {hasActiveFilters && (
             <button
@@ -307,7 +309,7 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
               className="group flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-500 hover:text-primary transition-all duration-200 ease-in-out hover:scale-105 active:scale-95 relative overflow-hidden rounded-full"
               aria-label="Clear all filters"
             >
-              <span className="relative z-10">Clear filters</span>
+              <span className="relative z-10">{t('step_one.clear_filters', 'Clear filters')}</span>
               <X className="h-3.5 w-3.5 relative z-10 group-hover:rotate-90 transition-transform duration-300" />
               <span className="absolute inset-0 bg-gray-100 opacity-0 group-hover:opacity-100 group-active:opacity-80 rounded-full scale-0 group-hover:scale-100 transition-all duration-300 ease-out" />
             </button>
@@ -334,8 +336,8 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
             <div className="overflow-y-auto max-h-[600px] border border-gray-200 rounded-lg shadow-sm">
               <InteractiveBentoGallery
                 mediaItems={galleryItems}
-                title="Select Your Ideal Ad Style"
-                description="Browse and choose the ad style that best matches your desired outcome"
+                title={t('step_one.gallery_title', 'Select Your Ideal Ad Style')}
+                description={t('step_one.gallery_description', 'Browse and choose the ad style that best matches your desired outcome')}
                 onItemSelect={(item) => setSelectedAdLibrary(item.id)}
                 selectedItemId={selectedAdLibrary}
               />
@@ -343,7 +345,7 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
             <div className="mt-12 w-full max-w-4xl mx-auto">
               <div className="space-y-4">
-                <p className="text-lg font-medium text-center">Select a canvas size to proceed</p>
+                <p className="text-lg font-medium text-center">{t('step_one.select_canvas', 'Select a canvas size to proceed')}</p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {canvasSizes.map((item) => (
                     <div
@@ -389,7 +391,7 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
                   </TooltipTrigger>
                   {(!selectedAdLibrary || !selectedCanvasSize) && (
                     <TooltipContent>
-                      <p>Please select an image and canvas size</p>
+                      <p>{t('step_one.tooltip_validation', 'Please select an image and canvas size')}</p>
                     </TooltipContent>
                   )}
                 </Tooltip>
@@ -405,7 +407,7 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
           </>
         ) : (
           <div className="text-center my-12 p-8 bg-gray-50 rounded-lg">
-            <p className="text-gray-500 text-lg">No ad examples found. Try adjusting your filters.</p>
+            <p className="text-gray-500 text-lg">{t('step_one.no_results', 'No ad examples found. Try adjusting your filters.')}</p>
           </div>
         )}
       </div>

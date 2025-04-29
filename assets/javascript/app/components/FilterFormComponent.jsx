@@ -13,6 +13,7 @@ import {
 } from '../../components/ui/form';
 import MultipleSelector from '../../components/ui/multiselect';
 import { Tag, Factory } from 'lucide-react';
+import { useTranslation } from '../../lib/useTranslation';
 
 // Esquema de validación con zod
 const FilterFormSchema = z.object({
@@ -35,6 +36,7 @@ export const FilterFormComponent = ({
   onIndustriesChange,
   onTagsChange
 }) => {
+  const { t } = useTranslation();
   const [industriesList, setIndustriesList] = useState([]);
   const [tagsList, setTagsList] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -108,7 +110,7 @@ export const FilterFormComponent = ({
           <div className="space-y-2">
             <div className="flex items-center">
               <Factory className="h-4 w-4 mr-2" />
-              <h3 className="text-base font-medium">Industries</h3>
+              <h3 className="text-base font-medium">{t('filter.industries', 'Industries')}</h3>
             </div>
 
             <FormField
@@ -130,12 +132,12 @@ export const FilterFormComponent = ({
                           field.value.includes(industry.value)
                         )}
                         options={availableIndustries}
-                        placeholder="Select industries"
+                        placeholder={t('filter.select_industries', 'Select industries')}
                         emptyIndicator={
                           isLoading ? (
-                            <p className="text-center text-sm">Loading industries...</p>
+                            <p className="text-center text-sm">{t('filter.loading_industries', 'Loading industries...')}</p>
                           ) : (
-                            <p className="text-center text-sm">No industries available</p>
+                            <p className="text-center text-sm">{t('filter.no_industries', 'No industries available')}</p>
                           )
                         }
                         disabled={isLoading}
@@ -159,7 +161,7 @@ export const FilterFormComponent = ({
           <div className="space-y-2">
             <div className="flex items-center">
               <Tag className="h-4 w-4 mr-2" />
-              <h3 className="text-base font-medium">Tags</h3>
+              <h3 className="text-base font-medium">{t('filter.tags', 'Tags')}</h3>
             </div>
 
             <FormField
@@ -181,12 +183,12 @@ export const FilterFormComponent = ({
                           field.value.includes(tag.value)
                         )}
                         options={availableTags}
-                        placeholder="Select tags"
+                        placeholder={t('filter.select_tags', 'Select tags')}
                         emptyIndicator={
                           isLoading ? (
-                            <p className="text-center text-sm">Loading tags...</p>
+                            <p className="text-center text-sm">{t('filter.loading_tags', 'Loading tags...')}</p>
                           ) : (
-                            <p className="text-center text-sm">No tags available</p>
+                            <p className="text-center text-sm">{t('filter.no_tags', 'No tags available')}</p>
                           )
                         }
                         disabled={isLoading}

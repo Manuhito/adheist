@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-29 18:32+0000\n"
+"POT-Creation-Date: 2025-04-29 19:44+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -505,7 +505,8 @@ msgstr "Por mes"
 msgid "No library"
 msgstr "No hay biblioteca"
 
-#: apps/web/context_processors.py:162 templates/ads/adlibrary_form.html:40
+#: apps/web/context_processors.py:162 apps/web/context_processors.py:249
+#: templates/ads/adlibrary_form.html:40
 msgid "Industries"
 msgstr "Industrias"
 
@@ -555,10 +556,8 @@ msgid "Image uploaded successfully!"
 msgstr "Imagen subida exitosamente!"
 
 #: apps/web/context_processors.py:174
-#, fuzzy
-#| msgid "Error creating ad request. Please try again."
 msgid "Error uploading image. Please try again."
-msgstr "Error al crear el pedido de anuncio. Por favor, intentalo de nuevo."
+msgstr "Error al subir la imagen. Por favor, inténtalo de nuevo."
 
 #: apps/web/context_processors.py:175
 #: templates/account/components/profile_form.html:10
@@ -590,8 +589,12 @@ msgstr "Tu zona horaria actual es {timezone}, la cual es {now}."
 
 #: apps/web/context_processors.py:184
 #, python-brace-format
-msgid "You have not set a timezone, and are using the system timezone of {currentTz} where it is {now}."
-msgstr "No has establecido una zona horaria, y estás usando la zona horaria del sistema {currentTz} la cual es {now}."
+msgid ""
+"You have not set a timezone, and are using the system timezone of "
+"{currentTz} where it is {now}."
+msgstr ""
+"No has establecido una zona horaria, y estás usando la zona horaria del "
+"sistema {currentTz} la cual es {now}."
 
 #: apps/web/context_processors.py:185
 msgid "Saving..."
@@ -626,7 +629,9 @@ msgstr "Habilitar"
 #: apps/web/context_processors.py:194 templates/account/components/2fa.html:12
 msgid ""
 "To set up two-factor authentication you must first verify your email address."
-msgstr "Para configurar la autenticación de dos factores, primero debes verificar tu dirección de correo electrónico."
+msgstr ""
+"Para configurar la autenticación de dos factores, primero debes verificar tu "
+"dirección de correo electrónico."
 
 #: apps/web/context_processors.py:195 templates/account/components/2fa.html:13
 msgid "Verify"
@@ -649,6 +654,184 @@ msgstr "Gestionar cuentas"
 #: apps/web/context_processors.py:201
 msgid "Add a Password"
 msgstr "Agregar una contraseña"
+
+#: apps/web/context_processors.py:204
+msgid "Create Ad Request"
+msgstr "Crear solicitud de anuncio"
+
+#: apps/web/context_processors.py:205
+msgid "Delete Ad Request"
+msgstr "Eliminar solicitud de anuncio"
+
+#: apps/web/context_processors.py:206
+msgid ""
+"Are you sure you want to permanently delete this ad request? This action "
+"cannot be undone."
+msgstr ""
+"¿Estás seguro de que quieres eliminar permanentemente esta solicitud de "
+"anuncio? Esta acción no se puede deshacer."
+
+#: apps/web/context_processors.py:207
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: apps/web/context_processors.py:208
+msgid "Delete"
+msgstr "Eliminar"
+
+#: apps/web/context_processors.py:209
+msgid "Select Ad Style"
+msgstr "Seleccionar estilo de anuncio"
+
+#: apps/web/context_processors.py:210
+msgid "Configure Ad"
+msgstr "Configurar anuncio"
+
+#: apps/web/context_processors.py:211
+msgid "Review & Submit"
+msgstr "Revisar y enviar"
+
+#: apps/web/context_processors.py:212
+msgid "No ad request ID available"
+msgstr "No hay ID de solicitud de anuncio disponible"
+
+#: apps/web/context_processors.py:213
+msgid "Failed to delete ad request"
+msgstr "Error al eliminar la solicitud de anuncio"
+
+#: apps/web/context_processors.py:216
+msgid "Please select both an ad style and canvas size"
+msgstr "Por favor, selecciona un estilo de anuncio y un tamaño de imagen."
+
+#: apps/web/context_processors.py:217
+msgid "Failed to update ad request"
+msgstr "Error al actualizar la solicitud de anuncio"
+
+#: apps/web/context_processors.py:218
+msgid "Failed to create ad request"
+msgstr "Error al crear la solicitud de anuncio"
+
+#: apps/web/context_processors.py:219
+msgid "An unexpected error occurred"
+msgstr "Error inesperado"
+
+#: apps/web/context_processors.py:220 apps/web/context_processors.py:236
+msgid "Company"
+msgstr "Compañía"
+
+#: apps/web/context_processors.py:221
+msgid "Clear filters"
+msgstr "Borrar filtros"
+
+#: apps/web/context_processors.py:222
+msgid "Select Your Ideal Ad Style"
+msgstr "Seleccionar estilo de anuncio ideal"
+
+#: apps/web/context_processors.py:223
+msgid "Browse and choose the ad style that best matches your desired outcome"
+msgstr ""
+"Navega y elige el estilo de anuncio que mejor coincida con tu resultado "
+"deseado"
+
+#: apps/web/context_processors.py:224
+msgid "Select a canvas size to proceed"
+msgstr "Selecciona un tamaño de imagen para continuar"
+
+#: apps/web/context_processors.py:225
+msgid "Square"
+msgstr "Cuadrado"
+
+#: apps/web/context_processors.py:226
+msgid "Portrait"
+msgstr "Vertical"
+
+#: apps/web/context_processors.py:227
+msgid "Landscape"
+msgstr "Apaisajado"
+
+#: apps/web/context_processors.py:228
+msgid "Please select an image and canvas size"
+msgstr "Por favor, selecciona una imagen y un tamaño."
+
+#: apps/web/context_processors.py:229
+msgid "No ad examples found. Try adjusting your filters."
+msgstr "No se encontraron ejemplos de anuncios. Intenta ajustar tus filtros."
+
+#: apps/web/context_processors.py:232
+#: templates/web/components/paginator.html:18
+#: templates/web/components/paginator.html:22
+#: templates/web/components/paginator.html:74
+#: templates/web/components/paginator.html:81
+msgid "Next"
+msgstr "Siguiente"
+
+#: apps/web/context_processors.py:233
+#, fuzzy
+#| msgid "Uploading..."
+msgid "Updating..."
+msgstr "Cargando..."
+
+#: apps/web/context_processors.py:237
+msgid "Industry"
+msgstr "Industria"
+
+#: apps/web/context_processors.py:238 apps/web/context_processors.py:253
+#: templates/ads/adlibrary_form.html:49
+msgid "Tags"
+msgstr "Etiquetas"
+
+#: apps/web/context_processors.py:239
+msgid "Select This Ad Style"
+msgstr "Seleccionar este estilo de anuncio"
+
+#: apps/web/context_processors.py:240
+#, python-brace-format
+msgid "Selected Style: {style}"
+msgstr "Estilo de anuncio seleccionado: {style}"
+
+#: apps/web/context_processors.py:243
+msgid "Select Company"
+msgstr "Seleccionar compañía"
+
+#: apps/web/context_processors.py:244
+msgid "Search company..."
+msgstr "Buscar compañía..."
+
+#: apps/web/context_processors.py:245
+msgid "Loading companies..."
+msgstr "Cargando compañías..."
+
+#: apps/web/context_processors.py:246
+msgid "No companies found."
+msgstr "No se encontraron compañías."
+
+#: apps/web/context_processors.py:250
+msgid "Select industries"
+msgstr "Seleccionar industrias"
+
+#: apps/web/context_processors.py:251
+#, fuzzy
+#| msgid "No associated industries"
+msgid "Loading industries..."
+msgstr "No hay industrias asociadas"
+
+#: apps/web/context_processors.py:252
+#, fuzzy
+#| msgid "No ad request ID available"
+msgid "No industries available"
+msgstr "No hay industrias disponibles"
+
+#: apps/web/context_processors.py:254
+msgid "Select tags"
+msgstr "Seleccionar etiquetas"
+
+#: apps/web/context_processors.py:255
+msgid "Loading tags..."
+msgstr "Cargando etiquetas..."
+
+#: apps/web/context_processors.py:256
+msgid "No tags available"
+msgstr "No hay etiquetas disponibles"
 
 #: templates/400.html:4
 msgid "Shucks. That was a bad request."
@@ -1033,10 +1216,6 @@ msgstr ""
 msgid "Hold Ctrl/Cmd to select multiple"
 msgstr ""
 
-#: templates/ads/adlibrary_form.html:49
-msgid "Tags"
-msgstr ""
-
 #: templates/ads/adlibrary_form.html:58
 msgid "Ad Image"
 msgstr ""
@@ -1294,13 +1473,6 @@ msgstr ""
 #: templates/web/components/paginator.html:40
 #: templates/web/components/paginator.html:47
 msgid "Previous"
-msgstr ""
-
-#: templates/web/components/paginator.html:18
-#: templates/web/components/paginator.html:22
-#: templates/web/components/paginator.html:74
-#: templates/web/components/paginator.html:81
-msgid "Next"
 msgstr ""
 
 #: templates/web/components/paginator.html:30

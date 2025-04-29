@@ -3,6 +3,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/pop
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { Search, Check, ChevronDown } from 'lucide-react';
+import { useTranslation } from '../../lib/useTranslation';
 
 /**
  * Search component with popover functionality
@@ -13,6 +14,7 @@ import { Search, Check, ChevronDown } from 'lucide-react';
  * @param {Function} props.onCompanyChange - Callback when company selection changes
  */
 export const SearchComponent = ({ selectedCompany, onCompanyChange }) => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [companies, setCompanies] = useState([]);
@@ -73,7 +75,7 @@ export const SearchComponent = ({ selectedCompany, onCompanyChange }) => {
             className="w-full justify-between bg-background px-3 font-normal"
           >
             <span className={!selectedCompany ? "text-muted-foreground" : ""}>
-              {selectedCompany || "Select Company"}
+              {selectedCompany || t('search.select_company', 'Select Company')}
             </span>
             <ChevronDown
               size={16}
@@ -88,7 +90,7 @@ export const SearchComponent = ({ selectedCompany, onCompanyChange }) => {
             <div className="flex items-center border-b px-3 py-2">
               <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
               <Input
-                placeholder="Search company..."
+                placeholder={t('search.search_company', 'Search company...')}
                 className="flex h-8 w-full rounded-md border-0 bg-transparent py-2 text-sm outline-none placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -99,11 +101,11 @@ export const SearchComponent = ({ selectedCompany, onCompanyChange }) => {
             <div className="max-h-[300px] overflow-y-auto overflow-x-hidden">
               {isLoading ? (
                 <div className="py-6 text-center text-sm">
-                  Cargando empresas...
+                  {t('search.loading_companies', 'Loading companies...')}
                 </div>
               ) : filteredCompanies.length === 0 ? (
                 <div className="py-6 text-center text-sm">
-                  No se encontraron empresas.
+                  {t('search.no_companies', 'No companies found.')}
                 </div>
               ) : (
                 <div className="py-2">
