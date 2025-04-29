@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-29 19:44+0000\n"
+"POT-Creation-Date: 2025-04-29 21:36+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -737,15 +737,15 @@ msgstr ""
 msgid "Select a canvas size to proceed"
 msgstr "Selecciona un tamaño de imagen para continuar"
 
-#: apps/web/context_processors.py:225
+#: apps/web/context_processors.py:225 apps/web/context_processors.py:262
 msgid "Square"
 msgstr "Cuadrado"
 
-#: apps/web/context_processors.py:226
+#: apps/web/context_processors.py:226 apps/web/context_processors.py:264
 msgid "Portrait"
 msgstr "Vertical"
 
-#: apps/web/context_processors.py:227
+#: apps/web/context_processors.py:227 apps/web/context_processors.py:265
 msgid "Landscape"
 msgstr "Apaisajado"
 
@@ -832,6 +832,233 @@ msgstr "Cargando etiquetas..."
 #: apps/web/context_processors.py:256
 msgid "No tags available"
 msgstr "No hay etiquetas disponibles"
+
+#: apps/web/context_processors.py:259
+msgid "Summary"
+msgstr "Resumen"
+
+#: apps/web/context_processors.py:260
+msgid "Loading..."
+msgstr "Cargando..."
+
+#: apps/web/context_processors.py:261
+msgid "No image"
+msgstr "Sin imagen"
+
+#: apps/web/context_processors.py:263
+msgid "Portrait Tall"
+msgstr "Vertical"
+
+#: apps/web/context_processors.py:266
+msgid "Unknown"
+msgstr "Desconocido"
+
+#: apps/web/context_processors.py:267
+msgid "Not specified"
+msgstr "No especificado"
+
+#: apps/web/context_processors.py:268
+msgid "Campaign Details"
+msgstr "Detalles de la Campaña"
+
+#: apps/web/context_processors.py:269
+msgid "Website URL"
+msgstr "URL del Sitio Web"
+
+#: apps/web/context_processors.py:270
+msgid "Enter your website URL"
+msgstr "Introduce la URL de tu sitio web"
+
+#: apps/web/context_processors.py:271
+msgid "Brand Color"
+msgstr "Color de la marca"
+
+#: apps/web/context_processors.py:272
+msgid "Enter a hex color that represents your brand identity"
+msgstr "Introduce un color hex que represente la identidad de tu marca"
+
+#: apps/web/context_processors.py:273
+msgid "Enter hex color (e.g. FF5500)"
+msgstr "Introduce un color hex (e.g. FF5500)"
+
+#: apps/web/context_processors.py:274
+msgid "Please enter a valid hex color code (e.g. FF5500)"
+msgstr "Por favor, introduce un código de color hex válido (e.g. FF5500)"
+
+#: apps/web/context_processors.py:275
+msgid "Key Benefits"
+msgstr "Ventajas principales"
+
+#: apps/web/context_processors.py:276
+msgid "Add the key benefits of your product or service"
+msgstr "Añade las ventajas principales de tu producto o servicio"
+
+#: apps/web/context_processors.py:277
+msgid "E.g. Fast delivery, 24/7 support..."
+msgstr "Ej. Entrega rápida, soporte 24/7..."
+
+#: apps/web/context_processors.py:280
+msgid "Product Type"
+msgstr "Tipo de producto"
+
+#: apps/web/context_processors.py:281
+msgid "Upload images for your product or service"
+msgstr "Sube imágenes para tu producto o servicio"
+
+#: apps/web/context_processors.py:282
+msgid "Physical Product"
+msgstr "Producto físico"
+
+#: apps/web/context_processors.py:283
+msgid "Tangible items that can be photographed"
+msgstr "Objetos tangibles que pueden ser fotografiados"
+
+#: apps/web/context_processors.py:284
+msgid "Software / Service"
+msgstr "Software / Servicio"
+
+#: apps/web/context_processors.py:285
+msgid "Digital products or services with screenshots"
+msgstr "Productos o servicios digitales con capturas de pantalla"
+
+#: apps/web/context_processors.py:286
+msgid "OR"
+msgstr "O"
+
+#: apps/web/context_processors.py:289
+msgid "Product Images"
+msgstr "Imágenes del producto"
+
+#: apps/web/context_processors.py:290
+msgid ""
+"Upload high-quality images of your physical product to showcase in your ad"
+msgstr ""
+"Sube imágenes de alta calidad de tu producto físico para mostrar en tu "
+"anuncio"
+
+#: apps/web/context_processors.py:291
+msgid "Primary Product"
+msgstr "Producto principal"
+
+#: apps/web/context_processors.py:292
+msgid "Front view or main product shot"
+msgstr "Vista frontal o captura principal del producto"
+
+#: apps/web/context_processors.py:293
+msgid "Add primary image"
+msgstr "Añadir imagen principal"
+
+#: apps/web/context_processors.py:294
+msgid "Secondary Product"
+msgstr "Producto secundario"
+
+#: apps/web/context_processors.py:295
+msgid "Side view or product in use"
+msgstr "Vista lateral o producto en uso"
+
+#: apps/web/context_processors.py:296
+msgid "Add secondary image"
+msgstr "Añadir imagen secundaria"
+
+#: apps/web/context_processors.py:299
+msgid "App Screenshots"
+msgstr "Capturas de pantalla del app"
+
+#: apps/web/context_processors.py:300
+msgid "Upload high-quality screenshots of your software to showcase its features"
+msgstr "Sube capturas de pantalla de alta calidad de tu software para mostrar sus características"
+
+#: apps/web/context_processors.py:301
+msgid "Main Interface"
+msgstr "Interfaz principal"
+
+#: apps/web/context_processors.py:302
+msgid "Main screen or dashboard view"
+msgstr "Vista principal o dashboard"
+
+#: apps/web/context_processors.py:303
+msgid "Add main screenshot"
+msgstr "Añadir captura principal"
+
+#: apps/web/context_processors.py:304
+msgid "Feature Highlight"
+msgstr "Destacar característica"
+
+#: apps/web/context_processors.py:305
+msgid "Key feature or functionality in action"
+msgstr "Característica clave o funcionalidad en acción"
+
+#: apps/web/context_processors.py:306
+msgid "Add feature screenshot"
+msgstr "Añadir captura de característica"
+
+#: apps/web/context_processors.py:309
+msgid "Additional Marketing Materials"
+msgstr "Materiales de marketing adicionales"
+
+#: apps/web/context_processors.py:310
+msgid "Upload supplementary images to enhance your ad campaign (optional)"
+msgstr "Sube imágenes adicionales para mejorar tu campaña de anuncios (opcional)"
+
+#: apps/web/context_processors.py:311
+msgid "Testimonial"
+msgstr "Testimonial"
+
+#: apps/web/context_processors.py:312
+msgid "Customer review or testimonial"
+msgstr "Revisión o testimonio del cliente"
+
+#: apps/web/context_processors.py:313
+msgid "Add image"
+msgstr "Añadir imagen"
+
+#: apps/web/context_processors.py:314
+msgid "Product in Use"
+msgstr "Producto en uso"
+
+#: apps/web/context_processors.py:315
+msgid "Show your product in action"
+msgstr "Muestra tu producto en acción"
+
+#: apps/web/context_processors.py:316
+msgid "Additional View"
+msgstr "Vista adicional"
+
+#: apps/web/context_processors.py:317
+msgid "Any other relevant image"
+msgstr "Cualquier otra imagen relevante"
+
+#: apps/web/context_processors.py:320
+msgid "Company Branding"
+msgstr "Marca personalizada"
+
+#: apps/web/context_processors.py:321
+msgid "Upload your company logo to enhance your ad campaign's brand identity"
+msgstr "Sube tu logo de empresa para mejorar la identidad de tu campaña de anuncios"
+
+#: apps/web/context_processors.py:322
+msgid "Company Logo"
+msgstr "Logo de la empresa"
+
+#: apps/web/context_processors.py:323
+msgid "Upload a high-quality logo (PNG or SVG preferred)"
+msgstr "Sube un logo de alta calidad (PNG o SVG preferido)"
+
+#: apps/web/context_processors.py:324
+msgid "Add your company logo"
+msgstr "Añade tu logo de empresa"
+
+#: apps/web/context_processors.py:327
+msgid "Back"
+msgstr "Atrás"
+
+#: apps/web/context_processors.py:328
+msgid "Going back..."
+msgstr "Cargando..."
+
+#: apps/web/context_processors.py:331
+msgid "or drag and drop file here"
+msgstr "o arrastra y suelta el archivo aquí"
 
 #: templates/400.html:4
 msgid "Shucks. That was a bad request."

@@ -255,6 +255,81 @@ def translations(request):
             'filter.loading_tags': _('Loading tags...'),
             'filter.no_tags': _('No tags available'),
             
+            # StepTwoComponent translations
+            'step_two.summary': _('Summary'),
+            'step_two.loading': _('Loading...'),
+            'step_two.no_image': _('No image'),
+            'step_two.square': _('Square'),
+            'step_two.portrait_tall': _('Portrait Tall'),
+            'step_two.portrait': _('Portrait'),
+            'step_two.landscape': _('Landscape'),
+            'step_two.unknown': _('Unknown'),
+            'step_two.not_specified': _('Not specified'),
+            'step_two.campaign_details': _('Campaign Details'),
+            'step_two.website_url': _('Website URL'),
+            'step_two.enter_website_url': _('Enter your website URL'),
+            'step_two.brand_color': _('Brand Color'),
+            'step_two.enter_hex_color': _('Enter a hex color that represents your brand identity'),
+            'step_two.enter_hex_color_example': _('Enter hex color (e.g. FF5500)'),
+            'step_two.enter_valid_hex_color': _('Please enter a valid hex color code (e.g. FF5500)'),
+            'step_two.key_benefits': _('Key Benefits'),
+            'step_two.add_key_benefits': _('Add the key benefits of your product or service'),
+            'step_two.key_benefits_example': _('E.g. Fast delivery, 24/7 support...'),
+            
+            # ProductTypeSelect translations
+            'product_type.title': _('Product Type'),
+            'product_type.upload_images': _('Upload images for your product or service'),
+            'product_type.physical_product': _('Physical Product'),
+            'product_type.tangible_items': _('Tangible items that can be photographed'),
+            'product_type.software_service': _('Software / Service'),
+            'product_type.digital_products': _('Digital products or services with screenshots'),
+            'product_type.or': _('OR'),
+            
+            # ProductImageUpload translations
+            'product_image.title': _('Product Images'),
+            'product_image.upload_description': _('Upload high-quality images of your physical product to showcase in your ad'),
+            'product_image.primary_product': _('Primary Product'),
+            'product_image.front_view': _('Front view or main product shot'),
+            'product_image.add_primary': _('Add primary image'),
+            'product_image.secondary_product': _('Secondary Product'),
+            'product_image.side_view': _('Side view or product in use'),
+            'product_image.add_secondary': _('Add secondary image'),
+            
+            # AppScreenshotUpload translations
+            'app_screenshot.title': _('App Screenshots'),
+            'app_screenshot.upload_description': _('Upload high-quality screenshots of your software to showcase its features'),
+            'app_screenshot.main_interface': _('Main Interface'),
+            'app_screenshot.main_screen': _('Main screen or dashboard view'),
+            'app_screenshot.add_main': _('Add main screenshot'),
+            'app_screenshot.feature_highlight': _('Feature Highlight'),
+            'app_screenshot.key_feature': _('Key feature or functionality in action'),
+            'app_screenshot.add_feature': _('Add feature screenshot'),
+            
+            # MarketingMaterialUpload translations
+            'marketing_material.title': _('Additional Marketing Materials'),
+            'marketing_material.upload_description': _('Upload supplementary images to enhance your ad campaign (optional)'),
+            'marketing_material.testimonial': _('Testimonial'),
+            'marketing_material.customer_review': _('Customer review or testimonial'),
+            'marketing_material.add_image': _('Add image'),
+            'marketing_material.product_in_use': _('Product in Use'),
+            'marketing_material.show_product': _('Show your product in action'),
+            'marketing_material.additional_view': _('Additional View'),
+            'marketing_material.any_other_image': _('Any other relevant image'),
+            
+            # CompanyLogoUpload translations
+            'company_logo.title': _('Company Branding'),
+            'company_logo.upload_description': _('Upload your company logo to enhance your ad campaign\'s brand identity'),
+            'company_logo.company_logo': _('Company Logo'),
+            'company_logo.logo_description': _('Upload a high-quality logo (PNG or SVG preferred)'),
+            'company_logo.add_logo': _('Add your company logo'),
+            
+            # BackButton translations
+            'back_button.back': _('Back'),
+            'back_button.going_back': _('Going back...'),
+            
+            # ImageUpload translations
+            'image_upload.drag_drop': _('or drag and drop file here'),
+            
             # Add more translations as needed
         }
     }
