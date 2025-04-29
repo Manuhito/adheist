@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-29 17:38+0000\n"
+"POT-Creation-Date: 2025-04-29 18:32+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -155,15 +155,16 @@ msgstr ""
 msgid "Every {count} {interval}s"
 msgstr ""
 
-#: apps/users/forms.py:51
+#: apps/users/forms.py:51 apps/web/context_processors.py:177
 msgid "Email"
 msgstr "E-mail"
 
 #: apps/users/forms.py:52 apps/web/context_processors.py:66
+#: apps/web/context_processors.py:181
 msgid "Language"
 msgstr "Langue"
 
-#: apps/users/forms.py:53
+#: apps/users/forms.py:53 apps/web/context_processors.py:182
 msgid "Time Zone"
 msgstr ""
 
@@ -548,6 +549,118 @@ msgstr ""
 msgid "Create New Ad Request"
 msgstr ""
 
+#: apps/web/context_processors.py:171
+msgid "Error: Profile data not available"
+msgstr ""
+
+#: apps/web/context_processors.py:172
+msgid "Uploading..."
+msgstr ""
+
+#: apps/web/context_processors.py:173
+msgid "Image uploaded successfully!"
+msgstr ""
+
+#: apps/web/context_processors.py:174
+msgid "Error uploading image. Please try again."
+msgstr ""
+
+#: apps/web/context_processors.py:175
+#: templates/account/components/profile_form.html:10
+msgid "Change Picture"
+msgstr "Changer la photo"
+
+#: apps/web/context_processors.py:176
+#: templates/account/components/profile_form.html:18
+msgid "My Details"
+msgstr "Mes Details"
+
+#: apps/web/context_processors.py:178
+#: templates/account/components/profile_form.html:23
+msgid "Manage email addresses"
+msgstr ""
+
+#: apps/web/context_processors.py:179
+msgid "First Name"
+msgstr ""
+
+#: apps/web/context_processors.py:180
+msgid "Last Name"
+msgstr ""
+
+#: apps/web/context_processors.py:183
+#, python-brace-format
+msgid "Your current timezone is {timezone}, where it is {now}."
+msgstr ""
+
+#: apps/web/context_processors.py:184
+#, python-brace-format
+msgid ""
+"You have not set a timezone, and are using the system timezone of "
+"{currentTz} where it is {now}."
+msgstr ""
+
+#: apps/web/context_processors.py:185
+msgid "Saving..."
+msgstr ""
+
+#: apps/web/context_processors.py:186
+#: templates/account/components/profile_form.html:43
+#: templates/ads/adlibrary_form.html:69
+msgid "Save"
+msgstr "Sauvegarder"
+
+#: apps/web/context_processors.py:189 templates/account/components/2fa.html:3
+msgid "Two-Factor Auth"
+msgstr ""
+
+#: apps/web/context_processors.py:190 templates/account/components/2fa.html:5
+msgid "You already have two-factor authentication enabled."
+msgstr ""
+
+#: apps/web/context_processors.py:191 templates/account/components/2fa.html:6
+msgid "Configure"
+msgstr ""
+
+#: apps/web/context_processors.py:192 templates/account/components/2fa.html:9
+msgid "You do not have two-factor authentication enabled."
+msgstr ""
+
+#: apps/web/context_processors.py:193 templates/account/components/2fa.html:10
+msgid "Enable"
+msgstr ""
+
+#: apps/web/context_processors.py:194 templates/account/components/2fa.html:12
+msgid ""
+"To set up two-factor authentication you must first verify your email address."
+msgstr ""
+
+#: apps/web/context_processors.py:195 templates/account/components/2fa.html:13
+msgid "Verify"
+msgstr ""
+
+#: apps/web/context_processors.py:198
+#: templates/account/components/social/social_accounts.html:3
+msgid "Connected Accounts"
+msgstr "Comptes connectés"
+
+#: apps/web/context_processors.py:199
+#: templates/account/components/social/social_accounts.html:29
+msgid "You haven't linked any social accounts yet. Create one below."
+msgstr "Vous n'avez pas encore lié de comptes sociaux. Créez-en un ci-dessous."
+
+#: apps/web/context_processors.py:200
+#, fuzzy
+#| msgid "My Account"
+msgid "Manage Accounts"
+msgstr "Mon Compte"
+
+#: apps/web/context_processors.py:201
+#, fuzzy
+#| msgid "Set Password"
+msgid "Add a Password"
+msgstr "Définir le mot de passe"
+
 #: templates/400.html:4
 msgid "Shucks. That was a bad request."
 msgstr ""
@@ -600,47 +713,6 @@ msgstr "Pages de compte"
 msgid "This account is inactive."
 msgstr ""
 
-#: templates/account/components/2fa.html:3
-msgid "Two-Factor Auth"
-msgstr ""
-
-#: templates/account/components/2fa.html:5
-msgid "You already have two-factor authentication enabled."
-msgstr ""
-
-#: templates/account/components/2fa.html:6
-msgid "Configure"
-msgstr ""
-
-#: templates/account/components/2fa.html:9
-msgid "You do not have two-factor authentication enabled."
-msgstr ""
-
-#: templates/account/components/2fa.html:10
-msgid "Enable"
-msgstr ""
-
-#: templates/account/components/2fa.html:12
-msgid ""
-"To set up two-factor authentication you must first verify your email address."
-msgstr ""
-
-#: templates/account/components/2fa.html:13
-msgid "Verify"
-msgstr ""
-
-#: templates/account/components/profile_form.html:10
-msgid "Change Picture"
-msgstr "Changer la photo"
-
-#: templates/account/components/profile_form.html:18
-msgid "My Details"
-msgstr "Mes Details"
-
-#: templates/account/components/profile_form.html:23
-msgid "Manage email addresses"
-msgstr ""
-
 #: templates/account/components/profile_form.html:33
 #, python-format
 msgid ""
@@ -658,11 +730,6 @@ msgid ""
 "          "
 msgstr ""
 
-#: templates/account/components/profile_form.html:43
-#: templates/ads/adlibrary_form.html:69
-msgid "Save"
-msgstr "Sauvegarder"
-
 #: templates/account/components/social/login_with_social_button.html:9
 msgid "Logo"
 msgstr ""
@@ -672,14 +739,6 @@ msgstr ""
 #| msgid "Continue with Google"
 msgid "Continue with"
 msgstr "Continuer avec Google"
-
-#: templates/account/components/social/social_accounts.html:3
-msgid "Connected Accounts"
-msgstr "Comptes connectés"
-
-#: templates/account/components/social/social_accounts.html:29
-msgid "You haven't linked any social accounts yet. Create one below."
-msgstr "Vous n'avez pas encore lié de comptes sociaux. Créez-en un ci-dessous."
 
 #: templates/account/components/social/social_buttons.html:5
 msgid "or"

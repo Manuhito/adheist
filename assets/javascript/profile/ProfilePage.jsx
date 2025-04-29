@@ -2,15 +2,17 @@ import React from 'react';
 import ProfileForm from './components/ProfileForm';
 import TwoFactorAuth from './components/TwoFactorAuth';
 import SocialAccounts from './components/SocialAccounts';
+import { useTranslation } from '../lib/useTranslation';
 
 const ProfilePage = () => {
+  const { t } = useTranslation();
   // Get profile data from the window object
   const profileData = window.__PROFILE_DATA__ || null;
 
   if (!profileData) {
     return (
       <div className="text-red-500 p-4 border border-red-300 rounded bg-red-50">
-        Error: Profile data not available
+        {t('profile.error_no_data', 'Error: Profile data not available')}
       </div>
     );
   }

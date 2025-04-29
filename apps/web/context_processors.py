@@ -167,6 +167,39 @@ def translations(request):
             'ad_requests.success_message': _('Your ad request has been processed successfully! Your ad is being generated and may take a few minutes to be available.'),
             'ad_requests.create_new': _('Create New Ad Request'),
             
+            # Profile page translations
+            'profile.error_no_data': _('Error: Profile data not available'),
+            'profile.uploading': _('Uploading...'),
+            'profile.image_success': _('Image uploaded successfully!'),
+            'profile.image_error': _('Error uploading image. Please try again.'),
+            'profile.change_picture': _('Change Picture'),
+            'profile.my_details': _('My Details'),
+            'profile.email': _('Email'),
+            'profile.manage_emails': _('Manage email addresses'),
+            'profile.first_name': _('First Name'),
+            'profile.last_name': _('Last Name'),
+            'profile.language': _('Language'),
+            'profile.time_zone': _('Time Zone'),
+            'profile.current_timezone': _('Your current timezone is {timezone}, where it is {now}.'),
+            'profile.no_timezone': _('You have not set a timezone, and are using the system timezone of {currentTz} where it is {now}.'),
+            'profile.saving': _('Saving...'),
+            'profile.save': _('Save'),
+            
+            # Two-factor auth translations
+            'profile.two_factor': _('Two-Factor Auth'),
+            'profile.2fa_enabled': _('You already have two-factor authentication enabled.'),
+            'profile.configure': _('Configure'),
+            'profile.2fa_disabled': _('You do not have two-factor authentication enabled.'),
+            'profile.enable': _('Enable'),
+            'profile.verify_email_for_2fa': _('To set up two-factor authentication you must first verify your email address.'),
+            'profile.verify': _('Verify'),
+            
+            # Social accounts translations
+            'profile.connected_accounts': _('Connected Accounts'),
+            'profile.no_social_accounts': _('You haven\'t linked any social accounts yet. Create one below.'),
+            'profile.manage_accounts': _('Manage Accounts'),
+            'profile.add_password': _('Add a Password'),
+            
             # Add more translations as needed
         }
     }
