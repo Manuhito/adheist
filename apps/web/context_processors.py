@@ -140,6 +140,7 @@ def translations(request):
             'pricing.feature_enterprise_4': _('API access'),
             'pricing.feature_enterprise_5': _('Advanced analytics'),
             'pricing.get_started': _('Get Started'),
+            'pricing.upgrade_to_starter': _('Upgrade to Starter'),
             'pricing.upgrade_to_pro': _('Upgrade to Pro'),
             'pricing.upgrade_to_team': _('Upgrade to Team'),
             'pricing.contact_sales': _('Contact Sales'),
