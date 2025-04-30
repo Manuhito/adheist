@@ -1004,8 +1004,47 @@ def billing_page(request):
     }
     # Get current user's subscription plan ID if available
     current_plan_id = None
+    current_plan_name = None
+    
+    # Define the hierarchy of plans
+    tier_order = ["Free", "Starter", "Pro", "Enterprise"]
+    
     if request.user.is_authenticated and request.user.has_active_subscription():
         current_plan_id = request.user.active_stripe_subscription.plan.product.id
+        print("Current plan:", request.user.active_stripe_subscription)
+        
+        # Get all user subscriptions from Stripe to find the highest tier
+        if request.user.customer:
+            from djstripe.models import Subscription
+            from apps.subscriptions.helpers import subscription_is_active
+            
+            # Get all active subscriptions for this customer
+            active_subscriptions = []
+            subscriptions = Subscription.objects.filter(customer=request.user.customer)
+            
+            for sub in subscriptions:
+                if subscription_is_active(sub):
+                    active_subscriptions.append(sub)
+                    print(f"Active subscription found: {sub.plan.product.name}")
+            
+            # Find the highest tier subscription
+            highest_tier_position = -1
+            highest_tier_sub = None
+            
+            for sub in active_subscriptions:
+                product_name = sub.plan.product.name
+                # Try to match with our tier names
+                for tier_name in tier_order:
+                    if tier_name.lower() in product_name.lower():
+                        tier_position = tier_order.index(tier_name)
+                        if tier_position > highest_tier_position:
+                            highest_tier_position = tier_position
+                            highest_tier_sub = sub
+                            current_plan_name = tier_name
+            
+            if highest_tier_sub:
+                current_plan_id = highest_tier_sub.plan.product.id
+                print(f"Highest tier subscription: {current_plan_name}")
     # Add tiers from metadata
     for product in products_with_metadata:
         slug = product.metadata.slug
@@ -1016,6 +1055,16 @@ def billing_page(request):
             
             # Check if this is the current plan
             is_current_plan = current_plan_id == product.product.id
+            
+            # Check if this plan should be disabled (user has a higher tier plan)
+            is_disabled = False
+            if current_plan_name:
+                current_tier_position = tier_order.index(current_plan_name) if current_plan_name in tier_order else -1
+                this_tier_position = tier_order.index(product_mapping[slug]['display_name']) if product_mapping[slug]['display_name'] in tier_order else -1
+                
+                # Disable if this plan is lower tier than current plan
+                if this_tier_position < current_tier_position:
+                    is_disabled = True
             
             # Format price display
             price_data = {}
@@ -1050,12 +1099,18 @@ def billing_page(request):
                 "cta": product_mapping[slug]["cta"],
                 "highlighted": product_mapping[slug]["highlighted"],
                 "popular": product_mapping[slug]["popular"],
-                "is_current_plan": is_current_plan
+                "is_current_plan": is_current_plan,
+                "is_disabled": is_disabled
             }
             
             pricing_data["tiers"].append(tier)
     
     # Add Enterprise plan with original values
+    # Check if Enterprise plan should be disabled
+    enterprise_disabled = False
+    if current_plan_name == "Enterprise":
+        enterprise_disabled = False  # Never disable current plan
+    
     enterprise_plan = {
         "name": "Enterprise",
         "description": "For large organizations",
@@ -1072,12 +1127,13 @@ def billing_page(request):
         ],
         "cta": "Contact Sales",
         "highlighted": False,
-        "popular": False
+        "popular": False,
+        "is_current_plan": current_plan_name == "Enterprise",
+        "is_disabled": enterprise_disabled
     }
     pricing_data["tiers"].append(enterprise_plan)
     
     # Sort tiers in the correct order: Free, Starter, Pro, Enterprise
-    tier_order = ["Free", "Starter", "Pro", "Enterprise"]
     pricing_data["tiers"] = sorted(
         pricing_data["tiers"], 
         key=lambda x: tier_order.index(x["name"]) if x["name"] in tier_order else 999

@@ -18,7 +18,8 @@ export function PricingCard({
   const isHighlighted = tier.highlighted
   const isPopular = tier.popular
   const isCurrentPlan = tier.is_current_plan
-  console.log("Pricing card data:", { tier, paymentFrequency, onSubscribe })
+  const isDisabled = tier.is_disabled
+  console.log("Pricing card data:", { tier, paymentFrequency, onSubscribe, isDisabled })
   // Get the correct Stripe price ID based on payment frequency
   const priceId = paymentFrequency === 'monthly' 
     ? tier.price?.monthlyPriceId 
@@ -26,9 +27,11 @@ export function PricingCard({
 
   return (
     <Card
-      className={cn("relative flex flex-col gap-8 overflow-hidden p-6", isHighlighted
-        ? "bg-foreground text-background"
-        : "bg-background text-foreground", isPopular && "ring-2 ring-primary")}>
+      className={cn(
+        "relative flex flex-col gap-8 overflow-hidden p-6", 
+        isHighlighted ? "bg-foreground text-background" : "bg-background text-foreground", 
+        isPopular && "ring-2 ring-primary",
+        isDisabled && "opacity-70")}>
       {isHighlighted && <HighlightedBackground />}
       {isPopular && <PopularBackground />}
       <h2 className="flex items-center gap-3 text-xl font-medium capitalize">
@@ -85,10 +88,11 @@ export function PricingCard({
         variant={isHighlighted ? "secondary" : "default"} 
         className="w-full relative z-10"
         onClick={() => onSubscribe && onSubscribe(priceId)}
-        disabled={!onSubscribe || !priceId || isCurrentPlan}
+        disabled={!onSubscribe || !priceId || isCurrentPlan || isDisabled}
       >
-        {isCurrentPlan ? t('pricing.current_plan', 'Current Plan') : tier.cta}
-        {!isCurrentPlan && <ArrowRight className="ml-2 h-4 w-4" />}
+        {isCurrentPlan ? t('pricing.current_plan', 'Current Plan') : 
+         isDisabled ? t('pricing.lower_tier', 'Plan inferior') : tier.cta}
+        {!isCurrentPlan && !isDisabled && <ArrowRight className="ml-2 h-4 w-4" />}
       </Button>
     </Card>
   );
