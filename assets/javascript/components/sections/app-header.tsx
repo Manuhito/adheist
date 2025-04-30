@@ -5,10 +5,12 @@ import { ThemeSwitch } from "@/components/theme-switch";
 import { buttonVariants, Button } from "@/components/ui/button";
 import { siteConfig } from "@/lib/config";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/useTranslation";
 
 export default function AppHeader() {
   const [addBorder, setAddBorder] = useState(false);
   const [user, setUser] = useState(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     // Get user data from window object if available
@@ -66,7 +68,7 @@ export default function AppHeader() {
                   "font-medium"
                 )}
               >
-                Blog
+                {t('app_header.blog', 'Blog')}
               </a>
               <a
                 href="/pricing"
@@ -75,7 +77,7 @@ export default function AppHeader() {
                   "text-primary"
                 )}
               >
-                Upgrade
+                {t('app_header.upgrade', 'Upgrade')}
               </a>
               
               {user ? (
@@ -147,13 +149,13 @@ export default function AppHeader() {
                     }}
                   >
                     <div className="py-1" role="none">
-                      <a href="/users/profile/" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800" role="menuitem">Profile</a>
-                      <a href="/ads/billing" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800" role="menuitem">Billing</a>
+                      <a href="/users/profile/" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800" role="menuitem">{t('app_header.profile', 'Profile')}</a>
+                      <a href="/ads/billing" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800" role="menuitem">{t('app_header.billing', 'Billing')}</a>
                       <div className="px-4 py-2 flex items-center justify-between border-t border-gray-200 dark:border-gray-700">
-                        <span className="text-sm text-gray-700 dark:text-gray-100">Theme</span>
+                        <span className="text-sm text-gray-700 dark:text-gray-100">{t('app_header.theme', 'Theme')}</span>
                         <ThemeSwitch />
                       </div>
-                      <a href="/accounts/logout" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 border-t border-gray-200 dark:border-gray-700" role="menuitem">Log out</a>
+                      <a href="/accounts/logout" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 border-t border-gray-200 dark:border-gray-700" role="menuitem">{t('app_header.logout', 'Log out')}</a>
                     </div>
                   </div>
                 </div>
@@ -162,7 +164,7 @@ export default function AppHeader() {
                   href="/accounts/login"
                   className={cn(buttonVariants({ variant: "default", size: "sm" }))}
                 >
-                  Login
+                  {t('app_header.login', 'Login')}
                 </a>
               )}
             </div>

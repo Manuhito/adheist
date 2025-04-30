@@ -137,6 +137,8 @@ TEMPLATES = [
                 "apps.web.context_processors.project_meta",
                 # this line can be removed if not using google analytics
                 "apps.web.context_processors.google_analytics_id",
+                # translations for i18n in React components
+                "apps.web.context_processors.translations",
             ],
             "loaders": _DEFAULT_LOADERS if DEBUG else _CACHED_LOADERS,
         },
@@ -273,6 +275,7 @@ LANGUAGE_COOKIE_NAME = "adheist_language"
 LANGUAGES = WAGTAIL_CONTENT_LANGUAGES = [
     ("en", gettext_lazy("English")),
     ("fr", gettext_lazy("French")),
+    ("es", gettext_lazy("Spanish")),
 ]
 LOCALE_PATHS = (BASE_DIR / "locale",)
 

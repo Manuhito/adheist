@@ -4,6 +4,7 @@ import { BentoGrid, BentoItem } from "../components/ui/bento-grid";
 import { ButtonColorful } from "../components/ui/button-colorful";
 import { AlertNotification } from "../components/ui/alert-notification";
 import { cn } from "../lib/utils";
+import { useTranslation } from "../lib/useTranslation";
 
 // Debug log
 console.log("Ad Requests script loaded");
@@ -55,7 +56,7 @@ function formatDate(dateString: string): string {
 }
 
 // Function to convert AdRequest to BentoItem
-function adRequestToBentoItem(adRequest: AdRequest): BentoItem {
+function adRequestToBentoItem(adRequest: AdRequest, t: (key: string, fallback?: string) => string): BentoItem {
     // Determine the appropriate URL based on status
     const getRedirectUrl = (status: string, id: number): string | null => {
         // For DRAFT, NEW, FILLED statuses, redirect to create_adrequest_page
@@ -77,15 +78,15 @@ function adRequestToBentoItem(adRequest: AdRequest): BentoItem {
     };
 
     return {
-        title: adRequest.ad_library_name,
+        title: adRequest.ad_library_name || t('ad_requests.no_library', "No library"),
         meta: `${adRequest.canvas_size}`,
         description: adRequest.industries.length > 0 
-            ? `Industries: ${adRequest.industries.join(", ")}` 
-            : "No associated industries",
+            ? `${t('ad_requests.industries', 'Industries')}: ${adRequest.industries.join(", ")}` 
+            : t('ad_requests.no_industries', "No associated industries"),
         icon: statusIconMap[adRequest.status] || statusIconMap.DEFAULT,
         status: adRequest.display_status,  // Use display_status instead of status
         tags: adRequest.tags,
-        cta: "View details",
+        cta: t('ad_requests.view_details', "View details"),
         hasPersistentHover: false,
         id: adRequest.ad_request_id,
         onClick: async () => {
@@ -109,7 +110,7 @@ function adRequestToBentoItem(adRequest: AdRequest): BentoItem {
                     
                     // Render the notification
                     const notificationRoot = ReactDOM.createRoot(notificationContainer);
-                    const message = `This ad request is currently in ${data.status.toLowerCase()} status. Please wait for it to be processed.`;
+                    const message = t('ad_requests.wait_processing', `This ad request is currently in ${data.status.toLowerCase()} status. Please wait for it to be processed.`);
                     
                     notificationRoot.render(
                         React.createElement(AlertNotification, {
@@ -146,7 +147,7 @@ function adRequestToBentoItem(adRequest: AdRequest): BentoItem {
 }
 
 // Function to create a new ad request
-async function createNewAdRequest() {
+async function createNewAdRequest(t: (key: string, fallback?: string) => string) {
     try {
         // Get the CSRF token from the cookie
         const csrfToken = document.cookie
@@ -186,12 +187,13 @@ async function createNewAdRequest() {
         }
     } catch (error) {
         console.error('Error creating ad request:', error);
-        alert('Error creating ad request. Please try again.');
+        alert(t('ad_requests.error_creating', 'Error creating ad request. Please try again.'));
     }
 }
 
 // Main component
 function AdRequestsGrid() {
+    const { t } = useTranslation();
     // State for notification
     const [notification, setNotification] = useState<{ message: string; variant: "warning" | "error" | "success" | "info" } | null>(null);
 
@@ -199,7 +201,7 @@ function AdRequestsGrid() {
     React.useEffect(() => {
         if (sessionStorage.getItem('ads_success_alert')) {
             setNotification({
-                message: 'Your ad request has been processed successfully! Your ad is being generated and may take a few minutes to be available.',
+                message: t('ad_requests.success_message', 'Your ad request has been processed successfully! Your ad is being generated and may take a few minutes to be available.'),
                 variant: 'success',
             });
             sessionStorage.removeItem('ads_success_alert');
@@ -222,7 +224,7 @@ function AdRequestsGrid() {
     console.log("Number of ad requests:", adRequests.length);
     
     // Convert data to BentoItem format
-    const bentoItems = adRequests.map(adRequestToBentoItem);
+    const bentoItems = adRequests.map(adRequest => adRequestToBentoItem(adRequest, t));
     console.log("Bento items:", bentoItems);
 
     return (
@@ -239,8 +241,8 @@ function AdRequestsGrid() {
             {/* Create new ad request button */}
             <div className="flex justify-center my-4">
                 <ButtonColorful 
-                    label="Create New Ad Request"
-                    onClick={createNewAdRequest}
+                    label={t('ad_requests.create_new', "Create New Ad Request")}
+                    onClick={() => createNewAdRequest(t)}
                 />
             </div>
             

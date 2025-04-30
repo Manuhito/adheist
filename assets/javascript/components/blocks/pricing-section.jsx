@@ -7,9 +7,10 @@ export function PricingSection({
   subtitle,
   tiers,
   frequencies,
-  onSubscribe
+  onSubscribe,
+  t
 }) {
-  const [selectedFrequency, setSelectedFrequency] = React.useState(frequencies[0])
+  const [selectedFrequency, setSelectedFrequency] = React.useState(frequencies[0].key)
   console.log("data on ps:", { title, subtitle, tiers, frequencies, onSubscribe })
 
   return (
@@ -22,11 +23,11 @@ export function PricingSection({
         <div className="mx-auto flex w-fit rounded-full bg-muted p-1">
           {frequencies.map((freq) => (
             <Tab
-              key={freq}
-              text={freq}
-              selected={selectedFrequency === freq}
-              setSelected={setSelectedFrequency}
-              discount={freq === "yearly"} />
+              key={freq.key}
+              text={freq.label}
+              selected={selectedFrequency === freq.key}
+              setSelected={() => setSelectedFrequency(freq.key)}
+              discount={freq.key === "yearly"} />
           ))}
         </div>
       </div>
@@ -37,6 +38,7 @@ export function PricingSection({
             tier={tier} 
             paymentFrequency={selectedFrequency} 
             onSubscribe={onSubscribe}
+            t={t}
           />
         ))}
       </div>

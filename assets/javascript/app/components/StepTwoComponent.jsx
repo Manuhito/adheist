@@ -7,21 +7,23 @@ import { AppScreenshotUpload } from './AppScreenshotUpload.jsx';
 import { ProductTypeSelect } from './ProductTypeSelect.jsx';
 import { MarketingMaterialUpload } from './MarketingMaterialUpload.jsx';
 import { Input } from '../../components/ui/input.jsx';
+import { useTranslation } from '../../lib/useTranslation';
 
 /**
  * Step Two Component for the Create Ad Request flow
  * Handles image upload, color selection, and navigation
  */
 const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
+  const { t } = useTranslation();
   const [isBackSubmitting, setIsBackSubmitting] = useState(false);
-  
+
   // Estado para los datos completos del adlibrary
   const [adLibraryData, setAdLibraryData] = useState(null);
   const [isAdLibraryLoading, setIsAdLibraryLoading] = useState(false);
   const websiteUrlId = useId();
   const keyBenefitsId = useId();
   const brandColorId = useId();
-  
+
   const [websiteUrl, setWebsiteUrl] = useState(
     // Check for company_website in asset_overrides first
     (initialData.asset_overrides?.company_website) ||
@@ -30,7 +32,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     // Finally default to empty string
     ''
   );
-  
+
   const [keyBenefits, setKeyBenefits] = useState(
     // Check for key_benefits in asset_overrides first
     (initialData.asset_overrides?.key_benefits) ||
@@ -39,7 +41,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     // Finally default to empty string
     ''
   );
-  
+
   const [selectedColor, setSelectedColor] = useState(
     // Check for main_hex_color in asset_overrides first
     (initialData.asset_overrides?.main_hex_color) ||
@@ -47,7 +49,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     initialData.brandColor ||
     ''
   );
-  
+
   // We no longer need to track product type selection as both containers are always visible
 
   // Debounce timers
@@ -70,7 +72,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-  
+
   // Fetch adlibrary info cuando tengamos el nombre
   useEffect(() => {
     if (!initialData.ad_library_name) return;
@@ -220,7 +222,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
     // Only proceed if we have an ID
     if (!initialData.id) return;
-    
+
     // If url is explicitly null, it means the image should be deleted
     // If url is undefined, it means no action should be taken
     if (url === undefined) return;
@@ -239,7 +241,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
       // Create a FormData object
       const formData = new FormData();
-      
+
       // If url is null, it means we want to delete the image
       if (url === null) {
         console.log('Deleting logo image...');
@@ -250,18 +252,18 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       // Check if this is a blob URL (from a new upload) or a server URL (from initialData)
       else if (url.startsWith('blob:')) {
         console.log('Processing blob URL...');
-        
+
         // Convert the blob URL to an actual file
         const blobResponse = await fetch(url);
         const blob = await blobResponse.blob();
-        
+
         // Create a file from the blob
         // Use a descriptive filename with timestamp to avoid caching issues
         const filename = `company_logo_${Date.now()}.${blob.type.split('/')[1] || 'png'}`;
         const file = new File([blob], filename, { type: blob.type });
-        
+
         console.log('Created file:', file.name, 'type:', file.type, 'size:', file.size);
-        
+
         // Add the file to the FormData with the field name 'logo'
         // This matches what the Django view expects in request.FILES
         formData.append('logo', file);
@@ -269,21 +271,21 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       } else {
         // This is a server URL (from initialData)
         console.log('Processing server URL...');
-        
+
         // For server URLs, we'll send the URL directly
         // The server already has this image, so we don't need to upload it again
         formData.append('logo_override_url', url);
         console.log('Added logo_override_url to FormData');
       }
-      
+
       // Log all form data entries
       console.log('FormData entries:');
       for (let pair of formData.entries()) {
-        console.log(pair[0] + ':', pair[1] instanceof File ? 
-          `File: ${pair[1].name}, type: ${pair[1].type}, size: ${pair[1].size}` : 
+        console.log(pair[0] + ':', pair[1] instanceof File ?
+          `File: ${pair[1].name}, type: ${pair[1].type}, size: ${pair[1].size}` :
           pair[1]);
       }
-      
+
       // Make the API call to update the logo
       const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
         method: 'POST',
@@ -313,16 +315,16 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   // Handle product image upload
   const handleProductImageUpload = async (imageData) => {
     console.log('Product image uploaded or deleted:', imageData);
-    
+
     // Only proceed if we have an ID
     if (!initialData.id) return;
-    
+
     // If imageData is undefined, it means no action should be taken
     if (imageData === undefined) return;
-    
+
     // If imageData.url is null, it means the image should be deleted
     const isDeleteOperation = imageData?.url === null;
-    
+
     try {
       // Get CSRF token from cookies
       const csrfToken = document.cookie
@@ -337,7 +339,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
       // Create a FormData object
       const formData = new FormData();
-      
+
       // Handle image deletion
       if (isDeleteOperation) {
         console.log('Deleting product image:', imageData.type);
@@ -352,17 +354,17 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       // Check if this is a blob URL (from a new upload) or a server URL (from initialData)
       else if (imageData.url.startsWith('blob:')) {
         console.log('Processing blob URL for product image...');
-        
+
         // Convert the blob URL to an actual file
         const blobResponse = await fetch(imageData.url);
         const blob = await blobResponse.blob();
-        
+
         // Create a file from the blob with a descriptive filename
         const filename = `product_image_${imageData.type}_${Date.now()}.${blob.type.split('/')[1] || 'png'}`;
         const file = new File([blob], filename, { type: blob.type });
-        
+
         console.log('Created file:', file.name, 'type:', file.type, 'size:', file.size);
-        
+
         // Add the file to the FormData with the field name based on image type
         if (imageData.type === 'primary') {
           formData.append('product_image_1', file);
@@ -372,7 +374,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       } else {
         // This is a server URL (from initialData)
         console.log('Processing server URL for product image...');
-        
+
         // For server URLs, we'll send the URL directly
         if (imageData.type === 'primary') {
           formData.append('product_image_1_override_url', imageData.url);
@@ -380,7 +382,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
           formData.append('product_image_2_override_url', imageData.url);
         }
       }
-      
+
       // Make the API call to update the product image
       const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
         method: 'POST',
@@ -409,16 +411,16 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   // Handle app screenshot upload
   const handleAppScreenshotUpload = async (imageData) => {
     console.log('App screenshot uploaded or deleted:', imageData);
-    
+
     // Only proceed if we have an ID
     if (!initialData.id) return;
-    
+
     // If imageData is undefined, it means no action should be taken
     if (imageData === undefined) return;
-    
+
     // If imageData.url is null, it means the image should be deleted
     const isDeleteOperation = imageData?.url === null;
-    
+
     try {
       // Get CSRF token from cookies
       const csrfToken = document.cookie
@@ -433,7 +435,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
       // Create a FormData object
       const formData = new FormData();
-      
+
       // Handle image deletion
       if (isDeleteOperation) {
         console.log('Deleting app screenshot:', imageData.type);
@@ -448,17 +450,17 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       // Check if this is a blob URL (from a new upload) or a server URL (from initialData)
       else if (imageData.url.startsWith('blob:')) {
         console.log('Processing blob URL for app screenshot...');
-        
+
         // Convert the blob URL to an actual file
         const blobResponse = await fetch(imageData.url);
         const blob = await blobResponse.blob();
-        
+
         // Create a file from the blob with a descriptive filename
         const filename = `app_image_${imageData.type}_${Date.now()}.${blob.type.split('/')[1] || 'png'}`;
         const file = new File([blob], filename, { type: blob.type });
-        
+
         console.log('Created file:', file.name, 'type:', file.type, 'size:', file.size);
-        
+
         // Add the file to the FormData with the field name based on image type
         if (imageData.type === 'primary') {
           formData.append('app_image_1', file);
@@ -468,7 +470,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       } else {
         // This is a server URL (from initialData)
         console.log('Processing server URL for app screenshot...');
-        
+
         // For server URLs, we'll send the URL directly
         if (imageData.type === 'primary') {
           formData.append('app_image_1_override_url', imageData.url);
@@ -476,7 +478,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
           formData.append('app_image_2_override_url', imageData.url);
         }
       }
-      
+
       // Make the API call to update the app screenshot
       const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
         method: 'POST',
@@ -505,16 +507,16 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   // Handle marketing material uploads
   const handleMarketingMaterialUpload = async (imageData) => {
     console.log('Marketing material uploaded or deleted:', imageData);
-    
+
     // Only proceed if we have an ID
     if (!initialData.id) return;
-    
+
     // If imageData is undefined, it means no action should be taken
     if (imageData === undefined) return;
-    
+
     // If imageData.url is null, it means the image should be deleted
     const isDeleteOperation = imageData?.url === null;
-    
+
     try {
       // Get CSRF token from cookies
       const csrfToken = document.cookie
@@ -529,7 +531,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
       // Create a FormData object
       const formData = new FormData();
-      
+
       // Handle image deletion
       if (isDeleteOperation) {
         console.log('Deleting marketing material:', imageData.position);
@@ -539,27 +541,27 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       // Check if this is a blob URL (from a new upload) or a server URL (from initialData)
       else if (imageData.url.startsWith('blob:')) {
         console.log('Processing blob URL for marketing material...');
-        
+
         // Convert the blob URL to an actual file
         const blobResponse = await fetch(imageData.url);
         const blob = await blobResponse.blob();
-        
+
         // Create a file from the blob with a descriptive filename
         const filename = `marketing_image_${imageData.position}_${Date.now()}.${blob.type.split('/')[1] || 'png'}`;
         const file = new File([blob], filename, { type: blob.type });
-        
+
         console.log('Created file:', file.name, 'type:', file.type, 'size:', file.size);
-        
+
         // Add the file to the FormData with the field name based on position
         formData.append(`marketing_image_${imageData.position}`, file);
       } else {
         // This is a server URL (from initialData)
         console.log('Processing server URL for marketing material...');
-        
+
         // For server URLs, we'll send the URL directly
         formData.append(`marketing_image_${imageData.position}_override_url`, imageData.url);
       }
-      
+
       // Make the API call to update the marketing material
       const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
         method: 'POST',
@@ -604,7 +606,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
     console.log('Website URL updated locally:', newValue);
   };
-  
+
   // Handle key benefits input change with debouncing
   const handleKeyBenefitsChange = (e) => {
     const newValue = e.target.value;
@@ -675,7 +677,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       console.error('Error saving website URL:', error);
     }
   };
-  
+
   // Function to update key benefits in the database
   const updateKeyBenefits = async (benefits) => {
     // Only proceed if we have an ID
@@ -730,10 +732,10 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const isLightColor = (hexColor) => {
     // Default to dark if invalid color
     if (!hexColor || hexColor === '#') return false;
-    
+
     // Remove the # if present
     const hex = hexColor.replace('#', '');
-    
+
     // Convert hex to RGB
     let r, g, b;
     if (hex.length === 3) {
@@ -750,66 +752,66 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       // Invalid hex, default to dark
       return false;
     }
-    
+
     // Calculate perceived brightness using the formula
     // (0.299*R + 0.587*G + 0.114*B)
     const brightness = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    
+
     // If brightness is greater than 0.5, color is considered light
     return brightness > 0.5;
   };
-  
+
   // State for color validation
   const [colorError, setColorError] = useState(false);
-  
+
   // Handle color change with debouncing
   const handleColorChange = (e) => {
     let newValue = e.target.value;
-    
+
     // Allow editing without the # prefix in the input
     if (newValue) {
       // Add the # for internal state
       newValue = newValue.startsWith('#') ? newValue : `#${newValue}`;
     }
-    
+
     // Always update the state to allow editing
     setSelectedColor(newValue);
-    
+
     // Basic validation for hex color format
     const hexColorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
     const isValidHex = hexColorRegex.test(newValue) || newValue === '#' || newValue === '';
-    
+
     // Update error state
     setColorError(!isValidHex);
-    
+
     // Clear any existing timer
     if (colorUpdateTimer.current) {
       clearTimeout(colorUpdateTimer.current);
     }
-    
+
     // Only update if we have a valid hex color or empty string
     if (isValidHex && newValue !== '#') {
       // Set a new timer to update the database after 2 seconds of inactivity
       colorUpdateTimer.current = setTimeout(() => {
         updateBrandColor(newValue);
       }, 2000);
-      
+
       console.log('Brand color updated locally:', newValue);
     }
   };
-  
+
   // Function to update brand color in the database
   const updateBrandColor = async (color) => {
     // Only proceed if we have an ID
     if (!initialData.id) return;
-    
+
     try {
       // Get CSRF token from cookies
       const csrfToken = document.cookie
         .split('; ')
         .find(row => row.startsWith('csrftoken='))
         ?.split('=')[1];
-        
+
       if (!csrfToken) {
         console.error('CSRF token not found');
         return;
@@ -817,10 +819,10 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
       // Create a FormData object for the request
       const formData = new FormData();
-      
+
       // Add the main_hex_color field directly
       formData.append('main_hex_color', color);
-      
+
       // Make the API call to update the color
       const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
         method: 'POST',
@@ -829,14 +831,14 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
         },
         body: formData
       });
-      
+
       if (!response.ok) {
         throw new Error(`Error updating brand color: ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       console.log('Brand color updated in database:', data);
-      
+
     } catch (error) {
       console.error('Error saving brand color:', error);
     }
@@ -846,8 +848,8 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     <div className="space-y-8">
       {/* Summary section from Step One */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-semibold mb-4">Summary</h2>
-        
+        <h2 className="text-xl font-semibold mb-4">{t('step_two.summary', 'Summary')}</h2>
+
         {/* Summary of Step One selections */}
         <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 rounded-md mb-6">
           <div className="flex flex-col md:flex-row gap-6 items-center justify-center">
@@ -855,7 +857,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
             <div className="flex flex-col md:w-1/2 items-center text-center">
               <div className="group relative w-32 h-32 rounded-lg overflow-hidden shadow border bg-white dark:bg-gray-800">
                 {isAdLibraryLoading ? (
-                  <div className="flex items-center justify-center w-full h-full text-gray-400 animate-pulse">Loading...</div>
+                  <div className="flex items-center justify-center w-full h-full text-gray-400 animate-pulse">{t('step_two.loading', 'Loading...')}</div>
                 ) : adLibraryData ? (
                   <>
                     <img
@@ -877,20 +879,20 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
                     </div>
                   </>
                 ) : (
-                  <div className="flex items-center justify-center w-full h-full text-gray-400">No image</div>
+                  <div className="flex items-center justify-center w-full h-full text-gray-400">{t('step_two.no_image', 'No image')}</div>
                 )}
               </div>
             </div>
-            
+
             {/* Column 2: Canvas Size */}
             <div className="flex flex-col md:w-1/2 items-center text-center">
               <div className="mb-2">
                 {(() => {
                   const canvasSizes = [
-                    { id: '1080x1080', label: 'Square', size: '1080x1080' },
-                    { id: '1080x1920', label: 'Portrait Tall', size: '1080x1920' },
-                    { id: '1080x1350', label: 'Portrait', size: '1080x1350' },
-                    { id: '1280x720', label: 'Landscape', size: '1280x720' },
+                    { id: '1080x1080', label: t('step_two.square', 'Square'), size: '1080x1080' },
+                    { id: '1080x1920', label: t('step_two.portrait_tall', 'Portrait Tall'), size: '1080x1920' },
+                    { id: '1080x1350', label: t('step_two.portrait', 'Portrait'), size: '1080x1350' },
+                    { id: '1280x720', label: t('step_two.landscape', 'Landscape'), size: '1280x720' },
                   ];
                   // Use the canvas size value directly as the ID
                   const item = canvasSizes.find(c => c.id === initialData.canvas_size);
@@ -919,8 +921,8 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
                   return (
                     <div className="flex flex-col items-center">
                       <div className="w-8 h-8 border-2 border-dashed border-gray-200 rounded-sm mb-2 flex items-center justify-center text-xs text-gray-400">?</div>
-                      <span className="font-semibold text-xs text-gray-400">Unknown</span>
-                      <span className="text-xs text-gray-400">{initialData.canvas_size || 'Not specified'}</span>
+                      <span className="font-semibold text-xs text-gray-400">{t('step_two.unknown', 'Unknown')}</span>
+                      <span className="text-xs text-gray-400">{initialData.canvas_size || t('step_two.not_specified', 'Not specified')}</span>
                     </div>
                   );
                 })()}
@@ -946,27 +948,27 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
           <div className="lg:col-span-6 space-y-6">
             <div className="bg-card p-6 rounded-xl overflow-hidden h-full">
               {/* Section Title */}
-              <h3 className="text-lg font-medium mb-4">Campaign Details</h3>
+              <h3 className="text-lg font-medium mb-4">{t('step_two.campaign_details', 'Campaign Details')}</h3>
               {/* Website URL input field */}
               <div className="mb-6">
                 <label
                   htmlFor={websiteUrlId}
                   className="block text-sm font-medium mb-2"
                 >
-                  Website URL
+                  {t('step_two.website_url', 'Website URL')}
                 </label>
                 <Input
                   id={websiteUrlId}
                   type="url"
-                  placeholder="Enter your website URL"
+                  placeholder={t('step_two.enter_website_url', 'Enter your website URL')}
                   value={websiteUrl}
                   onChange={handleWebsiteUrlChange}
                 />
               </div>
               {/* Brand Color Input */}
               <div className="w-full mb-6">
-                <h3 className="text-sm font-medium mb-2">Brand Color</h3>
-                <p className="text-xs text-muted-foreground mb-3">Enter a hex color that represents your brand identity</p>
+                <h3 className="text-sm font-medium mb-2">{t('step_two.brand_color', 'Brand Color')}</h3>
+                <p className="text-xs text-muted-foreground mb-3">{t('step_two.enter_hex_color', 'Enter a hex color that represents your brand identity')}</p>
                 <div>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -975,19 +977,19 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
                     <Input
                       id={brandColorId}
                       type="text"
-                      placeholder="Enter hex color (e.g. FF5500)"
+                      placeholder={t('step_two.enter_hex_color_example', 'Enter hex color (e.g. FF5500)')}
                       value={selectedColor.replace('#', '')}
                       onChange={handleColorChange}
                       className={`pl-6 ${colorError ? 'border-red-500' : ''}`}
                     />
                   </div>
                   {colorError && (
-                    <p className="text-xs text-red-500 mt-1">Please enter a valid hex color code (e.g. FF5500)</p>
+                    <p className="text-xs text-red-500 mt-1">{t('step_two.enter_valid_hex_color', 'Please enter a valid hex color code (e.g. FF5500)')}</p>
                   )}
                   {selectedColor && !colorError && (
                     <div className="mt-2 flex items-center gap-2">
-                      <div 
-                        className="h-6 w-6 rounded-md border" 
+                      <div
+                        className="h-6 w-6 rounded-md border"
                         style={{ backgroundColor: selectedColor }}
                       />
                       <span className="text-xs">{selectedColor}</span>
@@ -997,13 +999,13 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
               </div>
               {/* Key Benefits Input Section */}
               <div className="w-full">
-                <h3 className="text-sm font-medium mb-2">Key Benefits</h3>
-                <p className="text-xs text-muted-foreground mb-3">Add the key benefits of your product or service</p>
+                <h3 className="text-sm font-medium mb-2">{t('step_two.key_benefits', 'Key Benefits')}</h3>
+                <p className="text-xs text-muted-foreground mb-3">{t('step_two.add_key_benefits', 'Add the key benefits of your product or service')}</p>
                 <div>
                   <Input
                     id={keyBenefitsId}
                     type="text"
-                    placeholder="E.g. Fast delivery, 24/7 support..."
+                    placeholder={t('step_two.key_benefits_example', 'E.g. Fast delivery, 24/7 support...')}
                     value={keyBenefits}
                     onChange={handleKeyBenefitsChange}
                   />

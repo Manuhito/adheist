@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { AlertNotification } from '../../components/ui/alert-notification';
 import { Button } from '../../shadcn/components/ui/button';
 import { Card } from '../../shadcn/components/ui/card';
+import { useTranslation } from '../../lib/useTranslation';
 
 // Componente personalizado para mensajes de alerta con color personalizado
 const ColoredAlertMessage = ({ message, color }) => {
@@ -9,6 +10,7 @@ const ColoredAlertMessage = ({ message, color }) => {
 };
 
 const ProfileForm = ({ userData, formData, currentTz, now }) => {
+  const { t } = useTranslation();
   // Inicializar el estado del formulario con los valores del usuario
   const initialState = {
     email: userData.email || '',
@@ -106,7 +108,7 @@ const ProfileForm = ({ userData, formData, currentTz, now }) => {
     
     // Indicador visual de carga
     if (uploadLabel) {
-      uploadLabel.innerHTML = '<span class="pg-icon"><i class="fa fa-refresh"></i></span><span>Uploading...</span>';
+      uploadLabel.innerHTML = `<span class="pg-icon"><i class="fa fa-refresh"></i></span><span>${t('profile.uploading', 'Uploading...')}</span>`;
       uploadLabel.classList.add('is-active');
     }
 
@@ -126,7 +128,7 @@ const ProfileForm = ({ userData, formData, currentTz, now }) => {
         // Mostrar mensaje de éxito como alerta con texto verde
         setAlertInfo({
           show: true,
-          message: <ColoredAlertMessage message={text || 'Image uploaded successfully!'} color="emerald" />,
+          message: <ColoredAlertMessage message={text || t('profile.image_success', 'Image uploaded successfully!')} color="emerald" />,
           variant: 'success'
         });
         // Restaurar el botón a su estado original
@@ -155,7 +157,7 @@ const ProfileForm = ({ userData, formData, currentTz, now }) => {
       // Mostrar mensaje de error como alerta
       setAlertInfo({
         show: true,
-        message: 'Error uploading image. Please try again.',
+        message: t('profile.image_error', 'Error uploading image. Please try again.'),
         variant: 'error'
       });
       // Restaurar el botón a su estado original
@@ -197,7 +199,7 @@ const ProfileForm = ({ userData, formData, currentTz, now }) => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                Change Picture
+                {t('profile.change_picture', 'Change Picture')}
               </a>
             </label>
             <input 
@@ -211,7 +213,7 @@ const ProfileForm = ({ userData, formData, currentTz, now }) => {
         </div>
       </div>
       <div className="pg-column">
-        <h2 className="pg-subtitle">My Details</h2>
+        <h2 className="pg-subtitle">{t('profile.my_details', 'My Details')}</h2>
         {message && (
           <div className={`alert ${message.type === 'success' ? 'alert-success' : 'alert-error'} mb-4`}>
             {message.text}
@@ -219,7 +221,7 @@ const ProfileForm = ({ userData, formData, currentTz, now }) => {
         )}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-1" htmlFor="email">Email</label>
+            <label className="block text-sm font-medium mb-1" htmlFor="email">{t('profile.email', 'Email')}</label>
             <input
               id="email"
               name="email"
@@ -231,13 +233,13 @@ const ProfileForm = ({ userData, formData, currentTz, now }) => {
             />
             {userData.emailaddress_set?.count > 1 && (
               <div className="pg-help">
-                <a href="/accounts/email/" className="link">Manage email addresses</a>
+                <a href="/accounts/email/" className="link">{t('profile.manage_emails', 'Manage email addresses')}</a>
               </div>
             )}
           </div>
           
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-1" htmlFor="first_name">First Name</label>
+            <label className="block text-sm font-medium mb-1" htmlFor="first_name">{t('profile.first_name', 'First Name')}</label>
             <input
               id="first_name"
               name="first_name"
@@ -249,7 +251,7 @@ const ProfileForm = ({ userData, formData, currentTz, now }) => {
           </div>
           
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-1" htmlFor="last_name">Last Name</label>
+            <label className="block text-sm font-medium mb-1" htmlFor="last_name">{t('profile.last_name', 'Last Name')}</label>
             <input
               id="last_name"
               name="last_name"
@@ -262,7 +264,7 @@ const ProfileForm = ({ userData, formData, currentTz, now }) => {
           
           {formData.fields?.language?.choices && (
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-1" htmlFor="language">Language</label>
+              <label className="block text-sm font-medium mb-1" htmlFor="language">{t('profile.language', 'Language')}</label>
               <select
                 id="language"
                 name="language"
@@ -278,7 +280,7 @@ const ProfileForm = ({ userData, formData, currentTz, now }) => {
           )}
           
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-1" htmlFor="timezone">Time Zone</label>
+            <label className="block text-sm font-medium mb-1" htmlFor="timezone">{t('profile.time_zone', 'Time Zone')}</label>
             <select
               id="timezone"
               name="timezone"
@@ -292,9 +294,9 @@ const ProfileForm = ({ userData, formData, currentTz, now }) => {
             </select>
             <div className="pg-help text-sm mt-1">
               {userData.timezone ? (
-                <>Your current timezone is {userData.timezone}, where it is {now}.</>
+                <>{t('profile.current_timezone', 'Your current timezone is {timezone}, where it is {now}.', { timezone: userData.timezone, now: now })}</>
               ) : (
-                <>You have not set a timezone, and are using the system timezone of {currentTz} where it is {now}.</>
+                <>{t('profile.no_timezone', 'You have not set a timezone, and are using the system timezone of {currentTz} where it is {now}.', { currentTz: currentTz, now: now })}</>
               )}
             </div>
           </div>
@@ -305,7 +307,7 @@ const ProfileForm = ({ userData, formData, currentTz, now }) => {
               className="pg-button-primary" 
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Saving...' : 'Save'}
+              {isSubmitting ? t('profile.saving', 'Saving...') : t('profile.save', 'Save')}
             </Button>
           </div>
         </form>

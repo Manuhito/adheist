@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Check } from 'lucide-react';
+import { useTranslation } from '../../lib/useTranslation';
 
 /**
  * MediaItem component renders an image with optional selection indicator
@@ -34,6 +35,7 @@ const MediaItem = ({ item, className, onClick, isSelected }) => {
  * Includes company information and tags
  */
 const GalleryModal = ({ selectedItem, isOpen, onClose, onSelect }) => {
+    const { t } = useTranslation();
     if (!isOpen) return null;
 
     const handleBackdropClick = (e) => {
@@ -82,13 +84,13 @@ const GalleryModal = ({ selectedItem, isOpen, onClose, onSelect }) => {
                     {/* Details */}
                     <div className="md:w-1/3 p-4 overflow-y-auto">
                         <div className="mb-4">
-                            <h4 className="font-medium text-muted-foreground">Company</h4>
+                            <h4 className="font-medium text-muted-foreground">{t('bento_gallery.company', 'Company')}</h4>
                             <p className="text-lg font-semibold">{selectedItem.title}</p>
                         </div>
 
                         {selectedItem.industry && (
                             <div className="mb-4">
-                                <h4 className="font-medium text-muted-foreground">Industry</h4>
+                                <h4 className="font-medium text-muted-foreground">{t('bento_gallery.industry', 'Industry')}</h4>
                                 <div className="flex flex-wrap gap-2 mt-1">
                                     {selectedItem.industry.split(', ').map((ind, i) => (
                                         <span
@@ -104,7 +106,7 @@ const GalleryModal = ({ selectedItem, isOpen, onClose, onSelect }) => {
 
                         {selectedItem.desc && (
                             <div className="mb-4">
-                                <h4 className="font-medium text-muted-foreground">Tags</h4>
+                                <h4 className="font-medium text-muted-foreground">{t('bento_gallery.tags', 'Tags')}</h4>
                                 <div className="flex flex-wrap gap-2 mt-1">
                                     {selectedItem.desc.split(', ').map((tag, i) => (
                                         <span
@@ -122,7 +124,7 @@ const GalleryModal = ({ selectedItem, isOpen, onClose, onSelect }) => {
                             onClick={() => onSelect(selectedItem)}
                             className="w-full mt-4 py-2 px-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors"
                         >
-                            Select This Ad Style
+                            {t('bento_gallery.select_style', 'Select This Ad Style')}
                         </button>
                     </div>
                 </div>
@@ -142,6 +144,7 @@ const InteractiveBentoGallery = ({
     onItemSelect,
     selectedItemId
 }) => {
+    const { t } = useTranslation();
     const [selectedItem, setSelectedItem] = useState(null);
     const [selectedAdStyle, setSelectedAdStyle] = useState(null);
 
@@ -188,7 +191,7 @@ const InteractiveBentoGallery = ({
                         />
                     </div>
                     <div className="flex-1">
-                        <h3 className="font-medium">Selected Style: {selectedAdStyle.title}</h3>
+                        <h3 className="font-medium">{t('bento_gallery.selected_style', 'Selected Style: {style}', { style: selectedAdStyle.title })}</h3>
                         <p className="text-sm text-muted-foreground">{selectedAdStyle.desc}</p>
                     </div>
                     <button

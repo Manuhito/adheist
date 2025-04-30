@@ -4,6 +4,7 @@ import { useImageUpload } from "../../lib/hooks/use-image-upload";
 import { ImagePlus, X, Upload, Trash2 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { Button } from "./button";
+import { useTranslation } from "../../lib/useTranslation";
 
 export function ImageUpload({ 
   onUpload, 
@@ -14,6 +15,7 @@ export function ImageUpload({
   initialImage = null,
   ...props 
 }) {
+  const { t } = useTranslation();
   const {
     previewUrl,
     fileName,
@@ -99,7 +101,7 @@ export function ImageUpload({
           <div className="text-center">
             <p className="text-sm font-medium">{customPlaceholderText}</p>
             <p className="text-xs text-muted-foreground">
-              or drag and drop file here
+              {t('image_upload.drag_drop', 'or drag and drop file here')}
             </p>
           </div>
         </div>

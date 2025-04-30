@@ -13,10 +13,12 @@
 
 {% block extra_js %}
 {{ block.super }}
+<script>
+  window.__BLOG_POST_DATA__ = {{ page|serialize_blog_post|safe }};
+</script>
 <script src="{% static 'js/blog-post-bundle.js' %}"></script>
 {% endblock %}
 
 {% block content %}
-{{ page|serialize_blog_post|json_script:"blogPostData" }}
-<div id="blog-post-root"></div>
+<!-- Dejamos el bloque de contenido vacío para que el componente React se monte en page-content-mount -->
 {% endblock %}

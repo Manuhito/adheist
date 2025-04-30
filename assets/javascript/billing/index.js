@@ -1,7 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { PricingSection } from './components/blocks/pricing-section';
-import { InvoiceSection } from './components/sections/invoice-section';
+import { BillingPage } from './page';
 
 // Helper to get CSRF token from cookie
 function getCookie(name) {
@@ -50,10 +49,13 @@ async function handleCreatePaymentIntent(priceId) {
   }
 }
 
-// Wait for DOM to be ready
+/**
+ * Mount the React application to the DOM when the document is loaded
+ * Following the same pattern as create-adrequest.jsx
+ */
 document.addEventListener('DOMContentLoaded', () => {
   const container = document.getElementById('pricing-section-container');
-
+  
   if (container) {
     // Get pricing data from window object
     const pricingData = window.__PRICING_DATA__ || {
@@ -132,25 +134,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       ]
     };
-
-    // Verificar si el usuario tiene una suscripción activa
-    const hasActiveSubscription = pricingData.tiers.some(tier => tier.is_current_plan);
-    console.log("Has active subscription:", hasActiveSubscription);
     
+    // Create root and render component
     const root = createRoot(container);
     root.render(
-      <div>
-        <PricingSection
-          title={pricingData.title}
-          subtitle={pricingData.subtitle}
-          tiers={pricingData.tiers}
-          frequencies={pricingData.frequencies}
-          onSubscribe={handleCreatePaymentIntent}
-        />
-        
-        {/* Solo mostrar la sección de facturas si el usuario tiene una suscripción activa */}
-        {hasActiveSubscription && <InvoiceSection />}
-      </div>
+      <BillingPage 
+        pricingData={pricingData} 
+        onSubscribe={handleCreatePaymentIntent} 
+      />
     );
+  } else {
+    console.error('Could not find mount point for Billing page');
   }
 });

@@ -6,6 +6,16 @@ import { siteConfig } from "@/lib/config";
 import { formatDate } from "@/lib/utils";
 import { Image } from "@/components/common/index";
 import React, { Suspense } from "react";
+import { useTranslation } from "@/lib/useTranslation";
+
+// Definir la interfaz para window con nuestra propiedad personalizada
+interface CustomWindow extends Window {
+  __TRANSLATIONS__?: Record<string, string>;
+  baseLayoutReady?: boolean;
+}
+
+// Asignar el tipo personalizado a window
+declare const window: CustomWindow;
 
 interface Post {
   metadata: {
@@ -24,6 +34,7 @@ interface BlogPostProps {
 }
 
 export default function BlogPost({ post }: BlogPostProps) {
+  const { t } = useTranslation();
   return (
     <section id="blog">
       <script
@@ -78,7 +89,17 @@ export default function BlogPost({ post }: BlogPostProps) {
                 dateTime={post.metadata.publishedAt}
                 className="text-sm text-gray-500"
               >
-                {formatDate(post.metadata.publishedAt)}
+                {formatDate(
+                  post.metadata.publishedAt, 
+                  navigator.language, 
+                  {
+                    today: t('today', 'Today'),
+                    days_ago: t('days_ago', 'd ago'),
+                    weeks_ago: t('weeks_ago', 'w ago'),
+                    months_ago: t('months_ago', 'mo ago'),
+                    years_ago: t('years_ago', 'y ago')
+                  }
+                )}
               </time>
             </div>
           </Suspense>

@@ -11,7 +11,8 @@ import { Card } from "@/components/ui/card"
 export function PricingCard({
   tier,
   paymentFrequency,
-  onSubscribe
+  onSubscribe,
+  t
 }) {
   const price = tier.price[paymentFrequency]
   const isHighlighted = tier.highlighted
@@ -37,11 +38,11 @@ export function PricingCard({
             variant={isHighlighted ? "secondary" : "outline"} 
             className="mt-1 z-10"
           >
-            Current Plan
+            {t('pricing.current_plan', 'Current Plan')}
           </Badge>
         ) : isPopular && (
           <Badge variant="secondary" className="mt-1 z-10">
-            🔥 Most Popular
+            {t('pricing.most_popular', '🔥 Most Popular')}
           </Badge>
         )}
       </h2>
@@ -57,7 +58,7 @@ export function PricingCard({
               value={price}
               className="text-4xl font-medium" />
             <p className="-mt-2 text-xs text-muted-foreground">
-              Per month
+              {t('pricing.per_month', 'Per month')}
             </p>
           </>
         ) : (
@@ -86,7 +87,7 @@ export function PricingCard({
         onClick={() => onSubscribe && onSubscribe(priceId)}
         disabled={!onSubscribe || !priceId || isCurrentPlan}
       >
-        {isCurrentPlan ? "Current Plan" : tier.cta}
+        {isCurrentPlan ? t('pricing.current_plan', 'Current Plan') : tier.cta}
         {!isCurrentPlan && <ArrowRight className="ml-2 h-4 w-4" />}
       </Button>
     </Card>

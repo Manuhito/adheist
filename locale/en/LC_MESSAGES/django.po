@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-03 12:12+0000\n"
+"POT-Creation-Date: 2025-04-30 09:17+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -12,21 +12,53 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-msgid ""
-"Sorry, that page requires an active subscription. You've been redirected."
+#: adheist/settings.py:276 apps/web/context_processors.py:63
+msgid "English"
 msgstr ""
 
-msgid ""
-"Sorry, that page requires a higher subscription tier. Upgrade your plan to "
-"continue."
+#: adheist/settings.py:277 apps/web/context_processors.py:64
+msgid "French"
 msgstr ""
 
+#: adheist/settings.py:278 apps/web/context_processors.py:65
+msgid "Spanish"
+msgstr ""
+
+#: adheist/settings.py:405
+msgid "AdHeist"
+msgstr ""
+
+#: adheist/settings.py:407
+msgid "AdHeist description"
+msgstr ""
+
+#: apps/subscriptions/decorators.py:43
+#, python-brace-format
+msgid "Sorry, but you don't have access to that. {details}"
+msgstr ""
+
+#: apps/subscriptions/feature_gating.py:19
+msgid "Couldn't find a model to check for a valid subscription."
+msgstr ""
+
+#: apps/subscriptions/feature_gating.py:22
+msgid "No active subscription was found."
+msgstr ""
+
+#: apps/subscriptions/feature_gating.py:30
+msgid "Your current plan does not support that."
+msgstr ""
+
+#: apps/subscriptions/forms.py:13
+#: templates/subscriptions/components/subscription_details.html:58
 msgid "Product"
 msgstr ""
 
+#: apps/subscriptions/helpers.py:113
 msgid "Whoops, we couldn't find a subscription associated with your account!"
 msgstr ""
 
+#: apps/subscriptions/metadata.py:87
 #, python-brace-format
 msgid ""
 "Unable to select a \"{interval}\" plan for {self.product}. Have you setup "
@@ -35,375 +67,1224 @@ msgid ""
 "apps/subscriptions/metadata.py"
 msgstr ""
 
+#: apps/subscriptions/metadata.py:151
 msgid "Annual"
 msgstr ""
 
+#: apps/subscriptions/metadata.py:152
 msgid "Monthly"
 msgstr ""
 
+#: apps/subscriptions/metadata.py:153
 msgid "Weekly"
 msgstr ""
 
+#: apps/subscriptions/metadata.py:154
 msgid "Daily"
 msgstr ""
 
+#: apps/subscriptions/metadata.py:155 apps/web/context_processors.py:147
 msgid "Custom"
 msgstr ""
 
+#: apps/subscriptions/metadata.py:160
 msgid "You're getting two months free by choosing an Annual plan!"
 msgstr ""
 
+#: apps/subscriptions/metadata.py:161
 msgid "Upgrade to annual pricing to get two free months."
 msgstr ""
 
+#: apps/subscriptions/metadata.py:162
 msgid "Good choice!"
 msgstr ""
 
-msgid "Starter"
-msgstr ""
-
-msgid "For hobbyists and side-projects"
-msgstr ""
-
-msgid "Up to 100 Widgets"
-msgstr ""
-
-msgid "Unlimited Widget Editing"
-msgstr ""
-
-msgid "Standard"
-msgstr ""
-
-msgid "For small businesses and teams"
-msgstr ""
-
-msgid "Up to 500 Widgets"
-msgstr ""
-
-msgid "Advanced Widget Editing Features"
-msgstr ""
-
-msgid "Premium"
-msgstr ""
-
-msgid "Unlimited Widgets"
-msgstr ""
-
-msgid "All Features"
-msgstr ""
-
-msgid "Priority Support and Training"
-msgstr ""
-
+#: apps/subscriptions/metadata.py:233
 #, python-brace-format
 msgid "No Product with ID \"{product_meta.stripe_id}\" found! "
 msgstr ""
 
+#: apps/subscriptions/metadata.py:252
 msgid ""
 "It looks like you do not have any Products in your database. In order to use "
 "subscriptions you first have to setup Stripe billing and sync it with your "
 "local data."
 msgstr ""
 
+#: apps/subscriptions/models.py:28
 msgid "The associated Stripe Subscription object, if it exists"
 msgstr ""
 
+#: apps/subscriptions/models.py:32
 msgid "Updated every time an event that might trigger billing happens."
 msgstr ""
 
+#: apps/subscriptions/models.py:35
 msgid "Used for determining when to next sync with Stripe."
 msgstr ""
 
-#, python-brace-format
-msgid "Subscription | {team}"
+#: apps/subscriptions/views/views.py:93
+msgid "Subscription"
 msgstr ""
 
-#, python-brace-format
-msgid "Subscription Demo | {team}"
+#: apps/subscriptions/views/views.py:137
+msgid "Subscription Demo"
 msgstr ""
 
+#: apps/subscriptions/views/views.py:156
 msgid "Successfully recorded {} units for metered billing."
 msgstr ""
 
+#: apps/subscriptions/views/views.py:165
 msgid ""
 "It looks like you don't have any metered subscriptions set up. Sign up for a "
 "subscription with metered usage to use this UI."
 msgstr ""
 
+#: apps/subscriptions/wrappers.py:54
 msgid "Multiple Products"
 msgstr ""
 
+#: apps/subscriptions/wrappers.py:64
 #, python-brace-format
 msgid "Every {interval}"
 msgstr ""
 
+#: apps/subscriptions/wrappers.py:66
 #, python-brace-format
 msgid "Every {count} {interval}s"
 msgstr ""
 
-msgid "Team Name (Optional)"
-msgstr ""
-
-msgid ""
-"That invitation could not be found. Please double check your invitation link "
-"or sign in to continue."
-msgstr ""
-
-msgid ""
-"It looks like that invitation link has expired. Please request a new "
-"invitation or sign in to continue."
-msgstr ""
-
-msgid ""
-"You must sign up with the email address that the invitation was sent to."
-msgstr ""
-
-msgid "Team Name"
-msgstr ""
-
-msgid "Team ID"
-msgstr ""
-
-msgid "Your team name."
-msgstr ""
-
-msgid "A unique ID for your team. No spaces are allowed!"
-msgstr ""
-
-msgid ""
-"There is already a pending invitation for {}. You can resend it by clicking "
-"\"Resend Invitation\"."
-msgstr ""
-
-msgid "My Team"
-msgstr ""
-
-msgid "You're invited to {}!"
-msgstr ""
-
-msgid "Team"
-msgstr ""
-
-msgid "Activate this flag for these teams."
-msgstr ""
-
-msgid "Updating team membership must be done through the team object!"
-msgstr ""
-
-msgid "Manage Teams"
-msgstr ""
-
-msgid "Team details saved!"
-msgstr ""
-
-#, python-brace-format
-msgid "My Team | {team}"
-msgstr ""
-
-msgid "Create Team"
-msgstr ""
-
-#, python-brace-format
-msgid "The \"{team}\" team was successfully deleted"
-msgstr ""
-
-#, python-brace-format
-msgid ""
-"It looks like you're already a member of {team}. You've been redirected."
-msgstr ""
-
-msgid "Please log in again to accept your invitation."
-msgstr ""
-
-msgid "Sorry, it looks like that invitation link has expired."
-msgstr ""
-
-msgid "You successfully joined {}"
-msgstr ""
-
-msgid "Sorry, you don't have permission to access that page."
-msgstr ""
-
-msgid "You don't have permission to edit team members in that team."
-msgstr ""
-
-msgid "You aren't allowed to change your own role."
-msgstr ""
-
-#, python-brace-format
-msgid "Role for {member} updated."
-msgstr ""
-
-msgid "You don't have permission to remove others from that team."
-msgstr ""
-
-msgid ""
-"You cannot remove the only administrator from a team. Make another team "
-"member an administrator and try again."
-msgstr ""
-
-#, python-brace-format
-msgid "{member} was removed from {team}."
-msgstr ""
-
-#, python-brace-format
-msgid "Example App | {team}"
-msgstr ""
-
+#: apps/users/forms.py:51 apps/web/context_processors.py:184
 msgid "Email"
 msgstr ""
 
+#: apps/users/forms.py:52 apps/web/context_processors.py:66
+#: apps/web/context_processors.py:188
 msgid "Language"
 msgstr ""
 
+#: apps/users/forms.py:53 apps/web/context_processors.py:189
+msgid "Time Zone"
+msgstr ""
+
+#: apps/users/forms.py:85
+msgid "Terms and Conditions"
+msgstr ""
+
+#: apps/users/forms.py:87
+#, python-brace-format
+msgid "I agree to the {terms_link}"
+msgstr ""
+
+#: apps/users/helpers.py:35
+#, python-brace-format
+msgid "Please upload a valid image file! Supported types are {types}"
+msgstr ""
+
+#: apps/users/helpers.py:43
+#, python-brace-format
+msgid "Maximum file size allowed is 5 MB. Provided file is {size} MB."
+msgstr ""
+
+#: apps/users/views.py:68
+msgid "A confirmation email has been sent to your new email address."
+msgstr ""
+
+#: apps/users/views.py:82 apps/users/views.py:118
 msgid "Profile successfully saved."
 msgstr ""
 
+#: apps/users/views.py:193 apps/web/context_processors.py:56
+#: apps/web/context_processors.py:161
+#: templates/web/components/app_nav_menu_items.html:37
 msgid "Profile"
 msgstr ""
 
+#: apps/users/views.py:206
 msgid "Success!"
 msgstr ""
 
+#: apps/utils/timezones.py:42
+msgid "Not Set"
+msgstr ""
+
+#: apps/web/context_processors.py:54 apps/web/context_processors.py:93
+#: apps/web/context_processors.py:165
+msgid "Login"
+msgstr ""
+
+#: apps/web/context_processors.py:55 apps/web/context_processors.py:164
+msgid "Log out"
+msgstr ""
+
+#: apps/web/context_processors.py:57 apps/web/context_processors.py:162
+msgid "Billing"
+msgstr ""
+
+#: apps/web/context_processors.py:58 apps/web/context_processors.py:163
+msgid "Theme"
+msgstr ""
+
+#: apps/web/context_processors.py:59 apps/web/context_processors.py:160
+msgid "Upgrade"
+msgstr ""
+
+#: apps/web/context_processors.py:60 apps/web/context_processors.py:105
+#: apps/web/context_processors.py:159 templates/web/components/top_nav.html:23
+#: templates/web/components/top_nav.html:37
+msgid "Blog"
+msgstr ""
+
+#: apps/web/context_processors.py:67
+msgid "Change language"
+msgstr ""
+
+#: apps/web/context_processors.py:70 templates/account/login.html:17
+msgid "Seconds to Sign up"
+msgstr ""
+
+#: apps/web/context_processors.py:71 templates/account/login.html:20
+#: templates/account/signup.html:25
+msgid "Get 5 Free Backlinks"
+msgstr ""
+
+#: apps/web/context_processors.py:72 templates/account/login.html:36
+#: templates/web/components/top_nav.html:48
+msgid "Sign In"
+msgstr ""
+
+#: apps/web/context_processors.py:73 templates/account/login.html:47
+msgid "Mail me a sign-in code"
+msgstr ""
+
+#: apps/web/context_processors.py:76 templates/account/signup.html:22
+msgid "Create your account"
+msgstr ""
+
+#: apps/web/context_processors.py:77 templates/account/signup.html:49
+#: templates/socialaccount/signup.html:6 templates/socialaccount/signup.html:9
+#: templates/socialaccount/signup.html:21
+#: templates/web/components/top_nav.html:45
+msgid "Sign Up"
+msgstr ""
+
+#: apps/web/context_processors.py:78 templates/account/signup.html:57
+msgid "Already have account?"
+msgstr ""
+
+#: apps/web/context_processors.py:79 templates/account/signup.html:59
+msgid "Go to sign in."
+msgstr ""
+
+#: apps/web/context_processors.py:82
+msgid "Articles"
+msgstr ""
+
+#: apps/web/context_processors.py:83
+msgid "Latest news and updates from"
+msgstr ""
+
+#: apps/web/context_processors.py:86
+msgid "Today"
+msgstr ""
+
+#: apps/web/context_processors.py:87
+msgid "d ago"
+msgstr ""
+
+#: apps/web/context_processors.py:88
+msgid "w ago"
+msgstr ""
+
+#: apps/web/context_processors.py:89
+msgid "mo ago"
+msgstr ""
+
+#: apps/web/context_processors.py:90
+msgid "y ago"
+msgstr ""
+
+#: apps/web/context_processors.py:94
+msgid "Get Started for Free"
+msgstr ""
+
+#: apps/web/context_processors.py:97
+msgid "Copyright ©"
+msgstr ""
+
+#: apps/web/context_processors.py:98
+msgid "Privacy Policy"
+msgstr ""
+
+#: apps/web/context_processors.py:99
+msgid "Terms of Service"
+msgstr ""
+
+#: apps/web/context_processors.py:102
+msgid "Features"
+msgstr ""
+
+#: apps/web/context_processors.py:103
+msgid "Solutions"
+msgstr ""
+
+#: apps/web/context_processors.py:104
+#: templates/subscriptions/components/subscription_details.html:54
+msgid "Pricing"
+msgstr ""
+
+#: apps/web/context_processors.py:106
+msgid "AI-Powered Automation"
+msgstr ""
+
+#: apps/web/context_processors.py:107
+msgid "Task Automation"
+msgstr ""
+
+#: apps/web/context_processors.py:108
+msgid "Workflow Optimization"
+msgstr ""
+
+#: apps/web/context_processors.py:109
+msgid "Intelligent Scheduling"
+msgstr ""
+
+#: apps/web/context_processors.py:112
+msgid "Pricing Plans"
+msgstr ""
+
+#: apps/web/context_processors.py:113
+msgid "Choose the perfect plan for your needs"
+msgstr ""
+
+#: apps/web/context_processors.py:114
+msgid "monthly"
+msgstr ""
+
+#: apps/web/context_processors.py:115
+msgid "yearly"
+msgstr ""
+
+#: apps/web/context_processors.py:116
+msgid "Free"
+msgstr ""
+
+#: apps/web/context_processors.py:117
+msgid "Starter"
+msgstr ""
+
+#: apps/web/context_processors.py:118
+msgid "Pro"
+msgstr ""
+
+#: apps/web/context_processors.py:119
+msgid "Team"
+msgstr ""
+
+#: apps/web/context_processors.py:120
+msgid "Enterprise"
+msgstr ""
+
+#: apps/web/context_processors.py:121
+msgid "Basic features for individuals"
+msgstr ""
+
+#: apps/web/context_processors.py:122
+msgid "Advanced features for professionals"
+msgstr ""
+
+#: apps/web/context_processors.py:123
+msgid "For teams and businesses"
+msgstr ""
+
+#: apps/web/context_processors.py:124
+msgid "For large organizations"
+msgstr ""
+
+#: apps/web/context_processors.py:125
+msgid "3 ad requests per month"
+msgstr ""
+
+#: apps/web/context_processors.py:126
+msgid "Basic templates"
+msgstr ""
+
+#: apps/web/context_processors.py:127
+msgid "Standard support"
+msgstr ""
+
+#: apps/web/context_processors.py:128
+msgid "20 ad requests per month"
+msgstr ""
+
+#: apps/web/context_processors.py:129
+msgid "Premium templates"
+msgstr ""
+
+#: apps/web/context_processors.py:130
+msgid "Priority support"
+msgstr ""
+
+#: apps/web/context_processors.py:131 apps/web/context_processors.py:135
+msgid "Custom branding"
+msgstr ""
+
+#: apps/web/context_processors.py:132
+msgid "50 ad requests per month"
+msgstr ""
+
+#: apps/web/context_processors.py:133
+msgid "All premium templates"
+msgstr ""
+
+#: apps/web/context_processors.py:134
+msgid "24/7 support"
+msgstr ""
+
+#: apps/web/context_processors.py:136
+msgid "Team collaboration"
+msgstr ""
+
+#: apps/web/context_processors.py:137
+msgid "Unlimited ad requests"
+msgstr ""
+
+#: apps/web/context_processors.py:138
+msgid "Custom templates"
+msgstr ""
+
+#: apps/web/context_processors.py:139
+msgid "Dedicated support"
+msgstr ""
+
+#: apps/web/context_processors.py:140
+msgid "API access"
+msgstr ""
+
+#: apps/web/context_processors.py:141
+msgid "Advanced analytics"
+msgstr ""
+
+#: apps/web/context_processors.py:142
+msgid "Get Started"
+msgstr ""
+
+#: apps/web/context_processors.py:143
+msgid "Upgrade to Starter"
+msgstr ""
+
+#: apps/web/context_processors.py:144
+msgid "Upgrade to Pro"
+msgstr ""
+
+#: apps/web/context_processors.py:145
+msgid "Upgrade to Team"
+msgstr ""
+
+#: apps/web/context_processors.py:146
+msgid "Contact Sales"
+msgstr ""
+
+#: apps/web/context_processors.py:148
+msgid "Current Plan"
+msgstr ""
+
+#: apps/web/context_processors.py:149
+msgid "🔥 Most Popular"
+msgstr ""
+
+#: apps/web/context_processors.py:150
+msgid "Per month"
+msgstr ""
+
+#: apps/web/context_processors.py:153
+msgid "Error creating payment intent: "
+msgstr ""
+
+#: apps/web/context_processors.py:154
+msgid "Unknown error"
+msgstr ""
+
+#: apps/web/context_processors.py:155
+msgid "Network error: "
+msgstr ""
+
+#: apps/web/context_processors.py:156
+msgid "Has active subscription:"
+msgstr ""
+
+#: apps/web/context_processors.py:168
+msgid "No library"
+msgstr ""
+
+#: apps/web/context_processors.py:169 apps/web/context_processors.py:256
+#: templates/ads/adlibrary_form.html:40
+msgid "Industries"
+msgstr ""
+
+#: apps/web/context_processors.py:170
+msgid "No associated industries"
+msgstr ""
+
+#: apps/web/context_processors.py:171
+msgid "View details"
+msgstr ""
+
+#: apps/web/context_processors.py:172
 #, python-brace-format
 msgid ""
-"API Key created. Your key is: {key}. Save this somewhere safe - you will "
-"only see it once!"
+"This ad request is currently in {status} status. Please wait for it to be "
+"processed."
 msgstr ""
 
+#: apps/web/context_processors.py:173
+msgid "Error creating ad request. Please try again."
+msgstr ""
+
+#: apps/web/context_processors.py:174
+msgid ""
+"Your ad request has been processed successfully! Your ad is being generated "
+"and may take a few minutes to be available."
+msgstr ""
+
+#: apps/web/context_processors.py:175
+msgid "Create New Ad Request"
+msgstr ""
+
+#: apps/web/context_processors.py:178
+msgid "Error: Profile data not available"
+msgstr ""
+
+#: apps/web/context_processors.py:179
+msgid "Uploading..."
+msgstr ""
+
+#: apps/web/context_processors.py:180
+msgid "Image uploaded successfully!"
+msgstr ""
+
+#: apps/web/context_processors.py:181
+msgid "Error uploading image. Please try again."
+msgstr ""
+
+#: apps/web/context_processors.py:182
+#: templates/account/components/profile_form.html:10
+msgid "Change Picture"
+msgstr ""
+
+#: apps/web/context_processors.py:183
+#: templates/account/components/profile_form.html:18
+msgid "My Details"
+msgstr ""
+
+#: apps/web/context_processors.py:185
+#: templates/account/components/profile_form.html:23
+msgid "Manage email addresses"
+msgstr ""
+
+#: apps/web/context_processors.py:186
+msgid "First Name"
+msgstr ""
+
+#: apps/web/context_processors.py:187
+msgid "Last Name"
+msgstr ""
+
+#: apps/web/context_processors.py:190
+#, python-brace-format
+msgid "Your current timezone is {timezone}, where it is {now}."
+msgstr ""
+
+#: apps/web/context_processors.py:191
 #, python-brace-format
 msgid ""
-"API Key {key} has been revoked. It can no longer be used to access the site."
+"You have not set a timezone, and are using the system timezone of "
+"{currentTz} where it is {now}."
 msgstr ""
 
+#: apps/web/context_processors.py:192
+msgid "Saving..."
+msgstr ""
+
+#: apps/web/context_processors.py:193
+#: templates/account/components/profile_form.html:43
+#: templates/ads/adlibrary_form.html:69
+msgid "Save"
+msgstr ""
+
+#: apps/web/context_processors.py:196 templates/account/components/2fa.html:3
+msgid "Two-Factor Auth"
+msgstr ""
+
+#: apps/web/context_processors.py:197 templates/account/components/2fa.html:5
+msgid "You already have two-factor authentication enabled."
+msgstr ""
+
+#: apps/web/context_processors.py:198 templates/account/components/2fa.html:6
+msgid "Configure"
+msgstr ""
+
+#: apps/web/context_processors.py:199 templates/account/components/2fa.html:9
+msgid "You do not have two-factor authentication enabled."
+msgstr ""
+
+#: apps/web/context_processors.py:200 templates/account/components/2fa.html:10
+msgid "Enable"
+msgstr ""
+
+#: apps/web/context_processors.py:201 templates/account/components/2fa.html:12
 msgid ""
-"Teams are enabled but you have no teams. Create a team below to access the "
-"rest of the dashboard."
+"To set up two-factor authentication you must first verify your email address."
 msgstr ""
 
+#: apps/web/context_processors.py:202 templates/account/components/2fa.html:13
+msgid "Verify"
+msgstr ""
+
+#: apps/web/context_processors.py:205
+#: templates/account/components/social/social_accounts.html:3
+msgid "Connected Accounts"
+msgstr ""
+
+#: apps/web/context_processors.py:206
+#: templates/account/components/social/social_accounts.html:29
+msgid "You haven't linked any social accounts yet. Create one below."
+msgstr ""
+
+#: apps/web/context_processors.py:207
+msgid "Manage Accounts"
+msgstr ""
+
+#: apps/web/context_processors.py:208
+msgid "Add a Password"
+msgstr ""
+
+#: apps/web/context_processors.py:211
+msgid "Create Ad Request"
+msgstr ""
+
+#: apps/web/context_processors.py:212
+msgid "Delete Ad Request"
+msgstr ""
+
+#: apps/web/context_processors.py:213
+msgid ""
+"Are you sure you want to permanently delete this ad request? This action "
+"cannot be undone."
+msgstr ""
+
+#: apps/web/context_processors.py:214
+msgid "Cancel"
+msgstr ""
+
+#: apps/web/context_processors.py:215
+msgid "Delete"
+msgstr ""
+
+#: apps/web/context_processors.py:216
+msgid "Select Ad Style"
+msgstr ""
+
+#: apps/web/context_processors.py:217
+msgid "Configure Ad"
+msgstr ""
+
+#: apps/web/context_processors.py:218
+msgid "Review & Submit"
+msgstr ""
+
+#: apps/web/context_processors.py:219 apps/web/context_processors.py:367
+msgid "No ad request ID available"
+msgstr ""
+
+#: apps/web/context_processors.py:220
+msgid "Failed to delete ad request"
+msgstr ""
+
+#: apps/web/context_processors.py:223
+msgid "Please select both an ad style and canvas size"
+msgstr ""
+
+#: apps/web/context_processors.py:224
+msgid "Failed to update ad request"
+msgstr ""
+
+#: apps/web/context_processors.py:225
+msgid "Failed to create ad request"
+msgstr ""
+
+#: apps/web/context_processors.py:226
+msgid "An unexpected error occurred"
+msgstr ""
+
+#: apps/web/context_processors.py:227 apps/web/context_processors.py:243
+msgid "Company"
+msgstr ""
+
+#: apps/web/context_processors.py:228
+msgid "Clear filters"
+msgstr ""
+
+#: apps/web/context_processors.py:229
+msgid "Select Your Ideal Ad Style"
+msgstr ""
+
+#: apps/web/context_processors.py:230
+msgid "Browse and choose the ad style that best matches your desired outcome"
+msgstr ""
+
+#: apps/web/context_processors.py:231
+msgid "Select a canvas size to proceed"
+msgstr ""
+
+#: apps/web/context_processors.py:232 apps/web/context_processors.py:269
+#: apps/web/context_processors.py:349
+msgid "Square"
+msgstr ""
+
+#: apps/web/context_processors.py:233 apps/web/context_processors.py:271
+#: apps/web/context_processors.py:351
+msgid "Portrait"
+msgstr ""
+
+#: apps/web/context_processors.py:234 apps/web/context_processors.py:272
+#: apps/web/context_processors.py:352
+msgid "Landscape"
+msgstr ""
+
+#: apps/web/context_processors.py:235
+msgid "Please select an image and canvas size"
+msgstr ""
+
+#: apps/web/context_processors.py:236
+msgid "No ad examples found. Try adjusting your filters."
+msgstr ""
+
+#: apps/web/context_processors.py:239
+#: templates/web/components/paginator.html:18
+#: templates/web/components/paginator.html:22
+#: templates/web/components/paginator.html:74
+#: templates/web/components/paginator.html:81
+msgid "Next"
+msgstr ""
+
+#: apps/web/context_processors.py:240
+msgid "Updating..."
+msgstr ""
+
+#: apps/web/context_processors.py:244
+msgid "Industry"
+msgstr ""
+
+#: apps/web/context_processors.py:245 apps/web/context_processors.py:260
+#: templates/ads/adlibrary_form.html:49
+msgid "Tags"
+msgstr ""
+
+#: apps/web/context_processors.py:246
+msgid "Select This Ad Style"
+msgstr ""
+
+#: apps/web/context_processors.py:247
 #, python-brace-format
-msgid "{team} Dashboard"
+msgid "Selected Style: {style}"
 msgstr ""
 
+#: apps/web/context_processors.py:250
+msgid "Select Company"
+msgstr ""
+
+#: apps/web/context_processors.py:251
+msgid "Search company..."
+msgstr ""
+
+#: apps/web/context_processors.py:252
+msgid "Loading companies..."
+msgstr ""
+
+#: apps/web/context_processors.py:253
+msgid "No companies found."
+msgstr ""
+
+#: apps/web/context_processors.py:257
+msgid "Select industries"
+msgstr ""
+
+#: apps/web/context_processors.py:258
+msgid "Loading industries..."
+msgstr ""
+
+#: apps/web/context_processors.py:259
+msgid "No industries available"
+msgstr ""
+
+#: apps/web/context_processors.py:261
+msgid "Select tags"
+msgstr ""
+
+#: apps/web/context_processors.py:262
+msgid "Loading tags..."
+msgstr ""
+
+#: apps/web/context_processors.py:263
+msgid "No tags available"
+msgstr ""
+
+#: apps/web/context_processors.py:266 apps/web/context_processors.py:341
+msgid "Summary"
+msgstr ""
+
+#: apps/web/context_processors.py:267 apps/web/context_processors.py:342
+msgid "Loading..."
+msgstr ""
+
+#: apps/web/context_processors.py:268 apps/web/context_processors.py:343
+msgid "No image"
+msgstr ""
+
+#: apps/web/context_processors.py:270 apps/web/context_processors.py:350
+msgid "Portrait Tall"
+msgstr ""
+
+#: apps/web/context_processors.py:273 apps/web/context_processors.py:353
+msgid "Unknown"
+msgstr ""
+
+#: apps/web/context_processors.py:274 apps/web/context_processors.py:354
+msgid "Not specified"
+msgstr ""
+
+#: apps/web/context_processors.py:275
+msgid "Campaign Details"
+msgstr ""
+
+#: apps/web/context_processors.py:276
+msgid "Website URL"
+msgstr ""
+
+#: apps/web/context_processors.py:277
+msgid "Enter your website URL"
+msgstr ""
+
+#: apps/web/context_processors.py:278
+msgid "Brand Color"
+msgstr ""
+
+#: apps/web/context_processors.py:279
+msgid "Enter a hex color that represents your brand identity"
+msgstr ""
+
+#: apps/web/context_processors.py:280
+msgid "Enter hex color (e.g. FF5500)"
+msgstr ""
+
+#: apps/web/context_processors.py:281
+msgid "Please enter a valid hex color code (e.g. FF5500)"
+msgstr ""
+
+#: apps/web/context_processors.py:282
+msgid "Key Benefits"
+msgstr ""
+
+#: apps/web/context_processors.py:283
+msgid "Add the key benefits of your product or service"
+msgstr ""
+
+#: apps/web/context_processors.py:284
+msgid "E.g. Fast delivery, 24/7 support..."
+msgstr ""
+
+#: apps/web/context_processors.py:287
+msgid "Product Type"
+msgstr ""
+
+#: apps/web/context_processors.py:288
+msgid "Upload images for your product or service"
+msgstr ""
+
+#: apps/web/context_processors.py:289
+msgid "Physical Product"
+msgstr ""
+
+#: apps/web/context_processors.py:290
+msgid "Tangible items that can be photographed"
+msgstr ""
+
+#: apps/web/context_processors.py:291
+msgid "Software / Service"
+msgstr ""
+
+#: apps/web/context_processors.py:292
+msgid "Digital products or services with screenshots"
+msgstr ""
+
+#: apps/web/context_processors.py:293
+msgid "OR"
+msgstr ""
+
+#: apps/web/context_processors.py:296
+msgid "Product Images"
+msgstr ""
+
+#: apps/web/context_processors.py:297
+msgid ""
+"Upload high-quality images of your physical product to showcase in your ad"
+msgstr ""
+
+#: apps/web/context_processors.py:298
+msgid "Primary Product"
+msgstr ""
+
+#: apps/web/context_processors.py:299
+msgid "Front view or main product shot"
+msgstr ""
+
+#: apps/web/context_processors.py:300
+msgid "Add primary image"
+msgstr ""
+
+#: apps/web/context_processors.py:301
+msgid "Secondary Product"
+msgstr ""
+
+#: apps/web/context_processors.py:302
+msgid "Side view or product in use"
+msgstr ""
+
+#: apps/web/context_processors.py:303
+msgid "Add secondary image"
+msgstr ""
+
+#: apps/web/context_processors.py:306
+msgid "App Screenshots"
+msgstr ""
+
+#: apps/web/context_processors.py:307
+msgid ""
+"Upload high-quality screenshots of your software to showcase its features"
+msgstr ""
+
+#: apps/web/context_processors.py:308
+msgid "Main Interface"
+msgstr ""
+
+#: apps/web/context_processors.py:309
+msgid "Main screen or dashboard view"
+msgstr ""
+
+#: apps/web/context_processors.py:310
+msgid "Add main screenshot"
+msgstr ""
+
+#: apps/web/context_processors.py:311
+msgid "Feature Highlight"
+msgstr ""
+
+#: apps/web/context_processors.py:312
+msgid "Key feature or functionality in action"
+msgstr ""
+
+#: apps/web/context_processors.py:313
+msgid "Add feature screenshot"
+msgstr ""
+
+#: apps/web/context_processors.py:316
+msgid "Additional Marketing Materials"
+msgstr ""
+
+#: apps/web/context_processors.py:317
+msgid "Upload supplementary images to enhance your ad campaign (optional)"
+msgstr ""
+
+#: apps/web/context_processors.py:318
+msgid "Testimonial"
+msgstr ""
+
+#: apps/web/context_processors.py:319
+msgid "Customer review or testimonial"
+msgstr ""
+
+#: apps/web/context_processors.py:320
+msgid "Add image"
+msgstr ""
+
+#: apps/web/context_processors.py:321
+msgid "Product in Use"
+msgstr ""
+
+#: apps/web/context_processors.py:322
+msgid "Show your product in action"
+msgstr ""
+
+#: apps/web/context_processors.py:323
+msgid "Additional View"
+msgstr ""
+
+#: apps/web/context_processors.py:324
+msgid "Any other relevant image"
+msgstr ""
+
+#: apps/web/context_processors.py:327
+msgid "Company Branding"
+msgstr ""
+
+#: apps/web/context_processors.py:328
+msgid "Upload your company logo to enhance your ad campaign's brand identity"
+msgstr ""
+
+#: apps/web/context_processors.py:329
+msgid "Company Logo"
+msgstr ""
+
+#: apps/web/context_processors.py:330
+msgid "Upload a high-quality logo (PNG or SVG preferred)"
+msgstr ""
+
+#: apps/web/context_processors.py:331
+msgid "Add your company logo"
+msgstr ""
+
+#: apps/web/context_processors.py:334
+msgid "Back"
+msgstr ""
+
+#: apps/web/context_processors.py:335
+msgid "Going back..."
+msgstr ""
+
+#: apps/web/context_processors.py:338
+msgid "or drag and drop file here"
+msgstr ""
+
+#: apps/web/context_processors.py:344
+msgid "Ad Preview"
+msgstr ""
+
+#: apps/web/context_processors.py:345
+msgid "No name"
+msgstr ""
+
+#: apps/web/context_processors.py:346
+msgid "No brand color"
+msgstr ""
+
+#: apps/web/context_processors.py:347
+msgid "No company website"
+msgstr ""
+
+#: apps/web/context_processors.py:348
+msgid "No key benefits"
+msgstr ""
+
+#: apps/web/context_processors.py:355
+msgid "Product 1"
+msgstr ""
+
+#: apps/web/context_processors.py:356
+msgid "Product 2"
+msgstr ""
+
+#: apps/web/context_processors.py:357
+msgid "Service 1"
+msgstr ""
+
+#: apps/web/context_processors.py:358
+msgid "Service 2"
+msgstr ""
+
+#: apps/web/context_processors.py:359
+msgid "Marketing 1"
+msgstr ""
+
+#: apps/web/context_processors.py:360
+msgid "Marketing 2"
+msgstr ""
+
+#: apps/web/context_processors.py:361
+msgid "Marketing 3"
+msgstr ""
+
+#: apps/web/context_processors.py:362
+msgid "What message do you want to transmit or additional instructions?"
+msgstr ""
+
+#: apps/web/context_processors.py:363
+msgid "Write your prompt..."
+msgstr ""
+
+#: apps/web/context_processors.py:364
+msgid ""
+"Once submitted, your ad request will be processed. This may take a few "
+"minutes."
+msgstr ""
+
+#: apps/web/context_processors.py:365
+msgid "Generating..."
+msgstr ""
+
+#: apps/web/context_processors.py:366
+msgid "Generate"
+msgstr ""
+
+#: apps/web/context_processors.py:368
+msgid "CSRF token not found"
+msgstr ""
+
+#: apps/web/context_processors.py:369
+msgid "Failed to update status to SUBMITED"
+msgstr ""
+
+#: apps/web/context_processors.py:370
+msgid "Error updating status to SUBMITED:"
+msgstr ""
+
+#: apps/web/context_processors.py:371
+msgid "Error generating version"
+msgstr ""
+
+#: apps/web/context_processors.py:372
+msgid "Failed to submit ad request"
+msgstr ""
+
+#: apps/web/context_processors.py:373
+msgid "Failed to update status to DRAFT"
+msgstr ""
+
+#: templates/400.html:4
 msgid "Shucks. That was a bad request."
 msgstr ""
 
+#: templates/400.html:6 templates/500.html:6
 msgid ""
 "Please try again, and if you continue to get this message, contact support."
 msgstr ""
 
+#: templates/403.html:4
 msgid "Oops. You don't have permission to do that."
 msgstr ""
 
+#: templates/403.html:6
 msgid "If you think this is a mistake, contact support."
 msgstr ""
 
+#: templates/404.html:4
 msgid "Shucks. We couldn't find that."
 msgstr ""
 
+#: templates/404.html:6
 msgid ""
 "If you think this page should exist, double-check that you are signed in as "
 "the right person."
 msgstr ""
 
+#: templates/429.html:4
+msgid "Oops. Too many requests."
+msgstr ""
+
+#: templates/429.html:6
+msgid ""
+"Try that again in a few minutes, and if you continue to have problems, let "
+"us know."
+msgstr ""
+
+#: templates/500.html:4
 msgid "Shucks. That's an error."
 msgstr ""
 
-msgid "Two-Factor Auth"
+#: templates/account/account_inactive.html:4
+#: templates/account/account_inactive.html:7
+msgid "Account Inactive"
 msgstr ""
 
-msgid "You already have two-factor authentication enabled."
+#: templates/account/account_inactive.html:8
+msgid "This account is inactive."
 msgstr ""
 
-msgid "Configure"
+#: templates/account/components/profile_form.html:33
+#, python-format
+msgid ""
+"\n"
+"            Your current timezone is %(user_tz)s, where it is %(now)s.\n"
+"          "
 msgstr ""
 
-msgid "You do not have two-factor authentication enabled."
+#: templates/account/components/profile_form.html:37
+#, python-format
+msgid ""
+"\n"
+"            You have not set a timezone, and are using the system timezone "
+"of %(current_tz)s where it is %(now)s.\n"
+"          "
 msgstr ""
 
-msgid "Enable"
+#: templates/account/components/social/login_with_social_button.html:9
+msgid "Logo"
 msgstr ""
 
-msgid "API Keys"
+#: templates/account/components/social/login_with_social_button.html:10
+msgid "Continue with"
 msgstr ""
 
-msgid "Prefix"
+#: templates/account/components/social/social_buttons.html:5
+msgid "or"
 msgstr ""
 
-msgid "Created"
-msgstr ""
-
-msgid "Revoke"
-msgstr ""
-
-msgid "You haven't created any API keys yet. Create one below."
-msgstr ""
-
-msgid "New API Key"
-msgstr ""
-
-msgid "Change Picture"
-msgstr ""
-
-msgid "My Details"
-msgstr ""
-
-msgid "Save"
-msgstr ""
-
-msgid "Continue with Google"
-msgstr ""
-
-msgid "Continue with Twitter"
-msgstr ""
-
-msgid "Connected Accounts"
-msgstr ""
-
-msgid "You haven't linked any social accounts yet. Create one below."
-msgstr ""
-
+#: templates/account/email.html:4 templates/account/email.html:6
 msgid "E-mail Addresses"
 msgstr ""
 
+#: templates/account/email.html:8
 msgid "The following e-mail addresses are associated with your account:"
 msgstr ""
 
+#: templates/account/email.html:22
 msgid "Verified"
 msgstr ""
 
+#: templates/account/email.html:24
 msgid "Unverified"
 msgstr ""
 
+#: templates/account/email.html:26
 msgid "Primary"
 msgstr ""
 
+#: templates/account/email.html:32
 msgid "Make Primary"
 msgstr ""
 
+#: templates/account/email.html:33
 msgid "Re-send Verification"
 msgstr ""
 
+#: templates/account/email.html:34 templates/socialaccount/connections.html:32
 msgid "Remove"
 msgstr ""
 
+#: templates/account/email.html:40
 msgid "Warning:"
 msgstr ""
 
+#: templates/account/email.html:40
 msgid ""
 "You currently do not have any e-mail address set up. You should really add "
 "an e-mail address so you can receive notifications, reset your password, etc."
 msgstr ""
 
+#: templates/account/email.html:45
 msgid "Add E-mail Address"
 msgstr ""
 
+#: templates/account/email.html:50
 msgid "Add E-mail"
 msgstr ""
 
+#: templates/account/email.html:58
 msgid "Do you really want to remove the selected e-mail address?"
 msgstr ""
 
+#: templates/account/email/email_confirmation_message.html:3
 #, python-format
 msgid ""
 "\n"
@@ -411,9 +1292,12 @@ msgid ""
 "account.\n"
 msgstr ""
 
+#: templates/account/email/email_confirmation_message.html:7
+#: templates/account/email/email_confirmation_signup_message.html:8
 msgid "Confirm Email Address"
 msgstr ""
 
+#: templates/account/email/email_confirmation_signup_message.html:3
 #, python-format
 msgid ""
 "\n"
@@ -421,6 +1305,23 @@ msgid ""
 "  Click the confirmation link below to activate your account.\n"
 msgstr ""
 
+#: templates/account/email/login_code_message.html:5
+#, python-format
+msgid ""
+"\n"
+"      Your sign-in code for %(site_name)s is listed below. Please enter it "
+"in your open browser window.\n"
+"    "
+msgstr ""
+
+#: templates/account/email/login_code_message.html:11
+msgid ""
+"\n"
+"      This mail can be safely ignored if you did not initiate this action.\n"
+"    "
+msgstr ""
+
+#: templates/account/email/password_reset_key_message.html:3
 #, python-format
 msgid ""
 "\n"
@@ -428,9 +1329,12 @@ msgid ""
 "  If you didn't request this, you can safely ignore this email.\n"
 msgstr ""
 
+#: templates/account/email/password_reset_key_message.html:8
+#: templates/account/email/password_reset_key_subject.txt:3
 msgid "Reset Password"
 msgstr ""
 
+#: templates/account/email/password_reset_key_message.txt:1
 #, python-format
 msgid ""
 "Hello,\n"
@@ -442,6 +1346,7 @@ msgid ""
 "If you did not try to reset your password you can safely ignore this email.\n"
 msgstr ""
 
+#: templates/account/email/password_reset_key_message.txt:9
 #, python-format
 msgid ""
 "Thanks!\n"
@@ -449,9 +1354,11 @@ msgid ""
 "The %(site_name)s team\n"
 msgstr ""
 
+#: templates/account/email_confirm.html:5
 msgid "Confirm E-mail Address"
 msgstr ""
 
+#: templates/account/email_confirm.html:9
 #, python-format
 msgid ""
 "\n"
@@ -460,9 +1367,11 @@ msgid ""
 "    "
 msgstr ""
 
+#: templates/account/email_confirm.html:17
 msgid "Confirm"
 msgstr ""
 
+#: templates/account/email_confirm.html:23
 #, python-format
 msgid ""
 "\n"
@@ -472,44 +1381,50 @@ msgid ""
 "    "
 msgstr ""
 
-msgid "Sign In"
-msgstr ""
-
-msgid "or"
-msgstr ""
-
-msgid "Forgot password?"
-msgstr ""
-
+#: templates/account/logout.html:7
 msgid "Are you sure you want to sign out?"
 msgstr ""
 
+#: templates/account/logout.html:15
 msgid "Sign Out"
 msgstr ""
 
+#: templates/account/logout.html:20
 msgid "Home"
 msgstr ""
 
+#: templates/account/password_change.html:8
+#: templates/account/password_change.html:16
+#: templates/account/password_reset_from_key.html:5
+#: templates/account/password_reset_from_key.html:28
+#: templates/account/password_reset_from_key_done.html:4
+#: templates/web/components/app_nav_menu_items.html:44
 msgid "Change Password"
 msgstr ""
 
+#: templates/account/password_reset.html:7
+#: templates/account/password_reset_done.html:5
 msgid "Password Reset"
 msgstr ""
 
+#: templates/account/password_reset.html:11
 msgid ""
 "Forgot your password? Enter your e-mail address below, and we'll send you an "
 "e-mail allowing you to reset it."
 msgstr ""
 
+#: templates/account/password_reset.html:17
 msgid "Send Password Reset"
 msgstr ""
 
+#: templates/account/password_reset.html:20
 msgid ""
 "\n"
 "        Please contact us if you have any trouble resetting your password.\n"
 "      "
 msgstr ""
 
+#: templates/account/password_reset_done.html:10
 msgid ""
 "\n"
 "        We've sent you an e-mail. Please get in touch if you do not receive "
@@ -517,9 +1432,11 @@ msgid ""
 "        "
 msgstr ""
 
+#: templates/account/password_reset_from_key.html:5
 msgid "Bad Token"
 msgstr ""
 
+#: templates/account/password_reset_from_key.html:10
 msgid ""
 "\n"
 "        The password reset link was invalid, possibly because it has already "
@@ -527,6 +1444,7 @@ msgid ""
 "      "
 msgstr ""
 
+#: templates/account/password_reset_from_key.html:15
 #, python-format
 msgid ""
 "\n"
@@ -535,15 +1453,18 @@ msgid ""
 "      "
 msgstr ""
 
+#: templates/account/password_reset_from_key.html:32
 msgid "Your password is now changed."
 msgstr ""
 
+#: templates/account/password_reset_from_key_done.html:7
 msgid ""
 "\n"
 "            Your password has been changed.\n"
 "            "
 msgstr ""
 
+#: templates/account/password_reset_from_key_done.html:13
 #, python-format
 msgid ""
 "\n"
@@ -552,26 +1473,24 @@ msgid ""
 "            "
 msgstr ""
 
+#: templates/account/password_set.html:8 templates/account/password_set.html:14
 msgid "Set Password"
 msgstr ""
 
-#, python-format
-msgid ""
-"\n"
-"                    You're signing up to join \"%(team_name)s\" as "
-"\"%(email)s\".\n"
-"                    "
+#: templates/account/signup_closed.html:4
+#: templates/account/signup_closed.html:7
+msgid "Sign Up Closed"
 msgstr ""
 
-msgid "Already have account?"
+#: templates/account/signup_closed.html:8
+msgid "We are sorry, but the sign up is currently closed."
 msgstr ""
 
-msgid "Go to sign in."
-msgstr ""
-
+#: templates/account/verification_sent.html:4
 msgid "Verify Your E-mail Address"
 msgstr ""
 
+#: templates/account/verification_sent.html:6
 msgid ""
 "\n"
 "        We have sent an e-mail to you for verification.\n"
@@ -579,153 +1498,172 @@ msgid ""
 "        "
 msgstr ""
 
+#: templates/account/verification_sent.html:12
 msgid ""
 "\n"
 "        Please contact us if you do not receive it within a few minutes.\n"
 "        "
 msgstr ""
 
-msgid "Two-Factor Authentication"
+#: templates/ads/adlibrary_form.html:10 templates/ads/adlibrary_list.html:9
+msgid "ads"
 msgstr ""
 
-msgid "Verify"
+#: templates/ads/adlibrary_form.html:12
+msgid "AdLibraries"
 msgstr ""
 
-msgid "Two-Factor Authentication Backup Tokens"
-msgstr ""
-
-msgid ""
-"Backup tokens have been generated, but are not revealed here for security "
-"reasons. Press the button below to generate new ones."
-msgstr ""
-
-msgid ""
-"No backup tokens have been created. Press the button below to generate some."
-msgstr ""
-
-msgid "Generate backup tokens"
-msgstr ""
-
-msgid "Disable Two-Factor Authentication"
-msgstr ""
-
-msgid ""
-"Please enter a valid authentication token to disable two-factor "
-"authentication:"
-msgstr ""
-
-msgid "Disable Two-Factor"
-msgstr ""
-
-msgid "Setup Two-Factor Authentication"
-msgstr ""
-
-msgid "Step 1"
-msgstr ""
-
-msgid ""
-"Scan the QR code below with a token generator of your choice (e.g. <a href="
-"\"https://support.google.com/accounts/answer/1066447\" target=\"_blank"
-"\">Google Authenticator</a>)."
-msgstr ""
-
-msgid "Step 2"
-msgstr ""
-
-msgid "Input a token generated by the app:"
-msgstr ""
-
-msgid "Image Gallery"
-msgstr ""
-
-msgid "Add Employee"
-msgstr ""
-
-msgid "Name"
-msgstr ""
-
-msgid "Department"
-msgstr ""
-
-msgid "Salary"
-msgstr ""
-
+#: templates/ads/adlibrary_form.html:18
 msgid "Edit"
 msgstr ""
 
-msgid "Delete"
+#: templates/ads/adlibrary_form.html:20
+msgid "New"
 msgstr ""
 
-msgid "No Employees Yet!"
+#: templates/ads/adlibrary_form.html:27
+#, python-format
+msgid "Edit %(name)s"
 msgstr ""
 
-msgid "Create your first employee below to get started."
+#: templates/ads/adlibrary_form.html:29
+msgid "New AdLibrary"
 msgstr ""
 
-msgid "Create Employee"
+#: templates/ads/adlibrary_form.html:40 templates/ads/adlibrary_form.html:49
+msgid "Hold Ctrl/Cmd to select multiple"
 msgstr ""
 
+#: templates/ads/adlibrary_form.html:58
+msgid "Ad Image"
+msgstr ""
+
+#: templates/ads/adlibrary_form.html:62
+msgid "Current image:"
+msgstr ""
+
+#: templates/ads/adlibrary_list.html:10 templates/ads/adlibrary_list.html:14
+msgid "All AdLibraries"
+msgstr ""
+
+#: templates/ads/adlibrary_list.html:61
+msgid "There aren't any adlibraries! Add one below."
+msgstr ""
+
+#: templates/ads/adlibrary_list.html:67
+msgid "Add AdLibrary"
+msgstr ""
+
+#: templates/content/blog_page.html:30
+msgid "Image Gallery"
+msgstr ""
+
+#: templates/dashboard/user_dashboard.html:8
+#: templates/web/components/app_nav_menu_items.html:64
+msgid "Project Dashboard"
+msgstr ""
+
+#: templates/dashboard/user_dashboard.html:23
+msgid "User Signups (Daily)"
+msgstr ""
+
+#: templates/dashboard/user_dashboard.html:27
+msgid "Registered Users (Total)"
+msgstr ""
+
+#: templates/socialaccount/authentication_error.html:3
+msgid "Authentication Error"
+msgstr ""
+
+#: templates/socialaccount/authentication_error.html:11
+msgid "Social Network Login Failure"
+msgstr ""
+
+#: templates/socialaccount/authentication_error.html:12
+msgid ""
+"An error occurred while attempting to login via your social network account."
+msgstr ""
+
+#: templates/socialaccount/connections.html:3
+#: templates/socialaccount/connections.html:12
 msgid "Account Connections"
 msgstr ""
 
+#: templates/socialaccount/connections.html:11
 msgid "← Return to Profile"
 msgstr ""
 
+#: templates/socialaccount/connections.html:14
 msgid ""
 "You can sign in to your account using any of the following third party "
 "accounts:"
 msgstr ""
 
+#: templates/socialaccount/connections.html:37
 msgid ""
 "You currently have no social network accounts connected to this account."
 msgstr ""
 
+#: templates/socialaccount/connections.html:39
 msgid "Add a 3rd Party Account"
 msgstr ""
 
+#: templates/socialaccount/login.html:6
 #, python-format
 msgid "Connect %(provider)s"
 msgstr ""
 
+#: templates/socialaccount/login.html:8
 #, python-format
 msgid "You are about to connect a new third party account from %(provider)s."
 msgstr ""
 
+#: templates/socialaccount/login.html:10
 #, python-format
 msgid "Sign In Via %(provider)s"
 msgstr ""
 
+#: templates/socialaccount/login.html:12
 #, python-format
 msgid "You are about to sign in using a third party account from %(provider)s."
 msgstr ""
 
+#: templates/socialaccount/login.html:17
 msgid "Continue"
 msgstr ""
 
-msgid "Sign Up"
-msgstr ""
-
+#: templates/socialaccount/signup.html:11
 #, python-format
 msgid ""
 "You are about to use your %(provider_name)s account to login to\n"
 "%(site_name)s. As a final step, please complete the following form:"
 msgstr ""
 
+#: templates/subscriptions/components/subscription_details.html:16
+msgid "Trial Ends"
+msgstr ""
+
+#: templates/subscriptions/components/subscription_details.html:26
 msgid "Next Invoice"
 msgstr ""
 
+#: templates/subscriptions/components/subscription_details.html:31
 msgid "On"
 msgstr ""
 
+#: templates/subscriptions/components/subscription_details.html:33
 msgid "No further invoices"
 msgstr ""
 
+#: templates/subscriptions/components/subscription_details.html:39
 msgid "Renews"
 msgstr ""
 
+#: templates/subscriptions/components/subscription_details.html:45
 msgid "Off"
 msgstr ""
 
+#: templates/subscriptions/components/subscription_details.html:46
 #, python-format
 msgid ""
 "\n"
@@ -733,21 +1671,23 @@ msgid ""
 "          "
 msgstr ""
 
-msgid "Pricing"
-msgstr ""
-
+#: templates/subscriptions/components/subscription_details.html:59
 msgid "Price"
 msgstr ""
 
+#: templates/subscriptions/components/subscription_details.html:60
 msgid "Quantity"
 msgstr ""
 
+#: templates/subscriptions/components/subscription_details.html:68
 msgid "Varies with usage"
 msgstr ""
 
+#: templates/subscriptions/demo.html:44
 msgid "Metered Billing"
 msgstr ""
 
+#: templates/subscriptions/demo.html:48
 #, python-format
 msgid ""
 "\n"
@@ -757,6 +1697,7 @@ msgid ""
 "      "
 msgstr ""
 
+#: templates/subscriptions/demo.html:54
 msgid ""
 "\n"
 "        You aren't currently subscribed to a plan that supports metered "
@@ -770,9 +1711,11 @@ msgid ""
 "      "
 msgstr ""
 
+#: templates/subscriptions/metered_billing_demo.html:7
 msgid "Metered Billing Demo"
 msgstr ""
 
+#: templates/subscriptions/metered_billing_demo.html:10
 msgid ""
 "\n"
 "        Use the form below to add usage data for your metered subscription.\n"
@@ -781,288 +1724,81 @@ msgid ""
 "      "
 msgstr ""
 
+#: templates/subscriptions/metered_billing_demo.html:19
 msgid "Add Usage"
 msgstr ""
 
-msgid "Welcome!"
-msgstr ""
-
-msgid "Accept Invitation?"
-msgstr ""
-
-#, python-format
-msgid ""
-"\n"
-"            You've been invited to join %(team_name)s by %(by)s.\n"
-"            "
-msgstr ""
-
-#, python-format
-msgid ""
-"\n"
-"                  This invitation was sent to %(invite_email)s but you're "
-"logged in as %(user_email)s.\n"
-"                  What would you like to do?\n"
-"                  "
-msgstr ""
-
-msgid "Sign out"
-msgstr ""
-
-msgid "Create Account to Accept"
-msgstr ""
-
-msgid ""
-"Sorry, it looks like that invitation has already been accepted or expired."
-msgstr ""
-
-msgid ""
-"If you think this is a mistake, ask your team administrator to invite you "
-"again!"
-msgstr ""
-
-msgid "Resend Invitation"
-msgstr ""
-
-msgid "Cancel Invitation"
-msgstr ""
-
-msgid "Invite Team Members"
-msgstr ""
-
-msgid "Send Invitation"
-msgstr ""
-
-msgid "Pending Invitations"
-msgstr ""
-
-msgid "Invited"
-msgstr ""
-
-msgid "Role"
-msgstr ""
-
-msgid "Any pending invitations will show up here until accepted."
-msgstr ""
-
-msgid "My Teams"
-msgstr ""
-
-msgid "View Dashboard"
-msgstr ""
-
-msgid "View Details"
-msgstr ""
-
-msgid "Add Team"
-msgstr ""
-
-msgid "Nothing Here"
-msgstr ""
-
-msgid "No Teams Yet!"
-msgstr ""
-
-msgid "Create your first team below to get started."
-msgstr ""
-
-msgid "Team Details"
-msgstr ""
-
-msgid "Save Details"
-msgstr ""
-
-msgid "Team Members"
-msgstr ""
-
-msgid "Member"
-msgstr ""
-
-msgid "Danger Zone"
-msgstr ""
-
-msgid "Delete Team"
-msgstr ""
-
-msgid "Date Joined"
-msgstr ""
-
-msgid "Update Role"
-msgstr ""
-
-msgid "You are not allowed to modify your own role."
-msgstr ""
-
-msgid "Leave Team"
-msgstr ""
-
-msgid "Remove from Team"
-msgstr ""
-
+#: templates/web/app_home.html:8
 msgid "Fly Away!"
 msgstr ""
 
+#: templates/web/app_home.html:11
 msgid "You're Signed In!"
 msgstr ""
 
+#: templates/web/app_home.html:13
 msgid "This is your application's logged in home page."
 msgstr ""
 
-#, python-format
-msgid "You're logged into the \"%(team_name)s\" Team."
-msgstr ""
-
-msgid "Copyright"
-msgstr ""
-
-msgid "Create account"
-msgstr ""
-
-msgid "Really delete team?"
-msgstr ""
-
-msgid "Close"
-msgstr ""
-
-#, python-format
-msgid ""
-"\n"
-"        This will permanently delete the <em><strong>%(team_name)s</strong></"
-"em> team and all associated data.\n"
-"        "
-msgstr ""
-
-msgid "This action cannot be undone."
-msgstr ""
-
-msgid "I understand, permanently delete this team"
-msgstr ""
-
-msgid "Cancel"
-msgstr ""
-
-msgid "Leave team?"
-msgstr ""
-
-msgid "Remove team member?"
-msgstr ""
-
-#, python-format
-msgid ""
-"\n"
-"          You will be removed from the team: <em><strong>%(team_name)s</"
-"strong></em>.\n"
-"          After this, you will no longer be able to access any team pages, "
-"and will have to be invited again to regain access.\n"
-"          "
-msgstr ""
-
-#, python-format
-msgid ""
-"\n"
-"          This will remove <em><strong>%(member_name)s</strong></em> from "
-"your team: <em>%(team_name)s</em>.\n"
-"          They will no longer be able to access any team pages, and will "
-"have to be invited again to regain access.\n"
-"          "
-msgstr ""
-
-msgid "I understand, leave team"
-msgstr ""
-
-msgid "I understand, remove team member"
-msgstr ""
-
+#: templates/web/components/app_nav_menu_items.html:3
 msgid "Application"
 msgstr ""
 
+#: templates/web/components/app_nav_menu_items.html:8
 msgid "Dashboard"
 msgstr ""
 
+#: templates/web/components/app_nav_menu_items.html:20
+msgid "Shadcn Demo"
+msgstr ""
+
+#: templates/web/components/app_nav_menu_items.html:25
 msgid "My Account"
 msgstr ""
 
-msgid "Teams"
+#: templates/web/components/app_nav_menu_items.html:51
+msgid "Sign out"
 msgstr ""
 
-msgid "Example App"
-msgstr ""
-
-msgid "Subscription Demo"
-msgstr ""
-
-msgid "Subscription"
-msgstr ""
-
-msgid "Blog"
-msgstr ""
-
-msgid "Examples Gallery"
-msgstr ""
-
-msgid "Impersonate a User"
-msgstr ""
-
-#, python-format
-msgid ""
-"\n"
-"      This will permanently delete the <em><strong>%(team_name)s</strong></"
-"em> team and all associated data.\n"
-"      "
-msgstr ""
-
-#, python-format
-msgid ""
-"\n"
-"          You will be removed from the team: <em><strong>%(team_name)s</"
-"strong></em>.\n"
-"          After this, you will no longer be able to access any team pages, "
-"and will have to be invited again to regain access.\n"
-"        "
-msgstr ""
-
-#, python-format
-msgid ""
-"\n"
-"          This will remove <em><strong>%(member_name)s</strong></em> from "
-"your team: <em>%(team_name)s</em>.\n"
-"          They will no longer be able to access any team pages, and will "
-"have to be invited again to regain access.\n"
-"        "
-msgstr ""
-
-msgid "Don't have an account?"
-msgstr ""
-
-msgid "Enter your email and password to register"
-msgstr ""
-
-msgid "Terms and Conditions"
-msgstr ""
-
-msgid "Already have an account?"
-msgstr ""
-
-msgid "Account pages"
-msgstr ""
-
+#: templates/web/components/app_nav_menu_items.html:58
 msgid "Admin"
 msgstr ""
 
-msgid "Pegasus Examples"
+#: templates/web/components/footer.html:4
+msgid "Copyright"
 msgstr ""
 
+#: templates/web/components/footer.html:7
+msgid ""
+"🦄 Built with <a class=\"link\" href=\"https://www.saaspegasus.com/\" "
+"target=\"_blank\">SaaS Pegasus</a>"
+msgstr ""
+
+#: templates/web/components/hero.html:14
+msgid "Get started"
+msgstr ""
+
+#: templates/web/components/hero.html:15
+msgid "Sign in"
+msgstr ""
+
+#: templates/web/components/hero.html:19
+msgid " Fly Away!"
+msgstr ""
+
+#: templates/web/components/paginator.html:8
+#: templates/web/components/paginator.html:12
+#: templates/web/components/paginator.html:40
+#: templates/web/components/paginator.html:47
+msgid "Previous"
+msgstr ""
+
+#: templates/web/components/paginator.html:30
 #, python-format
 msgid ""
 "\n"
-"      This will permanently delete the <em><strong>%(team_name)s</strong></"
-"em> team and all associated data.\n"
-"      <strong>This action cannot be undone.</strong>\n"
-"      "
-msgstr ""
-
-msgid "English"
-msgstr ""
-
-msgid "French"
+"        Showing <span class=\"font-medium\">%(start)s</span> to <span "
+"class=\"font-medium\">%(end)s</span> of <span class=\"font-"
+"medium\">%(total)s</span> results\n"
+"        "
 msgstr ""

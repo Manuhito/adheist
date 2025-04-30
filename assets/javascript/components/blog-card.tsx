@@ -2,6 +2,7 @@ import * as React from "react";
 import { Post } from "@/lib/blog";
 import { formatDate, cn } from "@/lib/utils";
 import { Image, Link } from "@/components/common/index";
+import { useTranslation } from "@/lib/useTranslation";
 
 export default function BlogCard({
   data,
@@ -10,6 +11,7 @@ export default function BlogCard({
   data: Post;
   priority?: boolean;
 }) {
+  const { t } = useTranslation();
   return (
     <Link href={`/blog/${data.slug}`} className="block">
       <div className="bg-background rounded-lg p-4 mb-4 border hover:shadow-sm transition-shadow duration-200">
@@ -29,7 +31,17 @@ export default function BlogCard({
             dateTime={data.publishedAt}
             className="text-sm text-muted-foreground"
           >
-            {formatDate(data.publishedAt)}
+            {formatDate(
+              data.publishedAt,
+              navigator.language,
+              {
+                today: t('today', 'Today'),
+                days_ago: t('days_ago', 'd ago'),
+                weeks_ago: t('weeks_ago', 'w ago'),
+                months_ago: t('months_ago', 'mo ago'),
+                years_ago: t('years_ago', 'y ago')
+              }
+            )}
           </time>
         </p>
         <h3 className="text-xl font-semibold mb-2">{data.title}</h3>

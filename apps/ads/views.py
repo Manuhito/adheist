@@ -358,7 +358,7 @@ def home(request):
         # Create request data dictionary
         request_data = {
             'ad_request_id': req.id,
-            'ad_library_name': req.ad_library.company_name if req.ad_library else 'No library',
+            'ad_library_name': req.ad_library.company_name if req.ad_library else None,
             'status': req.status,
             'display_status': display_status,
             'created_at': req.created_at.isoformat() if req.created_at else None,

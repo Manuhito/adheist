@@ -1,10 +1,12 @@
 import React from 'react';
 import { Button } from '../../shadcn/components/ui/button';
+import { useTranslation } from '../../lib/useTranslation';
 
 const SocialAccounts = ({ socialAccounts, hasUsablePassword }) => {
+  const { t } = useTranslation();
   return (
     <>
-      <h2 className="pg-subtitle">Connected Accounts</h2>
+      <h2 className="pg-subtitle">{t('profile.connected_accounts', 'Connected Accounts')}</h2>
       {socialAccounts && socialAccounts.length > 0 ? (
         socialAccounts.map((account, index) => (
           <div className="mb-3" key={index}>
@@ -56,7 +58,7 @@ const SocialAccounts = ({ socialAccounts, hasUsablePassword }) => {
           </div>
         ))
       ) : (
-        <p className="mb-3">You haven't linked any social accounts yet. Create one below.</p>
+        <p className="mb-3">{t('profile.no_social_accounts', "You haven't linked any social accounts yet. Create one below.")}</p>
       )}
       
       <div className="flex gap-2">
@@ -65,7 +67,7 @@ const SocialAccounts = ({ socialAccounts, hasUsablePassword }) => {
           className="pg-button-secondary"
           onClick={() => window.location.href = '/accounts/social/connections/'}
         >
-          Manage Accounts
+          {t('profile.manage_accounts', 'Manage Accounts')}
         </Button>
         
         {!hasUsablePassword && (
@@ -74,7 +76,7 @@ const SocialAccounts = ({ socialAccounts, hasUsablePassword }) => {
             className="pg-button-secondary"
             onClick={() => window.location.href = '/accounts/password/set/'}
           >
-            Add a Password
+            {t('profile.add_password', 'Add a Password')}
           </Button>
         )}
       </div>

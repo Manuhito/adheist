@@ -8,9 +8,11 @@ import { buttonVariants } from "@/components/ui/button";
 import { siteConfig } from "@/lib/config";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
+import { useTranslation } from "@/lib/useTranslation";
 
 export default function Header() {
   const [addBorder, setAddBorder] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -54,7 +56,7 @@ export default function Header() {
                 href="/accounts/login"
                 className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
               >
-                Login
+                {t('login', 'Login')}
               </a>
               <a
                 href="/accounts/signup"
@@ -63,7 +65,7 @@ export default function Header() {
                   "text-background flex gap-2"
                 )}
               >
-                Get Started for Free
+                {t('get_started_free', 'Get Started for Free')}
               </a>
               <ThemeToggle />
             </div>

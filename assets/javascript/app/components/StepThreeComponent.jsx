@@ -3,12 +3,14 @@ import { NextButton } from '../../components/ui/next-button.jsx';
 import { BackButton } from '../../components/ui/back-button.jsx';
 import { Button } from '../../components/ui/button.tsx';
 import { Sparkles } from "lucide-react";
+import { useTranslation } from "../../lib/useTranslation";
 
 /**
  * Step Three Component for the Create Ad Request flow
  * Handles final submission of the ad request
  */
 const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
+  const { t } = useTranslation();
   const [isGenerating, setIsGenerating] = useState(false);
 
   // Helper: get adRequestData.id if present, else fallback to initialData.id
@@ -19,7 +21,7 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
   // Generate version handler
   const handleGenerateVersion = async () => {
     if (!adRequestId) {
-      console.error('No ad request ID available');
+      console.error(t('step_three.no_request_id', 'No ad request ID available'));
       return;
     }
     setIsGenerating(true);
@@ -31,7 +33,7 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
         .find(row => row.startsWith('csrftoken='))
         ?.split('=')[1];
       if (!csrfToken) {
-        console.error('CSRF token not found');
+        console.error(t('step_three.csrf_not_found', 'CSRF token not found'));
         setIsGenerating(false);
         return;
       }
@@ -44,10 +46,10 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
       });
       if (!statusResponse.ok) {
         const errorData = await statusResponse.json();
-        throw new Error(errorData.error || 'Failed to update status to SUBMITED');
+        throw new Error(errorData.error || t('step_three.update_status_failed', 'Failed to update status to SUBMITED'));
       }
     } catch (err) {
-      console.error('Error updating status to SUBMITED:', err);
+      console.error(t('step_three.update_status_error', 'Error updating status to SUBMITED:'), err);
       setIsGenerating(false);
       return;
     }
@@ -64,7 +66,7 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
       });
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.error || 'Error generating version');
+        throw new Error(data.error || t('step_three.generate_version_error', 'Error generating version'));
       }
       // Guardar flag para mostrar alert en la home y redirigir
       sessionStorage.setItem('ads_success_alert', '1');
@@ -136,7 +138,7 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to submit ad request');
+        throw new Error(data.error || t('step_three.submit_request_failed', 'Failed to submit ad request'));
       }
       
       // Call the onComplete callback with the updated data
@@ -174,7 +176,7 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to update status to DRAFT');
+        throw new Error(data.error || t('step_three.update_draft_failed', 'Failed to update status to DRAFT'));
       }
 
       if (onComplete) {
@@ -207,7 +209,7 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
   return (
     <div className="space-y-8">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-semibold mb-4">Summary</h2>
+        <h2 className="text-xl font-semibold mb-4">{t('step_three.summary', 'Summary')}</h2>
         
         {/* Summary of the ad request */}
         <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 rounded-md mb-6">
@@ -217,17 +219,17 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
               <div className="group relative w-32 h-32 rounded-lg overflow-hidden shadow border bg-white dark:bg-gray-800">
                 {isAdLibraryLoading ? (
-                  <div className="flex items-center justify-center w-full h-full text-gray-400 animate-pulse">Loading...</div>
+                  <div className="flex items-center justify-center w-full h-full text-gray-400 animate-pulse">{t('step_three.loading', 'Loading...')}</div>
                 ) : adLibraryData ? (
                   <>
                     <img
                       src={adLibraryData.ad_image || 'https://images.unsplash.com/photo-1557804506-669a67965ba0'}
-                      alt={adLibraryData.company_name || initialData.ad_library_name || 'Ad Preview'}
+                      alt={adLibraryData.company_name || initialData.ad_library_name || t('step_three.ad_preview', 'Ad Preview')}
                       className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
                     />
                     {/* Overlay info on hover */}
                     <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center items-center text-white p-2">
-                      <h4 className="text-sm font-semibold mb-1">{adLibraryData.company_name || initialData.ad_library_name || 'No name'}</h4>
+                      <h4 className="text-sm font-semibold mb-1">{adLibraryData.company_name || initialData.ad_library_name || t('step_three.no_name', 'No name')}</h4>
                       {adLibraryData.industries && adLibraryData.industries.length > 0 && (
                         <p className="text-xs mb-1 text-center">
                           {adLibraryData.industries.join(', ')}
@@ -239,7 +241,7 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
                     </div>
                   </>
                 ) : (
-                  <div className="flex items-center justify-center w-full h-full text-gray-400">No image</div>
+                  <div className="flex items-center justify-center w-full h-full text-gray-400">{t('step_three.no_image', 'No image')}</div>
                 )}
               </div>
             </div>
@@ -264,7 +266,7 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
                       </span>
                     </div>
                   ) : (
-                    <span className="text-xs text-gray-400">No brand color</span>
+                    <span className="text-xs text-gray-400">{t('step_three.no_brand_color', 'No brand color')}</span>
                   )}
                 </div>
                 {/* Company Website Display */}
@@ -279,7 +281,7 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
                       {initialData.asset_overrides.company_website}
                     </a>
                   ) : (
-                    <span className="text-xs text-gray-400">No company website</span>
+                    <span className="text-xs text-gray-400">{t('step_three.no_company_website', 'No company website')}</span>
                   )}
                 </div>
                 {/* Key Benefits Display */}
@@ -290,7 +292,7 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
                       {initialData.asset_overrides.key_benefits}
                     </span>
                   ) : (
-                    <span className="text-xs text-gray-400">No key benefits</span>
+                    <span className="text-xs text-gray-400">{t('step_three.no_key_benefits', 'No key benefits')}</span>
                   )}
                 </div>
                 {/* Canvas Size Display (vertical) */}
@@ -298,10 +300,10 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
                   {(() => {
                     const canvasSizes = [
-                      { id: '1080x1080', label: 'Square', size: '1080x1080' },
-                      { id: '1080x1920', label: 'Portrait Tall', size: '1080x1920' },
-                      { id: '1080x1350', label: 'Portrait', size: '1080x1350' },
-                      { id: '1280x720', label: 'Landscape', size: '1280x720' },
+                      { id: '1080x1080', label: t('step_three.square', 'Square'), size: '1080x1080' },
+                      { id: '1080x1920', label: t('step_three.portrait_tall', 'Portrait Tall'), size: '1080x1920' },
+                      { id: '1080x1350', label: t('step_three.portrait', 'Portrait'), size: '1080x1350' },
+                      { id: '1280x720', label: t('step_three.landscape', 'Landscape'), size: '1280x720' },
                     ];
                     // Use the canvas size value directly as the ID
                     const item = canvasSizes.find(c => c.id === initialData.canvas_size);
@@ -330,8 +332,8 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
                     return (
                       <div className="flex flex-col items-center">
                         <div className="w-8 h-8 border-2 border-dashed border-gray-200 rounded-sm mb-2 flex items-center justify-center text-xs text-gray-400">?</div>
-                        <span className="font-semibold text-xs text-gray-400">Unknown</span>
-                        <span className="text-xs text-gray-400">{initialData.canvas_size || 'Not specified'}</span>
+                        <span className="font-semibold text-xs text-gray-400">{t('step_three.unknown', 'Unknown')}</span>
+                        <span className="text-xs text-gray-400">{initialData.canvas_size || t('step_three.not_specified', 'Not specified')}</span>
                       </div>
                     );
                   })()}
@@ -364,10 +366,10 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
                 {/* Row 2: Product and Service Images */}
                 {(() => {
                   const productServiceImages = [
-                    { key: 'product_image_1_override', label: 'Product 1' },
-                    { key: 'product_image_2_override', label: 'Product 2' },
-                    { key: 'app_image_1_override', label: 'Service 1' },
-                    { key: 'app_image_2_override', label: 'Service 2' },
+                    { key: 'product_image_1_override', label: t('step_three.product_1', 'Product 1') },
+                    { key: 'product_image_2_override', label: t('step_three.product_2', 'Product 2') },
+                    { key: 'app_image_1_override', label: t('step_three.service_1', 'Service 1') },
+                    { key: 'app_image_2_override', label: t('step_three.service_2', 'Service 2') },
                   ].filter(img => initialData[img.key]);
                   
                   if (productServiceImages.length === 0) return null;
@@ -397,9 +399,9 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
                 {/* Row 3: Marketing Images */}
                 {(() => {
                   const marketingImages = [
-                    { key: 'marketing_image_1_override', label: 'Marketing 1' },
-                    { key: 'marketing_image_2_override', label: 'Marketing 2' },
-                    { key: 'marketing_image_3_override', label: 'Marketing 3' },
+                    { key: 'marketing_image_1_override', label: t('step_three.marketing_1', 'Marketing 1') },
+                    { key: 'marketing_image_2_override', label: t('step_three.marketing_2', 'Marketing 2') },
+                    { key: 'marketing_image_3_override', label: t('step_three.marketing_3', 'Marketing 3') },
                   ].filter(img => initialData[img.key]);
                   
                   if (marketingImages.length === 0) return null;
@@ -437,7 +439,7 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
       <div className="flex flex-col items-center justify-center mb-8">
         <div className="space-y-2 w-full min-w-[300px] max-w-2xl">
           <label htmlFor="user-prompt" className="block text-lg font-medium text-primary mb-2 text-center">
-            What message do you want to transmit or additional instructions?
+            {t('step_three.prompt_label', 'What message do you want to transmit or additional instructions?')}
           </label>
           <textarea
             id="user-prompt"
@@ -445,7 +447,7 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
             onChange={e => setUserPrompt(e.target.value)}
             rows={5}
             className="w-full min-h-[120px] rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 text-base text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 shadow-sm focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-200 dark:focus-visible:ring-blue-800 transition resize-y mb-2"
-            placeholder="Write your prompt..."
+            placeholder={t('step_three.prompt_placeholder', 'Write your prompt...')}
           />
           {/* Generate button moved to bottom */}
         </div>
@@ -460,7 +462,7 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
           </div>
           <div className="ml-3">
             <p className="text-sm text-blue-700">
-              Once submitted, your ad request will be processed. This may take a few minutes.
+              {t('step_three.processing_info', 'Once submitted, your ad request will be processed. This may take a few minutes.')}
             </p>
           </div>
         </div>
@@ -475,9 +477,9 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
           disabled={isGenerating}
         >
           {isGenerating ? (
-            <span className="flex items-center"><Sparkles className="w-4 h-4 mr-1 animate-spin text-yellow-400 dark:text-yellow-300" strokeWidth={2.2} /> Generating...</span>
+            <span className="flex items-center"><Sparkles className="w-4 h-4 mr-1 animate-spin text-yellow-400 dark:text-yellow-300" strokeWidth={2.2} /> {t('step_three.generating', 'Generating...')}</span>
           ) : (
-            <><Sparkles className="w-4 h-4 mr-1 text-yellow-400 dark:text-yellow-300 group-hover:text-yellow-500 transition-colors duration-200" strokeWidth={2.2} />Generate</>
+            <><Sparkles className="w-4 h-4 mr-1 text-yellow-400 dark:text-yellow-300 group-hover:text-yellow-500 transition-colors duration-200" strokeWidth={2.2} />{t('step_three.generate', 'Generate')}</>
           )}
         </Button>
       </div>
