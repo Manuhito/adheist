@@ -977,37 +977,21 @@ def billing_page(request):
         # Enterprise plan will be added manually
     }
     
-    # Initialize pricing data with Free plan
+    # Initialize pricing data without Free plan
     pricing_data = {
         "title": "Pricing Plans",
         "subtitle": "Choose the perfect plan for your needs",
         "frequencies": ["monthly", "yearly"],
-        "tiers": [
-            {
-                "name": "Free",
-                "description": "Basic features for individuals",
-                "price": {
-                    "monthly": 0,
-                    "yearly": 0
-                },
-                "features": [
-                    "3 ad requests per month",
-                    "Basic templates",
-                    "Standard support"
-                ],
-                "cta": "Get Started",
-                "highlighted": False,
-                "popular": False,
-                "is_current_plan": False
-            }
-        ]
+        "tiers": []
     }
     # Get current user's subscription plan ID if available
     current_plan_id = None
     current_plan_name = None
     
-    # Define the hierarchy of plans
+    # Define the hierarchy of plans (including Free for reference)
     tier_order = ["Free", "Starter", "Pro", "Enterprise"]
+    # Define the hierarchy of plans without Free for the billing page
+    tier_order_without_free = ["Starter", "Pro", "Enterprise"]
     
     if request.user.is_authenticated and request.user.has_active_subscription():
         current_plan_id = request.user.active_stripe_subscription.plan.product.id
@@ -1133,10 +1117,11 @@ def billing_page(request):
     }
     pricing_data["tiers"].append(enterprise_plan)
     
-    # Sort tiers in the correct order: Free, Starter, Pro, Enterprise
+    # Sort tiers in the correct order: Starter, Pro, Enterprise
+    tier_order_without_free = ["Starter", "Pro", "Enterprise"]
     pricing_data["tiers"] = sorted(
         pricing_data["tiers"], 
-        key=lambda x: tier_order.index(x["name"]) if x["name"] in tier_order else 999
+        key=lambda x: tier_order_without_free.index(x["name"]) if x["name"] in tier_order_without_free else 999
     )
         
     # Convert pricing data to JSON for the React component
