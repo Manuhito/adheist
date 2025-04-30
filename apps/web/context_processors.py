@@ -154,8 +154,27 @@ def translations(request):
             # Billing page translations
             'billing.error_creating_payment_intent': _('Error creating payment intent: '),
             'billing.unknown_error': _('Unknown error'),
-            'billing.network_error': _('Network error: '),
+            'billing.network_error': _('Network error'),
             'billing.has_active_subscription': _('Has active subscription:'),
+            
+            # Invoice section translations
+            'invoice.history_title': _('Invoice History'),
+            'invoice.history_description': _('Download your Stripe invoices for your financial records'),
+            'invoice.not_available': _('N/A'),
+            'invoice.unable_to_load': _('Unable to load invoices. Please try again later.'),
+            'invoice.retry': _('Retry'),
+            'invoice.no_invoices': _('No invoices available.'),
+            'invoice.column_number': _('Number'),
+            'invoice.column_date': _('Date'),
+            'invoice.column_total': _('Total'),
+            'invoice.column_status': _('Status'),
+            'invoice.column_actions': _('Actions'),
+            'invoice.download': _('Download'),
+            'invoice.refresh': _('Refresh'),
+            'invoice.status_paid': _('Paid'),
+            'invoice.status_pending': _('Pending'),
+            'invoice.status_void': _('Void'),
+            'invoice.status_draft': _('Draft'),
             
             # App header translations
             'app_header.blog': _('Blog'),

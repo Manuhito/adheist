@@ -5,11 +5,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Skeleton } from "../../shadcn/components/ui/skeleton";
 import { Badge } from "../../shadcn/components/ui/badge";
 import { CalendarIcon, DownloadIcon, RefreshCwIcon } from "lucide-react";
+import { useTranslation } from "../../lib/useTranslation";
 
 /**
  * Component for displaying and downloading Stripe invoices
  */
 export function InvoiceSection() {
+  const { t } = useTranslation();
   const [invoices, setInvoices] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -37,7 +39,7 @@ export function InvoiceSection() {
       setInvoices(data.invoices || []);
     } catch (err) {
       console.error('Error fetching invoices:', err);
-      setError('Unable to load invoices. Please try again later.');
+      setError(t('invoice.unable_to_load', 'Unable to load invoices. Please try again later.'));
     } finally {
       setIsLoading(false);
     }
@@ -50,9 +52,10 @@ export function InvoiceSection() {
 
   // Format date to a more readable format
   const formatDate = (timestamp) => {
-    if (!timestamp) return 'N/A';
+    if (!timestamp) return t('invoice.not_available', 'N/A');
     const date = new Date(timestamp * 1000);
-    return new Intl.DateTimeFormat('en-US', {
+    // Use the user's locale from the browser
+    return new Intl.DateTimeFormat(navigator.language || 'en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
@@ -61,12 +64,13 @@ export function InvoiceSection() {
 
   // Format currency amount
   const formatAmount = (amount, currency) => {
-    if (!amount) return 'N/A';
+    if (!amount) return t('invoice.not_available', 'N/A');
     
     // Convert from cents to dollars/euros
     const value = amount / 100;
     
-    return new Intl.NumberFormat('en-US', {
+    // Use the user's locale from the browser
+    return new Intl.NumberFormat(navigator.language || 'en-US', {
       style: 'currency',
       currency: currency || 'USD'
     }).format(value);
@@ -76,13 +80,13 @@ export function InvoiceSection() {
   const getStatusBadge = (status) => {
     switch (status) {
       case 'paid':
-        return <Badge className="bg-green-500">Paid</Badge>;
+        return <Badge className="bg-green-500">{t('invoice.status_paid', 'Paid')}</Badge>;
       case 'open':
-        return <Badge className="bg-yellow-500">Pending</Badge>;
+        return <Badge className="bg-yellow-500">{t('invoice.status_pending', 'Pending')}</Badge>;
       case 'void':
-        return <Badge className="bg-gray-500">Void</Badge>;
+        return <Badge className="bg-gray-500">{t('invoice.status_void', 'Void')}</Badge>;
       case 'draft':
-        return <Badge className="bg-blue-500">Draft</Badge>;
+        return <Badge className="bg-blue-500">{t('invoice.status_draft', 'Draft')}</Badge>;
       default:
         return <Badge>{status}</Badge>;
     }
@@ -91,9 +95,9 @@ export function InvoiceSection() {
   return (
     <Card className="w-full mt-8">
       <CardHeader>
-        <CardTitle className="text-2xl">Invoice History</CardTitle>
+        <CardTitle className="text-2xl">{t('invoice.history_title', 'Invoice History')}</CardTitle>
         <CardDescription>
-          Download your Stripe invoices for your financial records
+          {t('invoice.history_description', 'Download your Stripe invoices for your financial records')}
         </CardDescription>
       </CardHeader>
       
@@ -121,24 +125,24 @@ export function InvoiceSection() {
               onClick={fetchInvoices}
             >
               <RefreshCwIcon className="mr-2 h-4 w-4" />
-              Retry
+              {t('invoice.retry', 'Retry')}
             </Button>
           </div>
         ) : invoices.length === 0 ? (
           // No invoices message
           <div className="text-center py-6 text-gray-500">
-            <p>No invoices available.</p>
+            <p>{t('invoice.no_invoices', 'No invoices available.')}</p>
           </div>
         ) : (
           // Invoice table
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Number</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t('invoice.column_number', 'Number')}</TableHead>
+                <TableHead>{t('invoice.column_date', 'Date')}</TableHead>
+                <TableHead>{t('invoice.column_total', 'Total')}</TableHead>
+                <TableHead>{t('invoice.column_status', 'Status')}</TableHead>
+                <TableHead className="text-right">{t('invoice.column_actions', 'Actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -161,7 +165,7 @@ export function InvoiceSection() {
                       disabled={!invoice.invoice_pdf}
                     >
                       <DownloadIcon className="mr-2 h-4 w-4" />
-                      Download
+                      {t('invoice.download', 'Download')}
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -178,7 +182,7 @@ export function InvoiceSection() {
           disabled={isLoading}
         >
           <RefreshCwIcon className="mr-2 h-4 w-4" />
-          Refresh
+          {t('invoice.refresh', 'Refresh')}
         </Button>
       </CardFooter>
     </Card>

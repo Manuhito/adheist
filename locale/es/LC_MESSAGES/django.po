@@ -536,7 +536,75 @@ msgstr ""
 #, fuzzy
 #| msgid "No active subscription was found."
 msgid "Has active subscription:"
-msgstr "No se encontró ninguna suscripción activa."
+msgstr "Tiene suscripción activa:"
+
+#: apps/web/context_processors.py:158
+msgid "Invoice History"
+msgstr "Historial de Facturas"
+
+#: apps/web/context_processors.py:159
+msgid "Download your Stripe invoices for your financial records"
+msgstr "Descarga tus facturas de Stripe para tus registros financieros"
+
+#: apps/web/context_processors.py:160
+msgid "N/A"
+msgstr "N/D"
+
+#: apps/web/context_processors.py:161
+msgid "Unable to load invoices. Please try again later."
+msgstr "No se pudieron cargar las facturas. Por favor, inténtalo más tarde."
+
+#: apps/web/context_processors.py:162
+msgid "Retry"
+msgstr "Reintentar"
+
+#: apps/web/context_processors.py:163
+msgid "No invoices available."
+msgstr "No hay facturas disponibles."
+
+#: apps/web/context_processors.py:164
+msgid "Number"
+msgstr "Número"
+
+#: apps/web/context_processors.py:165
+msgid "Date"
+msgstr "Fecha"
+
+#: apps/web/context_processors.py:166
+msgid "Total"
+msgstr "Total"
+
+#: apps/web/context_processors.py:167
+msgid "Status"
+msgstr "Estado"
+
+#: apps/web/context_processors.py:168
+msgid "Actions"
+msgstr "Acciones"
+
+#: apps/web/context_processors.py:169
+msgid "Download"
+msgstr "Descargar"
+
+#: apps/web/context_processors.py:170
+msgid "Refresh"
+msgstr "Actualizar"
+
+#: apps/web/context_processors.py:171
+msgid "Paid"
+msgstr "Pagado"
+
+#: apps/web/context_processors.py:172
+msgid "Pending"
+msgstr "Pendiente"
+
+#: apps/web/context_processors.py:173
+msgid "Void"
+msgstr "Anulado"
+
+#: apps/web/context_processors.py:174
+msgid "Draft"
+msgstr "Borrador"
 
 #: apps/web/context_processors.py:168
 msgid "No library"
