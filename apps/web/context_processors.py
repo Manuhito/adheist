@@ -148,6 +148,14 @@ def translations(request):
             'pricing.current_plan': _('Current Plan'),
             'pricing.most_popular': _('🔥 Most Popular'),
             'pricing.per_month': _('Per month'),
+            'pricing.monthly': _('Monthly'),
+            'pricing.yearly': _('Yearly'),
+            
+            # Billing page translations
+            'billing.error_creating_payment_intent': _('Error creating payment intent: '),
+            'billing.unknown_error': _('Unknown error'),
+            'billing.network_error': _('Network error: '),
+            'billing.has_active_subscription': _('Has active subscription:'),
             
             # App header translations
             'app_header.blog': _('Blog'),

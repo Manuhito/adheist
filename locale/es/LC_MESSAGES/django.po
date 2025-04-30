@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-30 09:12+0000\n"
+"POT-Creation-Date: 2025-04-30 09:17+0000\n"
 "PO-Revision-Date: 2025-04-30 00:00+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Spanish <LL@li.org>\n"
@@ -173,16 +173,16 @@ msgstr "Cada {interval}"
 msgid "Every {count} {interval}s"
 msgstr "Cada {count} {interval}s"
 
-#: apps/users/forms.py:51 apps/web/context_processors.py:178
+#: apps/users/forms.py:51 apps/web/context_processors.py:184
 msgid "Email"
 msgstr "Correo electrónico"
 
 #: apps/users/forms.py:52 apps/web/context_processors.py:66
-#: apps/web/context_processors.py:182
+#: apps/web/context_processors.py:188
 msgid "Language"
 msgstr "Idioma"
 
-#: apps/users/forms.py:53 apps/web/context_processors.py:183
+#: apps/users/forms.py:53 apps/web/context_processors.py:189
 msgid "Time Zone"
 msgstr "Zona horaria"
 
@@ -216,7 +216,7 @@ msgid "Profile successfully saved."
 msgstr "Perfil guardado correctamente."
 
 #: apps/users/views.py:193 apps/web/context_processors.py:56
-#: apps/web/context_processors.py:155
+#: apps/web/context_processors.py:161
 #: templates/web/components/app_nav_menu_items.html:37
 msgid "Profile"
 msgstr "Perfil"
@@ -230,28 +230,28 @@ msgid "Not Set"
 msgstr "No configurado"
 
 #: apps/web/context_processors.py:54 apps/web/context_processors.py:93
-#: apps/web/context_processors.py:159
+#: apps/web/context_processors.py:165
 msgid "Login"
 msgstr "Iniciar sesión"
 
-#: apps/web/context_processors.py:55 apps/web/context_processors.py:158
+#: apps/web/context_processors.py:55 apps/web/context_processors.py:164
 msgid "Log out"
 msgstr "Cerrar sesión"
 
-#: apps/web/context_processors.py:57 apps/web/context_processors.py:156
+#: apps/web/context_processors.py:57 apps/web/context_processors.py:162
 msgid "Billing"
 msgstr "Facturación"
 
-#: apps/web/context_processors.py:58 apps/web/context_processors.py:157
+#: apps/web/context_processors.py:58 apps/web/context_processors.py:163
 msgid "Theme"
 msgstr "Tema"
 
-#: apps/web/context_processors.py:59 apps/web/context_processors.py:154
+#: apps/web/context_processors.py:59 apps/web/context_processors.py:160
 msgid "Upgrade"
 msgstr "Actualizar"
 
 #: apps/web/context_processors.py:60 apps/web/context_processors.py:105
-#: apps/web/context_processors.py:153 templates/web/components/top_nav.html:23
+#: apps/web/context_processors.py:159 templates/web/components/top_nav.html:23
 #: templates/web/components/top_nav.html:37
 msgid "Blog"
 msgstr "Blog"
@@ -518,24 +518,44 @@ msgstr "🔥 Más popular"
 msgid "Per month"
 msgstr "Por mes"
 
-#: apps/web/context_processors.py:162
+#: apps/web/context_processors.py:153
+msgid "Error creating payment intent: "
+msgstr ""
+
+#: apps/web/context_processors.py:154
+#, fuzzy
+#| msgid "Unknown"
+msgid "Unknown error"
+msgstr "Desconocido"
+
+#: apps/web/context_processors.py:155
+msgid "Network error: "
+msgstr ""
+
+#: apps/web/context_processors.py:156
+#, fuzzy
+#| msgid "No active subscription was found."
+msgid "Has active subscription:"
+msgstr "No se encontró ninguna suscripción activa."
+
+#: apps/web/context_processors.py:168
 msgid "No library"
 msgstr "Sin biblioteca"
 
-#: apps/web/context_processors.py:163 apps/web/context_processors.py:250
+#: apps/web/context_processors.py:169 apps/web/context_processors.py:256
 #: templates/ads/adlibrary_form.html:40
 msgid "Industries"
 msgstr "Industrias"
 
-#: apps/web/context_processors.py:164
+#: apps/web/context_processors.py:170
 msgid "No associated industries"
 msgstr "Sin industrias asociadas"
 
-#: apps/web/context_processors.py:165
+#: apps/web/context_processors.py:171
 msgid "View details"
 msgstr "Ver detalles"
 
-#: apps/web/context_processors.py:166
+#: apps/web/context_processors.py:172
 #, python-brace-format
 msgid ""
 "This ad request is currently in {status} status. Please wait for it to be "
@@ -544,11 +564,11 @@ msgstr ""
 "Esta solicitud de anuncio está actualmente en estado {status}. Por favor, "
 "espera a que sea procesada."
 
-#: apps/web/context_processors.py:167
+#: apps/web/context_processors.py:173
 msgid "Error creating ad request. Please try again."
 msgstr "Error al crear la solicitud de anuncio. Por favor, inténtalo de nuevo."
 
-#: apps/web/context_processors.py:168
+#: apps/web/context_processors.py:174
 msgid ""
 "Your ad request has been processed successfully! Your ad is being generated "
 "and may take a few minutes to be available."
@@ -556,55 +576,55 @@ msgstr ""
 "Tu solicitud de anuncio ha sido procesada con éxito. El anuncio se está "
 "generando y puede tardar unos minutos en estar disponible."
 
-#: apps/web/context_processors.py:169
+#: apps/web/context_processors.py:175
 msgid "Create New Ad Request"
 msgstr "Crear nueva solicitud de anuncio"
 
-#: apps/web/context_processors.py:172
+#: apps/web/context_processors.py:178
 msgid "Error: Profile data not available"
 msgstr "Error: Datos del perfil no disponibles"
 
-#: apps/web/context_processors.py:173
+#: apps/web/context_processors.py:179
 msgid "Uploading..."
 msgstr "Subiendo..."
 
-#: apps/web/context_processors.py:174
+#: apps/web/context_processors.py:180
 msgid "Image uploaded successfully!"
 msgstr "¡Imagen subida con éxito!"
 
-#: apps/web/context_processors.py:175
+#: apps/web/context_processors.py:181
 msgid "Error uploading image. Please try again."
 msgstr "Error al subir la imagen. Por favor, inténtalo de nuevo."
 
-#: apps/web/context_processors.py:176
+#: apps/web/context_processors.py:182
 #: templates/account/components/profile_form.html:10
 msgid "Change Picture"
 msgstr "Cambiar imagen"
 
-#: apps/web/context_processors.py:177
+#: apps/web/context_processors.py:183
 #: templates/account/components/profile_form.html:18
 msgid "My Details"
 msgstr "Mis datos"
 
-#: apps/web/context_processors.py:179
+#: apps/web/context_processors.py:185
 #: templates/account/components/profile_form.html:23
 msgid "Manage email addresses"
 msgstr "Gestionar direcciones de correo"
 
-#: apps/web/context_processors.py:180
+#: apps/web/context_processors.py:186
 msgid "First Name"
 msgstr "Nombre"
 
-#: apps/web/context_processors.py:181
+#: apps/web/context_processors.py:187
 msgid "Last Name"
 msgstr "Apellido"
 
-#: apps/web/context_processors.py:184
+#: apps/web/context_processors.py:190
 #, python-brace-format
 msgid "Your current timezone is {timezone}, where it is {now}."
 msgstr "Tu zona horaria actual es {timezone}, donde ahora son las {now}."
 
-#: apps/web/context_processors.py:185
+#: apps/web/context_processors.py:191
 #, python-brace-format
 msgid ""
 "You have not set a timezone, and are using the system timezone of "
@@ -613,74 +633,74 @@ msgstr ""
 "No has configurado una zona horaria y estás usando la del sistema "
 "({currentTz}), donde ahora son las {now}."
 
-#: apps/web/context_processors.py:186
+#: apps/web/context_processors.py:192
 msgid "Saving..."
 msgstr "Guardando..."
 
-#: apps/web/context_processors.py:187
+#: apps/web/context_processors.py:193
 #: templates/account/components/profile_form.html:43
 #: templates/ads/adlibrary_form.html:69
 msgid "Save"
 msgstr "Guardar"
 
-#: apps/web/context_processors.py:190 templates/account/components/2fa.html:3
+#: apps/web/context_processors.py:196 templates/account/components/2fa.html:3
 msgid "Two-Factor Auth"
 msgstr "Autenticación de dos factores"
 
-#: apps/web/context_processors.py:191 templates/account/components/2fa.html:5
+#: apps/web/context_processors.py:197 templates/account/components/2fa.html:5
 msgid "You already have two-factor authentication enabled."
 msgstr "Ya tienes autenticación de dos factores habilitada."
 
-#: apps/web/context_processors.py:192 templates/account/components/2fa.html:6
+#: apps/web/context_processors.py:198 templates/account/components/2fa.html:6
 msgid "Configure"
 msgstr "Configurar"
 
-#: apps/web/context_processors.py:193 templates/account/components/2fa.html:9
+#: apps/web/context_processors.py:199 templates/account/components/2fa.html:9
 msgid "You do not have two-factor authentication enabled."
 msgstr "No tienes autenticación de dos factores habilitada."
 
-#: apps/web/context_processors.py:194 templates/account/components/2fa.html:10
+#: apps/web/context_processors.py:200 templates/account/components/2fa.html:10
 msgid "Enable"
 msgstr "Habilitar"
 
-#: apps/web/context_processors.py:195 templates/account/components/2fa.html:12
+#: apps/web/context_processors.py:201 templates/account/components/2fa.html:12
 msgid ""
 "To set up two-factor authentication you must first verify your email address."
 msgstr ""
 "Para configurar la autenticación de dos factores, primero debes verificar tu "
 "dirección de correo electrónico."
 
-#: apps/web/context_processors.py:196 templates/account/components/2fa.html:13
+#: apps/web/context_processors.py:202 templates/account/components/2fa.html:13
 msgid "Verify"
 msgstr "Verificar"
 
-#: apps/web/context_processors.py:199
+#: apps/web/context_processors.py:205
 #: templates/account/components/social/social_accounts.html:3
 msgid "Connected Accounts"
 msgstr "Cuentas conectadas"
 
-#: apps/web/context_processors.py:200
+#: apps/web/context_processors.py:206
 #: templates/account/components/social/social_accounts.html:29
 msgid "You haven't linked any social accounts yet. Create one below."
 msgstr "No has vinculado ninguna cuenta social todavía. Crea una abajo."
 
-#: apps/web/context_processors.py:201
+#: apps/web/context_processors.py:207
 msgid "Manage Accounts"
 msgstr "Gestionar cuentas"
 
-#: apps/web/context_processors.py:202
+#: apps/web/context_processors.py:208
 msgid "Add a Password"
 msgstr "Agregar una contraseña"
 
-#: apps/web/context_processors.py:205
+#: apps/web/context_processors.py:211
 msgid "Create Ad Request"
 msgstr "Crear solicitud de anuncio"
 
-#: apps/web/context_processors.py:206
+#: apps/web/context_processors.py:212
 msgid "Delete Ad Request"
 msgstr "Eliminar solicitud de anuncio"
 
-#: apps/web/context_processors.py:207
+#: apps/web/context_processors.py:213
 msgid ""
 "Are you sure you want to permanently delete this ad request? This action "
 "cannot be undone."
@@ -688,96 +708,96 @@ msgstr ""
 "¿Estás seguro de que quieres eliminar permanentemente esta solicitud de "
 "anuncio? Esta acción no se puede deshacer."
 
-#: apps/web/context_processors.py:208
+#: apps/web/context_processors.py:214
 msgid "Cancel"
 msgstr "Cancelar"
 
-#: apps/web/context_processors.py:209
+#: apps/web/context_processors.py:215
 msgid "Delete"
 msgstr "Eliminar"
 
-#: apps/web/context_processors.py:210
+#: apps/web/context_processors.py:216
 msgid "Select Ad Style"
 msgstr "Seleccionar estilo de anuncio"
 
-#: apps/web/context_processors.py:211
+#: apps/web/context_processors.py:217
 msgid "Configure Ad"
 msgstr "Configurar anuncio"
 
-#: apps/web/context_processors.py:212
+#: apps/web/context_processors.py:218
 msgid "Review & Submit"
 msgstr "Revisar y enviar"
 
-#: apps/web/context_processors.py:213 apps/web/context_processors.py:361
+#: apps/web/context_processors.py:219 apps/web/context_processors.py:367
 msgid "No ad request ID available"
 msgstr "No hay ID de solicitud de anuncio disponible"
 
-#: apps/web/context_processors.py:214
+#: apps/web/context_processors.py:220
 msgid "Failed to delete ad request"
 msgstr "Error al eliminar la solicitud de anuncio"
 
-#: apps/web/context_processors.py:217
+#: apps/web/context_processors.py:223
 msgid "Please select both an ad style and canvas size"
 msgstr "Por favor, selecciona un estilo de anuncio y un tamaño de imagen."
 
-#: apps/web/context_processors.py:218
+#: apps/web/context_processors.py:224
 msgid "Failed to update ad request"
 msgstr "Error al actualizar la solicitud de anuncio"
 
-#: apps/web/context_processors.py:219
+#: apps/web/context_processors.py:225
 msgid "Failed to create ad request"
 msgstr "Error al crear la solicitud de anuncio"
 
-#: apps/web/context_processors.py:220
+#: apps/web/context_processors.py:226
 msgid "An unexpected error occurred"
 msgstr "Error inesperado"
 
-#: apps/web/context_processors.py:221 apps/web/context_processors.py:237
+#: apps/web/context_processors.py:227 apps/web/context_processors.py:243
 msgid "Company"
 msgstr "Compañía"
 
-#: apps/web/context_processors.py:222
+#: apps/web/context_processors.py:228
 msgid "Clear filters"
 msgstr "Borrar filtros"
 
-#: apps/web/context_processors.py:223
+#: apps/web/context_processors.py:229
 msgid "Select Your Ideal Ad Style"
 msgstr "Seleccionar estilo de anuncio ideal"
 
-#: apps/web/context_processors.py:224
+#: apps/web/context_processors.py:230
 msgid "Browse and choose the ad style that best matches your desired outcome"
 msgstr ""
 "Navega y elige el estilo de anuncio que mejor coincida con tu resultado "
 "deseado"
 
-#: apps/web/context_processors.py:225
+#: apps/web/context_processors.py:231
 msgid "Select a canvas size to proceed"
 msgstr "Selecciona un tamaño de imagen para continuar"
 
-#: apps/web/context_processors.py:226 apps/web/context_processors.py:263
-#: apps/web/context_processors.py:343
+#: apps/web/context_processors.py:232 apps/web/context_processors.py:269
+#: apps/web/context_processors.py:349
 msgid "Square"
 msgstr "Cuadrado"
 
-#: apps/web/context_processors.py:227 apps/web/context_processors.py:265
-#: apps/web/context_processors.py:345
+#: apps/web/context_processors.py:233 apps/web/context_processors.py:271
+#: apps/web/context_processors.py:351
 msgid "Portrait"
 msgstr "Vertical"
 
-#: apps/web/context_processors.py:228 apps/web/context_processors.py:266
-#: apps/web/context_processors.py:346
+#: apps/web/context_processors.py:234 apps/web/context_processors.py:272
+#: apps/web/context_processors.py:352
 msgid "Landscape"
 msgstr "Apaisajado"
 
-#: apps/web/context_processors.py:229
+#: apps/web/context_processors.py:235
 msgid "Please select an image and canvas size"
 msgstr "Por favor, selecciona una imagen y un tamaño."
 
-#: apps/web/context_processors.py:230
+#: apps/web/context_processors.py:236
 msgid "No ad examples found. Try adjusting your filters."
 msgstr "No se encontraron ejemplos de anuncios. Intenta ajustar tus filtros."
 
-#: apps/web/context_processors.py:233
+#: apps/web/context_processors.py:239
 #: templates/web/components/paginator.html:18
 #: templates/web/components/paginator.html:22
 #: templates/web/components/paginator.html:74
@@ -785,363 +805,363 @@ msgstr "No se encontraron ejemplos de anuncios. Intenta ajustar tus filtros."
 msgid "Next"
 msgstr "Siguiente"
 
-#: apps/web/context_processors.py:234
+#: apps/web/context_processors.py:240
 #, fuzzy
 #| msgid "Uploading..."
 msgid "Updating..."
 msgstr "Cargando..."
 
-#: apps/web/context_processors.py:238
+#: apps/web/context_processors.py:244
 msgid "Industry"
 msgstr "Industria"
 
-#: apps/web/context_processors.py:239 apps/web/context_processors.py:254
+#: apps/web/context_processors.py:245 apps/web/context_processors.py:260
 #: templates/ads/adlibrary_form.html:49
 msgid "Tags"
 msgstr "Etiquetas"
 
-#: apps/web/context_processors.py:240
+#: apps/web/context_processors.py:246
 msgid "Select This Ad Style"
 msgstr "Seleccionar este estilo de anuncio"
 
-#: apps/web/context_processors.py:241
+#: apps/web/context_processors.py:247
 #, python-brace-format
 msgid "Selected Style: {style}"
 msgstr "Estilo de anuncio seleccionado: {style}"
 
-#: apps/web/context_processors.py:244
+#: apps/web/context_processors.py:250
 msgid "Select Company"
 msgstr "Seleccionar compañía"
 
-#: apps/web/context_processors.py:245
+#: apps/web/context_processors.py:251
 msgid "Search company..."
 msgstr "Buscar compañía..."
 
-#: apps/web/context_processors.py:246
+#: apps/web/context_processors.py:252
 msgid "Loading companies..."
 msgstr "Cargando compañías..."
 
-#: apps/web/context_processors.py:247
+#: apps/web/context_processors.py:253
 msgid "No companies found."
 msgstr "No se encontraron compañías."
 
-#: apps/web/context_processors.py:251
+#: apps/web/context_processors.py:257
 msgid "Select industries"
 msgstr "Seleccionar industrias"
 
-#: apps/web/context_processors.py:252
+#: apps/web/context_processors.py:258
 #, fuzzy
 #| msgid "No associated industries"
 msgid "Loading industries..."
 msgstr "No hay industrias asociadas"
 
-#: apps/web/context_processors.py:253
+#: apps/web/context_processors.py:259
 #, fuzzy
 #| msgid "No ad request ID available"
 msgid "No industries available"
 msgstr "No hay industrias disponibles"
 
-#: apps/web/context_processors.py:255
+#: apps/web/context_processors.py:261
 msgid "Select tags"
 msgstr "Seleccionar etiquetas"
 
-#: apps/web/context_processors.py:256
+#: apps/web/context_processors.py:262
 msgid "Loading tags..."
 msgstr "Cargando etiquetas..."
 
-#: apps/web/context_processors.py:257
+#: apps/web/context_processors.py:263
 msgid "No tags available"
 msgstr "No hay etiquetas disponibles"
 
-#: apps/web/context_processors.py:260 apps/web/context_processors.py:335
+#: apps/web/context_processors.py:266 apps/web/context_processors.py:341
 msgid "Summary"
 msgstr "Resumen"
 
-#: apps/web/context_processors.py:261 apps/web/context_processors.py:336
+#: apps/web/context_processors.py:267 apps/web/context_processors.py:342
 msgid "Loading..."
 msgstr "Cargando..."
 
-#: apps/web/context_processors.py:262 apps/web/context_processors.py:337
+#: apps/web/context_processors.py:268 apps/web/context_processors.py:343
 msgid "No image"
 msgstr "Sin imagen"
 
-#: apps/web/context_processors.py:264 apps/web/context_processors.py:344
+#: apps/web/context_processors.py:270 apps/web/context_processors.py:350
 msgid "Portrait Tall"
 msgstr "Vertical"
 
-#: apps/web/context_processors.py:267 apps/web/context_processors.py:347
+#: apps/web/context_processors.py:273 apps/web/context_processors.py:353
 msgid "Unknown"
 msgstr "Desconocido"
 
-#: apps/web/context_processors.py:268 apps/web/context_processors.py:348
+#: apps/web/context_processors.py:274 apps/web/context_processors.py:354
 msgid "Not specified"
 msgstr "No especificado"
 
-#: apps/web/context_processors.py:269
+#: apps/web/context_processors.py:275
 msgid "Campaign Details"
 msgstr "Detalles de la Campaña"
 
-#: apps/web/context_processors.py:270
+#: apps/web/context_processors.py:276
 msgid "Website URL"
 msgstr "URL del Sitio Web"
 
-#: apps/web/context_processors.py:271
+#: apps/web/context_processors.py:277
 msgid "Enter your website URL"
 msgstr "Introduce la URL de tu sitio web"
 
-#: apps/web/context_processors.py:272
+#: apps/web/context_processors.py:278
 msgid "Brand Color"
 msgstr "Color de la marca"
 
-#: apps/web/context_processors.py:273
+#: apps/web/context_processors.py:279
 msgid "Enter a hex color that represents your brand identity"
 msgstr "Introduce un color hex que represente la identidad de tu marca"
 
-#: apps/web/context_processors.py:274
+#: apps/web/context_processors.py:280
 msgid "Enter hex color (e.g. FF5500)"
 msgstr "Introduce un color hex (e.g. FF5500)"
 
-#: apps/web/context_processors.py:275
+#: apps/web/context_processors.py:281
 msgid "Please enter a valid hex color code (e.g. FF5500)"
 msgstr "Por favor, introduce un código de color hex válido (e.g. FF5500)"
 
-#: apps/web/context_processors.py:276
+#: apps/web/context_processors.py:282
 msgid "Key Benefits"
 msgstr "Ventajas principales"
 
-#: apps/web/context_processors.py:277
+#: apps/web/context_processors.py:283
 msgid "Add the key benefits of your product or service"
 msgstr "Añade las ventajas principales de tu producto o servicio"
 
-#: apps/web/context_processors.py:278
+#: apps/web/context_processors.py:284
 msgid "E.g. Fast delivery, 24/7 support..."
 msgstr "Ej. Entrega rápida, soporte 24/7..."
 
-#: apps/web/context_processors.py:281
+#: apps/web/context_processors.py:287
 msgid "Product Type"
 msgstr "Tipo de producto"
 
-#: apps/web/context_processors.py:282
+#: apps/web/context_processors.py:288
 msgid "Upload images for your product or service"
 msgstr "Sube imágenes para tu producto o servicio"
 
-#: apps/web/context_processors.py:283
+#: apps/web/context_processors.py:289
 msgid "Physical Product"
 msgstr "Producto físico"
 
-#: apps/web/context_processors.py:284
+#: apps/web/context_processors.py:290
 msgid "Tangible items that can be photographed"
 msgstr "Objetos tangibles que pueden ser fotografiados"
 
-#: apps/web/context_processors.py:285
+#: apps/web/context_processors.py:291
 msgid "Software / Service"
 msgstr "Software / Servicio"
 
-#: apps/web/context_processors.py:286
+#: apps/web/context_processors.py:292
 msgid "Digital products or services with screenshots"
 msgstr "Productos o servicios digitales con capturas de pantalla"
 
-#: apps/web/context_processors.py:287
+#: apps/web/context_processors.py:293
 msgid "OR"
 msgstr "O"
 
-#: apps/web/context_processors.py:290
+#: apps/web/context_processors.py:296
 msgid "Product Images"
 msgstr "Imágenes del producto"
 
-#: apps/web/context_processors.py:291
+#: apps/web/context_processors.py:297
 msgid ""
 "Upload high-quality images of your physical product to showcase in your ad"
 msgstr ""
 "Sube imágenes de alta calidad de tu producto físico para mostrar en tu "
 "anuncio"
 
-#: apps/web/context_processors.py:292
+#: apps/web/context_processors.py:298
 msgid "Primary Product"
 msgstr "Producto principal"
 
-#: apps/web/context_processors.py:293
+#: apps/web/context_processors.py:299
 msgid "Front view or main product shot"
 msgstr "Vista frontal o captura principal del producto"
 
-#: apps/web/context_processors.py:294
+#: apps/web/context_processors.py:300
 msgid "Add primary image"
 msgstr "Añadir imagen principal"
 
-#: apps/web/context_processors.py:295
+#: apps/web/context_processors.py:301
 msgid "Secondary Product"
 msgstr "Producto secundario"
 
-#: apps/web/context_processors.py:296
+#: apps/web/context_processors.py:302
 msgid "Side view or product in use"
 msgstr "Vista lateral o producto en uso"
 
-#: apps/web/context_processors.py:297
+#: apps/web/context_processors.py:303
 msgid "Add secondary image"
 msgstr "Añadir imagen secundaria"
 
-#: apps/web/context_processors.py:300
+#: apps/web/context_processors.py:306
 msgid "App Screenshots"
 msgstr "Capturas de pantalla del app"
 
-#: apps/web/context_processors.py:301
+#: apps/web/context_processors.py:307
 msgid ""
 "Upload high-quality screenshots of your software to showcase its features"
 msgstr ""
 "Sube capturas de pantalla de alta calidad de tu software para mostrar sus "
 "características"
 
-#: apps/web/context_processors.py:302
+#: apps/web/context_processors.py:308
 msgid "Main Interface"
 msgstr "Interfaz principal"
 
-#: apps/web/context_processors.py:303
+#: apps/web/context_processors.py:309
 msgid "Main screen or dashboard view"
 msgstr "Vista principal o dashboard"
 
-#: apps/web/context_processors.py:304
+#: apps/web/context_processors.py:310
 msgid "Add main screenshot"
 msgstr "Añadir captura principal"
 
-#: apps/web/context_processors.py:305
+#: apps/web/context_processors.py:311
 msgid "Feature Highlight"
 msgstr "Destacar característica"
 
-#: apps/web/context_processors.py:306
+#: apps/web/context_processors.py:312
 msgid "Key feature or functionality in action"
 msgstr "Característica clave o funcionalidad en acción"
 
-#: apps/web/context_processors.py:307
+#: apps/web/context_processors.py:313
 msgid "Add feature screenshot"
 msgstr "Añadir captura de característica"
 
-#: apps/web/context_processors.py:310
+#: apps/web/context_processors.py:316
 msgid "Additional Marketing Materials"
 msgstr "Materiales de marketing adicionales"
 
-#: apps/web/context_processors.py:311
+#: apps/web/context_processors.py:317
 msgid "Upload supplementary images to enhance your ad campaign (optional)"
 msgstr ""
 "Sube imágenes adicionales para mejorar tu campaña de anuncios (opcional)"
 
-#: apps/web/context_processors.py:312
+#: apps/web/context_processors.py:318
 msgid "Testimonial"
 msgstr "Testimonial"
 
-#: apps/web/context_processors.py:313
+#: apps/web/context_processors.py:319
 msgid "Customer review or testimonial"
 msgstr "Revisión o testimonio del cliente"
 
-#: apps/web/context_processors.py:314
+#: apps/web/context_processors.py:320
 msgid "Add image"
 msgstr "Añadir imagen"
 
-#: apps/web/context_processors.py:315
+#: apps/web/context_processors.py:321
 msgid "Product in Use"
 msgstr "Producto en uso"
 
-#: apps/web/context_processors.py:316
+#: apps/web/context_processors.py:322
 msgid "Show your product in action"
 msgstr "Muestra tu producto en acción"
 
-#: apps/web/context_processors.py:317
+#: apps/web/context_processors.py:323
 msgid "Additional View"
 msgstr "Vista adicional"
 
-#: apps/web/context_processors.py:318
+#: apps/web/context_processors.py:324
 msgid "Any other relevant image"
 msgstr "Cualquier otra imagen relevante"
 
-#: apps/web/context_processors.py:321
+#: apps/web/context_processors.py:327
 msgid "Company Branding"
 msgstr "Marca personalizada"
 
-#: apps/web/context_processors.py:322
+#: apps/web/context_processors.py:328
 msgid "Upload your company logo to enhance your ad campaign's brand identity"
 msgstr ""
 "Sube tu logo de empresa para mejorar la identidad de tu campaña de anuncios"
 
-#: apps/web/context_processors.py:323
+#: apps/web/context_processors.py:329
 msgid "Company Logo"
 msgstr "Logo de la empresa"
 
-#: apps/web/context_processors.py:324
+#: apps/web/context_processors.py:330
 msgid "Upload a high-quality logo (PNG or SVG preferred)"
 msgstr "Sube un logo de alta calidad (PNG o SVG preferido)"
 
-#: apps/web/context_processors.py:325
+#: apps/web/context_processors.py:331
 msgid "Add your company logo"
 msgstr "Añade tu logo de empresa"
 
-#: apps/web/context_processors.py:328
+#: apps/web/context_processors.py:334
 msgid "Back"
 msgstr "Atrás"
 
-#: apps/web/context_processors.py:329
+#: apps/web/context_processors.py:335
 msgid "Going back..."
 msgstr "Cargando..."
 
-#: apps/web/context_processors.py:332
+#: apps/web/context_processors.py:338
 msgid "or drag and drop file here"
 msgstr "o arrastra y suelta el archivo aquí"
 
-#: apps/web/context_processors.py:338
+#: apps/web/context_processors.py:344
 msgid "Ad Preview"
 msgstr "Vista previa del anuncio"
 
-#: apps/web/context_processors.py:339
+#: apps/web/context_processors.py:345
 msgid "No name"
 msgstr "Sin nombre"
 
-#: apps/web/context_processors.py:340
+#: apps/web/context_processors.py:346
 msgid "No brand color"
 msgstr "Sin color de la marca"
 
-#: apps/web/context_processors.py:341
+#: apps/web/context_processors.py:347
 msgid "No company website"
 msgstr "Sin sitio web de empresa"
 
-#: apps/web/context_processors.py:342
+#: apps/web/context_processors.py:348
 msgid "No key benefits"
 msgstr "Sin ventajas principales"
 
-#: apps/web/context_processors.py:349
+#: apps/web/context_processors.py:355
 msgid "Product 1"
 msgstr "Producto 1"
 
-#: apps/web/context_processors.py:350
+#: apps/web/context_processors.py:356
 msgid "Product 2"
 msgstr "Producto 2"
 
-#: apps/web/context_processors.py:351
+#: apps/web/context_processors.py:357
 msgid "Service 1"
 msgstr "Servicio 1"
 
-#: apps/web/context_processors.py:352
+#: apps/web/context_processors.py:358
 msgid "Service 2"
 msgstr "Servicio 2"
 
-#: apps/web/context_processors.py:353
+#: apps/web/context_processors.py:359
 msgid "Marketing 1"
 msgstr "Marketing 1"
 
-#: apps/web/context_processors.py:354
+#: apps/web/context_processors.py:360
 msgid "Marketing 2"
 msgstr "Marketing 2"
 
-#: apps/web/context_processors.py:355
+#: apps/web/context_processors.py:361
 msgid "Marketing 3"
 msgstr "Marketing 3"
 
-#: apps/web/context_processors.py:356
+#: apps/web/context_processors.py:362
 msgid "What message do you want to transmit or additional instructions?"
 msgstr "¿Qué mensaje deseas transmitir o instrucciones adicionales?"
 
-#: apps/web/context_processors.py:357
+#: apps/web/context_processors.py:363
 msgid "Write your prompt..."
 msgstr "Escribe tu prompt..."
 
-#: apps/web/context_processors.py:358
+#: apps/web/context_processors.py:364
 msgid ""
 "Once submitted, your ad request will be processed. This may take a few "
 "minutes."
@@ -1149,37 +1169,37 @@ msgstr ""
 "Una vez enviado, tu solicitud de anuncio será procesada. Esto puede tomar "
 "unos minutos."
 
-#: apps/web/context_processors.py:359
+#: apps/web/context_processors.py:365
 #, fuzzy
 #| msgid "Uploading..."
 msgid "Generating..."
 msgstr "Generando..."
 
-#: apps/web/context_processors.py:360
+#: apps/web/context_processors.py:366
 msgid "Generate"
 msgstr "Generar"
 
-#: apps/web/context_processors.py:362
+#: apps/web/context_processors.py:368
 msgid "CSRF token not found"
 msgstr "CSRF token no encontrado"
 
-#: apps/web/context_processors.py:363
+#: apps/web/context_processors.py:369
 msgid "Failed to update status to SUBMITED"
 msgstr "Error al actualizar el estado a SUBMITED"
 
-#: apps/web/context_processors.py:364
+#: apps/web/context_processors.py:370
 msgid "Error updating status to SUBMITED:"
 msgstr "Error al actualizar el estado a SUBMITED: "
 
-#: apps/web/context_processors.py:365
+#: apps/web/context_processors.py:371
 msgid "Error generating version"
 msgstr "Error al generar la versión"
 
-#: apps/web/context_processors.py:366
+#: apps/web/context_processors.py:372
 msgid "Failed to submit ad request"
 msgstr "Error al enviar la solicitud de anuncio"
 
-#: apps/web/context_processors.py:367
+#: apps/web/context_processors.py:373
 msgid "Failed to update status to DRAFT"
 msgstr "Error al actualizar el estado a DRAFT"
 
