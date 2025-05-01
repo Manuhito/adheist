@@ -4,7 +4,8 @@ import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { useTranslation } from "../lib/useTranslation";
 import { Skeleton } from "../shadcn/components/ui/skeleton";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowLeft, Sparkles, AlertCircle } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../shadcn/components/ui/tooltip";
 
 // Debug log
 console.log("Revision AdRequest script loaded");
@@ -19,6 +20,7 @@ const RevisionAdRequest = () => {
   const [currentVersionIndex, setCurrentVersionIndex] = useState(0);
   const [userPrompt, setUserPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [total_versions, setTotalVersions] = useState(2); // Default to 2 if not specified
 
   useEffect(() => {
     const loadAdRequestData = () => {
@@ -42,6 +44,12 @@ const RevisionAdRequest = () => {
             console.log("Versions found:", jsonData.versions);
             setVersions(jsonData.versions);
             setCurrentVersionIndex(0); // Start with the first version (newest)
+            
+            // Get total_versions from JSON data
+            if (jsonData.total_versions) {
+              console.log("Total versions:", jsonData.total_versions);
+              setTotalVersions(jsonData.total_versions);
+            }
           } else {
             setError("No versions found for this ad request");
           }
@@ -221,7 +229,7 @@ const RevisionAdRequest = () => {
                         {new Date(currentVersion.created_at).toLocaleDateString()}
                       </div>
                       <div>
-                        {currentVersion.version_index}/{currentVersion.total_versions} {t("revision.revision", "Revision")}
+                        {currentVersion.version_index}/{total_versions} {t("revision.revision", "Revision")}
                       </div>
                     </div>
                   </div>
@@ -237,14 +245,28 @@ const RevisionAdRequest = () => {
               <label htmlFor="user-prompt" className="block text-lg font-medium text-primary mb-2 text-center">
                 {t("revision.prompt_label", "What message do you want to transmit or additional instructions?")}
               </label>
-              <textarea
-                id="user-prompt"
-                value={userPrompt}
-                onChange={e => setUserPrompt(e.target.value)}
-                rows={5}
-                className="w-full min-h-[120px] rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 text-base text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 shadow-sm focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-200 dark:focus-visible:ring-blue-800 transition resize-y mb-2"
-                placeholder={t("revision.prompt_placeholder", "Write your prompt...")}
-              />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <textarea
+                        id="user-prompt"
+                        value={userPrompt}
+                        onChange={e => setUserPrompt(e.target.value)}
+                        rows={5}
+                        className={`w-full min-h-[120px] rounded-lg border ${versions.length >= total_versions ? 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 opacity-75 cursor-not-allowed border-gray-400 dark:border-gray-600' : 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700'} px-4 py-3 text-base placeholder:text-gray-400 dark:placeholder:text-gray-500 shadow-sm focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-200 dark:focus-visible:ring-blue-800 transition resize-y mb-2`}
+                        placeholder={t("revision.prompt_placeholder", "Write your prompt...")}
+                        disabled={versions.length >= total_versions}
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  {versions.length >= total_versions && (
+                    <TooltipContent>
+                      <p>{t('revision.version_limit_reached', 'Version limit reached. No more versions can be generated.')}</p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
           
@@ -266,18 +288,31 @@ const RevisionAdRequest = () => {
           
           {/* Generate button */}
           <div className="flex justify-center items-center pb-8">
-            <Button
-              variant="outline"
-              className="group h-10 px-4 py-2 text-sm font-medium"
-              onClick={handleGenerateVersion}
-              disabled={isGenerating}
-            >
-              {isGenerating ? (
-                <span className="flex items-center"><Sparkles className="w-4 h-4 mr-1 animate-spin text-yellow-400 dark:text-yellow-300" strokeWidth={2.2} /> {t("revision.generating", "Generating...")}</span>
-              ) : (
-                <><Sparkles className="w-4 h-4 mr-1 text-yellow-400 dark:text-yellow-300 group-hover:text-yellow-500 transition-colors duration-200" strokeWidth={2.2} />{t("revision.generate", "Generate")}</>
-              )}
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <Button
+                      variant="outline"
+                      className="group h-10 px-4 py-2 text-sm font-medium"
+                      onClick={handleGenerateVersion}
+                      disabled={isGenerating || versions.length >= total_versions}
+                    >
+                      {isGenerating ? (
+                        <span className="flex items-center"><Sparkles className="w-4 h-4 mr-1 animate-spin text-yellow-400 dark:text-yellow-300" strokeWidth={2.2} /> {t("revision.generating", "Generating...")}</span>
+                      ) : (
+                        <><Sparkles className="w-4 h-4 mr-1 text-yellow-400 dark:text-yellow-300 group-hover:text-yellow-500 transition-colors duration-200" strokeWidth={2.2} />{t("revision.generate", "Generate")}</>
+                      )}
+                    </Button>
+                  </div>
+                </TooltipTrigger>
+                {versions.length >= total_versions && (
+                  <TooltipContent>
+                    <p>{t('revision.version_limit_reached', 'Version limit reached. No more versions can be generated.')}</p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </>
       ) : (

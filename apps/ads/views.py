@@ -955,7 +955,6 @@ def adrequest_details_page(request, adrequest_id):
             'generated_image': version.generated_image.url if version.generated_image else None,
             'created_at': version.created_at.isoformat() if version.created_at else None,
             'version_index': i + 1,  # 1-based index
-            'total_versions': max_versions
         })
     
     # Ordenar versions_data por version_index en orden descendente (índice más alto primero)
@@ -974,7 +973,8 @@ def adrequest_details_page(request, adrequest_id):
         "object": ad_request.ad_library if ad_request.ad_library else None,
         "ad_request": ad_request,
         "versions": versions,
-        "versions_json": versions_json
+        "versions_json": versions_json,
+        "total_versions": max_versions
     }
         
     return TemplateResponse(request, template, context)
