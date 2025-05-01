@@ -6,6 +6,7 @@ import { useTranslation } from "../lib/useTranslation";
 import { Skeleton } from "../shadcn/components/ui/skeleton";
 import { ArrowLeft, Sparkles, AlertCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../shadcn/components/ui/tooltip";
+import AnimatedDownloadButton from "../components/ui/animated-download-button";
 
 // Debug log
 console.log("Revision AdRequest script loaded");
@@ -221,10 +222,16 @@ const RevisionAdRequest = () => {
                     <img 
                       src={currentVersion.generated_image} 
                       alt={t("ad_requests.generated_image", "Generated Ad Image")} 
-                      className="max-w-full h-auto rounded-lg shadow-lg mb-6"
+                      className="max-w-full h-auto rounded-lg shadow-lg mb-2"
                     />
                     
-                    <div className="w-full flex justify-between text-sm text-gray-500 mt-4 px-2">
+                    {/* Download button */}
+                    <AnimatedDownloadButton 
+                      downloadUrl={currentVersion.generated_image}
+                      fileName={`ad-image-${currentVersion.version_index}.jpg`}
+                    />
+                    
+                    <div className="w-full flex justify-between text-sm text-gray-500 mt-2 px-2">
                       <div>
                         {new Date(currentVersion.created_at).toLocaleDateString()}
                       </div>
