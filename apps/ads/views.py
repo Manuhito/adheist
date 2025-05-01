@@ -922,7 +922,7 @@ def adrequest_delete(request, pk):
             'error': f'Failed to delete ad request: {str(e)}'
         }, status=500)
 
-
+@ensure_csrf_cookie
 def adrequest_details_page(request, adrequest_id):
     """
     Render the adrequest details page for completed ad requests.
