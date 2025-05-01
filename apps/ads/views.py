@@ -942,13 +942,20 @@ def adrequest_details_page(request, adrequest_id):
     
     # Prepare versions data for the template
     versions_data = []
-    for version in versions:
-        if version.generated_image:
-            versions_data.append({
-                'id': version.id,
-                'generated_image': version.generated_image.url if version.generated_image else None,
-                'created_at': version.created_at.isoformat() if version.created_at else None
-            })
+    versions_with_image = [v for v in versions if v.generated_image]
+    total_versions = len(versions_with_image)
+    
+    # We'll only show a maximum of 2 versions
+    max_versions = 2
+    
+    for i, version in enumerate(versions_with_image):
+        versions_data.append({
+            'id': version.id,
+            'generated_image': version.generated_image.url if version.generated_image else None,
+            'created_at': version.created_at.isoformat() if version.created_at else None,
+            'version_index': i + 1,  # 1-based index
+            'total_versions': max_versions
+        })
     
     # Convert to JSON for the template
     import json

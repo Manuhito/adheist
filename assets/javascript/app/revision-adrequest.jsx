@@ -113,8 +113,13 @@ const RevisionAdRequest = () => {
                 className="max-w-full h-auto rounded-lg shadow-lg mb-6"
               />
               
-              <div className="text-sm text-gray-500 mt-4 text-center">
-                {t("ad_requests.created_at", "Created")}: {new Date(latestVersion.created_at).toLocaleString()}
+              <div className="w-full flex justify-between text-sm text-gray-500 mt-4 px-2">
+                <div>
+                  {new Date(latestVersion.created_at).toLocaleDateString()}
+                </div>
+                <div>
+                      {latestVersion.version_index}/{latestVersion.total_versions} {t("ad_requests.revisions", "Revisions")}
+                </div>
               </div>
             </div>
           </CardContent>
