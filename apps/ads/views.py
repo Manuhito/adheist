@@ -936,13 +936,32 @@ def adrequest_details_page(request, adrequest_id):
         return result
     
     ad_request = result
+    
+    # Get all versions for this ad request
+    versions = ad_request.versions.all().order_by('-created_at')
+    
+    # Prepare versions data for the template
+    versions_data = []
+    for version in versions:
+        if version.generated_image:
+            versions_data.append({
+                'id': version.id,
+                'generated_image': version.generated_image.url if version.generated_image else None,
+                'created_at': version.created_at.isoformat() if version.created_at else None
+            })
+    
+    # Convert to JSON for the template
+    import json
+    versions_json = json.dumps(versions_data)
         
     # Render the adlibrary_detail.html template with the ad_request as the object
     template = "ads/adlibrary_detail.html"
     context = {
         "active_tab": "my_requests",
         "object": ad_request.ad_library if ad_request.ad_library else None,
-        "ad_request": ad_request
+        "ad_request": ad_request,
+        "versions": versions,
+        "versions_json": versions_json
     }
         
     return TemplateResponse(request, template, context)

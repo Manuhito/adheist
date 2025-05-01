@@ -11,7 +11,8 @@
         "id": {% if ad_request.id %}{{ ad_request.id }}{% else %}null{% endif %},
         "status": "{{ ad_request.status|default:"" }}",
         "created_at": "{{ ad_request.created_at|date:'c'|default:"" }}",
-        "updated_at": "{{ ad_request.updated_at|date:'c'|default:"" }}"
+        "updated_at": "{{ ad_request.updated_at|date:'c'|default:"" }}",
+        "versions": {{ versions_json|safe }}
       }
     </script>
     

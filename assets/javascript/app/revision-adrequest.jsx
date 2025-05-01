@@ -18,66 +18,49 @@ const RevisionAdRequest = () => {
   const [latestVersion, setLatestVersion] = useState(null);
 
   useEffect(() => {
-    const fetchAdRequestDetails = async () => {
+    const loadAdRequestData = () => {
       try {
         // Get the ad request data from the JSON script tag
-        let adRequestId = null;
         const dataScript = document.getElementById("adrequest-data");
         
-        if (dataScript) {
-          try {
-            const jsonData = JSON.parse(dataScript.textContent);
-            adRequestId = jsonData.id;
-            console.log("Found adRequestId from JSON script:", adRequestId);
-          } catch (e) {
-            console.error("Error parsing JSON data:", e);
-          }
+        if (!dataScript) {
+          throw new Error("Ad request data script not found");
         }
         
-        if (!adRequestId) {
-          throw new Error("Ad request ID not found");
-        }
-
-        // Fetch the ad request details
-        console.log("Fetching ad request details for ID:", adRequestId);
-        const response = await fetch(`/ads/adrequest/${adRequestId}/get/`);
-        
-        if (!response.ok) {
-          throw new Error(`Error fetching ad request: ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        console.log("Ad request data received:", data);
-        setAdRequestData(data);
-        
-        // Find the latest version with a generated image
-        if (data.versions && data.versions.length > 0) {
-          // Sort versions by created_at in descending order (newest first)
-          const sortedVersions = [...data.versions].sort((a, b) => 
-            new Date(b.created_at) - new Date(a.created_at)
-          );
+        try {
+          const jsonData = JSON.parse(dataScript.textContent);
+          console.log("Ad request data from script:", jsonData);
           
-          // Find the first version with a generated image
-          const versionWithImage = sortedVersions.find(v => v.generated_image);
-          console.log("Version with image found:", versionWithImage);
+          // Set the ad request data
+          setAdRequestData(jsonData);
           
-          if (versionWithImage) {
-            setLatestVersion(versionWithImage);
+          // Process versions data
+          if (jsonData.versions && jsonData.versions.length > 0) {
+            // Find the first version with a generated image (they should already be sorted by created_at)
+            const versionWithImage = jsonData.versions[0]; // Take the first one as they're already sorted in the view
+            console.log("Version with image found:", versionWithImage);
+            
+            if (versionWithImage) {
+              setLatestVersion(versionWithImage);
+            } else {
+              setError("No generated image found for this ad request");
+            }
           } else {
-            setError("No generated image found for this ad request");
+            setError("No versions found for this ad request");
           }
-        } else {
-          setError("No versions found for this ad request");
+        } catch (e) {
+          console.error("Error parsing JSON data:", e);
+          throw new Error("Error parsing ad request data");
         }
       } catch (error) {
-        console.error("Error fetching ad request details:", error);
+        console.error("Error loading ad request data:", error);
         setError(error.message || "Error loading ad request details");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchAdRequestDetails();
+    loadAdRequestData();
   }, []);
 
   const handleBackClick = () => {
@@ -130,18 +113,8 @@ const RevisionAdRequest = () => {
                 className="max-w-full h-auto rounded-lg shadow-lg mb-6"
               />
               
-              <div className="w-full mt-4">
-                <h2 className="text-xl font-semibold mb-2">
-                  {t("ad_requests.prompt_used", "Prompt Used")}
-                </h2>
-                <div className="bg-gray-100 p-4 rounded-md mb-4 whitespace-pre-wrap">
-                  {latestVersion.generated_prompt || latestVersion.user_prompt || 
-                   t("ad_requests.no_prompt", "No prompt information available")}
-                </div>
-                
-                <div className="text-sm text-gray-500 mt-4">
-                  {t("ad_requests.created_at", "Created")}: {new Date(latestVersion.created_at).toLocaleString()}
-                </div>
+              <div className="text-sm text-gray-500 mt-4 text-center">
+                {t("ad_requests.created_at", "Created")}: {new Date(latestVersion.created_at).toLocaleString()}
               </div>
             </div>
           </CardContent>
