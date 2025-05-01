@@ -15,7 +15,8 @@ const RevisionAdRequest = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [adRequestData, setAdRequestData] = useState(null);
-  const [latestVersion, setLatestVersion] = useState(null);
+  const [versions, setVersions] = useState([]);
+  const [currentVersionIndex, setCurrentVersionIndex] = useState(0);
   const [userPrompt, setUserPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -38,15 +39,9 @@ const RevisionAdRequest = () => {
           
           // Process versions data
           if (jsonData.versions && jsonData.versions.length > 0) {
-            // Find the first version with a generated image (they should already be sorted by created_at)
-            const versionWithImage = jsonData.versions[0]; // Take the first one as they're already sorted in the view
-            console.log("Version with image found:", versionWithImage);
-            
-            if (versionWithImage) {
-              setLatestVersion(versionWithImage);
-            } else {
-              setError("No generated image found for this ad request");
-            }
+            console.log("Versions found:", jsonData.versions);
+            setVersions(jsonData.versions);
+            setCurrentVersionIndex(0); // Start with the first version (newest)
           } else {
             setError("No versions found for this ad request");
           }
@@ -68,6 +63,15 @@ const RevisionAdRequest = () => {
   const handleBackClick = () => {
     // Navigate back to the ad requests page
     window.location.href = "/ads/";
+  };
+
+  // Handle version navigation
+  const handleVersionChange = (direction) => {
+    if (direction === 'prev' && currentVersionIndex < versions.length - 1) {
+      setCurrentVersionIndex(currentVersionIndex + 1);
+    } else if (direction === 'next' && currentVersionIndex > 0) {
+      setCurrentVersionIndex(currentVersionIndex - 1);
+    }
   };
 
   // Function to get CSRF token from cookies
@@ -175,28 +179,57 @@ const RevisionAdRequest = () => {
             </div>
           </CardContent>
         </Card>
-      ) : latestVersion ? (
+      ) : versions.length > 0 ? (
         <>
-          <Card className="w-full">
-            <CardContent className="p-6">
-              <div className="flex flex-col items-center">
-                <img 
-                  src={latestVersion.generated_image} 
-                  alt={t("ad_requests.generated_image", "Generated Ad Image")} 
-                  className="max-w-full h-auto rounded-lg shadow-lg mb-6"
-                />
-                
-                <div className="w-full flex justify-between text-sm text-gray-500 mt-4 px-2">
-                  <div>
-                    {new Date(latestVersion.created_at).toLocaleDateString()}
+          {/* Get the current version */}
+          {(() => {
+            const currentVersion = versions[currentVersionIndex];
+            return (
+              <Card className="w-full">
+                <CardContent className="p-6">
+                  <div className="flex flex-col items-center">
+                    {/* Version navigation buttons */}
+                    <div className="w-full flex justify-between mb-4">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleVersionChange('prev')}
+                        disabled={currentVersionIndex >= versions.length - 1}
+                        className={currentVersionIndex >= versions.length - 1 ? "invisible" : ""}
+                      >
+                        {t("revision.previous_version", "Previous Version")}
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleVersionChange('next')}
+                        disabled={currentVersionIndex <= 0}
+                        className={currentVersionIndex <= 0 ? "invisible" : ""}
+                      >
+                        {t("revision.next_version", "Next Version")}
+                      </Button>
+                    </div>
+                    
+                    <img 
+                      src={currentVersion.generated_image} 
+                      alt={t("ad_requests.generated_image", "Generated Ad Image")} 
+                      className="max-w-full h-auto rounded-lg shadow-lg mb-6"
+                    />
+                    
+                    <div className="w-full flex justify-between text-sm text-gray-500 mt-4 px-2">
+                      <div>
+                        {new Date(currentVersion.created_at).toLocaleDateString()}
+                      </div>
+                      <div>
+                        {currentVersion.version_index}/{currentVersion.total_versions} {t("revision.revision", "Revision")}
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    {latestVersion.version_index}/{latestVersion.total_versions} {t("ad_requests.revisions", "Revisions")}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            );
+          })()
+          }
           
           {/* Text area and Generate button */}
           <div className="flex flex-col items-center justify-center mt-8">

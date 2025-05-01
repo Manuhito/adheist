@@ -938,17 +938,18 @@ def adrequest_details_page(request, adrequest_id):
     ad_request = result
     
     # Get all versions for this ad request
-    versions = ad_request.versions.all().order_by('-created_at')
+    versions = ad_request.versions.all().order_by('created_at')
     
     # Prepare versions data for the template
     versions_data = []
-    versions_with_image = [v for v in versions if v.generated_image]
-    total_versions = len(versions_with_image)
+    
+    # Log for debugging
+    print(f"{versions=}")
     
     # We'll only show a maximum of 2 versions
     max_versions = 2
     
-    for i, version in enumerate(versions_with_image):
+    for i, version in enumerate(versions[:max_versions]):
         versions_data.append({
             'id': version.id,
             'generated_image': version.generated_image.url if version.generated_image else None,
@@ -956,6 +957,11 @@ def adrequest_details_page(request, adrequest_id):
             'version_index': i + 1,  # 1-based index
             'total_versions': max_versions
         })
+    
+    # Ordenar versions_data por version_index en orden descendente (índice más alto primero)
+    versions_data = sorted(versions_data, key=lambda x: x['version_index'], reverse=True)
+    
+    print(f"{versions_data=}")
     
     # Convert to JSON for the template
     import json
