@@ -33,6 +33,9 @@ DEBUG = env.bool("DEBUG", default=True)
 # Note: It is not recommended to set ALLOWED_HOSTS to "*" in production
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*"])
 
+# Meta Ads API token
+META_ADS_APP_TOKEN = env("META_ADS_APP_TOKEN", default="")
+META_ADS_USER_TOKEN = env("META_ADS_USER_TOKEN", default="")
 
 # Application definition
 

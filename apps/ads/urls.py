@@ -24,4 +24,5 @@ urlpatterns = [
     path("payment/", views.payment_page, name="payment_page"),
     path("payment-success/", views.payment_success, name="payment_success"),
     path("api/invoices/", views.get_user_invoices, name="get_user_invoices"),
+    path("api/meta-ads/search/", views.search_ads, name="search_ads"),
 ]

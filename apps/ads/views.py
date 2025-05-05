@@ -10,6 +10,8 @@ from apps.subscriptions.helpers import create_stripe_checkout_session
 from django.urls import reverse
 from django.views.decorators.http import require_POST, require_http_methods
 import json
+import requests
+from django.conf import settings
 
 from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion
 from .forms import AdLibraryForm
@@ -1235,3 +1237,75 @@ def get_user_invoices(request):
             'error': str(e),
             'invoices': []
         }, status=400)
+
+
+def search_ads(request):
+    """
+    View function to search for ads using Meta Ads API.
+    Accepts query parameters for search customization.
+    
+    Query parameters:
+    - search_terms: Keywords to search for (required)
+    - ad_type: Type of ads to search for (default: POLITICAL_AND_ISSUE_ADS)
+    - countries: Comma-separated list of country codes (default: US)
+    - limit: Number of results to return (default: 10, max: 100)
+    
+    Returns JSON response with the API results.
+    """
+    try:
+        # Get the access token from settings
+        access_token = settings.META_ADS_APP_TOKEN
+        if not access_token:
+            return JsonResponse({'error': 'META_ADS_APP_TOKEN not configured'}, status=500)
+            
+        # Base URL for the Meta Ads API - Usando un endpoint más básico para pruebas
+        # En lugar de ads_archive, usamos el endpoint de búsqueda general
+        url = 'https://graph.facebook.com/v18.0/ads_archive'
+        
+        # Get parameters from request with defaults
+        search_terms = request.GET.get('search_terms', 'facebook')
+        # Solo mostramos el mensaje de error si se proporciona explícitamente un valor vacío
+        if search_terms == '':
+            return JsonResponse({'error': 'search_terms parameter cannot be empty'}, status=400)
+        
+        # Parse and limit the number of results
+        try:
+            limit = int(request.GET.get('limit', '10'))
+            limit = min(max(1, limit), 100)  # Ensure limit is between 1 and 100
+        except ValueError:
+            limit = 10
+        
+        # Build the request parameters para el endpoint de búsqueda general
+        params = {
+            'access_token': access_token,
+            'search_terms': search_terms,
+            'ad_reached_countries': 'ES',  # o ajusta con lo que te llegue de request.GET
+            'ad_type': 'POLITICAL_AND_ISSUE_ADS',
+            'limit': limit,
+        }
+        
+        # Make the API request with timeout
+        response = requests.get(url, params=params, timeout=10)
+        
+        # Check if the request was successful
+        if response.status_code == 200:
+            return JsonResponse(response.json())
+        else:
+            # Return the error from the API
+            return JsonResponse({
+                'error': f'API request failed with status code {response.status_code}',
+                'details': response.text
+            }, status=response.status_code)
+            
+    except requests.RequestException as e:
+        # Handle network errors
+        return JsonResponse({
+            'error': 'Failed to connect to Meta Ads API',
+            'details': str(e)
+        }, status=503)
+    except Exception as e:
+        # Handle any other unexpected errors
+        return JsonResponse({
+            'error': 'An unexpected error occurred',
+            'details': str(e)
+        }, status=500)
