@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.contrib import messages
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.http.response import HttpResponseRedirect, JsonResponse
+from django.http.response import HttpResponseRedirect, JsonResponse, HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.template.response import TemplateResponse
 from django.views.decorators.http import require_POST
@@ -10,10 +10,15 @@ from apps.subscriptions.helpers import create_stripe_checkout_session
 from django.urls import reverse
 from django.views.decorators.http import require_POST, require_http_methods
 import json
+import requests
+import urllib.parse
+import os
+from django.conf import settings
 
 from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion
 from .forms import AdLibraryForm
 from .services import can_create_ad_request, increment_usage
+import boto3
 
 # A reasonable value for pagination would be 10 or 20 entries per page.
 # Here we use 4 (a very low value), so we can show off the pagination using fewer items
@@ -1167,6 +1172,92 @@ def billing_page(request):
 
 
 @login_required
+def get_user_invoices(request):
+    """
+    Obtiene las facturas del usuario desde Stripe y las devuelve como JSON.
+    """
+
+
+@login_required
+def proxy_image_download(request):
+    """
+    Proxy endpoint for downloading images from S3.
+    This solves CORS issues by fetching the image through the backend.
+    
+    GET parameters:
+    - url: The S3 URL to download (can be a pre-signed URL).
+    - filename: Optional filename for the downloaded file.
+    
+    Returns:
+    - HTTP response with the image content and appropriate headers for download.
+    """
+    url = request.GET.get('url')
+    filename = request.GET.get('filename', 'image.jpg')
+    
+    if not url:
+        return JsonResponse({'error': 'Missing URL parameter'}, status=400)
+    
+    try:
+        # Check if this is an S3 URL
+        if 'adheist-s3.s3.amazonaws.com' in url:
+            # Parse the URL to extract the key
+            parsed_url = urllib.parse.urlparse(url)
+            path = parsed_url.path.lstrip('/')
+            
+            # If the URL contains /media/, it's using our standard path structure
+            if path.startswith('media/'):
+                # Create a boto3 client
+                s3_client = boto3.client(
+                    's3',
+                    region_name=getattr(settings, 'AWS_S3_REGION_NAME', 'us-east-2'),
+                    aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                    aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                )
+                
+                # Get the object directly from S3
+                response = s3_client.get_object(
+                    Bucket=getattr(settings, 'AWS_STORAGE_BUCKET_NAME', 'adheist-s3'),
+                    Key=path
+                )
+                
+                # Get the content type from the response
+                content_type = response.get('ContentType', 'application/octet-stream')
+                
+                # Create the HTTP response with the file content
+                http_response = HttpResponse(
+                    response['Body'].read(),
+                    content_type=content_type
+                )
+            else:
+                # For other S3 URLs, use requests to fetch the content
+                response = requests.get(url)
+                response.raise_for_status()
+                
+                # Create the HTTP response with the file content
+                http_response = HttpResponse(
+                    response.content,
+                    content_type=response.headers.get('Content-Type', 'application/octet-stream')
+                )
+        else:
+            # For non-S3 URLs, use requests to fetch the content
+            response = requests.get(url)
+            response.raise_for_status()
+            
+            # Create the HTTP response with the file content
+            http_response = HttpResponse(
+                response.content,
+                content_type=response.headers.get('Content-Type', 'application/octet-stream')
+            )
+        
+        # Set headers for file download
+        http_response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        return http_response
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
 def get_user_invoices(request):
     """
     Obtiene las facturas del usuario desde Stripe y las devuelve como JSON.

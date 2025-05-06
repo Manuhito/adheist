@@ -13,27 +13,23 @@ const AnimatedDownloadButton = ({ downloadUrl, fileName }) => {
   const [isHovered, setIsHovered] = useState(false);
   const { t } = useTranslation();
 
-  // Handle the download click using fetch and blob
+  // Handle the download click using the proxy endpoint
   const handleDownload = async () => {
     try {
       // Show loading state
       setIsHovered(true);
-      
-      // Fetch the image
-      const response = await fetch(downloadUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
 
-      // Create download link
+      // Create the proxy URL with the original URL and filename as parameters
+      const proxyUrl = `/ads/proxy-image/?url=${encodeURIComponent(downloadUrl)}&filename=${encodeURIComponent(fileName || 'image.jpg')}`;
+
+      // Create and click a link to the proxy URL
+      // This will trigger the browser's download behavior without CORS issues
       const link = document.createElement('a');
-      link.href = url;
-      link.download = fileName || 'image.jpg';
+      link.href = proxyUrl;
+      link.setAttribute('download', fileName || 'image.jpg');
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
-      // Clean up
-      window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error downloading image:', error);
       // Could show an error toast here
@@ -55,7 +51,7 @@ const AnimatedDownloadButton = ({ downloadUrl, fileName }) => {
       >
         <motion.div
           className="absolute"
-          animate={{ 
+          animate={{
             opacity: isHovered ? 0 : 1,
             scale: isHovered ? 0.8 : 1
           }}
