@@ -272,6 +272,11 @@ class AdRequestVersion(BaseModel):
             self.status = self.STATUS_COMPLETED
             super().save(update_fields=['status'])
             
+            # Update the associated AdRequest status to COMPLETED (STATUS_APPROVED)
+            if self.ad_request and self.ad_request.status != AdRequest.STATUS_APPROVED:
+                self.ad_request.status = AdRequest.STATUS_APPROVED
+                self.ad_request.save(update_fields=['status'])
+            
             # Send email notification
             self.send_completion_email()
     

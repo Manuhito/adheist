@@ -4,6 +4,41 @@
 
 {% block app %}
 <div id="page-content">
-  detalles
+  <div class="app-card">
+    <!-- Script con los datos JSON para React -->
+    <script id="adrequest-data" type="application/json">
+      {
+        "id": {% if ad_request.id %}{{ ad_request.id }}{% else %}null{% endif %},
+        "status": "{{ ad_request.status|default:"" }}",
+        "created_at": "{{ ad_request.created_at|date:'c'|default:"" }}",
+        "updated_at": "{{ ad_request.updated_at|date:'c'|default:"" }}",
+        "versions": {{ versions_json|safe }},
+        "total_versions": {{ total_versions }}
+      }
+    </script>
+    
+    <!-- Contenedor para el componente React -->
+    <div id="revision-adrequest-container" class="w-full"></div>
+  </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+  // Asegurarnos de que el script se carga correctamente
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM fully loaded for revision-adrequest');
+    // Cargar el script de React dinámicamente
+    var script = document.createElement('script');
+    script.src = "{% static 'js/revision-adrequest-bundle.js' %}";
+    script.onload = function() {
+      console.log('Revision AdRequest script loaded successfully');
+    };
+    script.onerror = function() {
+      console.error('Error loading Revision AdRequest script');
+    };
+    document.body.appendChild(script);
+  });
+</script>
 {% endblock %}
