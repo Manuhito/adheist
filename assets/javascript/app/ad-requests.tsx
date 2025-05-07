@@ -6,8 +6,7 @@ import { AlertNotification } from "../components/ui/alert-notification";
 import { cn } from "../lib/utils";
 import { useTranslation } from "../lib/useTranslation";
 
-// Debug log
-console.log("Ad Requests script loaded");
+// Componente para mostrar solicitudes de anuncios
 import {
     CheckCircle,
     AlertCircle,
@@ -99,7 +98,7 @@ function adRequestToBentoItem(adRequest: AdRequest, t: (key: string, fallback?: 
                 }
                 
                 const data = await response.json();
-                console.log('Latest ad request data:', data);
+
                 
                 // Check if the status is SUBMITTED or REOPENED
                 if (['SUBMITTED', 'REOPENED'].includes(data.status)) {
@@ -135,7 +134,7 @@ function adRequestToBentoItem(adRequest: AdRequest, t: (key: string, fallback?: 
                     window.location.href = redirectUrl;
                 }
             } catch (error) {
-                console.error('Error checking ad request status:', error);
+
                 // Fallback to using the status we already have
                 const redirectUrl = getRedirectUrl(adRequest.status, adRequest.ad_request_id);
                 if (redirectUrl) {
@@ -175,18 +174,18 @@ async function createNewAdRequest(t: (key: string, fallback?: string) => string)
         }
 
         const data = await response.json();
-        console.log('New ad request created:', data);
+
         
         // Redirect to the create_adrequest_page with the ID as a URL parameter
         if (data && data.id) {
             window.location.href = `/ads/create/${data.id}/`;
         } else {
-            console.error('No ID returned from create ad request API');
+
             // Fallback to reload if no ID is returned
             window.location.reload();
         }
     } catch (error) {
-        console.error('Error creating ad request:', error);
+
         alert(t('ad_requests.error_creating', 'Error creating ad request. Please try again.'));
     }
 }
@@ -202,25 +201,25 @@ function useSSEListener(onEvent: (eventType: string, data: any) => void) {
         
         // Connection opened
         eventSource.addEventListener('connected', (event) => {
-            console.log('SSE connection established', event);
+
             onEvent('connected', JSON.parse(event.data));
         });
         
         // Status change events
         eventSource.addEventListener('status_change', (event) => {
-            console.log('Status change event received', event);
+
             onEvent('status_change', JSON.parse(event.data));
         });
         
         // Completion events
         eventSource.addEventListener('completion', (event) => {
-            console.log('Completion event received', event);
+
             onEvent('completion', JSON.parse(event.data));
         });
         
         // Error handling
         eventSource.onerror = (error) => {
-            console.error('SSE connection error:', error);
+
             // Try to reconnect after a delay
             setTimeout(() => {
                 if (eventSourceRef.current) {
@@ -233,7 +232,7 @@ function useSSEListener(onEvent: (eventType: string, data: any) => void) {
         
         // Cleanup on component unmount
         return () => {
-            console.log('Closing SSE connection');
+
             if (eventSourceRef.current) {
                 eventSourceRef.current.close();
                 eventSourceRef.current = null;
@@ -252,11 +251,7 @@ function AdRequestsGrid() {
     
     // Get data from script element with id "ad-requests-data"
     const dataElement = document.getElementById("ad-requests-data");
-    console.log("Data element:", dataElement);
-    
-    if (dataElement) {
-        console.log("Data element content:", dataElement.textContent);
-    }
+
     
     const initialAdRequests: AdRequest[] = dataElement 
         ? JSON.parse(dataElement.textContent || "[]") 
@@ -267,7 +262,7 @@ function AdRequestsGrid() {
     
     // Handle SSE events
     const handleSSEEvent = (eventType: string, data: any) => {
-        console.log(`Handling ${eventType} event:`, data);
+
         
         if (eventType === 'status_change') {
             // Update the ad request in the list
@@ -318,11 +313,8 @@ function AdRequestsGrid() {
         }
     }, [t]);
 
-    console.log("Number of ad requests:", adRequests.length);
-    
     // Convert data to BentoItem format
     const bentoItems = adRequests.map(adRequest => adRequestToBentoItem(adRequest, t));
-    console.log("Bento items:", bentoItems);
 
     return (
         <div className="ad-requests-container">
@@ -350,30 +342,28 @@ function AdRequestsGrid() {
 
 // Function to initialize the React component
 function initAdRequestsGrid() {
-    console.log("Initializing Ad Requests Grid");
-    const container = document.getElementById("ad-requests-grid");
-    console.log("Container:", container);
+        const container = document.getElementById("ad-requests-grid");
     
     if (container) {
         try {
             const root = ReactDOM.createRoot(container);
             root.render(<AdRequestsGrid />);
-            console.log("Ad Requests Grid rendered");
+
         } catch (error) {
-            console.error("Error rendering Ad Requests Grid:", error);
+
         }
     } else {
-        console.error("Container not found: ad-requests-grid");
+
     }
 }
 
 // Try to render immediately if the DOM is already ready
 if (document.readyState === "complete" || document.readyState === "interactive") {
-    console.log("DOM already ready, initializing immediately");
+
     setTimeout(initAdRequestsGrid, 100); // Small delay to ensure everything is loaded
 } else {
     // Otherwise, wait for the DOM to be ready
-    console.log("Waiting for DOMContentLoaded");
+
     document.addEventListener("DOMContentLoaded", initAdRequestsGrid);
 }
 
