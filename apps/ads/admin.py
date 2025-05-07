@@ -205,21 +205,6 @@ class AdRequestVersionAdmin(admin.ModelAdmin):
         return mark_safe(html)
     generated_prompt_with_copy.short_description = "Generated Prompt"
     
-    # Custom form for AdRequestVersion admin
-    class AdRequestVersionForm(forms.ModelForm):
-        class Meta:
-            model = AdRequestVersion
-            fields = '__all__'
-
-
-@admin.register(AdRequestUsage)
-class AdRequestUsageAdmin(admin.ModelAdmin):
-    list_display = ["user", "usage_count", "is_free_tier", "billing_period_start", "billing_period_end", "created_at"]
-    search_fields = ["user__email"]
-    list_filter = ["is_free_tier"]
-    # readonly_fields = ["user", "usage_count", "billing_period_start", "billing_period_end", "is_free_tier"]
-    readonly_fields = ["user", "billing_period_start", "billing_period_end", "is_free_tier"]
-    
     def assign_to_me(self, request, queryset):
         """Admin action to assign selected AdRequestVersion objects to the logged-in user"""
         updated = 0
@@ -241,4 +226,19 @@ class AdRequestUsageAdmin(admin.ModelAdmin):
                 f"{updated} version{'s' if updated > 1 else ''} successfully assigned to you."
             )
     assign_to_me.short_description = "Assign to me"
+    
+    # Custom form for AdRequestVersion admin
+    class AdRequestVersionForm(forms.ModelForm):
+        class Meta:
+            model = AdRequestVersion
+            fields = '__all__'
+
+
+@admin.register(AdRequestUsage)
+class AdRequestUsageAdmin(admin.ModelAdmin):
+    list_display = ["user", "usage_count", "is_free_tier", "billing_period_start", "billing_period_end", "created_at"]
+    search_fields = ["user__email"]
+    list_filter = ["is_free_tier"]
+    # readonly_fields = ["user", "usage_count", "billing_period_start", "billing_period_end", "is_free_tier"]
+    readonly_fields = ["user", "billing_period_start", "billing_period_end", "is_free_tier"]
 
