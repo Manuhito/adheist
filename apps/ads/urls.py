@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import sse
 
 app_name = "ads"
 
@@ -24,5 +25,6 @@ urlpatterns = [
     path("payment/", views.payment_page, name="payment_page"),
     path("payment-success/", views.payment_success, name="payment_success"),
     path("api/invoices/", views.get_user_invoices, name="get_user_invoices"),
+    path("sse/adrequest-updates/", sse.sse_adrequest_updates, name="sse_adrequest_updates"),
     path("proxy-image/", views.proxy_image_download, name="proxy_image_download"),
 ]

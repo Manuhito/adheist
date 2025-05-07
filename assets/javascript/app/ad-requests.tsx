@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import ReactDOM from "react-dom/client";
 import { BentoGrid, BentoItem } from "../components/ui/bento-grid";
 import { ButtonColorful } from "../components/ui/button-colorful";
@@ -6,8 +6,7 @@ import { AlertNotification } from "../components/ui/alert-notification";
 import { cn } from "../lib/utils";
 import { useTranslation } from "../lib/useTranslation";
 
-// Debug log
-console.log("Ad Requests script loaded");
+// Componente para mostrar solicitudes de anuncios
 import {
     CheckCircle,
     AlertCircle,
@@ -99,7 +98,7 @@ function adRequestToBentoItem(adRequest: AdRequest, t: (key: string, fallback?: 
                 }
                 
                 const data = await response.json();
-                console.log('Latest ad request data:', data);
+
                 
                 // Check if the status is SUBMITTED or REOPENED
                 if (['SUBMITTED', 'REOPENED'].includes(data.status)) {
@@ -135,7 +134,7 @@ function adRequestToBentoItem(adRequest: AdRequest, t: (key: string, fallback?: 
                     window.location.href = redirectUrl;
                 }
             } catch (error) {
-                console.error('Error checking ad request status:', error);
+
                 // Fallback to using the status we already have
                 const redirectUrl = getRedirectUrl(adRequest.status, adRequest.ad_request_id);
                 if (redirectUrl) {
@@ -175,20 +174,73 @@ async function createNewAdRequest(t: (key: string, fallback?: string) => string)
         }
 
         const data = await response.json();
-        console.log('New ad request created:', data);
+
         
         // Redirect to the create_adrequest_page with the ID as a URL parameter
         if (data && data.id) {
             window.location.href = `/ads/create/${data.id}/`;
         } else {
-            console.error('No ID returned from create ad request API');
+
             // Fallback to reload if no ID is returned
             window.location.reload();
         }
     } catch (error) {
-        console.error('Error creating ad request:', error);
+
         alert(t('ad_requests.error_creating', 'Error creating ad request. Please try again.'));
     }
+}
+
+// SSE Event Handler component
+function useSSEListener(onEvent: (eventType: string, data: any) => void) {
+    const eventSourceRef = useRef<EventSource | null>(null);
+
+    useEffect(() => {
+        // Create EventSource connection to the SSE endpoint
+        const eventSource = new EventSource('/ads/sse/adrequest-updates/');
+        eventSourceRef.current = eventSource;
+        
+        // Connection opened
+        eventSource.addEventListener('connected', (event) => {
+
+            onEvent('connected', JSON.parse(event.data));
+        });
+        
+        // Status change events
+        eventSource.addEventListener('status_change', (event) => {
+
+            onEvent('status_change', JSON.parse(event.data));
+        });
+        
+        // Completion events
+        eventSource.addEventListener('completion', (event) => {
+
+            onEvent('completion', JSON.parse(event.data));
+        });
+        
+        // Error handling
+        eventSource.onerror = (error) => {
+
+            // Try to reconnect after a delay
+            setTimeout(() => {
+                if (eventSourceRef.current) {
+                    eventSourceRef.current.close();
+                    eventSourceRef.current = null;
+                }
+                // The browser will automatically attempt to reconnect
+            }, 5000);
+        };
+        
+        // Cleanup on component unmount
+        return () => {
+
+            if (eventSourceRef.current) {
+                eventSourceRef.current.close();
+                eventSourceRef.current = null;
+            }
+        };
+    }, [onEvent]);
+    
+    return eventSourceRef.current;
 }
 
 // Main component
@@ -196,9 +248,62 @@ function AdRequestsGrid() {
     const { t } = useTranslation();
     // State for notification
     const [notification, setNotification] = useState<{ message: string; variant: "warning" | "error" | "success" | "info" } | null>(null);
+    
+    // Get data from script element with id "ad-requests-data"
+    const dataElement = document.getElementById("ad-requests-data");
 
+    
+    const initialAdRequests: AdRequest[] = dataElement 
+        ? JSON.parse(dataElement.textContent || "[]") 
+        : [];
+    
+    // State to hold ad requests (can be updated in real-time)
+    const [adRequests, setAdRequests] = useState<AdRequest[]>(initialAdRequests);
+    
+    // Handle SSE events
+    const handleSSEEvent = (eventType: string, data: any) => {
+
+        
+        if (eventType === 'status_change') {
+            // Update the ad request in the list
+            setAdRequests(prevRequests => {
+                return prevRequests.map(req => {
+                    if (req.ad_request_id === data.ad_request_id) {
+                        // Update the request with new data
+                        return {
+                            ...req,
+                            status: data.new_status,
+                            display_status: data.display_status,
+                            updated_at: data.timestamp || req.updated_at,
+                            ad_library_name: data.ad_library_name || req.ad_library_name,
+                            canvas_size: data.canvas_size || req.canvas_size,
+                            tags: data.tags || req.tags,
+                            industries: data.industries || req.industries
+                        };
+                    }
+                    return req;
+                });
+            });
+            
+            // Show a notification about the status change
+            setNotification({
+                message: t('ad_requests.status_changed', `Ad request status changed to ${data.display_status}`),
+                variant: 'info'
+            });
+        } else if (eventType === 'completion') {
+            // Show a more prominent notification for completion events
+            setNotification({
+                message: t('ad_requests.completed', 'Your ad request has been completed! Your ad is now available.'),
+                variant: 'success'
+            });
+        }
+    };
+    
+    // Set up SSE listener
+    useSSEListener(handleSSEEvent);
+    
     // Mostrar alert verde si el flag está presente
-    React.useEffect(() => {
+    useEffect(() => {
         if (sessionStorage.getItem('ads_success_alert')) {
             setNotification({
                 message: t('ad_requests.success_message', 'Your ad request has been processed successfully! Your ad is being generated and may take a few minutes to be available.'),
@@ -206,26 +311,10 @@ function AdRequestsGrid() {
             });
             sessionStorage.removeItem('ads_success_alert');
         }
-    }, []);
+    }, [t]);
 
-    // Get data from script element with id "ad-requests-data"
-    const dataElement = document.getElementById("ad-requests-data");
-    console.log("Data element:", dataElement);
-    
-    if (dataElement) {
-        console.log("Data element content:", dataElement.textContent);
-    }
-    
-    const adRequests: AdRequest[] = dataElement 
-        ? JSON.parse(dataElement.textContent || "[]") 
-        : [];
-    
-    console.log("Parsed ad requests:", adRequests);
-    console.log("Number of ad requests:", adRequests.length);
-    
     // Convert data to BentoItem format
     const bentoItems = adRequests.map(adRequest => adRequestToBentoItem(adRequest, t));
-    console.log("Bento items:", bentoItems);
 
     return (
         <div className="ad-requests-container">
@@ -253,30 +342,28 @@ function AdRequestsGrid() {
 
 // Function to initialize the React component
 function initAdRequestsGrid() {
-    console.log("Initializing Ad Requests Grid");
-    const container = document.getElementById("ad-requests-grid");
-    console.log("Container:", container);
+        const container = document.getElementById("ad-requests-grid");
     
     if (container) {
         try {
             const root = ReactDOM.createRoot(container);
             root.render(<AdRequestsGrid />);
-            console.log("Ad Requests Grid rendered");
+
         } catch (error) {
-            console.error("Error rendering Ad Requests Grid:", error);
+
         }
     } else {
-        console.error("Container not found: ad-requests-grid");
+
     }
 }
 
 // Try to render immediately if the DOM is already ready
 if (document.readyState === "complete" || document.readyState === "interactive") {
-    console.log("DOM already ready, initializing immediately");
+
     setTimeout(initAdRequestsGrid, 100); // Small delay to ensure everything is loaded
 } else {
     // Otherwise, wait for the DOM to be ready
-    console.log("Waiting for DOMContentLoaded");
+
     document.addEventListener("DOMContentLoaded", initAdRequestsGrid);
 }
 
