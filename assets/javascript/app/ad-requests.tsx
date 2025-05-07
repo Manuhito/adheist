@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import ReactDOM from "react-dom/client";
 import { BentoGrid, BentoItem } from "../components/ui/bento-grid";
 import { ButtonColorful } from "../components/ui/button-colorful";
@@ -191,23 +191,65 @@ async function createNewAdRequest(t: (key: string, fallback?: string) => string)
     }
 }
 
+// SSE Event Handler component
+function useSSEListener(onEvent: (eventType: string, data: any) => void) {
+    const eventSourceRef = useRef<EventSource | null>(null);
+
+    useEffect(() => {
+        // Create EventSource connection to the SSE endpoint
+        const eventSource = new EventSource('/ads/sse/adrequest-updates/');
+        eventSourceRef.current = eventSource;
+        
+        // Connection opened
+        eventSource.addEventListener('connected', (event) => {
+            console.log('SSE connection established', event);
+            onEvent('connected', JSON.parse(event.data));
+        });
+        
+        // Status change events
+        eventSource.addEventListener('status_change', (event) => {
+            console.log('Status change event received', event);
+            onEvent('status_change', JSON.parse(event.data));
+        });
+        
+        // Completion events
+        eventSource.addEventListener('completion', (event) => {
+            console.log('Completion event received', event);
+            onEvent('completion', JSON.parse(event.data));
+        });
+        
+        // Error handling
+        eventSource.onerror = (error) => {
+            console.error('SSE connection error:', error);
+            // Try to reconnect after a delay
+            setTimeout(() => {
+                if (eventSourceRef.current) {
+                    eventSourceRef.current.close();
+                    eventSourceRef.current = null;
+                }
+                // The browser will automatically attempt to reconnect
+            }, 5000);
+        };
+        
+        // Cleanup on component unmount
+        return () => {
+            console.log('Closing SSE connection');
+            if (eventSourceRef.current) {
+                eventSourceRef.current.close();
+                eventSourceRef.current = null;
+            }
+        };
+    }, [onEvent]);
+    
+    return eventSourceRef.current;
+}
+
 // Main component
 function AdRequestsGrid() {
     const { t } = useTranslation();
     // State for notification
     const [notification, setNotification] = useState<{ message: string; variant: "warning" | "error" | "success" | "info" } | null>(null);
-
-    // Mostrar alert verde si el flag está presente
-    React.useEffect(() => {
-        if (sessionStorage.getItem('ads_success_alert')) {
-            setNotification({
-                message: t('ad_requests.success_message', 'Your ad request has been processed successfully! Your ad is being generated and may take a few minutes to be available.'),
-                variant: 'success',
-            });
-            sessionStorage.removeItem('ads_success_alert');
-        }
-    }, []);
-
+    
     // Get data from script element with id "ad-requests-data"
     const dataElement = document.getElementById("ad-requests-data");
     console.log("Data element:", dataElement);
@@ -216,11 +258,66 @@ function AdRequestsGrid() {
         console.log("Data element content:", dataElement.textContent);
     }
     
-    const adRequests: AdRequest[] = dataElement 
+    const initialAdRequests: AdRequest[] = dataElement 
         ? JSON.parse(dataElement.textContent || "[]") 
         : [];
     
-    console.log("Parsed ad requests:", adRequests);
+    // State to hold ad requests (can be updated in real-time)
+    const [adRequests, setAdRequests] = useState<AdRequest[]>(initialAdRequests);
+    
+    // Handle SSE events
+    const handleSSEEvent = (eventType: string, data: any) => {
+        console.log(`Handling ${eventType} event:`, data);
+        
+        if (eventType === 'status_change') {
+            // Update the ad request in the list
+            setAdRequests(prevRequests => {
+                return prevRequests.map(req => {
+                    if (req.ad_request_id === data.ad_request_id) {
+                        // Update the request with new data
+                        return {
+                            ...req,
+                            status: data.new_status,
+                            display_status: data.display_status,
+                            updated_at: data.timestamp || req.updated_at,
+                            ad_library_name: data.ad_library_name || req.ad_library_name,
+                            canvas_size: data.canvas_size || req.canvas_size,
+                            tags: data.tags || req.tags,
+                            industries: data.industries || req.industries
+                        };
+                    }
+                    return req;
+                });
+            });
+            
+            // Show a notification about the status change
+            setNotification({
+                message: t('ad_requests.status_changed', `Ad request status changed to ${data.display_status}`),
+                variant: 'info'
+            });
+        } else if (eventType === 'completion') {
+            // Show a more prominent notification for completion events
+            setNotification({
+                message: t('ad_requests.completed', 'Your ad request has been completed! Your ad is now available.'),
+                variant: 'success'
+            });
+        }
+    };
+    
+    // Set up SSE listener
+    useSSEListener(handleSSEEvent);
+    
+    // Mostrar alert verde si el flag está presente
+    useEffect(() => {
+        if (sessionStorage.getItem('ads_success_alert')) {
+            setNotification({
+                message: t('ad_requests.success_message', 'Your ad request has been processed successfully! Your ad is being generated and may take a few minutes to be available.'),
+                variant: 'success',
+            });
+            sessionStorage.removeItem('ads_success_alert');
+        }
+    }, [t]);
+
     console.log("Number of ad requests:", adRequests.length);
     
     // Convert data to BentoItem format
