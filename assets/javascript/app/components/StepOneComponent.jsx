@@ -120,7 +120,7 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
       // Look for image URL in different possible properties
       const imageUrl = item.ad_image || item.image || item.url || item.image_url ||
         "https://images.unsplash.com/photo-1557804506-669a67965ba0";
-      
+
       // Get industry information if available
       let industry = "";
       if (item.industry) {
@@ -145,7 +145,7 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
   useEffect(() => {
     fetchFilteredResults();
   }, [selectedCompany, selectedIndustries, selectedTags]);
-  
+
   // Fetch fresh data when component mounts
   useEffect(() => {
     if (refreshData && initialData?.id) {
@@ -176,10 +176,9 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
   // Canvas size options - using actual size values as IDs
   const canvasSizes = [
-    { id: "1080x1080", label: t('step_one.square', 'Square'), size: "1080 x 1080" },
-    { id: "1080x1920", label: t('step_one.portrait', 'Portrait'), size: "1080 x 1920" },
-    { id: "1080x1350", label: t('step_one.portrait', 'Portrait'), size: "1080 x 1350" },
-    { id: "1280x720", label: t('step_one.landscape', 'Landscape'), size: "1280 x 720" },
+    { id: "1024x1024", label: t('step_one.square', 'Square'), size: "1024 x 1024" },
+    { id: "1024x1792", label: t('step_one.portrait', 'Portrait'), size: "1024 x 1792" },
+    { id: "1792x1024", label: t('step_one.landscape', 'Landscape'), size: "1792 x 1024" },
   ];
 
   // Function to clear all filters
@@ -218,7 +217,7 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
       if (initialData && initialData.id) {
         // Update existing AdRequest
         console.log('Updating ad request with ID:', initialData.id);
-        
+
         response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
           method: 'POST',
           body: formData,
@@ -237,7 +236,7 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
       } else {
         // Create new AdRequest
         console.log('Creating new ad request with:', { selectedAdLibrary, selectedCanvasSize });
-        
+
         response = await fetch('/ads/adrequest/create/', {
           method: 'POST',
           body: formData,
@@ -254,7 +253,7 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
           console.log('Ad request created successfully:', data);
         }
       }
-      
+
       // Call the onComplete callback with the updated ad request data
       if (onComplete) {
         onComplete({
@@ -346,7 +345,7 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
             <div className="mt-12 w-full max-w-4xl mx-auto">
               <div className="space-y-4">
                 <p className="text-lg font-medium text-center">{t('step_one.select_canvas', 'Select a canvas size to proceed')}</p>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {canvasSizes.map((item) => (
                     <div
                       key={item.id}
@@ -355,16 +354,13 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
                       onClick={() => handleCanvasSizeChange(item.id)}
                     >
                       {/* Shape preview that matches the aspect ratio */}
-                      {item.id === "1080x1080" && (
+                      {item.id === "1024x1024" && (
                         <div className="w-12 h-12 border-2 border-gray-300 rounded-sm mb-2" />
                       )}
-                      {item.id === "1080x1920" && (
+                      {item.id === "1024x1792" && (
                         <div className="w-8 h-14 border-2 border-gray-300 rounded-sm mb-2" />
                       )}
-                      {item.id === "1080x1350" && (
-                        <div className="w-9 h-12 border-2 border-gray-300 rounded-sm mb-2" />
-                      )}
-                      {item.id === "1280x720" && (
+                      {item.id === "1792x1024" && (
                         <div className="w-14 h-8 border-2 border-gray-300 rounded-sm mb-2" />
                       )}
                       <div className="font-semibold">{item.label}</div>
@@ -374,7 +370,7 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
                 </div>
               </div>
             </div>
-            
+
             {/* Next button - in its own container */}
             <div className="mt-8 w-full px-4 flex justify-end">
               <TooltipProvider>

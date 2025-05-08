@@ -99,7 +99,7 @@ class AdRequest(BaseModel):
     marketing_image_2_override = models.ImageField(upload_to="adrequest_assets/", null=True, blank=True)
     marketing_image_3_override = models.ImageField(upload_to="adrequest_assets/", null=True, blank=True)
     
-    canvas_size = models.CharField(max_length=20, default="1080x1080")
+    canvas_size = models.CharField(max_length=20, default="1024x1024")
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=STATUS_NEW)
     
     def save(self, *args, **kwargs):

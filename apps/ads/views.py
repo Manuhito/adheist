@@ -3,6 +3,10 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.contrib import messages
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http.response import HttpResponseRedirect, JsonResponse, HttpResponse
+import logging
+
+# Importar el servicio de generación de imágenes
+from apps.aiinterface.services import ImageGenerationService
 from django.shortcuts import get_object_or_404, render, redirect
 from django.template.response import TemplateResponse
 from django.views.decorators.http import require_POST
@@ -795,7 +799,7 @@ def user_ad_requests(request):
 @require_POST
 def adrequest_version_create(request):
     """
-    Create a new AdRequestVersion instance.
+    Create a new AdRequestVersion instance and generate an image using OpenAI.
     
     Required input:
     - ad_request: The primary key of the AdRequest to create a version for
@@ -803,8 +807,9 @@ def adrequest_version_create(request):
     Optional inputs:
     - user_prompt: The user prompt for the version
     
-    Returns: JSON with the AdRequestVersion instance ID
+    Returns: JSON with the AdRequestVersion instance ID and image generation status
     """
+    # Usando prints en lugar de loggers
     ad_request_id = request.POST.get('ad_request')
     
     # Validate inputs
@@ -829,14 +834,83 @@ def adrequest_version_create(request):
             status=AdRequestVersion.STATUS_UNASSIGNED
         )
         
-        # Return the AdRequestVersion instance ID
+        # Generate image using OpenAI if user_prompt is provided
+        image_generated = False
+        if user_prompt:
+            try:
+                # Collect image URLs from AdRequest for context
+                image_urls = []
+                
+                # Check each image field and add to context if it exists
+                image_fields = [
+                    'logo_override',
+                    'product_image_1_override',
+                    'product_image_2_override',
+                    'app_image_1_override',
+                    'app_image_2_override',
+                    'marketing_image_1_override',
+                    'marketing_image_2_override',
+                    'marketing_image_3_override'
+                ]
+                
+                for field_name in image_fields:
+                    image_field = getattr(ad_request, field_name)
+                    if image_field and image_field.url:
+                        # Get the full URL for the image
+                        image_urls.append(request.build_absolute_uri(image_field.url))
+                
+                # Get canvas size from AdRequest
+                canvas_size = ad_request.canvas_size or "1024x1024"
+                
+                # Generate image using OpenAI
+                print(f"Generating image for AdRequestVersion {version.id} with prompt: {user_prompt[:50]}...")
+                service = ImageGenerationService()
+                result = service.generate_image_from_text_and_images(
+                    text_prompt=user_prompt,
+                    image_urls=image_urls,
+                    canvas_size=canvas_size
+                )
+                
+                # Save the generated image URL to the version
+                if result and 'image_url' in result:
+                    from django.core.files.base import ContentFile
+                    import requests
+                    
+                    # Download the image from the URL
+                    image_url = result['image_url']
+                    response = requests.get(image_url)
+                    
+                    if response.status_code == 200:
+                        # Save the image to the model's ImageField
+                        image_name = f"version_{version.id}_image.png"
+                        version.generated_image.save(image_name, ContentFile(response.content), save=True)
+                        
+                        # Update status to COMPLETED since we have an image
+                        version.status = AdRequestVersion.STATUS_COMPLETED
+                        version.save(update_fields=['status'])
+                        
+                        # Save the enhanced prompt if available
+                        if 'enhanced_prompt' in result:
+                            version.generated_prompt = result['enhanced_prompt']
+                            version.save(update_fields=['generated_prompt'])
+                        
+                        image_generated = True
+                        print(f"Image generated successfully for AdRequestVersion {version.id}")
+                    else:
+                        print(f"Failed to download image from URL: {image_url}, status: {response.status_code}")
+            except Exception as img_error:
+                print(f"Error generating image: {str(img_error)}")
+        
+        # Return the AdRequestVersion instance ID and image generation status
         return JsonResponse({
             'id': version.id,
             'status': version.status,
-            'message': 'Version created successfully'
+            'image_generated': image_generated,
+            'message': 'Version created successfully' + (' with image' if image_generated else '')
         }, status=201)
         
     except Exception as e:
+        print(f"Error in adrequest_version_create: {str(e)}")
         return JsonResponse({'error': str(e)}, status=500)
 
 
