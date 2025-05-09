@@ -1,13 +1,10 @@
 """
 Services for AI interface operations.
 """
-import logging
 from typing import Dict, List, Optional, Union
 
 from django.conf import settings
 from openai import OpenAI
-
-logger = logging.getLogger(__name__)
 
 
 class ImageGenerationService:
@@ -39,7 +36,28 @@ class ImageGenerationService:
             messages = [
                 {
                     "role": "system",
-                    "content": "You are a prompt engineer combining visual and textual concepts into a DALL·E 3 image prompt."
+                    "content": """You are an expert prompt engineer specializing in creating prompts for DALL-E 3 image generation. 
+
+Your task is to create a detailed, descriptive prompt that DALL-E 3 will use to generate an advertisement image.
+
+IMPORTANT: The user will provide you with information about a company, product, and design requirements. 
+THIS IS NOT A REQUEST FOR INSTRUCTIONS - it is information for you to use in crafting a DALL-E prompt.
+
+DO NOT:
+- Provide instructions on how to manually create an image
+- Mention tools like Photoshop or Canva
+- Format your response as a conversation or explanation
+- Say you're unable to help or that you can't create images
+- Ask for more information or clarification
+
+INSTEAD, DIRECTLY CREATE:
+A single, cohesive paragraph describing the exact visual scene to be generated, incorporating:
+1. All company and product information provided by the user
+2. Specific details about composition, style, lighting, colors, and mood
+3. Precise description of advertisement elements (product placement, branding, etc.)
+4. Any logos or product images mentioned should be described as integrated into the scene
+
+Your entire response will be sent directly to DALL-E 3 as a prompt, so write ONLY what you want DALL-E to interpret."""
                 }
             ]
             
@@ -68,14 +86,15 @@ class ImageGenerationService:
             })
             
             # Get enhanced prompt from GPT-4o
-            logger.info(f"Sending request to GPT-4o with {len(messages)} messages")
+            print(f"Sending request to GPT-4o with {len(messages)} messages")
+            print(f"Messages: {messages}")
             completion = self.client.chat.completions.create(
                 model="gpt-4o",
                 messages=messages,
             )
             
             enhanced_prompt = completion.choices[0].message.content
-            logger.info(f"Enhanced prompt generated: {enhanced_prompt[:100]}...")
+            print(f"Enhanced prompt generated: {enhanced_prompt[:100]}...")
             
             # Generate image with DALL·E 3
             response = self.client.images.generate(
@@ -87,13 +106,25 @@ class ImageGenerationService:
             )
             
             image_url = response.data[0].url
-            logger.info(f"Image generated successfully")
+            print(f"Image generated successfully")
+            
+            # Prepare metadata from the OpenAI responses
+            metadata = {
+                "gpt4o_model": "gpt-4o",
+                "dalle_model": "dall-e-3",
+                "canvas_size": canvas_size,
+                "quality": "standard",
+                "completion_id": getattr(completion, 'id', None),
+                "image_response_id": getattr(response, 'id', None),
+                "created_at": getattr(response, 'created', None),
+            }
             
             return {
                 "image_url": image_url,
-                "enhanced_prompt": enhanced_prompt
+                "enhanced_prompt": enhanced_prompt,
+                "response_metadata": metadata
             }
         
         except Exception as e:
-            logger.error(f"Error generating image: {str(e)}")
+            print(f"Error generating image: {str(e)}")
             raise

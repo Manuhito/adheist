@@ -862,11 +862,15 @@ def adrequest_version_create(request):
                 # Get canvas size from AdRequest
                 canvas_size = ad_request.canvas_size or "1024x1024"
                 
+                # Generate the complete prompt using the generate_prompt function
+                from .gen_prompt import generate_prompt
+                complete_prompt = generate_prompt(version)
+                
                 # Generate image using OpenAI
                 print(f"Generating image for AdRequestVersion {version.id} with prompt: {user_prompt[:50]}...")
                 service = ImageGenerationService()
                 result = service.generate_image_from_text_and_images(
-                    text_prompt=user_prompt,
+                    text_prompt=complete_prompt,  
                     image_urls=image_urls,
                     canvas_size=canvas_size
                 )
@@ -889,10 +893,22 @@ def adrequest_version_create(request):
                         version.status = AdRequestVersion.STATUS_COMPLETED
                         version.save(update_fields=['status'])
                         
-                        # Save the enhanced prompt if available
+                        # Save the OpenAI responses in the new fields
+                        update_fields = []
+                        
+                        # Save the enhanced prompt in the new field
                         if 'enhanced_prompt' in result:
-                            version.generated_prompt = result['enhanced_prompt']
-                            version.save(update_fields=['generated_prompt'])
+                            version.openai_gpt4_prompt = result['enhanced_prompt']
+                            update_fields.append('openai_gpt4_prompt')
+                            
+                        # Save the response metadata if available
+                        if 'response_metadata' in result:
+                            version.openai_response_metadata = result['response_metadata']
+                            update_fields.append('openai_response_metadata')
+                            
+                        # Save the updated fields
+                        if update_fields:
+                            version.save(update_fields=update_fields)
                         
                         image_generated = True
                         print(f"Image generated successfully for AdRequestVersion {version.id}")
