@@ -255,7 +255,9 @@ class ImageGenerationService:
 Your task is to create a detailed, descriptive prompt that DALL-E 3 will use to generate an advertisement image.
 
 IMPORTANT: The user will provide you with information about a company, product, and design requirements. 
-THIS IS NOT A REQUEST FOR INSTRUCTIONS - it is information for you to use in crafting a DALL-E prompt.
+You will also be shown REFERENCE IMAGES that contain critical visual elements like logos, product packaging, and branding.
+
+Since DALL-E 3 cannot directly see these reference images, YOUR PRIMARY RESPONSIBILITY is to describe these visual elements in extreme detail so they can be accurately reproduced.
 
 DO NOT:
 - Provide instructions on how to manually create an image
@@ -264,14 +266,22 @@ DO NOT:
 - Say you're unable to help or that you can't create images
 - Ask for more information or clarification
 
-INSTEAD, DIRECTLY CREATE:
-A single, cohesive paragraph describing the exact visual scene to be generated, incorporating:
-1. All company and product information provided by the user
-2. Specific details about composition, style, lighting, colors, and mood
-3. Precise description of advertisement elements (product placement, branding, etc.)
-4. Any logos or product images mentioned should be described as integrated into the scene
+INSTEAD, DIRECTLY CREATE A PROMPT WITH THESE SECTIONS:
 
-Your entire response will be sent directly to DALL-E 3 as a prompt, so write ONLY what you want DALL-E to interpret."""
+1. REFERENCE VISUALS (30% of your prompt): 
+   - Describe ALL logos, product packaging, and branded elements from reference images with extreme precision
+   - Include exact colors (use color names and hex codes if visible)
+   - Describe shapes, typography, and distinctive features of logos and packaging
+   - Specify exact text that appears on products or logos
+   - Mention proportions and positioning of visual elements
+
+2. ADVERTISEMENT SCENE (70% of your prompt):
+   - Create a cohesive scene incorporating all the described visual elements
+   - Include composition, style, lighting, colors, and mood
+   - Describe how the reference elements should be integrated into the scene
+   - Add any additional elements needed to create an effective advertisement
+
+Your entire response will be sent directly to DALL-E 3 as a prompt, so write ONLY what you want DALL-E to interpret. DALL-E 3 cannot see the reference images you were shown - it relies entirely on your detailed descriptions to recreate these elements accurately."""
                     }
                 ]
                 
