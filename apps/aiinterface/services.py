@@ -428,11 +428,24 @@ Your entire response will be sent directly to DALL-E 3 as a prompt, so write ONL
                 "generated_images_count": len(generated_images)
             }
             
+            # Add OpenAI response metadata if available
+            if 'completion' in locals() and completion:
+                metadata["completion_id"] = getattr(completion, 'id', None)
+                metadata["gpt4o_prompt"] = messages[-1]["content"] if messages and len(messages) > 0 else None
+                
+            if 'response' in locals() and response:
+                metadata["image_response_id"] = getattr(response, 'id', None)
+                metadata["created_at"] = getattr(response, 'created', None)
+                
+            # Add final prompt used for the image generation
+            if final_prompt:
+                metadata["openai_prompt"] = final_prompt
+            
             return {
                 "image_url": final_image,
-                "final_prompt": final_prompt,
+                "enhanced_prompt": final_prompt,  # Nombre requerido por adrequest_version_create
                 "retry_history": retry_history,
-                "metadata": metadata
+                "response_metadata": metadata  # Nombre requerido por adrequest_version_create
             }
         except Exception as e:
             logger.error(f"Error in generate_image_from_text_and_images: {str(e)}")
