@@ -220,7 +220,7 @@ class ImageGenerationService:
         image_urls: List[str] = None,
         canvas_size: str = "1024x1024",
         verify_text: bool = True,
-        max_retries: int = 3
+        max_retries: int = 5
     ) -> Dict[str, Any]:
         """
         Generate an image using GPT-4o and DALL·E 3 with text verification.
