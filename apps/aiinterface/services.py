@@ -5,6 +5,8 @@ from typing import Dict, List, Optional, Union
 
 from django.conf import settings
 from openai import OpenAI
+import os
+import requests
 
 
 class ImageGenerationService:
@@ -13,216 +15,190 @@ class ImageGenerationService:
     def __init__(self):
         """Initialize the service with OpenAI client."""
         self.client = OpenAI(api_key=settings.OPENAI_API_KEY)
-        
+
     def test_openai_connection(self):
-        """Test method to verify OpenAI API connection with gpt-image-1.
-        
-        This method tests the gpt-image-1 model to verify if it's working correctly.
-        
-        Returns:
-            A dictionary with test results.
         """
-        print("\n----- TESTING GPT-IMAGE-1 CONNECTION -----")
-        
-        try:
-            print("Testing gpt-image-1 image generation...")
-            gpt_image_response = self.client.chat.completions.create(
-                model="gpt-image-1",
-                messages=[
-                    {"role": "system", "content": "Generate a high-quality image."},
-                    {"role": "user", "content": "A futuristic city skyline at night, with flying cars and neon lights"}
-                ],
-                max_tokens=4096
-            )
-            
-            # Print the raw response structure to understand the format
-            print(f"gpt-image-1 response type: {type(gpt_image_response)}")
-            print(f"gpt-image-1 response structure: {gpt_image_response}")
-            
-            content = gpt_image_response.choices[0].message.content
-            print(f"Content type: {type(content)}")
-            print(f"Content: {content[:100] if isinstance(content, str) else str(content)[:100]}...")
-            
-            # Try to extract image URL if possible
-            image_url = None
-            if isinstance(content, list):
-                for item in content:
-                    if isinstance(item, dict) and item.get("type") == "image":
-                        image_url = item.get("image_url", {}).get("url")
-                        break
-            elif isinstance(content, dict) and content.get("type") == "image":
-                image_url = content.get("image_url", {}).get("url")
-            
-            if image_url:
-                result = {
-                    "status": "success",
-                    "image_url": image_url,
-                    "message": "gpt-image-1 test successful!"
-                }
-                print("\n----- TEST COMPLETED SUCCESSFULLY -----")
+        Tests the OpenAI image generation endpoint using the gpt-image-1 model.
+        Returns True if the API is reachable and responds with an image URL.
+        Raises Exception on failure.
+        """
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY environment variable not set")
+
+        url = "https://api.openai.com/v1/images/generations"
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        }
+        data = {
+            "model": "gpt-image-1",
+            "prompt": "A red apple",
+            "n": 1,
+            "size": "1024x1024",
+            "output_format": "webp"
+        }
+        response = requests.post(url, headers=headers, json=data, timeout=300)
+        if response.status_code == 200:
+            result = response.json()
+            print(result)
+            if "data" in result and result["data"] and "b64_json" in result["data"][0]:
+                return True
             else:
-                result = {
-                    "status": "partial",
-                    "message": "gpt-image-1 API call succeeded but no image URL found in response",
-                    "raw_response": str(content)[:500] + "..."
-                }
-                print("\n----- TEST PARTIALLY COMPLETED -----")
-                
-        except Exception as e:
-            error_message = f"Error testing gpt-image-1: {str(e)}"
-            print(f"gpt-image-1 test failed: {error_message}")
-            result = {
-                "status": "failed",
-                "error": str(e),
-                "message": error_message
-            }
-            print("\n----- TEST FAILED -----")
-        
-        return result
+                raise Exception("No image URL returned in response")
+        else:
+            raise Exception(f"OpenAI API error: {response.status_code} - {response.text}")
 
     def generate_image_from_text_and_images(
         self,
         text_prompt: str,
         image_urls: List[str] = None,
         canvas_size: str = "1024x1024",
-    ) -> Dict[str, str]:
+    ) -> dict:
         """
-        Generate an image using GPT-4o for prompt enhancement and gpt-image-1 for image generation.
-        
+        Generate an image using the gpt-image-1 model via OpenAI's API.
         Args:
             text_prompt: The text prompt describing the image to generate.
-            image_urls: List of image URLs to use as visual context.
-            canvas_size: Size hint for the generated image. Default is "1024x1024".
-            
+            canvas_size: The desired image size (e.g., "1024x1024").
         Returns:
-            Dictionary containing the URL of the generated image.
+            A dictionary containing the image data ("b64_json" or "url" if present).
+        Raises:
+            Exception if the API call fails or no image is returned.
         """
+
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY environment variable not set")
+
+        if not image_urls or not image_urls[0]:
+            raise ValueError("At least one image URL or file path must be provided for edit mode.")
+
+        import tempfile
+        import shutil
+        from urllib.parse import urlparse
+        import requests
+        from PIL import Image
+        import io
+
+        image_source = image_urls[0]
+        temp_image_path = None
+        image_file = None
         try:
-            # Build messages for GPT-4o
-            messages = [
-                {
-                    "role": "system",
-                    "content": """You are an expert prompt engineer specializing in creating detailed image descriptions. 
-
-Your task is to create a detailed, descriptive prompt that will be used to generate an advertisement image.
-
-IMPORTANT: The user will provide you with information about a company, product, and design requirements. 
-THIS IS NOT A REQUEST FOR INSTRUCTIONS - it is information for you to use in crafting an image description.
-
-DO NOT:
-- Provide instructions on how to manually create an image
-- Mention tools like Photoshop or Canva
-- Format your response as a conversation or explanation
-- Say you're unable to help or that you can't create images
-- Ask for more information or clarification
-
-INSTEAD, DIRECTLY CREATE:
-A single, cohesive paragraph describing the exact visual scene to be generated, incorporating:
-1. All company and product information provided by the user
-2. Specific details about composition, style, lighting, colors, and mood
-3. Precise description of advertisement elements (product placement, branding, etc.)
-4. Any logos or product images mentioned should be described as integrated into the scene
-
-Your entire response will be used directly as an image generation prompt, so write ONLY what you want in the final image."""
-                }
-            ]
+            # Download or open the image in its original format if compatible
+            # gpt-image-1 accepts PNG, WebP, or JPG files
+            supported_formats = ["PNG", "WEBP", "JPEG", "JPG"]
             
-            # Add image messages
-            if image_urls:
-                for image_url in image_urls:
-                    if not image_url:
-                        continue
-                    
-                    messages.append({
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": image_url
-                                }
-                            }
-                        ]
-                    })
-            
-            # Add text prompt
-            messages.append({
-                "role": "user",
-                "content": text_prompt
-            })
-            
-            # Get enhanced prompt from GPT-4o
-            print(f"Sending request to GPT-4o with {len(messages)} messages")
-            print(f"Messages: {messages}")
-            completion = self.client.chat.completions.create(
-                model="gpt-4o",
-                messages=messages,
-            )
-            
-            enhanced_prompt = completion.choices[0].message.content
-            print(f"Enhanced prompt generated: {enhanced_prompt[:100]}...")
-            
-            # Generate image with gpt-image-1
-            print(f"Generating image with gpt-image-1 using enhanced prompt")
-            
-            # Create a simple message with just the enhanced prompt
-            image_messages = [
-                {
-                    "role": "system",
-                    "content": "Generate a high-quality image based on the following description."
-                },
-                {
-                    "role": "user",
-                    "content": enhanced_prompt
-                }
-            ]
-            
-            # Use the chat completions API with gpt-image-1 model
-            response = self.client.chat.completions.create(
-                model="gpt-image-1",
-                messages=image_messages,
-                max_tokens=4096
-            )
-            
-            # Extract the image URL from the response
-            content = response.choices[0].message.content
-            print(f"Response content type: {type(content)}")
-            
-            # Handle different possible response formats
-            image_url = None
-            
-            if isinstance(content, list):
-                # Format 1: List of content items
-                for content_item in content:
-                    if isinstance(content_item, dict) and content_item.get("type") == "image":
-                        image_url = content_item.get("image_url", {}).get("url")
-                        break
-            elif isinstance(content, dict):
-                # Format 2: Single content item
-                if content.get("type") == "image":
-                    image_url = content.get("image_url", {}).get("url")
-            
-            if not image_url:
-                raise ValueError("No image was generated in the response")
+            if urlparse(image_source).scheme in ("http", "https"):
+                resp = requests.get(image_source, stream=True)
+                resp.raise_for_status()
                 
-            print(f"Image generated successfully with gpt-image-1")
-            
-            # Prepare metadata from the OpenAI responses
-            metadata = {
-                "gpt4o_model": "gpt-4o",
-                "image_model": "gpt-image-1",
-                "canvas_size": canvas_size,
-                "completion_id": getattr(completion, 'id', None),
-                "image_response_id": getattr(response, 'id', None),
-                "created_at": getattr(response, 'created', None),
+                img = Image.open(io.BytesIO(resp.content))
+                img_format = img.format
+                
+                # Keep original format if supported, otherwise convert to PNG
+                if img_format in supported_formats:
+                    # Save with original format
+                    extension = f".{img_format.lower()}"
+                    temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=extension)
+                    img.save(temp_image, format=img_format)
+                    temp_image_path = temp_image.name
+                    temp_image.close()
+                else:
+                    # Convert to PNG if not supported
+                    temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
+                    img.save(temp_image, format="PNG")
+                    temp_image_path = temp_image.name
+                    temp_image.close()
+                    img_format = "PNG"
+                
+                image_file = open(temp_image_path, "rb")
+                content_type = f"image/{img_format.lower()}"
+            else:
+                # Assume local file path
+                img = Image.open(image_source)
+                img_format = img.format
+                
+                if img_format in supported_formats:
+                    # Use original file if format is supported
+                    image_file = open(image_source, "rb")
+                    content_type = f"image/{img_format.lower()}"
+                else:
+                    # Convert to PNG if not supported
+                    temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
+                    img.save(temp_image, format="PNG")
+                    temp_image_path = temp_image.name
+                    temp_image.close()
+                    image_file = open(temp_image_path, "rb")
+                    content_type = "image/png"
+
+            edit_url = "https://api.openai.com/v1/images/edits"
+            headers = {
+                "Authorization": f"Bearer {api_key}"
             }
-            
-            return {
-                "image_url": image_url,
-                "enhanced_prompt": enhanced_prompt,
-                "response_metadata": metadata
+            data = {
+                "model": "gpt-image-1",
+                "prompt": text_prompt,
+                "n": 1,
+                "size": canvas_size
+                # gpt-image-1 siempre devuelve base64, no se puede especificar response_format
             }
-        
-        except Exception as e:
-            print(f"Error generating image: {str(e)}")
-            raise
+            # Usar el nombre de archivo con la extensión correcta basada en el formato
+            file_extension = ".png" if img_format == "PNG" else ".webp" if img_format == "WEBP" else ".jpg"
+            filename = f"image{file_extension}"
+            
+            files = {
+                "image": (filename, image_file, content_type)
+            }
+            response = requests.post(edit_url, headers=headers, data=data, files=files, timeout=300)
+            if response.status_code == 200:
+                result = response.json()
+                if "data" in result and result["data"]:
+                    # Obtener el primer elemento de data
+                    image_data = result["data"][0]
+                    
+                    # gpt-image-1 siempre devuelve base64, así que debemos extraer b64_json
+                    if "b64_json" not in image_data:
+                        raise Exception("No b64_json found in response. gpt-image-1 should always return base64-encoded images.")
+                    
+                    # Obtener los datos base64
+                    b64_data = image_data["b64_json"]
+                    
+                    # Convertir base64 a bytes
+                    import base64
+                    image_bytes = base64.b64decode(b64_data)
+                    
+                    # Construir la respuesta en un formato que adrequest_version_create pueda usar
+                    # Proporcionamos directamente los bytes de la imagen para un procesamiento más eficiente
+                    formatted_response = {
+                        # Incluimos los bytes de la imagen para que adrequest_version_create
+                        # pueda guardarlos directamente sin necesidad de descargar una URL
+                        "image_content": image_bytes,
+                        "is_binary": True,  # Indicador de que estamos enviando datos binarios
+                        
+                        # Como ya no estamos usando GPT-4o para mejorar el prompt,
+                        # simplemente pasamos el prompt original
+                        "enhanced_prompt": text_prompt,
+                        
+                        # Incluir algunos metadatos básicos
+                        "response_metadata": {
+                            "model": "gpt-image-1",
+                            "canvas_size": canvas_size,
+                            "edit_mode": True,
+                            "created_at": None
+                        }
+                    }
+                    
+                    return formatted_response
+                else:
+                    raise Exception("No image data returned in response")
+            else:
+                raise Exception(f"OpenAI API error: {response.status_code} - {response.text}")
+        finally:
+            if image_file:
+                image_file.close()
+            if temp_image_path:
+                try:
+                    os.unlink(temp_image_path)
+                except Exception:
+                    pass
+
