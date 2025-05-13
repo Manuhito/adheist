@@ -8,9 +8,36 @@ from typing import Dict, List, Optional, Union
 from django.conf import settings
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
 
 from .services import ImageGenerationService
+
+
+@csrf_exempt
+@require_GET
+def test_openai_connection(request):
+    """
+    API endpoint to test the connection with OpenAI's gpt-image-1 API.
+    
+    This endpoint will test if the gpt-image-1 model is working correctly.
+    
+    Returns:
+        JSON with the test results
+    """
+    try:
+        # Run the test
+        service = ImageGenerationService()
+        result = service.test_openai_connection()
+        
+        # Return result
+        return JsonResponse({"result": result})
+    
+    except Exception as e:
+        logger.exception(f"Error in test_openai_connection API: {str(e)}")
+        return JsonResponse(
+            {"error": f"Failed to test OpenAI connection: {str(e)}"}, 
+            status=500
+        )
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +46,7 @@ logger = logging.getLogger(__name__)
 @require_POST
 def generate_image(request):
     """
-    API endpoint to generate images using OpenAI's GPT-4o and DALL·E 3.
+    API endpoint to generate images using OpenAI's GPT-4o and gpt-image-1.
     
     Accepts:
         - text_prompt: Required text description
