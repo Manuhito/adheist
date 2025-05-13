@@ -225,3 +225,5 @@ wcwidth==0.2.13
     # via prompt-toolkit
 willow[heif]==1.9.0
     # via wagtail
+openai==1.77.0
+    

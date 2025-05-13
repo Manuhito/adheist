@@ -9,7 +9,15 @@ class UserLocaleMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        """Activate logged-in users' preferred language based on their profile setting."""
+        """Activate logged-in users' preferred language based on their profile setting.
+        For new sessions, force English as the default language.
+        """
+        # For new sessions with no language cookie, force English
+        cookie_lang_code = request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME)
+        if not cookie_lang_code:
+            translation.activate('en')
+        
+        # For logged-in users, use their preferred language
         user = getattr(request, "user", None)
         if user and user.is_authenticated:
             if user.language and user.language != translation.get_language():
@@ -17,7 +25,7 @@ class UserLocaleMiddleware:
 
         response = self.get_response(request)
 
-        cookie_lang_code = request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME)
+        # Always ensure the cookie is set
         if not cookie_lang_code or cookie_lang_code != translation.get_language():
             response.set_cookie(settings.LANGUAGE_COOKIE_NAME, translation.get_language())
         return response

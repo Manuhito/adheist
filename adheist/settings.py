@@ -89,6 +89,7 @@ PROJECT_APPS = [
     "apps.dashboard.apps.DashboardConfig",
     "apps.web",
     "apps.ads",
+    "apps.aiinterface",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + PROJECT_APPS + WAGTAIL_APPS
@@ -473,5 +474,12 @@ LOGGING = {
             "handlers": ["console"],
             "level": env("ADHEIST_LOG_LEVEL", default="INFO"),
         },
+        "apps.aiinterface": {
+            "handlers": ["console"],
+            "level": env("AIINTERFACE_LOG_LEVEL", default="INFO"),
+        },
     },
 }
+
+# OpenAI API configuration
+OPENAI_API_KEY = env("OPENAI_API_KEY", default="")

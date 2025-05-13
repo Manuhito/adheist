@@ -36,87 +36,80 @@ def generate_prompt(version):
     # Start building the prompt
     prompt_parts = []
     
-    # Add basic information
-    prompt_parts.append(f"Create an advertisement for {company_name}.\n")
+    # Add original ad information
+    prompt_parts.append(f"[ORIGINAL AD]: {company_name}\n")
 
-    # Add website information if available
+    # Add company information section
+    company_info = []
     if company_website:
-        prompt_parts.append(f"The company website is {company_website}.\n")
-
+        company_info.append(f"- Website: {company_website}")
+    
     # Add industry information if available
     industries = [industry.name for industry in ad_request.ad_library.industries.all()]
     if industries:
         industries_text = ", ".join(industries)
-        prompt_parts.append(f"The company is in the following industries: {industries_text}.\n")
-
-    # Add tags information if available
+        company_info.append(f"- Industries: {industries_text}")
+    
+    if company_info:
+        prompt_parts.append("[COMPANY INFO]:")
+        prompt_parts.extend(company_info)
+        prompt_parts.append("")  # Add empty line
+    
+    # Add concepts to convey (tags)
     tags = [tag.name for tag in ad_request.ad_library.tags.all()]
     if tags:
         tags_text = ", ".join(tags)
-        prompt_parts.append(f"The advertisement should convey these concepts: {tags_text}.\n")
+        prompt_parts.append("[CONCEPTS TO CONVEY]:")
+        prompt_parts.append(f"- {tags_text}")
+        prompt_parts.append("")  # Add empty line
     
-    # Add canvas size information
+    # Add visual requirements section
+    visual_reqs = []
     if canvas_size:
-        prompt_parts.append(f"The advertisement should be in {canvas_size} format.\n")
+        format_type = "portrait" if "x" in canvas_size and int(canvas_size.split("x")[1]) > int(canvas_size.split("x")[0]) else "landscape"
+        visual_reqs.append(f"- Format: {canvas_size} ({format_type})")
     
-    # Add color information if available
     if main_hex_color:
-        prompt_parts.append(f"Use {main_hex_color} as the primary brand color.\n")
+        visual_reqs.append(f"- Primary brand color: {main_hex_color}")
+    
+    # Handle product images
+    if product_image_1_override and product_image_2_override:
+        visual_reqs.append("- Show the product from multiple angles")
+    elif product_image_1_override or product_image_2_override:
+        visual_reqs.append("- Show the product clearly in the advertisement")
+    
+    # Handle app images
+    if app_image_1_override or app_image_2_override:
+        visual_reqs.append("- Include app screenshots in the design")
+    
+    # Handle marketing images
+    if marketing_image_1_override or marketing_image_2_override or marketing_image_3_override:
+        visual_reqs.append("- Integrate marketing materials into the advertisement")
+    
+    if visual_reqs:
+        prompt_parts.append("[VISUAL REQUIREMENTS]:")
+        prompt_parts.extend(visual_reqs)
+        prompt_parts.append("")  # Add empty line
     
     # Add key benefits if available
     if key_benefits:
-        prompt_parts.append(f"Highlight these key benefits:\n {key_benefits}\n")
-    
-    # Handle product images based on what's available
-    if product_image_1_override and product_image_2_override:
-        # Both product images are available
-        prompt_parts.append(f"The product is shown in multiple angles\n")
-    elif product_image_1_override:
-        # Only first product image is available
-        prompt_parts.append(f"The product is shown in this image\n")
-    elif product_image_2_override:
-        # Only second product image is available
-        prompt_parts.append(f"The product is shown in this image\n")
-
-    # Handle app images based on what's available
-    if app_image_1_override and app_image_2_override:
-        # Both app images are available
-        prompt_parts.append(f"The app is shown in multiple screenshots\n")
-    elif app_image_1_override:
-        # Only first app image is available
-        prompt_parts.append(f"The app is shown in this screenshot\n")
-    elif app_image_2_override:
-        # Only second app image is available
-        prompt_parts.append(f"The app is shown in this screenshot\n")
-    
-    # Handle marketing images based on what's available
-    if marketing_image_1_override and marketing_image_2_override and marketing_image_3_override:
-        # All three marketing images are available
-        prompt_parts.append(f"I will attach the brand has multiple marketing materials\n")
-    elif marketing_image_1_override and marketing_image_2_override:
-        # First two marketing images are available
-        prompt_parts.append(f"I will attach the brand has these marketing materials\n")
-    elif marketing_image_1_override and marketing_image_3_override:
-        # First and third marketing images are available
-        prompt_parts.append(f"I will attach the brand has these marketing materials\n")
-    elif marketing_image_2_override and marketing_image_3_override:
-        # Second and third marketing images are available
-        prompt_parts.append(f"I will attach the brand has these marketing materials\n")
-    elif marketing_image_1_override:
-        # Only first marketing image is available
-        prompt_parts.append(f"I will attach the brand has this marketing material\n")
-    elif marketing_image_2_override:
-        # Only second marketing image is available
-        prompt_parts.append(f"I will attach the brand has this marketing material\n")
-    elif marketing_image_3_override:
-        # Only third marketing image is available
-        prompt_parts.append(f"I will attach the brand has this marketing material\n")
+        benefits_list = [f"- {benefit.strip()}" for benefit in key_benefits.split('\n') if benefit.strip()]
+        if benefits_list:
+            prompt_parts.append("[KEY BENEFITS TO HIGHLIGHT]:")
+            prompt_parts.extend(benefits_list)
+            prompt_parts.append("")  # Add empty line
     
     # Add user prompt if available
     if user_prompt:
-        prompt_parts.append(f"{user_prompt}\n")
+        prompt_parts.append("[ADDITIONAL INSTRUCTIONS]:")
+        prompt_parts.append(f"{user_prompt}")
+        prompt_parts.append("")  # Add empty line
     
-    # Combine all parts into a single prompt
-    prompt = " ".join(prompt_parts)
+    # Add goal section
+    prompt_parts.append("[GOAL]:")
+    prompt_parts.append("Create a single cohesive advertisement scene that integrates all of the above, written as a DALL·E 3 prompt.")
+    
+    # Combine all parts into a single prompt with line breaks
+    prompt = "\n".join(prompt_parts)
     
     return prompt
