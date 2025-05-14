@@ -908,6 +908,102 @@ def adrequest_version_create(request):
 
 
 @login_required
+@require_POST
+def adrequest_revision_create(request):
+    """
+    Create a new AdRequestVersion instance and generate an image using OpenAI with a revision image.
+    
+    Required input:
+    - ad_request: The primary key of the AdRequest to create a version for
+    - url_image_revision: URL of the image to use for revision
+    
+    Optional inputs:
+    - user_prompt: The user prompt for the version
+    
+    Returns: JSON with the AdRequestVersion instance ID and image generation status
+    """
+    # Usando prints en lugar de loggers
+    ad_request_id = request.POST.get('ad_request')
+    url_image_revision = request.POST.get('url_image_revision')
+    user_prompt = request.POST.get('user_prompt')
+    
+    # Validate inputs
+    if not ad_request_id:
+        return JsonResponse({'error': 'Ad request ID is required'}, status=400)
+    
+    if not url_image_revision:
+        return JsonResponse({'error': 'Revision image URL is required'}, status=400)
+    
+    if not user_prompt:
+        return JsonResponse({'error': 'User prompt is required'}, status=400)
+    
+    try:
+        # Get the AdRequest instance
+        ad_request = get_object_or_404(AdRequest, id=ad_request_id)
+        
+        # Check if the user has permission to create a version for this request
+        if ad_request.user != request.user:
+            return JsonResponse({'error': 'You do not have permission to create a version for this request'}, status=403)
+        
+        # Create a new AdRequestVersion instance
+        version = AdRequestVersion.objects.create(
+            ad_request=ad_request,
+            user_prompt=user_prompt,
+            status=AdRequestVersion.STATUS_UNASSIGNED
+        )
+        
+        # Generate image using OpenAI if user_prompt is provided
+        image_generated = False
+        task_id = None
+        
+        try:
+            # For revision, we only use the provided revision image URL
+            image_urls = [url_image_revision]
+            
+            # Get canvas size from AdRequest
+            canvas_size = ad_request.canvas_size or "1024x1024"
+            
+            # Generate image using Celery task in the background
+            from apps.aiinterface.tasks import generate_image_task
+            
+            # Update version status to processing
+            version.status = "processing"
+            version.save(update_fields=['status'])
+            
+            # Launch the Celery task
+            task = generate_image_task.delay(
+                text_prompt=user_prompt,
+                image_urls=image_urls,
+                canvas_size=canvas_size,
+                version_id=version.id
+            )
+            
+            task_id = task.id
+            print(f"Image revision task (ID: {task_id}) started for AdRequestVersion {version.id}")
+            
+        except Exception as img_error:
+            print(f"Error starting image revision task: {str(img_error)}")
+        
+        # Return the AdRequestVersion instance ID and image generation status
+        response_data = {
+            'id': version.id,
+            'status': version.status,
+            'image_generated': image_generated,
+            'message': 'Revision version created successfully. Image generation started in background.'
+        }
+        
+        # Add task_id to response if available
+        if task_id:
+            response_data['task_id'] = task_id
+        
+        return JsonResponse(response_data, status=201)
+        
+    except Exception as e:
+        print(f"Error in adrequest_revision_create: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
 def create_adrequest_page(request, adrequest_id=None):
     """
     Render the create ad request page with React components.
