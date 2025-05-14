@@ -836,6 +836,8 @@ def adrequest_version_create(request):
         
         # Generate image using OpenAI if user_prompt is provided
         image_generated = False
+        task_id = None
+        
         if user_prompt:
             try:
                 # Collect image URLs from AdRequest for context
@@ -866,62 +868,41 @@ def adrequest_version_create(request):
                 from .gen_prompt import generate_prompt
                 complete_prompt = generate_prompt(version)
                 
-                # Generate image using OpenAI
-                print(f"Generating image for AdRequestVersion {version.id} with prompt: {user_prompt[:50]}...")
-                service = ImageGenerationService()
-                result = service.generate_image_from_text_and_images(
-                    text_prompt=complete_prompt,  
+                # Generate image using Celery task in the background
+                print(f"Starting async image generation for AdRequestVersion {version.id} with prompt: {user_prompt[:50]}...")
+                from apps.aiinterface.tasks import generate_image_task
+                
+                # Update version status to processing
+                version.status = "processing"
+                version.save(update_fields=['status'])
+                
+                # Launch the Celery task
+                task = generate_image_task.delay(
+                    text_prompt=complete_prompt,
                     image_urls=image_urls,
-                    canvas_size=canvas_size
+                    canvas_size=canvas_size,
+                    version_id=version.id
                 )
                 
-                # Save the generated image to the version
-                if result:
-                    from django.core.files.base import ContentFile
-                    
-                    # Verificar que tenemos los datos binarios de la imagen
-                    if 'image_content' in result and result.get('is_binary', False):
-                        # Usar los datos binarios directamente
-                        image_name = f"version_{version.id}_image.png"
-                        version.generated_image.save(image_name, ContentFile(result['image_content']), save=True)
-                        print(f"Saved image directly from binary data for AdRequestVersion {version.id}")
-                    else:
-                        print("No binary image content found in result")
-                        return JsonResponse({'error': "No binary image content found in result"}, status=500)
-                        
-                    # Update status to COMPLETED since we have an image
-                    version.status = AdRequestVersion.STATUS_COMPLETED
-                    version.save(update_fields=['status'])
-                    
-                    # Save the OpenAI responses in the new fields
-                    update_fields = []
-                    
-                    # Save the enhanced prompt in the new field
-                    if 'enhanced_prompt' in result:
-                        version.openai_gpt4_prompt = result['enhanced_prompt']
-                        update_fields.append('openai_gpt4_prompt')
-                        
-                    # Save the response metadata if available
-                    if 'response_metadata' in result:
-                        version.openai_response_metadata = result['response_metadata']
-                        update_fields.append('openai_response_metadata')
-                        
-                    # Save the updated fields
-                    if update_fields:
-                        version.save(update_fields=update_fields)
-                    
-                    image_generated = True
-                    print(f"Image generated successfully for AdRequestVersion {version.id}")
+                task_id = task.id
+                print(f"Image generation task (ID: {task_id}) started for AdRequestVersion {version.id}")
+                
             except Exception as img_error:
-                print(f"Error generating image: {str(img_error)}")
+                print(f"Error starting image generation task: {str(img_error)}")
         
         # Return the AdRequestVersion instance ID and image generation status
-        return JsonResponse({
+        response_data = {
             'id': version.id,
             'status': version.status,
             'image_generated': image_generated,
-            'message': 'Version created successfully' + (' with image' if image_generated else '')
-        }, status=201)
+            'message': 'Version created successfully. Image generation started in background.'
+        }
+        
+        # Add task_id to response if available
+        if task_id:
+            response_data['task_id'] = task_id
+        
+        return JsonResponse(response_data, status=201)
         
     except Exception as e:
         print(f"Error in adrequest_version_create: {str(e)}")
