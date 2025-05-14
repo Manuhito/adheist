@@ -838,57 +838,55 @@ def adrequest_version_create(request):
         image_generated = False
         task_id = None
         
-        if user_prompt:
-            try:
-                # Collect image URLs from AdRequest for context
-                image_urls = []
-                
-                # Check each image field and add to context if it exists
-                image_fields = [
-                    'logo_override',
-                    'product_image_1_override',
-                    'product_image_2_override',
-                    'app_image_1_override',
-                    'app_image_2_override',
-                    'marketing_image_1_override',
-                    'marketing_image_2_override',
-                    'marketing_image_3_override'
-                ]
-                
-                for field_name in image_fields:
-                    image_field = getattr(ad_request, field_name)
-                    if image_field and image_field.url:
-                        # Get the full URL for the image
-                        image_urls.append(request.build_absolute_uri(image_field.url))
-                
-                # Get canvas size from AdRequest
-                canvas_size = ad_request.canvas_size or "1024x1024"
-                
-                # Generate the complete prompt using the generate_prompt function
-                from .gen_prompt import generate_prompt
-                complete_prompt = generate_prompt(version)
-                
-                # Generate image using Celery task in the background
-                print(f"Starting async image generation for AdRequestVersion {version.id} with prompt: {user_prompt[:50]}...")
-                from apps.aiinterface.tasks import generate_image_task
-                
-                # Update version status to processing
-                version.status = "processing"
-                version.save(update_fields=['status'])
-                
-                # Launch the Celery task
-                task = generate_image_task.delay(
-                    text_prompt=complete_prompt,
-                    image_urls=image_urls,
-                    canvas_size=canvas_size,
-                    version_id=version.id
-                )
-                
-                task_id = task.id
-                print(f"Image generation task (ID: {task_id}) started for AdRequestVersion {version.id}")
-                
-            except Exception as img_error:
-                print(f"Error starting image generation task: {str(img_error)}")
+        try:
+            # Collect image URLs from AdRequest for context
+            image_urls = []
+            
+            # Check each image field and add to context if it exists
+            image_fields = [
+                'logo_override',
+                'product_image_1_override',
+                'product_image_2_override',
+                'app_image_1_override',
+                'app_image_2_override',
+                'marketing_image_1_override',
+                'marketing_image_2_override',
+                'marketing_image_3_override'
+            ]
+            
+            for field_name in image_fields:
+                image_field = getattr(ad_request, field_name)
+                if image_field and image_field.url:
+                    # Get the full URL for the image
+                    image_urls.append(request.build_absolute_uri(image_field.url))
+            
+            # Get canvas size from AdRequest
+            canvas_size = ad_request.canvas_size or "1024x1024"
+            
+            # Generate the complete prompt using the generate_prompt function
+            from .gen_prompt import generate_prompt
+            complete_prompt = generate_prompt(version)
+            
+            # Generate image using Celery task in the background
+            from apps.aiinterface.tasks import generate_image_task
+            
+            # Update version status to processing
+            version.status = "processing"
+            version.save(update_fields=['status'])
+            
+            # Launch the Celery task
+            task = generate_image_task.delay(
+                text_prompt=complete_prompt,
+                image_urls=image_urls,
+                canvas_size=canvas_size,
+                version_id=version.id
+            )
+            
+            task_id = task.id
+            print(f"Image generation task (ID: {task_id}) started for AdRequestVersion {version.id}")
+            
+        except Exception as img_error:
+            print(f"Error starting image generation task: {str(img_error)}")
         
         # Return the AdRequestVersion instance ID and image generation status
         response_data = {
