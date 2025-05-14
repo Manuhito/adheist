@@ -102,8 +102,21 @@ const RevisionAdRequest = () => {
 
   // Generate version handler
   const handleGenerateVersion = async () => {
+    // Validate that prompt is not empty
+    if (!userPrompt.trim()) {
+      console.error(t('revision.prompt_required', 'Please enter a prompt before generating'));
+      return;
+    }
+    
     if (!adRequestData?.id) {
       console.error(t('revision.no_request_id', 'No ad request ID available'));
+      return;
+    }
+    
+    // Check if we have a current version with an image
+    const currentVersion = versions[currentVersionIndex];
+    if (!currentVersion || !currentVersion.generated_image) {
+      console.error(t('revision.no_image_available', 'No image available for revision'));
       return;
     }
     
@@ -125,14 +138,15 @@ const RevisionAdRequest = () => {
         throw new Error(errorData.error || t('revision.update_status_failed', 'Failed to update status to SUBMITTED'));
       }
       
-      // Then create a new version
-      const versionFormData = new FormData();
-      versionFormData.append('ad_request', adRequestData.id);
-      versionFormData.append('user_prompt', userPrompt);
+      // Then create a new revision using the current image
+      const revisionFormData = new FormData();
+      revisionFormData.append('ad_request', adRequestData.id);
+      revisionFormData.append('user_prompt', userPrompt);
+      revisionFormData.append('url_image_revision', currentVersion.generated_image);
       
-      const response = await fetch('/ads/adrequest/version/create/', {
+      const response = await fetch('/ads/adrequest/revision/create/', {
         method: 'POST',
-        body: versionFormData,
+        body: revisionFormData,
         headers: {
           'X-CSRFToken': getCsrfToken(),
         },
@@ -303,7 +317,7 @@ const RevisionAdRequest = () => {
                       variant="outline"
                       className="group h-10 px-4 py-2 text-sm font-medium"
                       onClick={handleGenerateVersion}
-                      disabled={isGenerating || versions.length >= total_versions}
+                      disabled={isGenerating || versions.length >= total_versions || !userPrompt.trim()}
                     >
                       {isGenerating ? (
                         <span className="flex items-center"><Sparkles className="w-4 h-4 mr-1 animate-spin text-yellow-400 dark:text-yellow-300" strokeWidth={2.2} /> {t("revision.generating", "Generating...")}</span>
@@ -316,6 +330,11 @@ const RevisionAdRequest = () => {
                 {versions.length >= total_versions && (
                   <TooltipContent>
                     <p>{t('revision.version_limit_reached', 'Version limit reached. No more versions can be generated.')}</p>
+                  </TooltipContent>
+                )}
+                {!userPrompt.trim() && versions.length < total_versions && (
+                  <TooltipContent>
+                    <p>{t('revision.prompt_required', 'Please enter a prompt before generating')}</p>
                   </TooltipContent>
                 )}
               </Tooltip>

@@ -12,6 +12,7 @@ urlpatterns = [
     path("adrequest/<int:pk>/update/", views.adrequest_update, name="adrequest_update"),
     path("adrequest/<int:pk>/delete/", views.adrequest_delete, name="adrequest_delete"),
     path("adrequest/version/create/", views.adrequest_version_create, name="adrequest_version_create"),
+    path("adrequest/revision/create/", views.adrequest_revision_create, name="adrequest_revision_create"),
     path("my-requests/", views.user_ad_requests, name="user_ad_requests"),
     path("industries/", views.get_all_industries, name="get_all_industries"),
     path("tags/", views.get_all_tags, name="get_all_tags"),
