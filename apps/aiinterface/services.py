@@ -8,6 +8,8 @@ from openai import OpenAI
 import os
 import requests
 
+from apps.ads.models import AppConfiguration
+
 
 class ImageGenerationService:
     """Service for generating images using OpenAI's GPT-4o and gpt-image-1 models."""
@@ -18,36 +20,24 @@ class ImageGenerationService:
 
     def test_openai_connection(self):
         """
-        Tests the OpenAI image generation endpoint using the gpt-image-1 model.
-        Returns True if the API is reachable and responds with an image URL.
-        Raises Exception on failure.
-        """
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key:
-            raise ValueError("OPENAI_API_KEY environment variable not set")
+        Tests the OpenAI image generation endpoint using the configured image model.
 
-        url = "https://api.openai.com/v1/images/generations"
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-        }
-        data = {
-            "model": "gpt-image-1",
-            "prompt": "A red apple",
-            "n": 1,
-            "size": "1024x1024",
-            "output_format": "webp"
-        }
-        response = requests.post(url, headers=headers, json=data, timeout=300)
-        if response.status_code == 200:
-            result = response.json()
-            print(result)
-            if "data" in result and result["data"] and "b64_json" in result["data"][0]:
-                return True
-            else:
-                raise Exception("No image URL returned in response")
-        else:
-            raise Exception(f"OpenAI API error: {response.status_code} - {response.text}")
+        Returns:
+            dict: Response from the OpenAI API
+        """
+        try:
+            # Get model from AppConfiguration
+            openai_config = AppConfiguration.get_openai_config()
+            
+            response = self.client.images.generate(
+                model=openai_config['model'],
+                prompt="A simple test image of a blue circle",
+                n=1,
+                size="1024x1024"
+            )
+            return response
+        except Exception as e:
+            raise Exception(f"OpenAI API error: {str(e)}")
 
     def generate_image_from_text_and_images(
         self,
@@ -56,7 +46,7 @@ class ImageGenerationService:
         canvas_size: str = "1024x1024",
     ) -> dict:
         """
-        Generate an image using the gpt-image-1 model via OpenAI's API.
+        Generate an image using the configured image model via OpenAI's API.
         Args:
             text_prompt: The text prompt describing the image to generate.
             canvas_size: The desired image size (e.g., "1024x1024").
@@ -135,8 +125,11 @@ class ImageGenerationService:
             headers = {
                 "Authorization": f"Bearer {api_key}"
             }
+            # Get model from AppConfiguration
+            openai_config = AppConfiguration.get_openai_config()
+            
             data = {
-                "model": "gpt-image-1",
+                "model": openai_config['model'],
                 "prompt": text_prompt,
                 "n": 1,
                 "size": canvas_size
@@ -181,7 +174,7 @@ class ImageGenerationService:
                         
                         # Incluir algunos metadatos básicos
                         "response_metadata": {
-                            "model": "gpt-image-1",
+                            "model": openai_config['model'],
                             "canvas_size": canvas_size,
                             "edit_mode": True,
                             "created_at": None
