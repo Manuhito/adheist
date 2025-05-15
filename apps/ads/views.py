@@ -21,7 +21,7 @@ from django.conf import settings
 
 from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion
 from .forms import AdLibraryForm
-from .services import can_create_ad_request, increment_usage
+from .services import can_create_ad_request, increment_usage, can_create_ad_request_version, get_ad_request_version_limit
 import boto3
 
 # A reasonable value for pagination would be 10 or 20 entries per page.
@@ -824,6 +824,14 @@ def adrequest_version_create(request):
         if ad_request.user != request.user:
             return JsonResponse({'error': 'You do not have permission to create a version for this request'}, status=403)
         
+        # Check if the AdRequest has reached its version limit
+        if not can_create_ad_request_version(ad_request):
+            # Get the limit for this AdRequest
+            limit = get_ad_request_version_limit(ad_request)
+            return JsonResponse({
+                'error': f'This ad request has reached its limit of {limit} versions. Please upgrade your plan for more versions.'
+            }, status=400)
+        
         # Get optional fields
         user_prompt = request.POST.get('user_prompt')
         
@@ -944,6 +952,14 @@ def adrequest_revision_create(request):
         # Check if the user has permission to create a version for this request
         if ad_request.user != request.user:
             return JsonResponse({'error': 'You do not have permission to create a version for this request'}, status=403)
+        
+        # Check if the AdRequest has reached its version limit
+        if not can_create_ad_request_version(ad_request):
+            # Get the limit for this AdRequest
+            limit = get_ad_request_version_limit(ad_request)
+            return JsonResponse({
+                'error': f'This ad request has reached its limit of {limit} versions. Please upgrade your plan for more versions.'
+            }, status=400)
         
         # Create a new AdRequestVersion instance
         version = AdRequestVersion.objects.create(
@@ -1114,10 +1130,11 @@ def adrequest_details_page(request, adrequest_id):
     # Log for debugging
     print(f"{versions=}")
     
-    # We'll only show a maximum of 2 versions
-    max_versions = 2
+    # Get the version limit for this AdRequest based on the user's subscription
+    version_limit = get_ad_request_version_limit(ad_request)
     
-    for i, version in enumerate(versions[:max_versions]):
+    # Get all versions for display
+    for i, version in enumerate(versions):
         versions_data.append({
             'id': version.id,
             'generated_image': version.generated_image.url if version.generated_image else None,
@@ -1142,7 +1159,8 @@ def adrequest_details_page(request, adrequest_id):
         "ad_request": ad_request,
         "versions": versions,
         "versions_json": versions_json,
-        "total_versions": max_versions
+        "total_versions": version_limit,
+        "current_versions_count": versions.count()
     }
         
     return TemplateResponse(request, template, context)
