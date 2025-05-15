@@ -1,10 +1,11 @@
 # apps/ads/services.py
 from apps.subscriptions.metadata import ACTIVE_PRODUCTS_BY_ID
+from apps.ads.models import AppConfiguration
 
 def get_ad_request_limit(user):
     """Get the AdRequest limit for a user based on their subscription"""
-    # Default limit for free users
-    default_limit = 5
+    # Get the default limit from configuration
+    default_limit, _ = AppConfiguration.get_limits()
     
     if not user.has_active_subscription():
         return default_limit
@@ -54,8 +55,8 @@ def get_ad_request_version_limit(ad_request):
     Returns:
         int: The maximum number of versions allowed for this AdRequest
     """
-    # Default limit for all AdRequests
-    default_limit = 2
+    # Get the default limit from configuration
+    _, default_limit = AppConfiguration.get_limits()
     
     # Get the user who owns the AdRequest
     user = ad_request.user

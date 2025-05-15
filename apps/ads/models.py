@@ -5,6 +5,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 import json
 
 from apps.utils.models import BaseModel
+from django.core.cache import cache
 
 
 class IndustryList(BaseModel):
@@ -39,6 +40,94 @@ class AdLibrary(BaseModel):
 
     def get_absolute_url(self):
         return reverse("ads:adlibrary_detail", kwargs={"pk": self.pk})
+
+
+class AppConfiguration(BaseModel):
+    """
+    Model to store application-wide configuration settings.
+    Only one instance of this model should exist in the database.
+    """
+    # AdRequest limits
+    default_ad_request_limit = models.PositiveIntegerField(
+        default=5,
+        help_text="Default limit of AdRequests for users without subscription"
+    )
+    default_ad_request_version_limit = models.PositiveIntegerField(
+        default=2,
+        help_text="Default limit of versions per AdRequest"
+    )
+    
+    # OpenAI configuration
+    openai_image_model = models.CharField(
+        max_length=50,
+        default="gpt-image-1",
+        help_text="OpenAI model to use for image generation"
+    )
+    
+    class Meta:
+        verbose_name = "Application Configuration"
+        verbose_name_plural = "Application Configuration"
+    
+    def __str__(self):
+        return f"Application Configuration (AdRequest Limit: {self.default_ad_request_limit}, Versions: {self.default_ad_request_version_limit})"
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one instance exists
+        if not self.pk and AppConfiguration.objects.exists():
+            # If an instance already exists and we're creating a new one, update the existing one
+            return AppConfiguration.objects.first()
+        
+        # Clear cache when saving
+        cache.delete('app_configuration')
+        
+        return super().save(*args, **kwargs)
+    
+    @classmethod
+    def get_limits(cls):
+        """
+        Get the configured limits, using cache to improve performance.
+        
+        Returns:
+            tuple: (default_ad_request_limit, default_ad_request_version_limit)
+        """
+        # Try to get from cache first
+        config = cls.get_config()
+        return (config.default_ad_request_limit, config.default_ad_request_version_limit)
+    
+    @classmethod
+    def get_openai_config(cls):
+        """
+        Get the OpenAI configuration settings.
+        
+        Returns:
+            dict: OpenAI configuration settings
+        """
+        config = cls.get_config()
+        return {
+            'model': config.openai_image_model
+        }
+    
+    @classmethod
+    def get_config(cls):
+        """
+        Get the application configuration, using cache to improve performance.
+        
+        Returns:
+            AppConfiguration: The application configuration object
+        """
+        # Try to get from cache first
+        config = cache.get('app_configuration')
+        if config is None:
+            # If not in cache, get from database
+            config = cls.objects.first()
+            if not config:
+                # If no configuration exists, create one with default values
+                config = cls.objects.create()
+            
+            # Save in cache for 1 hour (3600 seconds)
+            cache.set('app_configuration', config, 3600)
+        
+        return config
 
 
 class AdRequestAssets(BaseModel):

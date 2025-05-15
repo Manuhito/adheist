@@ -17,6 +17,7 @@ from .models import (
     AdRequestAssets,
     AdRequestVersion,
     AdRequestUsage,
+    AppConfiguration,
 )
 
 
@@ -239,6 +240,25 @@ class AdRequestUsageAdmin(admin.ModelAdmin):
     list_display = ["user", "usage_count", "is_free_tier", "billing_period_start", "billing_period_end", "created_at"]
     search_fields = ["user__email"]
     list_filter = ["is_free_tier"]
-    # readonly_fields = ["user", "usage_count", "billing_period_start", "billing_period_end", "is_free_tier"]
     readonly_fields = ["user", "billing_period_start", "billing_period_end", "is_free_tier"]
 
+
+@admin.register(AppConfiguration)
+class AppConfigurationAdmin(admin.ModelAdmin):
+    list_display = ["default_ad_request_limit", "default_ad_request_version_limit", "openai_image_model", "updated_at"]
+    fieldsets = [
+        ("AdRequest Limits", {
+            "fields": ["default_ad_request_limit", "default_ad_request_version_limit"]
+        }),
+        ("OpenAI Configuration", {
+            "fields": ["openai_image_model"]
+        }),
+    ]
+    
+    def has_add_permission(self, request):
+        # Only allow creating an instance if none exists
+        return not AppConfiguration.objects.exists()
+    
+    def has_delete_permission(self, request, obj=None):
+        # Do not allow deleting the configuration
+        return False
