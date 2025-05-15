@@ -162,6 +162,12 @@ class ImageGenerationService:
                     
                     # Construir la respuesta en un formato que adrequest_version_create pueda usar
                     # Proporcionamos directamente los bytes de la imagen para un procesamiento más eficiente
+                    
+                    # Extraer la información de uso si está disponible en la respuesta
+                    usage_data = {}
+                    if "usage" in result:
+                        usage_data = result["usage"]
+                    
                     formatted_response = {
                         # Incluimos los bytes de la imagen para que adrequest_version_create
                         # pueda guardarlos directamente sin necesidad de descargar una URL
@@ -172,12 +178,11 @@ class ImageGenerationService:
                         # simplemente pasamos el prompt original
                         "enhanced_prompt": text_prompt,
                         
-                        # Incluir algunos metadatos básicos
+                        # Incluir metadatos incluyendo la información de uso
                         "response_metadata": {
                             "model": openai_config['model'],
-                            "canvas_size": canvas_size,
-                            "edit_mode": True,
-                            "created_at": None
+                            # Añadir toda la información de uso de la API
+                            "usage": usage_data
                         }
                     }
                     
