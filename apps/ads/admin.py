@@ -245,13 +245,31 @@ class AdRequestUsageAdmin(admin.ModelAdmin):
 
 @admin.register(AppConfiguration)
 class AppConfigurationAdmin(admin.ModelAdmin):
-    list_display = ["default_ad_request_limit", "default_ad_request_version_limit", "openai_image_model", "updated_at"]
+    list_display = [
+        "default_ad_request_limit", "default_ad_request_version_limit", 
+        "starter_ad_request_limit", "starter_ad_request_version_limit",
+        "pro_ad_request_limit", "pro_ad_request_version_limit", 
+        "openai_image_model", "updated_at"
+    ]
     fieldsets = [
-        ("AdRequest Limits", {
-            "fields": ["default_ad_request_limit", "default_ad_request_version_limit"]
+        ("Default Plan Limits", {
+            "fields": ["default_ad_request_limit", "default_ad_request_version_limit"],
+            "description": "Limits for users without an active subscription",
+            "classes": ["wide"]
+        }),
+        ("Starter Plan Limits", {
+            "fields": ["starter_ad_request_limit", "starter_ad_request_version_limit"],
+            "description": "Limits for users with Starter subscription",
+            "classes": ["wide"]
+        }),
+        ("Pro Plan Limits", {
+            "fields": ["pro_ad_request_limit", "pro_ad_request_version_limit"],
+            "description": "Limits for users with Pro subscription",
+            "classes": ["wide"]
         }),
         ("OpenAI Configuration", {
-            "fields": ["openai_image_model"]
+            "fields": ["openai_image_model"],
+            "classes": ["wide"]
         }),
     ]
     

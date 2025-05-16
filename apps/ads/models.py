@@ -57,6 +57,26 @@ class AppConfiguration(BaseModel):
         help_text="Default limit of versions per AdRequest"
     )
     
+    # Starter plan limits
+    starter_ad_request_limit = models.PositiveIntegerField(
+        default=20,
+        help_text="Limit of AdRequests for users with Starter subscription"
+    )
+    starter_ad_request_version_limit = models.PositiveIntegerField(
+        default=5,
+        help_text="Limit of versions per AdRequest for Starter plan"
+    )
+    
+    # Pro plan limits
+    pro_ad_request_limit = models.PositiveIntegerField(
+        default=50,
+        help_text="Limit of AdRequests for users with Pro subscription"
+    )
+    pro_ad_request_version_limit = models.PositiveIntegerField(
+        default=10,
+        help_text="Limit of versions per AdRequest for Pro plan"
+    )
+    
     # OpenAI configuration
     openai_image_model = models.CharField(
         max_length=50,
@@ -88,11 +108,24 @@ class AppConfiguration(BaseModel):
         Get the configured limits, using cache to improve performance.
         
         Returns:
-            tuple: (default_ad_request_limit, default_ad_request_version_limit)
+            dict: Dictionary with all limit configurations
         """
         # Try to get from cache first
         config = cls.get_config()
-        return (config.default_ad_request_limit, config.default_ad_request_version_limit)
+        return {
+            'default': {
+                'ad_request_limit': config.default_ad_request_limit,
+                'ad_request_version_limit': config.default_ad_request_version_limit
+            },
+            'starter': {
+                'ad_request_limit': config.starter_ad_request_limit,
+                'ad_request_version_limit': config.starter_ad_request_version_limit
+            },
+            'pro': {
+                'ad_request_limit': config.pro_ad_request_limit,
+                'ad_request_version_limit': config.pro_ad_request_version_limit
+            }
+        }
     
     @classmethod
     def get_openai_config(cls):

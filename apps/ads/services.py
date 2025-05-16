@@ -4,8 +4,9 @@ from apps.ads.models import AppConfiguration
 
 def get_ad_request_limit(user):
     """Get the AdRequest limit for a user based on their subscription"""
-    # Get the default limit from configuration
-    default_limit, _ = AppConfiguration.get_limits()
+    # Get all limits from configuration
+    limits = AppConfiguration.get_limits()
+    default_limit = limits['default']['ad_request_limit']
     
     if not user.has_active_subscription():
         return default_limit
@@ -17,9 +18,12 @@ def get_ad_request_limit(user):
     if not product_meta:
         return default_limit
     
-    # Get limit from product metadata
-    limits = getattr(product_meta, 'limits', {})
-    return limits.get('ad_requests_per_month', default_limit)
+    # Get plan type (slug) and return corresponding limit
+    plan_type = product_meta.slug
+    if plan_type in limits:
+        return limits[plan_type]['ad_request_limit']
+    
+    return default_limit
 
 def can_create_ad_request(user):
     """Check if user can create a new AdRequest"""
@@ -55,8 +59,9 @@ def get_ad_request_version_limit(ad_request):
     Returns:
         int: The maximum number of versions allowed for this AdRequest
     """
-    # Get the default limit from configuration
-    _, default_limit = AppConfiguration.get_limits()
+    # Get all limits from configuration
+    limits = AppConfiguration.get_limits()
+    default_limit = limits['default']['ad_request_version_limit']
     
     # Get the user who owns the AdRequest
     user = ad_request.user
@@ -71,9 +76,12 @@ def get_ad_request_version_limit(ad_request):
     if not product_meta:
         return default_limit
     
-    # Get limit from product metadata
-    limits = getattr(product_meta, 'limits', {})
-    return limits.get('versions_per_ad_request', default_limit)
+    # Get plan type (slug) and return corresponding limit
+    plan_type = product_meta.slug
+    if plan_type in limits:
+        return limits[plan_type]['ad_request_version_limit']
+    
+    return default_limit
 
 def can_create_ad_request_version(ad_request):
     """
