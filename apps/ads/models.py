@@ -456,13 +456,26 @@ class AdRequestUsage(BaseModel):
             
             # Get product metadata to determine plan type
             from apps.subscriptions.metadata import ACTIVE_PRODUCTS_BY_ID
-            product_id = sub.plan.product
+            
+            # Get product ID - handle both string and object cases
+            if hasattr(sub.plan.product, 'id'):
+                # It's an object, get the ID
+                product_id = sub.plan.product.id
+            else:
+                # It's already an ID string
+                product_id = sub.plan.product
+                
             product_meta = ACTIVE_PRODUCTS_BY_ID.get(product_id)
             
             if product_meta:
                 plan_type = product_meta.slug
                 if plan_type in limits:
                     credit_limit = limits[plan_type]['ad_request_limit']
+                    print(f"Setting credit limit to {credit_limit} for plan {plan_type}")
+                else:
+                    print(f"Plan type {plan_type} not found in limits: {limits.keys()}")
+            else:
+                print(f"Product ID {product_id} not found in ACTIVE_PRODUCTS_BY_ID")
             
             # Get current period from subscription
             # Handle both timestamp integers and datetime objects
