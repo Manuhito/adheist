@@ -3,11 +3,13 @@ Celery tasks for AI interface operations.
 """
 from typing import Dict, List, Optional, Union
 import logging
+from decimal import Decimal
 
 from celery import shared_task
 from django.core.files.base import ContentFile
 
 from .services import ImageGenerationService
+from .models import OpenAIConfiguration
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +75,52 @@ def generate_image_task(
                         
                     # Save the response metadata if available
                     if 'response_metadata' in result:
-                        version.openai_response_metadata = result['response_metadata']
+                        # Get the OpenAI configuration for pricing
+                        openai_config = OpenAIConfiguration.get_config()
+                        
+                        # Calculate costs based on token usage
+                        metadata = result['response_metadata']
+                        
+                        # Initialize costs dictionary
+                        costs = {}
+                        
+                        # Calculate costs only if usage information is available
+                        if 'usage' in metadata:
+                            usage = metadata['usage']
+                            
+                            # Calculate text input cost (price per 1M tokens)
+                            if 'input_tokens_details' in usage and 'text_tokens' in usage['input_tokens_details']:
+                                text_tokens = usage['input_tokens_details']['text_tokens']
+                                # Convert price from per 1M tokens to per token
+                                price_per_token = float(openai_config.text_input_price) / 1_000_000
+                                text_input_cost = round(text_tokens * price_per_token, 4)
+                                costs['text_input_cost'] = text_input_cost
+                            
+                            # Calculate image input cost
+                            if 'input_tokens_details' in usage and 'image_tokens' in usage['input_tokens_details']:
+                                image_tokens = usage['input_tokens_details']['image_tokens']
+                                # Convert price from per 1M tokens to per token
+                                price_per_token = float(openai_config.image_input_price) / 1_000_000
+                                image_input_cost = round(image_tokens * price_per_token, 4)
+                                costs['image_input_cost'] = image_input_cost
+                            
+                            # Calculate image output cost
+                            if 'output_tokens' in usage:
+                                output_tokens = usage['output_tokens']
+                                # Convert price from per 1M tokens to per token
+                                price_per_token = float(openai_config.image_output_price) / 1_000_000
+                                image_output_cost = round(output_tokens * price_per_token, 4)
+                                costs['image_output_cost'] = image_output_cost
+                            
+                            # Calculate total cost
+                            total_cost = sum(costs.values())
+                            costs['total_cost'] = round(total_cost, 4)
+                            
+                            # Add costs to response metadata
+                            metadata['costs'] = costs
+                        
+                        # Update the response metadata
+                        version.openai_response_metadata = metadata
                         update_fields.append('openai_response_metadata')
                         
                     # Save the updated fields
