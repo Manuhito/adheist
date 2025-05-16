@@ -506,14 +506,16 @@ class AdRequestUsage(BaseModel):
                 # Get the first record for this user (paid tier)
                 usage = cls.objects.get(user=user, is_free_tier=False)
                 
-                # Check if the billing period has changed - ONLY reset credits if period changed
-                if usage.billing_period_start != period_start:
+                # Check if the billing period has changed OR if the plan has changed
+                # ONLY reset credits if period changed or plan upgraded
+                if usage.billing_period_start != period_start or usage.plan_type != plan_type:
                     # Update the billing period and reset credits
                     usage.billing_period_start = period_start
                     usage.billing_period_end = period_end
                     usage.remaining_credits = credit_limit
                     usage.plan_type = plan_type
                     usage.save()
+                    print(f"Updated user plan from {usage.plan_type} to {plan_type} or period changed")
             except cls.DoesNotExist:
                 # Create a new record if none exists - initialize with full credits
                 usage = cls.objects.create(
