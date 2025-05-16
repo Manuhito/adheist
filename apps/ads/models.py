@@ -415,17 +415,6 @@ class AdRequestVersion(BaseModel):
 # apps/ads/models.py
 class AdRequestUsage(BaseModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    billing_period_start = models.DateTimeField()
-    billing_period_end = models.DateTimeField()
-    usage_count = models.PositiveIntegerField(default=0)
-    
-    class Meta:
-        unique_together = ('user', 'billing_period_start')
-        
-    @classmethod
-    def get_current_usage(cls, user):
-        """Get or create usage record for current billing period"""
-        from django.utils import timezone
     # For paid users: tracks usage within a billing period
     billing_period_start = models.DateTimeField(null=True, blank=True)
     billing_period_end = models.DateTimeField(null=True, blank=True)
@@ -496,7 +485,7 @@ class AdRequestUsage(BaseModel):
                 defaults={
                     'billing_period_start': None,
                     'billing_period_end': None,
-            'usage_count': 0
-        }
-        )
-        return usage
+                    'usage_count': 0
+                }
+            )
+            return usage
