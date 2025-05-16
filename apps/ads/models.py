@@ -418,7 +418,8 @@ class AdRequestUsage(BaseModel):
     # For paid users: tracks usage within a billing period
     billing_period_start = models.DateTimeField(null=True, blank=True)
     billing_period_end = models.DateTimeField(null=True, blank=True)
-    usage_count = models.PositiveIntegerField(default=0)
+    # Credits remaining for the user in this period
+    remaining_credits = models.PositiveIntegerField(default=0)
     # For free users: tracks lifetime usage
     is_free_tier = models.BooleanField(default=False)
     
@@ -441,10 +442,28 @@ class AdRequestUsage(BaseModel):
         """Get or create usage record based on subscription status"""
         from django.utils import timezone
         from datetime import datetime
+        from apps.ads.models import AppConfiguration
         
-        # For users with active subscriptions, get billing period from subscription
+        # Get all limits from configuration
+        limits = AppConfiguration.get_limits()
+        
+        # Default limit for users without subscription
+        credit_limit = limits.get('default', {}).get('ad_request_limit', 5)  # 5 is fallback if all else fails
+        
+        # For users with active subscriptions, get plan-specific limit
         if user.has_active_subscription():
             sub = user.active_stripe_subscription
+            
+            # Get product metadata to determine plan type
+            from apps.subscriptions.metadata import ACTIVE_PRODUCTS_BY_ID
+            product_id = sub.plan.product
+            product_meta = ACTIVE_PRODUCTS_BY_ID.get(product_id)
+            
+            if product_meta:
+                plan_type = product_meta.slug
+                if plan_type in limits:
+                    credit_limit = limits[plan_type]['ad_request_limit']
+            
             # Get current period from subscription
             # Handle both timestamp integers and datetime objects
             if isinstance(sub.current_period_start, int):
@@ -472,33 +491,38 @@ class AdRequestUsage(BaseModel):
                 # Get the first record for this user (paid tier)
                 usage = cls.objects.get(user=user, is_free_tier=False)
                 
-                # Check if the billing period has changed
+                # Check if the billing period has changed - ONLY reset credits if period changed
                 if usage.billing_period_start != period_start:
-                    # Update the billing period and reset usage count
+                    # Update the billing period and reset credits
                     usage.billing_period_start = period_start
                     usage.billing_period_end = period_end
-                    usage.usage_count = 0
+                    usage.remaining_credits = credit_limit
                     usage.save()
             except cls.DoesNotExist:
-                # Create a new record if none exists
+                # Create a new record if none exists - initialize with full credits
                 usage = cls.objects.create(
                     user=user,
                     billing_period_start=period_start,
                     billing_period_end=period_end,
                     is_free_tier=False,
-                    usage_count=0
+                    remaining_credits=credit_limit
                 )
             
             return usage
         else:
             # For free users, use a lifetime record (no billing period)
-            usage, created = cls.objects.get_or_create(
-                user=user,
-                is_free_tier=True,
-                defaults={
-                    'billing_period_start': None,
-                    'billing_period_end': None,
-                    'usage_count': 0
-                }
-            )
+            try:
+                # Get the existing record for this free tier user
+                # IMPORTANT: Do NOT reset credits if they're at 0 - removed that logic
+                usage = cls.objects.get(user=user, is_free_tier=True)
+            except cls.DoesNotExist:
+                # Create a new record if none exists - initialize with full credits
+                usage = cls.objects.create(
+                    user=user,
+                    billing_period_start=None,
+                    billing_period_end=None,
+                    is_free_tier=True,
+                    remaining_credits=credit_limit
+                )
+            
             return usage

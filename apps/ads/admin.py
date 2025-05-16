@@ -237,7 +237,7 @@ class AdRequestVersionAdmin(admin.ModelAdmin):
 
 @admin.register(AdRequestUsage)
 class AdRequestUsageAdmin(admin.ModelAdmin):
-    list_display = ["user", "usage_count", "is_free_tier", "billing_period_start", "billing_period_end", "created_at"]
+    list_display = ["user", "remaining_credits", "is_free_tier", "billing_period_start", "billing_period_end", "created_at"]
     search_fields = ["user__email"]
     list_filter = ["is_free_tier"]
     readonly_fields = ["user", "billing_period_start", "billing_period_end", "is_free_tier"]

@@ -21,7 +21,7 @@ from django.conf import settings
 
 from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion
 from .forms import AdLibraryForm
-from .services import can_create_ad_request, increment_usage, can_create_ad_request_version, get_ad_request_version_limit
+from .services import can_create_ad_request, use_credit, can_create_ad_request_version, get_ad_request_version_limit
 import boto3
 
 # A reasonable value for pagination would be 10 or 20 entries per page.
@@ -545,38 +545,23 @@ def adrequest_create(request):
     
     Returns: JSON with the AdRequest instance ID
     """
-    # Check if user can create more ad requests
-    if not can_create_ad_request(request.user):
-        # Different message for free vs paid users
-        if not request.user.has_active_subscription():
-            messages.error(
-                request, 
-                "You've reached your lifetime limit for free ad requests. Please upgrade your plan to create more."
-            )
-        else:
-            messages.error(
-                request, 
-                "You've reached your monthly limit for ad requests. Please upgrade your plan to create more."
-            )
-        return redirect('subscription_plans')  # Redirect to plans page
-
+    if request.method != "POST":
+        return JsonResponse({'error': 'Only POST method is allowed'}, status=405)
+    
     try:
-        # Check if the user already has an AdRequestAssets instance
-        user_assets = AdRequestAssets.objects.filter(user=request.user).first()
+        # Check if user can create a new AdRequest
+        if not can_create_ad_request(request.user):
+            return JsonResponse({'error': 'You have reached your limit for ad requests. Please upgrade your plan to create more.'}, status=403)
         
-        # If not, create one
-        if not user_assets:
-            user_assets = AdRequestAssets.objects.create(user=request.user)
-        
-        # Prepare creation parameters
+        # Initialize create parameters
         create_params = {
             'user': request.user,
-            'base_assets': user_assets,
-            # No ad_library_id needed
-            # No canvas_size needed (will use default from model)
+            'status': AdRequest.STATUS_NEW
         }
         
-        # Add override fields if user_assets exists
+        # Get user assets if they exist
+        user_assets = AdRequestAssets.objects.filter(user=request.user).first()
+        
         if user_assets:
             # Add text fields to asset_overrides
             create_params['asset_overrides'] = user_assets.to_dict()
@@ -596,8 +581,8 @@ def adrequest_create(request):
         # Create the AdRequest with all fields at once
         ad_request = AdRequest.objects.create(**create_params)
         
-        # Increment usage counter
-        increment_usage(request.user)
+        # Use a credit
+        use_credit(request.user)
         
         # Return the AdRequest instance ID
         return JsonResponse({'id': ad_request.id}, status=201)

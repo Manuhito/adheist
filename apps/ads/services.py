@@ -29,22 +29,20 @@ def can_create_ad_request(user):
     """Check if user can create a new AdRequest"""
     from apps.ads.models import AdRequestUsage
     
-    # Get current usage
+    # Get current usage record
     usage = AdRequestUsage.get_current_usage(user)
     
-    # Get limit based on subscription
-    limit = get_ad_request_limit(user)
-    
-    # Check if user has reached their limit
-    return usage.usage_count < limit
+    # Check if user has remaining credits
+    return usage.remaining_credits > 0
 
-def increment_usage(user):
-    """Increment usage count for the current billing period"""
+def use_credit(user):
+    """Use one credit from the user's available credits"""
     from apps.ads.models import AdRequestUsage
     
     usage = AdRequestUsage.get_current_usage(user)
-    usage.usage_count += 1
-    usage.save()
+    if usage.remaining_credits > 0:
+        usage.remaining_credits -= 1
+        usage.save()
     return usage
 
 # Funciones para el control de versiones de AdRequest

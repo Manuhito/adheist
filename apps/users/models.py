@@ -32,31 +32,6 @@ class CustomUser(SubscriptionModelBase, AbstractUser):
             return self.get_full_name()
         return self.email or self.username
 
-    def get_ad_request_limit_and_usage(self):
-        """Get the user's AdRequest limit and current usage"""
-        from apps.ads.services import get_ad_request_limit
-        from apps.ads.models import AdRequestUsage
-        
-        limit = get_ad_request_limit(self)
-        usage = AdRequestUsage.get_current_usage(self).usage_count
-        
-        # For free users, show it as a lifetime limit
-        if not self.has_active_subscription():
-            return {
-                'limit': limit,
-                'usage': usage,
-                'remaining': max(0, limit - usage),
-                'is_lifetime': True
-            }
-        
-        # For paid users, show as a monthly limit
-        return {
-            'limit': limit,
-            'usage': usage,
-            'remaining': max(0, limit - usage),
-            'is_lifetime': False
-        }
-
     @property
     def avatar_url(self) -> str:
         if self.avatar:
@@ -72,5 +47,3 @@ class CustomUser(SubscriptionModelBase, AbstractUser):
     @cached_property
     def has_verified_email(self):
         return EmailAddress.objects.filter(user=self, verified=True).exists()
-
-    
