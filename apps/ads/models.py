@@ -467,15 +467,28 @@ class AdRequestUsage(BaseModel):
                 if timezone.is_naive(period_end):
                     period_end = timezone.make_aware(period_end)
             
-            usage, created = cls.objects.get_or_create(
-                user=user,
-                billing_period_start=period_start,
-                is_free_tier=False,
-                defaults={
-                    'billing_period_end': period_end,
-                    'usage_count': 0
-                }
-            )
+            # Try to find an existing record for this user
+            try:
+                # Get the first record for this user (paid tier)
+                usage = cls.objects.get(user=user, is_free_tier=False)
+                
+                # Check if the billing period has changed
+                if usage.billing_period_start != period_start:
+                    # Update the billing period and reset usage count
+                    usage.billing_period_start = period_start
+                    usage.billing_period_end = period_end
+                    usage.usage_count = 0
+                    usage.save()
+            except cls.DoesNotExist:
+                # Create a new record if none exists
+                usage = cls.objects.create(
+                    user=user,
+                    billing_period_start=period_start,
+                    billing_period_end=period_end,
+                    is_free_tier=False,
+                    usage_count=0
+                )
+            
             return usage
         else:
             # For free users, use a lifetime record (no billing period)
