@@ -422,6 +422,8 @@ class AdRequestUsage(BaseModel):
     remaining_credits = models.PositiveIntegerField(default=0)
     # For free users: tracks lifetime usage
     is_free_tier = models.BooleanField(default=False)
+    # Plan type for paid users (e.g., 'starter', 'pro')
+    plan_type = models.CharField(max_length=50, null=True, blank=True)
     
     class Meta:
         constraints = [
@@ -510,6 +512,7 @@ class AdRequestUsage(BaseModel):
                     usage.billing_period_start = period_start
                     usage.billing_period_end = period_end
                     usage.remaining_credits = credit_limit
+                    usage.plan_type = plan_type
                     usage.save()
             except cls.DoesNotExist:
                 # Create a new record if none exists - initialize with full credits
@@ -518,7 +521,8 @@ class AdRequestUsage(BaseModel):
                     billing_period_start=period_start,
                     billing_period_end=period_end,
                     is_free_tier=False,
-                    remaining_credits=credit_limit
+                    remaining_credits=credit_limit,
+                    plan_type=plan_type
                 )
             
             return usage
