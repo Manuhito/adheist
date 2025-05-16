@@ -17,6 +17,8 @@ from .models import (
     AdRequestAssets,
     AdRequestVersion,
     AdRequestUsage,
+    ExtraCredit,
+    AppConfiguration,
 )
 
 
@@ -236,9 +238,49 @@ class AdRequestVersionAdmin(admin.ModelAdmin):
 
 @admin.register(AdRequestUsage)
 class AdRequestUsageAdmin(admin.ModelAdmin):
-    list_display = ["user", "usage_count", "is_free_tier", "billing_period_start", "billing_period_end", "created_at"]
-    search_fields = ["user__email"]
-    list_filter = ["is_free_tier"]
-    # readonly_fields = ["user", "usage_count", "billing_period_start", "billing_period_end", "is_free_tier"]
+    list_display = ["user", "remaining_credits", "is_free_tier", "plan_type", "billing_period_start", "billing_period_end", "created_at"]
+    search_fields = ["user__email", "plan_type"]
+    list_filter = ["is_free_tier", "plan_type"]
     readonly_fields = ["user", "billing_period_start", "billing_period_end", "is_free_tier"]
 
+
+@admin.register(ExtraCredit)
+class ExtraCreditAdmin(admin.ModelAdmin):
+    list_display = ["user", "credits", "created_at", "updated_at"]
+    search_fields = ["user__email"]
+    readonly_fields = ["user"]
+
+
+@admin.register(AppConfiguration)
+class AppConfigurationAdmin(admin.ModelAdmin):
+    list_display = [
+        "default_ad_request_limit", "default_ad_request_version_limit", 
+        "starter_ad_request_limit", "starter_ad_request_version_limit",
+        "pro_ad_request_limit", "pro_ad_request_version_limit", 
+        "updated_at"
+    ]
+    fieldsets = [
+        ("Default Plan Limits", {
+            "fields": ["default_ad_request_limit", "default_ad_request_version_limit"],
+            "description": "Limits for users without an active subscription",
+            "classes": ["wide"]
+        }),
+        ("Starter Plan Limits", {
+            "fields": ["starter_ad_request_limit", "starter_ad_request_version_limit"],
+            "description": "Limits for users with Starter subscription",
+            "classes": ["wide"]
+        }),
+        ("Pro Plan Limits", {
+            "fields": ["pro_ad_request_limit", "pro_ad_request_version_limit"],
+            "description": "Limits for users with Pro subscription",
+            "classes": ["wide"]
+        })
+    ]
+    
+    def has_add_permission(self, request):
+        # Only allow creating an instance if none exists
+        return not AppConfiguration.objects.exists()
+    
+    def has_delete_permission(self, request, obj=None):
+        # Do not allow deleting the configuration
+        return False

@@ -5,6 +5,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 import json
 
 from apps.utils.models import BaseModel
+from django.core.cache import cache
 
 
 class IndustryList(BaseModel):
@@ -39,6 +40,106 @@ class AdLibrary(BaseModel):
 
     def get_absolute_url(self):
         return reverse("ads:adlibrary_detail", kwargs={"pk": self.pk})
+
+
+class AppConfiguration(BaseModel):
+    """
+    Model to store application-wide configuration settings.
+    Only one instance of this model should exist in the database.
+    """
+    # AdRequest limits
+    default_ad_request_limit = models.PositiveIntegerField(
+        default=5,
+        help_text="Default limit of AdRequests for users without subscription"
+    )
+    default_ad_request_version_limit = models.PositiveIntegerField(
+        default=2,
+        help_text="Default limit of versions per AdRequest"
+    )
+    
+    # Starter plan limits
+    starter_ad_request_limit = models.PositiveIntegerField(
+        default=20,
+        help_text="Limit of AdRequests for users with Starter subscription"
+    )
+    starter_ad_request_version_limit = models.PositiveIntegerField(
+        default=5,
+        help_text="Limit of versions per AdRequest for Starter plan"
+    )
+    
+    # Pro plan limits
+    pro_ad_request_limit = models.PositiveIntegerField(
+        default=50,
+        help_text="Limit of AdRequests for users with Pro subscription"
+    )
+    pro_ad_request_version_limit = models.PositiveIntegerField(
+        default=10,
+        help_text="Limit of versions per AdRequest for Pro plan"
+    )    
+    class Meta:
+        verbose_name = "Application Configuration"
+        verbose_name_plural = "Application Configuration"
+    
+    def __str__(self):
+        return f"Application Configuration (AdRequest Limit: {self.default_ad_request_limit}, Versions: {self.default_ad_request_version_limit})"
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one instance exists
+        if not self.pk and AppConfiguration.objects.exists():
+            # If an instance already exists and we're creating a new one, update the existing one
+            return AppConfiguration.objects.first()
+        
+        # Clear cache when saving
+        cache.delete('app_configuration')
+        
+        return super().save(*args, **kwargs)
+    
+    @classmethod
+    def get_limits(cls):
+        """
+        Get the configured limits, using cache to improve performance.
+        
+        Returns:
+            dict: Dictionary with all limit configurations
+        """
+        # Try to get from cache first
+        config = cls.get_config()
+        return {
+            'default': {
+                'ad_request_limit': config.default_ad_request_limit,
+                'ad_request_version_limit': config.default_ad_request_version_limit
+            },
+            'starter': {
+                'ad_request_limit': config.starter_ad_request_limit,
+                'ad_request_version_limit': config.starter_ad_request_version_limit
+            },
+            'pro': {
+                'ad_request_limit': config.pro_ad_request_limit,
+                'ad_request_version_limit': config.pro_ad_request_version_limit
+            }
+        }
+    
+    @classmethod
+    def get_config(cls):
+        """
+        Get the application configuration, using cache to improve performance.
+        
+        Returns:
+            AppConfiguration: The application configuration object
+        """
+        # Try to get from cache first
+        config = cache.get('app_configuration')
+        if config is None:
+            # If not in cache, get from database
+            config = cls.objects.first()
+            if not config:
+                # If no configuration exists, create one with default values
+                config = cls.objects.create()
+            
+            # Save in cache for 1 hour (3600 seconds)
+            cache.set('app_configuration', config, 3600)
+        
+        return config
 
 
 class AdRequestAssets(BaseModel):
@@ -314,23 +415,15 @@ class AdRequestVersion(BaseModel):
 # apps/ads/models.py
 class AdRequestUsage(BaseModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    billing_period_start = models.DateTimeField()
-    billing_period_end = models.DateTimeField()
-    usage_count = models.PositiveIntegerField(default=0)
-    
-    class Meta:
-        unique_together = ('user', 'billing_period_start')
-        
-    @classmethod
-    def get_current_usage(cls, user):
-        """Get or create usage record for current billing period"""
-        from django.utils import timezone
     # For paid users: tracks usage within a billing period
     billing_period_start = models.DateTimeField(null=True, blank=True)
     billing_period_end = models.DateTimeField(null=True, blank=True)
-    usage_count = models.PositiveIntegerField(default=0)
+    # Credits remaining for the user in this period
+    remaining_credits = models.PositiveIntegerField(default=0)
     # For free users: tracks lifetime usage
     is_free_tier = models.BooleanField(default=False)
+    # Plan type for paid users (e.g., 'starter', 'pro')
+    plan_type = models.CharField(max_length=50, null=True, blank=True)
     
     class Meta:
         constraints = [
@@ -351,10 +444,41 @@ class AdRequestUsage(BaseModel):
         """Get or create usage record based on subscription status"""
         from django.utils import timezone
         from datetime import datetime
+        from apps.ads.models import AppConfiguration
         
-        # For users with active subscriptions, get billing period from subscription
+        # Get all limits from configuration
+        limits = AppConfiguration.get_limits()
+        
+        # Default limit for users without subscription
+        credit_limit = limits.get('default', {}).get('ad_request_limit', 5)  # 5 is fallback if all else fails
+        
+        # For users with active subscriptions, get plan-specific limit
         if user.has_active_subscription():
             sub = user.active_stripe_subscription
+            
+            # Get product metadata to determine plan type
+            from apps.subscriptions.metadata import ACTIVE_PRODUCTS_BY_ID
+            
+            # Get product ID - handle both string and object cases
+            if hasattr(sub.plan.product, 'id'):
+                # It's an object, get the ID
+                product_id = sub.plan.product.id
+            else:
+                # It's already an ID string
+                product_id = sub.plan.product
+                
+            product_meta = ACTIVE_PRODUCTS_BY_ID.get(product_id)
+            
+            if product_meta:
+                plan_type = product_meta.slug
+                if plan_type in limits:
+                    credit_limit = limits[plan_type]['ad_request_limit']
+                    print(f"Setting credit limit to {credit_limit} for plan {plan_type}")
+                else:
+                    print(f"Plan type {plan_type} not found in limits: {limits.keys()}")
+            else:
+                print(f"Product ID {product_id} not found in ACTIVE_PRODUCTS_BY_ID")
+            
             # Get current period from subscription
             # Handle both timestamp integers and datetime objects
             if isinstance(sub.current_period_start, int):
@@ -377,25 +501,87 @@ class AdRequestUsage(BaseModel):
                 if timezone.is_naive(period_end):
                     period_end = timezone.make_aware(period_end)
             
-            usage, created = cls.objects.get_or_create(
-                user=user,
-                billing_period_start=period_start,
-                is_free_tier=False,
-                defaults={
-                    'billing_period_end': period_end,
-                    'usage_count': 0
-                }
-            )
+            # Try to find an existing record for this user
+            try:
+                # Get the first record for this user (paid tier)
+                usage = cls.objects.get(user=user, is_free_tier=False)
+                
+                # Check if the billing period has changed OR if the plan has changed
+                # ONLY reset credits if period changed or plan upgraded
+                if usage.billing_period_start != period_start or usage.plan_type != plan_type:
+                    # Update the billing period and reset credits
+                    usage.billing_period_start = period_start
+                    usage.billing_period_end = period_end
+                    usage.remaining_credits = credit_limit
+                    usage.plan_type = plan_type
+                    usage.save()
+                    print(f"Updated user plan from {usage.plan_type} to {plan_type} or period changed")
+            except cls.DoesNotExist:
+                # Create a new record if none exists - initialize with full credits
+                usage = cls.objects.create(
+                    user=user,
+                    billing_period_start=period_start,
+                    billing_period_end=period_end,
+                    is_free_tier=False,
+                    remaining_credits=credit_limit,
+                    plan_type=plan_type
+                )
+            
             return usage
         else:
             # For free users, use a lifetime record (no billing period)
-            usage, created = cls.objects.get_or_create(
-                user=user,
-                is_free_tier=True,
-                defaults={
-                    'billing_period_start': None,
-                    'billing_period_end': None,
-            'usage_count': 0
-        }
-        )
-        return usage
+            try:
+                # Get the existing record for this free tier user
+                # IMPORTANT: Do NOT reset credits if they're at 0 - removed that logic
+                usage = cls.objects.get(user=user, is_free_tier=True)
+            except cls.DoesNotExist:
+                # Create a new record if none exists - initialize with full credits
+                usage = cls.objects.create(
+                    user=user,
+                    billing_period_start=None,
+                    billing_period_end=None,
+                    is_free_tier=True,
+                    remaining_credits=credit_limit
+                )
+            
+            return usage
+
+class ExtraCredit(BaseModel):
+    """
+    Model to store extra credits that don't expire with billing periods.
+    These credits are used when a user has no remaining regular credits.
+    """
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="extra_credits")
+    credits = models.PositiveIntegerField(default=0)
+    
+    def __str__(self):
+        return f"{self.user.email} - {self.credits} extra credits"
+    
+    @classmethod
+    def get_or_create(cls, user):
+        """Get or create extra credits record for a user"""
+        extra_credits, created = cls.objects.get_or_create(user=user)
+        return extra_credits
+    
+    @classmethod
+    def add_credits(cls, user, amount):
+        """Add extra credits to a user"""
+        if amount <= 0:
+            return
+            
+        extra_credits = cls.get_or_create(user)
+        extra_credits.credits += amount
+        extra_credits.save()
+        return extra_credits
+    
+    @classmethod
+    def use_credit(cls, user):
+        """Use one extra credit if available"""
+        extra_credits = cls.get_or_create(user)
+        
+        if extra_credits.credits > 0:
+            extra_credits.credits -= 1
+            extra_credits.save()
+            return True
+        
+        return False

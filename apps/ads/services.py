@@ -1,10 +1,12 @@
 # apps/ads/services.py
 from apps.subscriptions.metadata import ACTIVE_PRODUCTS_BY_ID
+from apps.ads.models import AppConfiguration
 
 def get_ad_request_limit(user):
     """Get the AdRequest limit for a user based on their subscription"""
-    # Default limit for free users
-    default_limit = 5
+    # Get all limits from configuration
+    limits = AppConfiguration.get_limits()
+    default_limit = limits['default']['ad_request_limit']
     
     if not user.has_active_subscription():
         return default_limit
@@ -16,28 +18,101 @@ def get_ad_request_limit(user):
     if not product_meta:
         return default_limit
     
-    # Get limit from product metadata
-    limits = getattr(product_meta, 'limits', {})
-    return limits.get('ad_requests_per_month', default_limit)
+    # Get plan type (slug) and return corresponding limit
+    plan_type = product_meta.slug
+    if plan_type in limits:
+        return limits[plan_type]['ad_request_limit']
+    
+    return default_limit
 
 def can_create_ad_request(user):
     """Check if user can create a new AdRequest"""
-    from apps.ads.models import AdRequestUsage
+    from apps.ads.models import AdRequestUsage, ExtraCredit
     
-    # Get current usage
+    # Get current usage record
     usage = AdRequestUsage.get_current_usage(user)
+    
+    # First check if user has remaining regular credits
+    if usage.remaining_credits > 0:
+        return True
+    
+    # If no regular credits, check for extra credits
+    extra_credits = ExtraCredit.get_or_create(user)
+    return extra_credits.credits > 0
+
+def use_credit(user):
+    """Use one credit from the user's available credits"""
+    from apps.ads.models import AdRequestUsage, ExtraCredit
+    
+    usage = AdRequestUsage.get_current_usage(user)
+    
+    # First try to use regular credits
+    if usage.remaining_credits > 0:
+        usage.remaining_credits -= 1
+        usage.save()
+        return usage
+    
+    # If no regular credits, try to use extra credits
+    if ExtraCredit.use_credit(user):
+        # Return the usage object for consistency, even though we used an extra credit
+        return usage
+    
+    # No credits available
+    return usage
+
+# Funciones para el control de versiones de AdRequest
+
+def get_ad_request_version_limit(ad_request):
+    """
+    Get the version limit for an AdRequest based on the owner's subscription.
+    
+    Args:
+        ad_request: The AdRequest instance
+        
+    Returns:
+        int: The maximum number of versions allowed for this AdRequest
+    """
+    # Get all limits from configuration
+    limits = AppConfiguration.get_limits()
+    default_limit = limits['default']['ad_request_version_limit']
+    
+    # Get the user who owns the AdRequest
+    user = ad_request.user
+    
+    if not user.has_active_subscription():
+        return default_limit
+    
+    # Get product from subscription
+    product_id = user.active_stripe_subscription.plan.product.id
+    product_meta = ACTIVE_PRODUCTS_BY_ID.get(product_id)
+    
+    if not product_meta:
+        return default_limit
+    
+    # Get plan type (slug) and return corresponding limit
+    plan_type = product_meta.slug
+    if plan_type in limits:
+        return limits[plan_type]['ad_request_version_limit']
+    
+    return default_limit
+
+def can_create_ad_request_version(ad_request):
+    """
+    Check if a new version can be created for the given AdRequest.
+    
+    Args:
+        ad_request: The AdRequest instance
+        
+    Returns:
+        bool: True if a new version can be created, False otherwise
+    """
+    from apps.ads.models import AdRequestVersion
+    
+    # Get current number of versions
+    current_versions_count = AdRequestVersion.objects.filter(ad_request=ad_request).count()
     
     # Get limit based on subscription
-    limit = get_ad_request_limit(user)
+    limit = get_ad_request_version_limit(ad_request)
     
-    # Check if user has reached their limit
-    return usage.usage_count < limit
-
-def increment_usage(user):
-    """Increment usage count for the current billing period"""
-    from apps.ads.models import AdRequestUsage
-    
-    usage = AdRequestUsage.get_current_usage(user)
-    usage.usage_count += 1
-    usage.save()
-    return usage
+    # Check if AdRequest has reached its version limit
+    return current_versions_count < limit
