@@ -17,6 +17,7 @@ from .models import (
     AdRequestAssets,
     AdRequestVersion,
     AdRequestUsage,
+    ExtraCredit,
     AppConfiguration,
 )
 
@@ -237,10 +238,17 @@ class AdRequestVersionAdmin(admin.ModelAdmin):
 
 @admin.register(AdRequestUsage)
 class AdRequestUsageAdmin(admin.ModelAdmin):
-    list_display = ["user", "remaining_credits", "is_free_tier", "billing_period_start", "billing_period_end", "created_at"]
-    search_fields = ["user__email"]
-    list_filter = ["is_free_tier"]
+    list_display = ["user", "remaining_credits", "is_free_tier", "plan_type", "billing_period_start", "billing_period_end", "created_at"]
+    search_fields = ["user__email", "plan_type"]
+    list_filter = ["is_free_tier", "plan_type"]
     readonly_fields = ["user", "billing_period_start", "billing_period_end", "is_free_tier"]
+
+
+@admin.register(ExtraCredit)
+class ExtraCreditAdmin(admin.ModelAdmin):
+    list_display = ["user", "credits", "created_at", "updated_at"]
+    search_fields = ["user__email"]
+    readonly_fields = ["user"]
 
 
 @admin.register(AppConfiguration)

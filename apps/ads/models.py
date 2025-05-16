@@ -545,3 +545,43 @@ class AdRequestUsage(BaseModel):
                 )
             
             return usage
+
+class ExtraCredit(BaseModel):
+    """
+    Model to store extra credits that don't expire with billing periods.
+    These credits are used when a user has no remaining regular credits.
+    """
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="extra_credits")
+    credits = models.PositiveIntegerField(default=0)
+    
+    def __str__(self):
+        return f"{self.user.email} - {self.credits} extra credits"
+    
+    @classmethod
+    def get_or_create(cls, user):
+        """Get or create extra credits record for a user"""
+        extra_credits, created = cls.objects.get_or_create(user=user)
+        return extra_credits
+    
+    @classmethod
+    def add_credits(cls, user, amount):
+        """Add extra credits to a user"""
+        if amount <= 0:
+            return
+            
+        extra_credits = cls.get_or_create(user)
+        extra_credits.credits += amount
+        extra_credits.save()
+        return extra_credits
+    
+    @classmethod
+    def use_credit(cls, user):
+        """Use one extra credit if available"""
+        extra_credits = cls.get_or_create(user)
+        
+        if extra_credits.credits > 0:
+            extra_credits.credits -= 1
+            extra_credits.save()
+            return True
+        
+        return False

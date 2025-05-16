@@ -27,22 +27,37 @@ def get_ad_request_limit(user):
 
 def can_create_ad_request(user):
     """Check if user can create a new AdRequest"""
-    from apps.ads.models import AdRequestUsage
+    from apps.ads.models import AdRequestUsage, ExtraCredit
     
     # Get current usage record
     usage = AdRequestUsage.get_current_usage(user)
     
-    # Check if user has remaining credits
-    return usage.remaining_credits > 0
+    # First check if user has remaining regular credits
+    if usage.remaining_credits > 0:
+        return True
+    
+    # If no regular credits, check for extra credits
+    extra_credits = ExtraCredit.get_or_create(user)
+    return extra_credits.credits > 0
 
 def use_credit(user):
     """Use one credit from the user's available credits"""
-    from apps.ads.models import AdRequestUsage
+    from apps.ads.models import AdRequestUsage, ExtraCredit
     
     usage = AdRequestUsage.get_current_usage(user)
+    
+    # First try to use regular credits
     if usage.remaining_credits > 0:
         usage.remaining_credits -= 1
         usage.save()
+        return usage
+    
+    # If no regular credits, try to use extra credits
+    if ExtraCredit.use_credit(user):
+        # Return the usage object for consistency, even though we used an extra credit
+        return usage
+    
+    # No credits available
     return usage
 
 # Funciones para el control de versiones de AdRequest
