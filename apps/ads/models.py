@@ -75,15 +75,7 @@ class AppConfiguration(BaseModel):
     pro_ad_request_version_limit = models.PositiveIntegerField(
         default=10,
         help_text="Limit of versions per AdRequest for Pro plan"
-    )
-    
-    # OpenAI configuration
-    openai_image_model = models.CharField(
-        max_length=50,
-        default="gpt-image-1",
-        help_text="OpenAI model to use for image generation"
-    )
-    
+    )    
     class Meta:
         verbose_name = "Application Configuration"
         verbose_name_plural = "Application Configuration"
@@ -125,19 +117,6 @@ class AppConfiguration(BaseModel):
                 'ad_request_limit': config.pro_ad_request_limit,
                 'ad_request_version_limit': config.pro_ad_request_version_limit
             }
-        }
-    
-    @classmethod
-    def get_openai_config(cls):
-        """
-        Get the OpenAI configuration settings.
-        
-        Returns:
-            dict: OpenAI configuration settings
-        """
-        config = cls.get_config()
-        return {
-            'model': config.openai_image_model
         }
     
     @classmethod

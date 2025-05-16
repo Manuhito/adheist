@@ -9,6 +9,8 @@ import os
 import requests
 
 from apps.ads.models import AppConfiguration
+from apps.aiinterface.models import OpenAIConfiguration
+
 
 
 class ImageGenerationService:
@@ -27,10 +29,10 @@ class ImageGenerationService:
         """
         try:
             # Get model from AppConfiguration
-            openai_config = AppConfiguration.get_openai_config()
+            openai_config = OpenAIConfiguration.get_config()
             
             response = self.client.images.generate(
-                model=openai_config['model'],
+                model=openai_config.openai_image_model,
                 prompt="A simple test image of a blue circle",
                 n=1,
                 size="1024x1024"
@@ -126,10 +128,10 @@ class ImageGenerationService:
                 "Authorization": f"Bearer {api_key}"
             }
             # Get model from AppConfiguration
-            openai_config = AppConfiguration.get_openai_config()
+            openai_config = OpenAIConfiguration.get_config()
             
             data = {
-                "model": openai_config['model'],
+                "model": openai_config.openai_image_model,
                 "prompt": text_prompt,
                 "n": 1,
                 "size": canvas_size
@@ -180,7 +182,7 @@ class ImageGenerationService:
                         
                         # Incluir metadatos incluyendo la información de uso
                         "response_metadata": {
-                            "model": openai_config['model'],
+                            "model": openai_config.openai_image_model,
                             # Añadir toda la información de uso de la API
                             "usage": usage_data
                         }

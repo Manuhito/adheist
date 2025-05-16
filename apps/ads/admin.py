@@ -249,7 +249,7 @@ class AppConfigurationAdmin(admin.ModelAdmin):
         "default_ad_request_limit", "default_ad_request_version_limit", 
         "starter_ad_request_limit", "starter_ad_request_version_limit",
         "pro_ad_request_limit", "pro_ad_request_version_limit", 
-        "openai_image_model", "updated_at"
+        "updated_at"
     ]
     fieldsets = [
         ("Default Plan Limits", {
@@ -266,11 +266,7 @@ class AppConfigurationAdmin(admin.ModelAdmin):
             "fields": ["pro_ad_request_limit", "pro_ad_request_version_limit"],
             "description": "Limits for users with Pro subscription",
             "classes": ["wide"]
-        }),
-        ("OpenAI Configuration", {
-            "fields": ["openai_image_model"],
-            "classes": ["wide"]
-        }),
+        })
     ]
     
     def has_add_permission(self, request):
