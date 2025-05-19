@@ -27,46 +27,23 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
       return;
     }
     setIsGenerating(true);
-    // First, update status to SUBMITED in the backend (like StepTwoComponent)
+
     try {
-      // Get CSRF token from cookies
-      const csrfToken = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('csrftoken='))
-        ?.split('=')[1];
-      if (!csrfToken) {
-        console.error(t('step_three.csrf_not_found', 'CSRF token not found'));
-        setIsGenerating(false);
-        return;
-      }
-      const formData = new FormData();
-      formData.append('status', 'SUBMITTED');
-      const statusResponse = await fetch(`/ads/adrequest/${adRequestId}/update/`, {
-        method: 'POST',
-        headers: { 'X-CSRFToken': csrfToken },
-        body: formData
-      });
-      if (!statusResponse.ok) {
-        const errorData = await statusResponse.json();
-        throw new Error(errorData.error || t('step_three.update_status_failed', 'Failed to update status to SUBMITED'));
-      }
-    } catch (err) {
-      console.error(t('step_three.update_status_error', 'Error updating status to SUBMITED:'), err);
-      setIsGenerating(false);
-      return;
-    }
-    try {
-      const formData = new FormData();
-      formData.append('ad_request', adRequestId);
-      formData.append('user_prompt', userPrompt);
+      // Primero, intentar crear la versión
+      const versionFormData = new FormData();
+      versionFormData.append('ad_request', adRequestId);
+      versionFormData.append('user_prompt', userPrompt);
+
       const response = await fetch('/ads/adrequest/version/create/', {
         method: 'POST',
-        body: formData,
+        body: versionFormData,
         headers: {
           'X-CSRFToken': getCsrfToken(),
         },
       });
+
       const data = await response.json();
+
       if (!response.ok) {
         // Check if this is a credits error (status 403 with specific message)
         if (response.status === 403) {
@@ -76,9 +53,34 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
         }
         throw new Error(data.error || t('step_three.generate_version_error', 'Error generating version'));
       }
-      // Guardar flag para mostrar alert en la home y redirigir
-      sessionStorage.setItem('ads_success_alert', '1');
-      window.location.href = '/ads/';
+
+      // Si la creación de la versión fue exitosa, actualizar el estado del AdRequest
+      try {
+        const statusFormData = new FormData();
+        statusFormData.append('status', 'SUBMITTED');
+
+        const statusResponse = await fetch(`/ads/adrequest/${adRequestId}/update/`, {
+          method: 'POST',
+          headers: { 'X-CSRFToken': getCsrfToken() },
+          body: statusFormData
+        });
+
+        if (!statusResponse.ok) {
+          const errorData = await statusResponse.json();
+          console.warn(t('step_three.update_status_warning', 'Warning: Version created but status update failed:'), errorData.error);
+          // No interrumpimos el flujo aquí, ya que la versión se creó correctamente
+        }
+
+        // Guardar flag para mostrar alert en la home y redirigir
+        sessionStorage.setItem('ads_success_alert', '1');
+        window.location.href = '/ads/';
+
+      } catch (statusErr) {
+        console.warn(t('step_three.update_status_warning', 'Warning: Version created but status update failed:'), statusErr);
+        // Aún así redirigimos, ya que la versión se creó correctamente
+        sessionStorage.setItem('ads_success_alert', '1');
+        window.location.href = '/ads/';
+      }
     } catch (error) {
       console.error('Error generating version:', error);
     } finally {
@@ -113,7 +115,7 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
       .catch(() => setAdLibraryData(null))
       .finally(() => setIsAdLibraryLoading(false));
   }, [initialData.ad_library_name]);
-  
+
   // Fetch fresh data when component mounts
   useEffect(() => {
     if (refreshData && initialData?.id) {
@@ -125,15 +127,15 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-  
+
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    
+
     try {
       // Here you would submit the ad request for processing
       const formData = new FormData();
       formData.append('status', 'SUBMITTED');
-      
+
       // Send POST request to update ad request
       const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
         method: 'POST',
@@ -148,7 +150,7 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
       if (!response.ok) {
         throw new Error(data.error || t('step_three.submit_request_failed', 'Failed to submit ad request'));
       }
-      
+
       // Call the onComplete callback with the updated data
       if (onComplete) {
         onComplete({
@@ -156,17 +158,17 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
           status: 'SUBMITTED'
         });
       }
-      
+
       // Redirect to the ad requests list page
       window.location.href = '/ads/';
-      
+
     } catch (error) {
       console.error('Error submitting ad request:', error);
     } finally {
       setIsSubmitting(false);
     }
   };
-  
+
   // Handle going back to step 2 (DRAFT)
   const handleBack = async () => {
     setIsBackSubmitting(true);
@@ -223,12 +225,12 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
     <div className="space-y-8">
       {/* No Credits Dialog */}
       {showNoCreditsDialog && (
-        <div 
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" 
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
           style={{ margin: 0 }}
           onClick={() => setShowNoCreditsDialog(false)} // Close when clicking outside
         >
-          <div 
+          <div
             className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-md w-full mx-4"
             onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
           >
@@ -260,7 +262,7 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
       )}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
         <h2 className="text-xl font-semibold mb-4">{t('step_three.summary', 'Summary')}</h2>
-        
+
         {/* Summary of the ad request */}
         <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 rounded-md mb-6">
           <div className="flex flex-col md:flex-row gap-6 items-start">
@@ -295,11 +297,11 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
                 )}
               </div>
             </div>
-            
+
             {/* Column 2: Brand Details */}
             <div className="flex flex-col md:w-1/3">
 
-              
+
               {/* Details Content */}
               <div className="flex-1 w-full">
                 {/* Brand Color Display */}
@@ -310,7 +312,7 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
                       <div
                         className="h-6 w-6 rounded-md border"
                         style={{ backgroundColor: initialData.asset_overrides.main_hex_color }}
-                        />
+                      />
                       <span className="text-xs">
                         {initialData.asset_overrides.main_hex_color}
                       </span>
@@ -324,9 +326,9 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
                   {initialData.asset_overrides?.company_website ? (
                     <a
-                    href={initialData.asset_overrides.company_website}
-                    className="text-xs text-blue-600 underline break-all"
-                    target="_blank" rel="noopener noreferrer"
+                      href={initialData.asset_overrides.company_website}
+                      className="text-xs text-blue-600 underline break-all"
+                      target="_blank" rel="noopener noreferrer"
                     >
                       {initialData.asset_overrides.company_website}
                     </a>
@@ -386,11 +388,11 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
                 </div>
               </div>
             </div>
-            
+
             {/* Column 3: Images */}
             <div className="flex flex-col md:w-1/3">
 
-              
+
               {/* Images organized in 3 rows */}
               <div className="flex flex-col gap-4">
                 {/* Row 1: Logo */}
@@ -408,7 +410,7 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
                     </div>
                   </div>
                 )}
-                
+
                 {/* Row 2: Product and Service Images */}
                 {(() => {
                   const productServiceImages = [
@@ -417,9 +419,9 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
                     { key: 'app_image_1_override', label: t('step_three.service_1', 'Service 1') },
                     { key: 'app_image_2_override', label: t('step_three.service_2', 'Service 2') },
                   ].filter(img => initialData[img.key]);
-                  
+
                   if (productServiceImages.length === 0) return null;
-                  
+
                   return (
                     <div className="flex flex-col gap-1">
 
@@ -441,7 +443,7 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
                     </div>
                   );
                 })()}
-                
+
                 {/* Row 3: Marketing Images */}
                 {(() => {
                   const marketingImages = [
@@ -449,9 +451,9 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
                     { key: 'marketing_image_2_override', label: t('step_three.marketing_2', 'Marketing 2') },
                     { key: 'marketing_image_3_override', label: t('step_three.marketing_3', 'Marketing 3') },
                   ].filter(img => initialData[img.key]);
-                  
+
                   if (marketingImages.length === 0) return null;
-                  
+
                   return (
                     <div className="flex flex-col gap-1">
 
@@ -513,7 +515,7 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
           </div>
         </div>
       </div>
-      
+
       <div className="flex justify-between items-center gap-4 pb-8">
         <BackButton onClick={handleBack} isLoading={isBackSubmitting} />
         <Button

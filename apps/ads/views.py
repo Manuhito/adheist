@@ -790,7 +790,7 @@ def adrequest_version_create(request):
     """
     # Usando prints en lugar de loggers
     ad_request_id = request.POST.get('ad_request')
-    
+    print("ad_request_id: ", ad_request_id)
     # Validate inputs
     if not ad_request_id:
         return JsonResponse({'error': 'Ad request ID is required'}, status=400)
@@ -814,17 +814,20 @@ def adrequest_version_create(request):
         # Check if user has available credits
         if not can_create_ad_request(request.user):
             return JsonResponse({'error': 'You have reached out your image limit creation for your plan'}, status=403)
-        
+        print("User has available credits")
         # Get optional fields
         user_prompt = request.POST.get('user_prompt')
-        
+        print("User prompt: ", user_prompt)
         # Create a new AdRequestVersion instance
+        print("ad_request: ", ad_request)
+        print("user_prompt: ", user_prompt)
+        print("status: ", AdRequestVersion.STATUS_UNASSIGNED)
         version = AdRequestVersion.objects.create(
             ad_request=ad_request,
             user_prompt=user_prompt,
             status=AdRequestVersion.STATUS_UNASSIGNED
         )
-        
+        print("Version created: ", version)
         # Generate image using OpenAI if user_prompt is provided
         image_generated = False
         task_id = None
