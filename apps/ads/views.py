@@ -549,9 +549,6 @@ def adrequest_create(request):
         return JsonResponse({'error': 'Only POST method is allowed'}, status=405)
     
     try:
-        # Check if user can create a new AdRequest
-        if not can_create_ad_request(request.user):
-            return JsonResponse({'error': 'You have reached your limit for ad requests. Please upgrade your plan to create more.'}, status=403)
         
         # Initialize create parameters
         create_params = {
@@ -580,9 +577,6 @@ def adrequest_create(request):
         
         # Create the AdRequest with all fields at once
         ad_request = AdRequest.objects.create(**create_params)
-        
-        # Use a credit
-        use_credit(request.user)
         
         # Return the AdRequest instance ID
         return JsonResponse({'id': ad_request.id}, status=201)
@@ -817,6 +811,10 @@ def adrequest_version_create(request):
                 'error': f'This ad request has reached its limit of {limit} versions. Please upgrade your plan for more versions.'
             }, status=400)
         
+        # Check if user has available credits
+        if not can_create_ad_request(request.user):
+            return JsonResponse({'error': 'You have reached out your image limit creation for your plan'}, status=403)
+        
         # Get optional fields
         user_prompt = request.POST.get('user_prompt')
         
@@ -877,6 +875,9 @@ def adrequest_version_create(request):
             
             task_id = task.id
             print(f"Image generation task (ID: {task_id}) started for AdRequestVersion {version.id}")
+            
+            # Use a credit
+            use_credit(request.user)
             
         except Exception as img_error:
             print(f"Error starting image generation task: {str(img_error)}")

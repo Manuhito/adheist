@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { NextButton } from '../../components/ui/next-button.jsx';
 import { BackButton } from '../../components/ui/back-button.jsx';
 import { Button } from '../../components/ui/button.tsx';
-import { Sparkles } from "lucide-react";
+import { Sparkles, CreditCard } from "lucide-react";
 import { useTranslation } from "../../lib/useTranslation";
 
 /**
@@ -12,6 +12,8 @@ import { useTranslation } from "../../lib/useTranslation";
 const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const { t } = useTranslation();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showNoCreditsDialog, setShowNoCreditsDialog] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Helper: get adRequestData.id if present, else fallback to initialData.id
   const adRequestId = initialData?.id;
@@ -66,6 +68,12 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
       });
       const data = await response.json();
       if (!response.ok) {
+        // Check if this is a credits error (status 403 with specific message)
+        if (response.status === 403) {
+          setErrorMessage(data.error);
+          setShowNoCreditsDialog(true);
+          return;
+        }
         throw new Error(data.error || t('step_three.generate_version_error', 'Error generating version'));
       }
       // Guardar flag para mostrar alert en la home y redirigir
@@ -206,8 +214,50 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
     return cookieValue;
   };
 
+  // Navigate to billing page
+  const handleNavigateToBilling = () => {
+    window.location.href = '/ads/billing/';
+  };
+
   return (
     <div className="space-y-8">
+      {/* No Credits Dialog */}
+      {showNoCreditsDialog && (
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" 
+          style={{ margin: 0 }}
+          onClick={() => setShowNoCreditsDialog(false)} // Close when clicking outside
+        >
+          <div 
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-md w-full mx-4"
+            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+          >
+            <h2 className="text-xl font-semibold mb-4">{t('step_three.no_credits_title', 'No Credits Available')}</h2>
+            <div className="flex items-center gap-3 mb-4 text-amber-600 dark:text-amber-400">
+              <CreditCard className="h-6 w-6" />
+              <p className="text-gray-600 dark:text-gray-300">
+                {errorMessage || t('step_three.no_credits_message', 'You have reached out your image limit creation for your plan')}
+              </p>
+            </div>
+            <div className="flex justify-between">
+              <button
+                type="button"
+                className="px-4 py-2 text-gray-900 dark:text-white rounded-md hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                onClick={() => setShowNoCreditsDialog(false)}
+              >
+                {t('step_three.cancel', 'Cancel')}
+              </button>
+              <button
+                type="button"
+                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-600 hover:text-white rounded-md transition-all duration-200"
+                onClick={handleNavigateToBilling}
+              >
+                {t('step_three.upgrade_plan', 'Upgrade Plan')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
         <h2 className="text-xl font-semibold mb-4">{t('step_three.summary', 'Summary')}</h2>
         
