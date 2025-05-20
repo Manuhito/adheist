@@ -31,7 +31,7 @@ export function PricingSection({
           ))}
         </div>
       </div>
-      <div className="grid w-full max-w-6xl gap-6 sm:grid-cols-2 xl:grid-cols-4">
+      <div className={`grid w-full max-w-6xl gap-6 sm:grid-cols-2 ${tiers.length === 3 ? 'xl:grid-cols-3' : 'xl:grid-cols-4'} justify-center`}>
         {tiers.map((tier) => (
           <PricingCard 
             key={tier.name} 
