@@ -109,7 +109,7 @@ function adRequestToBentoItem(adRequest: AdRequest, t: (key: string, fallback?: 
                     
                     // Render the notification
                     const notificationRoot = ReactDOM.createRoot(notificationContainer);
-                    const message = t('ad_requests.wait_processing', `This ad request is currently in ${data.status.toLowerCase()} status. Please wait for it to be processed.`);
+                    const message = t('ad_requests.wait_processing', 'This image is currently generating. Please wait for it to be processed.');
                     
                     notificationRoot.render(
                         React.createElement(AlertNotification, {

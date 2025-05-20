@@ -626,11 +626,10 @@ msgstr "Ver detalles"
 #: apps/web/context_processors.py:172
 #, python-brace-format
 msgid ""
-"This ad request is currently in {status} status. Please wait for it to be "
-"processed."
+"This image is currently generating. Please wait for it to be processed."
 msgstr ""
-"Esta solicitud de anuncio está actualmente en estado {status}. Por favor, "
-"espera a que sea procesada."
+"Esta imagen está actualmente generando. Por favor, espera a que sea "
+"procesada."
 
 #: apps/web/context_processors.py:173
 msgid "Error creating ad request. Please try again."
