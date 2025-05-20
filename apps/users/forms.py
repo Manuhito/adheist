@@ -46,6 +46,16 @@ class TurnstileSignupForm(SignupForm):
 
         return turnstile_token
 
+    def signup(self, request, user):
+        """
+        Set user.language from adheist_language cookie if present and valid ('es' or 'en').
+        """
+        language = request.COOKIES.get('adheist_language')
+        if language in ('es', 'en'):
+            user.language = language
+        user.save()
+
+
 
 class CustomUserChangeForm(UserChangeForm):
     email = forms.EmailField(label=_("Email"), required=True)
