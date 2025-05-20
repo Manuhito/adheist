@@ -285,8 +285,8 @@ class AdRequest(BaseModel):
         if hasattr(self, override_field) and getattr(self, override_field):
             return getattr(self, override_field)
         
-        # Fall back to base assets
-        return getattr(self.base_assets, field_name)
+        # No fallback to base_assets, return None
+        return None
     
     def get_company_website(self):
         return self.get_asset_value('company_website')
@@ -298,28 +298,28 @@ class AdRequest(BaseModel):
         return self.get_asset_value('key_benefits')
     
     def get_logo(self):
-        return self.logo_override or self.base_assets.logo
+        return self.logo_override if self.logo_override else None
     
     def get_product_image_1(self):
-        return self.product_image_1_override or self.base_assets.product_image_1
+        return self.product_image_1_override if self.product_image_1_override else None
     
     def get_product_image_2(self):
-        return self.product_image_2_override or self.base_assets.product_image_2
+        return self.product_image_2_override if self.product_image_2_override else None
     
     def get_app_image_1(self):
-        return self.app_image_1_override or self.base_assets.app_image_1
+        return self.app_image_1_override if self.app_image_1_override else None
     
     def get_app_image_2(self):
-        return self.app_image_2_override or self.base_assets.app_image_2
+        return self.app_image_2_override if self.app_image_2_override else None
     
     def get_marketing_image_1(self):
-        return self.marketing_image_1_override or self.base_assets.marketing_image_1
+        return self.marketing_image_1_override if self.marketing_image_1_override else None
     
     def get_marketing_image_2(self):
-        return self.marketing_image_2_override or self.base_assets.marketing_image_2
+        return self.marketing_image_2_override if self.marketing_image_2_override else None
     
     def get_marketing_image_3(self):
-        return self.marketing_image_3_override or self.base_assets.marketing_image_3
+        return self.marketing_image_3_override if self.marketing_image_3_override else None
 
 
 class AdRequestVersion(BaseModel):
