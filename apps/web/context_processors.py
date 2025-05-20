@@ -348,7 +348,7 @@ def translations(request):
             'company_logo.title': _('Company Branding'),
             'company_logo.upload_description': _('Upload your company logo to enhance your ad campaign\'s brand identity'),
             'company_logo.company_logo': _('Company Logo'),
-            'company_logo.logo_description': _('Upload a high-quality logo (PNG or SVG preferred)'),
+            'company_logo.logo_description': _('Upload a high-quality logo'),
             'company_logo.add_logo': _('Add your company logo'),
             
             # BackButton translations
@@ -357,6 +357,7 @@ def translations(request):
             
             # ImageUpload translations
             'image_upload.drag_drop': _('or drag and drop file here'),
+            'image_upload.unsupported_format': _('Unsupported format. Please upload a JPG, PNG, or WebP image.'),
             
             # StepThreeComponent translations
             'step_three.summary': _('Summary'),
