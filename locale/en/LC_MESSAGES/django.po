@@ -1106,7 +1106,7 @@ msgid "Marketing 3"
 msgstr ""
 
 #: apps/web/context_processors.py:362
-msgid "What message do you want to transmit or additional instructions?"
+msgid "Additional instructions? (optional)"
 msgstr ""
 
 #: apps/web/context_processors.py:363

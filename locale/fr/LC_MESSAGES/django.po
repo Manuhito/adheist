@@ -1132,8 +1132,8 @@ msgid "Marketing 3"
 msgstr ""
 
 #: apps/web/context_processors.py:362
-msgid "What message do you want to transmit or additional instructions?"
-msgstr ""
+msgid "Additional instructions? (optional)"
+msgstr "Instructions supplémentaires ? (facultatif)"
 
 #: apps/web/context_processors.py:363
 msgid "Write your prompt..."

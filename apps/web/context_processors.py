@@ -380,7 +380,7 @@ def translations(request):
             'step_three.marketing_1': _('Marketing 1'),
             'step_three.marketing_2': _('Marketing 2'),
             'step_three.marketing_3': _('Marketing 3'),
-            'step_three.prompt_label': _('What message do you want to transmit or additional instructions?'),
+            'step_three.prompt_label': _('Additional instructions? (optional)'),
             'step_three.prompt_placeholder': _('Write your prompt...'),
             'step_three.processing_info': _('Once submitted, your ad request will be processed. This may take a few minutes.'),
             'step_three.generating': _('Generating...'),

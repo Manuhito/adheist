@@ -487,7 +487,7 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
       <div className="flex flex-col items-center justify-center mb-8">
         <div className="space-y-2 w-full min-w-[300px] max-w-2xl">
           <label htmlFor="user-prompt" className="block text-lg font-medium text-primary mb-2 text-center">
-            {t('step_three.prompt_label', 'What message do you want to transmit or additional instructions?')}
+            {t('step_three.prompt_label', 'Additional instructions? (optional)')}
           </label>
           <textarea
             id="user-prompt"
