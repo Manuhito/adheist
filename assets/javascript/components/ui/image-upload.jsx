@@ -10,7 +10,7 @@ export function ImageUpload({
   onUpload, 
   className, 
   customTitle = "Image Upload",
-  customDescription = "Supported formats: JPG, PNG, GIF",
+  customDescription = "Supported formats: JPG, PNG, WebP",
   customPlaceholderText = "Click to select",
   initialImage = null,
   ...props 
@@ -77,7 +77,7 @@ export function ImageUpload({
 
       <Input
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp"
         className="hidden"
         ref={fileInputRef}
         onChange={handleFileChange}

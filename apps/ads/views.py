@@ -560,6 +560,9 @@ def adrequest_create(request):
         user_assets = AdRequestAssets.objects.filter(user=request.user).first()
         
         if user_assets:
+            # Set base_assets reference
+            create_params['base_assets'] = user_assets
+            
             # Add text fields to asset_overrides
             create_params['asset_overrides'] = user_assets.to_dict()
             

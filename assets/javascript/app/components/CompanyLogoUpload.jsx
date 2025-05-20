@@ -21,7 +21,7 @@ export function CompanyLogoUpload({ onUpload, className, initialImage, ...props 
         <ImageUpload 
           onUpload={onUpload}
           customTitle={t('company_logo.company_logo', 'Company Logo')}
-          customDescription={t('company_logo.logo_description', 'Upload a high-quality logo (PNG or SVG preferred)')}
+          customDescription={t('company_logo.logo_description', 'Upload a high-quality logo (JPG, PNG or WebP only)')}
           customPlaceholderText={t('company_logo.add_logo', 'Add your company logo')}
           className="w-full border"
           initialImage={initialImage}
