@@ -232,13 +232,16 @@ const RevisionAdRequest = () => {
                         {t("revision.next_version", "Next Version")}
                       </Button>
                     </div>
-                    
-                    <img 
-                      src={currentVersion.generated_image} 
-                      alt={t("ad_requests.generated_image", "Generated Ad Image")} 
-                      className="max-w-full h-auto rounded-lg shadow-lg mb-2"
-                    />
-                    
+
+                    <div className="w-full flex justify-center items-center mb-4" style={{ height: '50vh' }}>
+                      <img
+                        src={currentVersion.generated_image}
+                        alt={t("ad_requests.generated_image", "Generated Ad Image")}
+                        className="max-h-full max-w-full object-contain rounded-lg shadow-lg"
+                        style={{ maxHeight: '100%' }}
+                      />
+                    </div>
+
                     {/* Download button */}
                     <AnimatedDownloadButton 
                       downloadUrl={currentVersion.generated_image}
