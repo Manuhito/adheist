@@ -156,6 +156,22 @@ def translations(request):
             'billing.unknown_error': _('Unknown error'),
             'billing.network_error': _('Network error'),
             'billing.has_active_subscription': _('Has active subscription:'),
+
+            # Payment page translations (from payment.js/payment-page)
+            'payment.no_data': _('No payment data found. Redirecting to billing page...'),
+            'payment.invalid_data': _('Invalid payment data. Missing required fields.'),
+            'payment.failed_load': _('Failed to load payment data. Please try again.'),
+            'payment.error_label': _('Error:'),
+            'payment.complete_your_payment': _('Complete Your Payment'),
+
+            # Payment form translations (from payment-form.jsx)
+            'payment_form.failed_load': _('Failed to load payment form. Please try again.'),
+            'payment_form.unexpected_error': _('An unexpected error occurred.'),
+            'payment_form.unexpected_error_try_again': _('An unexpected error occurred. Please try again.'),
+            'payment_form.amount': _('Amount:'),
+            'payment_form.details': _('Payment details'),
+            'payment_form.processing': _('Processing...'),
+            'payment_form.pay_now': _('Pay now'),
             
             # Invoice section translations
             'invoice.history_title': _('Invoice History'),

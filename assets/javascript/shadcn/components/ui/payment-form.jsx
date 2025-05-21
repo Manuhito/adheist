@@ -7,6 +7,7 @@ import { cn } from "@/utilities/shadcn";
 import { Badge } from "@/shadcn/components/ui/badge";
 import { Button } from "@/shadcn/components/ui/button";
 import { Card } from "@/shadcn/components/ui/card";
+import { useTranslation } from '../../../lib/useTranslation';
 
 export function PaymentForm({
   clientSecret,
@@ -15,6 +16,7 @@ export function PaymentForm({
   currency,
   returnUrl
 }) {
+  const { t } = useTranslation();
   const [stripe, setStripe] = useState(null);
   const [elements, setElements] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -63,7 +65,7 @@ export function PaymentForm({
         }
       } catch (error) {
         console.error("Error initializing Stripe:", error);
-        setErrorMessage("Failed to load payment form. Please try again.");
+        setErrorMessage(t('payment_form.failed_load', 'Failed to load payment form. Please try again.'));
       }
     };
     
@@ -92,13 +94,13 @@ export function PaymentForm({
       });
       
       if (error) {
-        setErrorMessage(error.message || "An unexpected error occurred.");
+        setErrorMessage(error.message || t('payment_form.unexpected_error', 'An unexpected error occurred.'));
         setIsLoading(false);
       }
       // On success, Stripe will redirect to the return_url
     } catch (error) {
       console.error("Payment confirmation error:", error);
-      setErrorMessage("An unexpected error occurred. Please try again.");
+      setErrorMessage(t('payment_form.unexpected_error_try_again', 'An unexpected error occurred. Please try again.'));
       setIsLoading(false);
     }
   };
@@ -107,7 +109,7 @@ export function PaymentForm({
     <Card className="p-6 bg-card dark:bg-card/90">
       <div className="mb-6">
         <div className="flex justify-between mb-2">
-          <span className="text-muted-foreground dark:text-muted-foreground/90">Amount:</span>
+          <span className="text-muted-foreground dark:text-muted-foreground/90">{t('payment_form.amount', 'Amount:')}</span>
           <span className="font-medium text-foreground dark:text-foreground/90">{formattedAmount}</span>
         </div>
       </div>
@@ -115,7 +117,7 @@ export function PaymentForm({
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="mb-4">
           <label htmlFor="payment-element" className="block text-sm font-medium text-foreground dark:text-foreground/90 mb-2">
-            Payment details
+            {t('payment_form.details', 'Payment details')}
           </label>
           <div id="payment-element" className="p-4 border rounded-md dark:border-muted/30 dark:bg-background/50">
             {/* Stripe Elements will be inserted here */}
@@ -134,12 +136,12 @@ export function PaymentForm({
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Processing...
+              {t('payment_form.processing', 'Processing...')}
             </>
-          ) : (
-            "Pay now"
-          )}
-        </Button>
+            ) : (
+            t('payment_form.pay_now', 'Pay now')
+           )}
+         </Button>
       </form>
     </Card>
   );
