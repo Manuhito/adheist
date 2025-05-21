@@ -253,6 +253,8 @@ def translations(request):
             'step_one.square': _('Square'),
             'step_one.portrait': _('Portrait'),
             'step_one.landscape': _('Landscape'),
+            'step_one.auto': _('Auto'),
+            'step_one.auto_desc': _('Automatic'),
             'step_one.tooltip_validation': _('Please select an image and canvas size'),
             'step_one.no_results': _('No ad examples found. Try adjusting your filters.'),
             
