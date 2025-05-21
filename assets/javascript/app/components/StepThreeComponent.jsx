@@ -352,11 +352,11 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
                   {(() => {
                     const canvasSizes = [
-                      { id: '1024x1024', label: t('step_three.square', 'Square'), size: '1024x1024' },
-                      { id: '1024x1792', label: t('step_three.portrait', 'Portrait'), size: '1024x1792' },
-                      { id: '1792x1024', label: t('step_three.landscape', 'Landscape'), size: '1792x1024' },
+                      { id: '1024x1024', label: t('step_one.square', 'Square'), size: '1024 x 1024' },
+                      { id: '1536x1024', label: t('step_one.landscape', 'Landscape'), size: '1536 x 1024' },
+                      { id: '1024x1536', label: t('step_one.portrait', 'Portrait'), size: '1024 x 1536' },
+                      { id: 'auto', label: t('step_one.auto_desc', 'Automatic'), size: t('step_one.auto', 'Auto') },
                     ];
-                    // Use the canvas size value directly as the ID
                     const item = canvasSizes.find(c => c.id === initialData.canvas_size);
                     if (item) {
                       return (
@@ -365,11 +365,14 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
                           {item.id === "1024x1024" && (
                             <div className="w-8 h-8 border-2 border-gray-300 rounded-sm mb-2" />
                           )}
-                          {item.id === "1024x1792" && (
-                            <div className="w-6 h-10 border-2 border-gray-300 rounded-sm mb-2" />
+                          {item.id === "1536x1024" && (
+                            <div className="w-12 h-8 border-2 border-gray-300 rounded-sm mb-2" />
                           )}
-                          {item.id === "1792x1024" && (
-                            <div className="w-12 h-6 border-2 border-gray-300 rounded-sm mb-2" />
+                          {item.id === "1024x1536" && (
+                            <div className="w-8 h-12 border-2 border-gray-300 rounded-sm mb-2" />
+                          )}
+                          {item.id === "auto" && (
+                            <div className="w-8 h-8 border-2 border-dashed border-gray-300 rounded-full flex items-center justify-center mb-2 text-xs text-gray-400">{t('step_one.auto', 'Auto')}</div>
                           )}
                           <span className="font-semibold text-xs">{item.label}</span>
                           <span className="text-xs text-gray-500">{item.size}</span>
