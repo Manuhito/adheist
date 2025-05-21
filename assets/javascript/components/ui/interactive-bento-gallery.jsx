@@ -215,7 +215,7 @@ const InteractiveBentoGallery = ({
             </AnimatePresence>
 
             <motion.div
-                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 auto-rows-[180px]"
+                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
                 initial="hidden"
                 animate="visible"
                 variants={{
@@ -230,7 +230,7 @@ const InteractiveBentoGallery = ({
                     <motion.div
                         key={item.id}
                         layoutId={`media-${item.id}`}
-                        className={`relative overflow-hidden rounded-xl shadow-md hover:shadow-lg transition-shadow ${item.span} ${selectedItemId === item.id ? 'ring-2 ring-primary ring-offset-2' : ''}`}
+                        className={`relative overflow-hidden rounded-xl shadow-md hover:shadow-lg transition-shadow aspect-square ${selectedItemId === item.id ? 'ring-2 ring-primary ring-offset-2' : ''}`}
                         onClick={() => {
                             // Only open the modal, don't select the item yet
                             setSelectedItem(item);

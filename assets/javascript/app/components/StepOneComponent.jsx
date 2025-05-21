@@ -91,15 +91,6 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
       return [];
     }
 
-    // Create spans for different grid positions
-    const spans = [
-      "md:col-span-1 md:row-span-3 sm:col-span-1 sm:row-span-2",
-      "md:col-span-2 md:row-span-2 col-span-1 sm:col-span-2 sm:row-span-2",
-      "md:col-span-1 md:row-span-3 sm:col-span-2 sm:row-span-2",
-      "md:col-span-2 md:row-span-2 sm:col-span-1 sm:row-span-2",
-      "md:col-span-1 md:row-span-3 sm:col-span-1 sm:row-span-2"
-    ];
-
     // Extract required fields from each item
     return apiResults.map((item, index) => {
       // Try to find the necessary fields
@@ -135,8 +126,7 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
         title: title,
         desc: desc,
         url: imageUrl,
-        industry: industry,
-        span: spans[index % spans.length]
+        industry: industry
       };
     });
   };
