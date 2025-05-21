@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-21 16:24+0000\n"
+"POT-Creation-Date: 2025-05-21 16:52+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1715,6 +1715,61 @@ msgstr ""
 #: templates/ads/adlibrary_list.html:67
 msgid "Add AdLibrary"
 msgstr ""
+
+#: templates/ads/payment_success.html:13
+msgid "Payment Successful!"
+msgstr "Paiement réussi!"
+
+#: templates/ads/payment_success.html:14
+msgid "Thank you for your subscription."
+msgstr "Merci pour votre abonnement."
+
+#: templates/ads/payment_success.html:18
+msgid "Subscription Details"
+msgstr "Détails de l'abonnement"
+
+#: templates/ads/payment_success.html:22
+msgid "Plan:"
+msgstr "Plan:"
+
+#: templates/ads/payment_success.html:29
+msgid "Status:"
+msgstr "Statut:"
+
+#: templates/ads/payment_success.html:35
+msgid "Current Period Ends:"
+msgstr "Fin de la période actuelle: "
+
+#: templates/ads/payment_success.html:40
+msgid ""
+"Your subscription has been activated. You now have access to all the "
+"features of your plan."
+msgstr "Votre abonnement a été activé. Vous avez maintenant accès à toutes les "
+"fonctionnalités de votre plan."
+
+#: templates/ads/payment_success.html:51
+msgid "Payment Issue"
+msgstr "Problème de paiement"
+
+#: templates/ads/payment_success.html:52
+msgid "There was a problem processing your payment."
+msgstr "Il y a eu un problème lors du traitement de votre paiement."
+
+#: templates/ads/payment_success.html:56
+msgid "Error Details"
+msgstr "Détails de l'erreur"
+
+#: templates/ads/payment_success.html:65
+msgid "An unknown error occurred. Please try again or contact support."
+msgstr "Une erreur inattendue est survenue. Veuillez réessayer."
+
+#: templates/ads/payment_success.html:70
+msgid "Debug Information"
+msgstr "Informations de débogage"
+
+#: templates/ads/payment_success.html:82
+msgid "Return to Billing"
+msgstr "Retour au paiement"
 
 #: templates/content/blog_page.html:30
 msgid "Image Gallery"

@@ -1,5 +1,6 @@
 {% extends "web/app/app_base.html" %}
 {% load static %}
+{% load i18n %}
 
 {% block app %}
 <div class="max-w-4xl mx-auto py-12 px-4">
@@ -10,34 +11,34 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
       </svg>
     </div>
-    <h1 class="text-3xl font-bold">Payment Successful!</h1>
-    <p class="text-gray-600 dark:text-gray-300 mt-2">Thank you for your subscription.</p>
+    <h1 class="text-3xl font-bold">{% trans "Payment Successful!" %}</h1>
+    <p class="text-gray-600 dark:text-gray-300 mt-2">{% trans "Thank you for your subscription." %}</p>
   </div>
   
   <div class="bg-card dark:bg-card/90 rounded-lg shadow-md p-6 mb-8">
-    <h2 class="text-xl font-semibold mb-4">Subscription Details</h2>
+    <h2 class="text-xl font-semibold mb-4">{% trans "Subscription Details" %}</h2>
     <div id="subscription-details" class="space-y-4">
       {% if product_name %}
       <div class="flex justify-between border-b pb-2">
-        <span class="text-muted-foreground dark:text-muted-foreground/90">Plan:</span>
+        <span class="text-muted-foreground dark:text-muted-foreground/90">{% trans "Plan:" %}</span>
         <span class="font-medium text-foreground dark:text-foreground/90">{{ product_name }}</span>
       </div>
       {% endif %}
       
       {% if subscription %}
       <div class="flex justify-between border-b pb-2">
-        <span class="text-muted-foreground dark:text-muted-foreground/90">Status:</span>
+        <span class="text-muted-foreground dark:text-muted-foreground/90">{% trans "Status:" %}</span>
         <span class="font-medium text-foreground dark:text-foreground/90">{{ subscription.status }}</span>
       </div>
       
       {% if subscription.current_period_end %}
       <div class="flex justify-between border-b pb-2">
-        <span class="text-muted-foreground dark:text-muted-foreground/90">Current Period Ends:</span>
+        <span class="text-muted-foreground dark:text-muted-foreground/90">{% trans "Current Period Ends:" %}</span>
         <span class="font-medium text-foreground dark:text-foreground/90">{{ subscription.current_period_end|date:"F j, Y" }}</span>
       </div>
       {% endif %}
       {% else %}
-      <p class="text-foreground dark:text-foreground/90">Your subscription has been activated. You now have access to all the features of your plan.</p>
+      <p class="text-foreground dark:text-foreground/90">{% trans "Your subscription has been activated. You now have access to all the features of your plan." %}</p>
       {% endif %}
     </div>
   </div>
@@ -48,12 +49,12 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
       </svg>
     </div>
-    <h1 class="text-3xl font-bold">Payment Issue</h1>
-    <p class="text-gray-600 dark:text-gray-300 mt-2">There was a problem processing your payment.</p>
+    <h1 class="text-3xl font-bold">{% trans "Payment Issue" %}</h1>
+    <p class="text-gray-600 dark:text-gray-300 mt-2">{% trans "There was a problem processing your payment." %}</p>
   </div>
   
   <div class="bg-card dark:bg-card/90 rounded-lg shadow-md p-6 mb-8">
-    <h2 class="text-xl font-semibold mb-4">Error Details</h2>
+    <h2 class="text-xl font-semibold mb-4">{% trans "Error Details" %}</h2>
     <div class="text-foreground dark:text-foreground/90">
       {% if messages %}
         {% for message in messages %}
@@ -62,12 +63,12 @@
           </div>
         {% endfor %}
       {% else %}
-        <p>An unknown error occurred. Please try again or contact support.</p>
+        <p>{% trans "An unknown error occurred. Please try again or contact support." %}</p>
       {% endif %}
       
       {% if debug_info %}
       <div class="mt-6 border-t pt-4">
-        <h3 class="text-lg font-medium mb-2">Debug Information</h3>
+        <h3 class="text-lg font-medium mb-2">{% trans "Debug Information" %}</h3>
         <div class="bg-gray-100 dark:bg-gray-800 p-3 rounded-md overflow-auto">
           <pre class="text-xs text-gray-800 dark:text-gray-300">{{ debug_info }}</pre>
         </div>
@@ -79,7 +80,7 @@
   
   <div class="flex justify-center">
     <a href="/ads/billing/" class="bg-primary text-white py-2 px-6 rounded-md hover:bg-primary/90 transition-colors">
-      Return to Billing
+      {% trans "Return to Billing" %}
     </a>
   </div>
 </div>
@@ -91,10 +92,10 @@
     
     // Redirect to /ads/ after successful payment
     {% if success %}
-      // Wait 3 seconds before redirecting to allow the user to see the success message
+      // Wait 5 seconds before redirecting to allow the user to see the success message
       setTimeout(function() {
         window.location.href = '/ads/';
-      }, 3000);
+      }, 5000);
     {% endif %}
   });
 </script>

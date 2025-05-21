@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-21 16:24+0000\n"
+"POT-Creation-Date: 2025-05-21 16:52+0000\n"
 "PO-Revision-Date: 2025-04-30 00:00+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Spanish <LL@li.org>\n"
@@ -568,6 +568,12 @@ msgstr "Completar tu pago"
 #: apps/web/context_processors.py:168
 msgid "Failed to load payment form. Please try again."
 msgstr "Fallo al cargar datos de pago. Por favor, inténtalo de nuevo."
+
+#: apps/web/context_processors.py:169
+#, fuzzy
+#| msgid "An unexpected error occurred"
+msgid "An unexpected error occurred."
+msgstr "Error inesperado"
 
 #: apps/web/context_processors.py:170
 msgid "An unexpected error occurred. Please try again."
@@ -1841,6 +1847,66 @@ msgstr ""
 #| msgid "No library"
 msgid "Add AdLibrary"
 msgstr "Sin biblioteca"
+
+#: templates/ads/payment_success.html:13
+msgid "Payment Successful!"
+msgstr "Pago exitoso!"
+
+#: templates/ads/payment_success.html:14
+msgid "Thank you for your subscription."
+msgstr "Gracias por su suscripción."
+
+#: templates/ads/payment_success.html:18
+msgid "Subscription Details"
+msgstr "Detalles de suscripción"
+
+#: templates/ads/payment_success.html:22
+msgid "Plan:"
+msgstr "Plan:"
+
+#: templates/ads/payment_success.html:29
+#, fuzzy
+#| msgid "Status"
+msgid "Status:"
+msgstr "Estado"
+
+#: templates/ads/payment_success.html:35
+#, fuzzy
+#| msgid "Current Plan"
+msgid "Current Period Ends:"
+msgstr "Plan actual"
+
+#: templates/ads/payment_success.html:40
+msgid ""
+"Your subscription has been activated. You now have access to all the "
+"features of your plan."
+msgstr ""
+
+#: templates/ads/payment_success.html:51
+#, fuzzy
+#| msgid "Payment Successful!"
+msgid "Payment Issue"
+msgstr "Pago exitoso!"
+
+#: templates/ads/payment_success.html:52
+msgid "There was a problem processing your payment."
+msgstr ""
+
+#: templates/ads/payment_success.html:56
+msgid "Error Details"
+msgstr "Detalles de error"
+
+#: templates/ads/payment_success.html:65
+msgid "An unknown error occurred. Please try again or contact support."
+msgstr "A ocurrido un error inesperado. Por favor, inténtalo de nuevo."
+
+#: templates/ads/payment_success.html:70
+msgid "Debug Information"
+msgstr "Información de depuración"
+
+#: templates/ads/payment_success.html:82
+msgid "Return to Billing"
+msgstr "Volver a página de facturación"
 
 #: templates/content/blog_page.html:30
 msgid "Image Gallery"

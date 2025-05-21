@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-21 16:28+0000\n"
+"POT-Creation-Date: 2025-05-21 16:52+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1679,6 +1679,61 @@ msgstr ""
 #: templates/ads/adlibrary_list.html:67
 msgid "Add AdLibrary"
 msgstr ""
+
+#: templates/ads/payment_success.html:13
+msgid "Payment Successful!"
+msgstr "Payment Successful!"
+
+#: templates/ads/payment_success.html:14
+msgid "Thank you for your subscription."
+msgstr "Thank you for your subscription."
+
+#: templates/ads/payment_success.html:18
+msgid "Subscription Details"
+msgstr "Subscription Details"
+
+#: templates/ads/payment_success.html:22
+msgid "Plan:"
+msgstr "Plan:"
+
+#: templates/ads/payment_success.html:29
+msgid "Status:"
+msgstr "Status:"
+
+#: templates/ads/payment_success.html:35
+msgid "Current Period Ends:"
+msgstr "Current Period Ends:"
+
+#: templates/ads/payment_success.html:40
+msgid ""
+"Your subscription has been activated. You now have access to all the "
+"features of your plan."
+msgstr "Your subscription has been activated. You now have access to all the "
+"features of your plan."
+
+#: templates/ads/payment_success.html:51
+msgid "Payment Issue"
+msgstr "Payment Issue"
+
+#: templates/ads/payment_success.html:52
+msgid "There was a problem processing your payment."
+msgstr "There was a problem processing your payment."
+
+#: templates/ads/payment_success.html:56
+msgid "Error Details"
+msgstr "Error Details"
+
+#: templates/ads/payment_success.html:65
+msgid "An unknown error occurred. Please try again or contact support."
+msgstr "An unknown error occurred. Please try again or contact support."
+
+#: templates/ads/payment_success.html:70
+msgid "Debug Information"
+msgstr "Debug Information"
+
+#: templates/ads/payment_success.html:82
+msgid "Return to Billing"
+msgstr "Return to Billing"
 
 #: templates/content/blog_page.html:30
 msgid "Image Gallery"
