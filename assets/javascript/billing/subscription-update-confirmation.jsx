@@ -1,11 +1,12 @@
-import React from 'react';
-import { ArrowLeft, ArrowUp, ArrowDown, CheckCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowLeft, ArrowUp, ArrowDown, CheckCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/shadcn/components/ui/separator';
 import { useTranslation } from '../lib/useTranslation';
 import NumberFlow from "@number-flow/react";
+import { useToast } from "@/hooks/use-toast"
 
 /**
  * Componente para la página de confirmación de actualización de suscripción
@@ -13,6 +14,8 @@ import NumberFlow from "@number-flow/react";
  */
 export function SubscriptionUpdateConfirmation({ currentPlan, newPlan, frequency, onConfirm, onCancel }) {
     const { t } = useTranslation();
+    const { toast } = useToast();
+    const [isLoading, setIsLoading] = useState(false);
 
     // Si no hay plan actual o nuevo plan, volver a la página de facturación
     if (!currentPlan || !newPlan) {
@@ -32,12 +35,102 @@ export function SubscriptionUpdateConfirmation({ currentPlan, newPlan, frequency
     // Formatear el nombre de la frecuencia para mostrar
     const frequencyName = frequency === 'monthly' ? t('pricing.monthly', 'Monthly') : t('pricing.yearly', 'Yearly');
 
+    // Función para manejar la confirmación de actualización
+    const handleConfirm = async () => {
+        if (!newPriceId) {
+            toast({
+                title: t('billing.error', 'Error'),
+                description: t('billing.no_price_id', 'No price ID available for the selected plan.'),
+                variant: 'destructive',
+            });
+            return;
+        }
+
+        setIsLoading(true);
+
+        try {
+            // Crear un FormData para enviar la solicitud
+            const formData = new FormData();
+            formData.append('priceId', newPriceId);
+
+            // Obtener el token CSRF de la cookie
+            const csrfToken = getCookie('csrftoken');
+            
+            // Enviar la solicitud al endpoint de API
+            const response = await fetch('/subscriptions/api/update-subscription/', {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                }
+            });
+
+            // Verificar si la respuesta es JSON
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    // Mostrar mensaje de éxito
+                    toast({
+                        title: t('billing.success', 'Success'),
+                        description: data.message,
+                    });
+
+                    // Llamar a onConfirm para cualquier lógica adicional
+                    if (onConfirm) onConfirm(newPriceId);
+
+                    // Redirigir a la página de detalles de suscripción después de un breve retraso
+                    setTimeout(() => {
+                        window.location.href = data.redirect_url;
+                    }, 1500);
+                } else {
+                    // Mostrar mensaje de error
+                    toast({
+                        title: t('billing.error', 'Error'),
+                        description: data.error || t('billing.update_failed', 'Failed to update subscription.'),
+                        variant: 'destructive',
+                    });
+                }
+            } else {
+                // Si la respuesta no es JSON, probablemente es un error HTML
+                const text = await response.text();
+                console.error('Non-JSON response:', text);
+                
+                toast({
+                    title: t('billing.error', 'Error'),
+                    description: t('billing.server_error', 'Server returned an unexpected response. Please try again later.'),
+                    variant: 'destructive',
+                });
+            }
+        } catch (error) {
+            console.error('Error updating subscription:', error);
+            toast({
+                title: t('billing.error', 'Error'),
+                description: t('billing.unexpected_error', 'An unexpected error occurred. Please try again.'),
+                variant: 'destructive',
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    
+    // Función para obtener una cookie por nombre
+    const getCookie = (name) => {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return '';
+    };
+
     return (
         <div className="container max-w-4xl py-10">
             <Button
                 variant="ghost"
                 className="mb-6"
                 onClick={onCancel}
+                disabled={isLoading}
             >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 {t('billing.back_to_plans', 'Back to plans')}
@@ -167,15 +260,24 @@ export function SubscriptionUpdateConfirmation({ currentPlan, newPlan, frequency
                 <Button
                     variant="outline"
                     onClick={onCancel}
+                    disabled={isLoading}
                 >
                     {t('billing.cancel', 'Cancel')}
                 </Button>
                 <Button
-                    onClick={() => onConfirm(newPriceId)}
+                    onClick={handleConfirm}
+                    disabled={isLoading}
                 >
-                    {isUpgrade
-                        ? t('billing.confirm_upgrade', 'Confirm Upgrade')
-                        : t('billing.confirm_downgrade', 'Confirm Downgrade')}
+                    {isLoading ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            {t('billing.processing', 'Processing...')}
+                        </>
+                    ) : (
+                        isUpgrade
+                            ? t('billing.confirm_upgrade', 'Confirm Upgrade')
+                            : t('billing.confirm_downgrade', 'Confirm Downgrade')
+                    )}
                 </Button>
             </div>
         </div>

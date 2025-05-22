@@ -17,6 +17,8 @@ urlpatterns = [
     # these are the defaults
     path("stripe/create-checkout-session/", views.create_checkout_session, name="create_checkout_session"),
     path("stripe/portal/", views.create_portal_session, name="create_stripe_portal_session"),
+    # subscription update views
+    path("update-subscription/", views.update_subscription_view, name="update_subscription"),
     # stripe api views that return Stripe URLs instead of redirects
     # these can be used by JavaScript front-ends to handle the redirect from the response
     path(
@@ -25,4 +27,6 @@ urlpatterns = [
         name="api_create_checkout_session",
     ),
     path("stripe/api/create-portal-session/", views.CreatePortalSession.as_view(), name="api_create_portal_session"),
+    # subscription update api views
+    path("api/update-subscription/", views.update_subscription_api, name="api_update_subscription"),
 ]
