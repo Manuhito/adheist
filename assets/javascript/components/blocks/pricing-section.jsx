@@ -8,10 +8,18 @@ export function PricingSection({
   tiers,
   frequencies,
   onSubscribe,
+  hasActiveSubscription,
   t
 }) {
   const [selectedFrequency, setSelectedFrequency] = React.useState(frequencies[0].key)
   console.log("data on ps:", { title, subtitle, tiers, frequencies, onSubscribe })
+
+  // Función para manejar la suscripción que incluye la frecuencia y el plan
+  const handleSubscribe = (priceId, tier) => {
+    if (onSubscribe) {
+      onSubscribe(priceId, selectedFrequency, tier);
+    }
+  };
 
   return (
     <section className="flex flex-col items-center gap-10 py-10">
@@ -33,11 +41,12 @@ export function PricingSection({
       </div>
       <div className={`grid w-full max-w-6xl gap-6 sm:grid-cols-2 ${tiers.length === 3 ? 'xl:grid-cols-3' : 'xl:grid-cols-4'} justify-center`}>
         {tiers.map((tier) => (
-          <PricingCard 
-            key={tier.name} 
-            tier={tier} 
-            paymentFrequency={selectedFrequency} 
-            onSubscribe={onSubscribe}
+          <PricingCard
+            key={tier.name}
+            tier={tier}
+            paymentFrequency={selectedFrequency}
+            onSubscribe={(priceId) => handleSubscribe(priceId, tier)}
+            hasActiveSubscription={hasActiveSubscription}
             t={t}
           />
         ))}
