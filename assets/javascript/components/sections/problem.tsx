@@ -9,20 +9,20 @@ import { DollarSign, Shield, Zap } from "lucide-react";
 
 const problems = [
   {
-    title: "Backlinks are Expensive",
-    description: "High Quality Backlinks Cost Over $200 per Link.",
+    title: "Agencies Are Expensive",
+    description: "Hiring agencies or freelancers costs $2K-$30K per month for ad creation.",
     icon: DollarSign,
   },
   {
-    title: "Too Many Dangerous Sites",
+    title: "Most Ads Don't Convert",
     description:
-      "Link Farms and PBNs can damage your site's reputation permanently.",
+      "Creating ads without real data leads to wasted budget and poor results.",
     icon: Shield,
   },
   {
-    title: "It's Tougher for Smaller Sites",
+    title: "Too Many Scattered Tools",
     description:
-      "Without a big enough Backlink profile, many big sites are reluctant to link back to smaller sites.",
+      "Planning, writing, designing, and launching ads typically requires multiple disjointed tools.",
     icon: Zap,
   },
 ];

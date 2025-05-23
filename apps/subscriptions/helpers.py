@@ -1,11 +1,13 @@
 import logging
+import time
+from datetime import datetime
 
 from django.db import transaction
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from djstripe.enums import SubscriptionStatus
-from djstripe.models import Subscription, Price
+from djstripe.models import Subscription, Price, SubscriptionItem
 from djstripe.settings import djstripe_settings
 
 from stripe.api_resources.billing_portal.session import Session as BillingPortalSession
@@ -39,6 +41,8 @@ def get_subscription_urls(subscription_holder):
         # checkout urls
         "create_checkout_session",
         "checkout_canceled",
+        # subscription update urls
+        "update_subscription",
     ]
 
     def _construct_url(base):
@@ -142,3 +146,120 @@ def cancel_subscription(subscription_id: str):
             log.error("Error deleting Stripe subscription: %s", e.user_message)
     else:
         Subscription.sync_from_stripe_data(subscription)
+
+
+def update_subscription(subscription_holder: CustomUser, new_price_id: str) -> Subscription:
+    """
+    Update an existing subscription to a new price.
+    Stripe will automatically calculate prorations based on the remaining time in the billing cycle.
+    
+    Args:
+        subscription_holder: The user whose subscription to update
+        new_price_id: The Stripe ID of the new price to apply
+        
+    Returns:
+        The updated Subscription object
+        
+    Raises:
+        SubscriptionConfigError: If the user doesn't have an active subscription
+    """
+    stripe = get_stripe_module()
+    
+    # Check if the user has an active subscription
+    if not subscription_holder.subscription or not subscription_holder.customer:
+        raise SubscriptionConfigError(_("No active subscription found to update."))
+    
+    subscription_id = subscription_holder.subscription.id
+    
+    try:
+        # Retrieve the full subscription from Stripe first to ensure we have all data
+        stripe_subscription = stripe.Subscription.retrieve(subscription_id)
+        
+        # Get the subscription item to update
+        subscription_items = SubscriptionItem.objects.filter(subscription__id=subscription_id)
+        if not subscription_items.exists():
+            raise SubscriptionConfigError(_("No subscription items found for this subscription."))
+        
+        if subscription_items.count() > 1:
+            log.warning("Subscription has multiple items. Only updating the first one.")
+        
+        # Get the first subscription item ID from Stripe data to ensure it's correct
+        subscription_item_id = stripe_subscription['items']['data'][0]['id']
+        
+        # Calculate the appropriate quantity
+        quantity = _get_quantity(new_price_id, subscription_holder)
+        
+        # Update the subscription in Stripe with parameters for immediate billing
+        updated_subscription = stripe.Subscription.modify(
+            subscription_id,
+            items=[{
+                'id': subscription_item_id,
+                'price': new_price_id,
+                'quantity': quantity,
+            }],
+            # Crear prorrateos y cobrarlos inmediatamente
+            proration_behavior='always_invoice',  # Siempre crear factura para los prorrateos
+            payment_behavior='error_if_incomplete',  # Cobrar inmediatamente y devolver error si falla
+            billing_cycle_anchor='unchanged',  # Mantener el ciclo de facturación original
+            # Expandir los items para obtener información completa
+            expand=['items'],
+        )
+        
+        # Ensure required period fields are set
+        required_period_fields = ['current_period_start', 'current_period_end']
+        for field in required_period_fields:
+            if field not in updated_subscription or not updated_subscription[field]:
+                # If it's not in the response for some reason, use the original value
+                original_value = getattr(subscription_holder.subscription, field, None)
+                if original_value:
+                    # Convert datetime to timestamp if needed
+                    if isinstance(original_value, datetime):
+                        timestamp = int(original_value.timestamp())
+                        updated_subscription[field] = timestamp
+                    else:
+                        updated_subscription[field] = original_value
+                else:
+                    # As a fallback for current_period_start, set it to now
+                    if field == 'current_period_start':
+                        updated_subscription[field] = int(time.time())
+                        log.warning(f"Setting default {field} for subscription {subscription_id}")
+                    # As a fallback for current_period_end, set it to 1 month from now
+                    elif field == 'current_period_end':
+                        updated_subscription[field] = int(time.time()) + (30 * 24 * 60 * 60)  # 30 days
+                        log.warning(f"Setting default {field} for subscription {subscription_id}")
+        
+        # Sync the updated subscription with the local database
+        try:
+            with transaction.atomic():
+                djstripe_subscription = Subscription.sync_from_stripe_data(updated_subscription)
+        except Exception as sync_error:
+            log.error(f"Error syncing subscription from Stripe: {str(sync_error)}")
+            # Try a more direct approach if sync fails
+            with transaction.atomic():
+                djstripe_subscription = subscription_holder.subscription
+                # Update subscription fields manually
+                djstripe_subscription.status = updated_subscription['status']
+                
+                # Handle required period fields
+                for field in required_period_fields:
+                    if field in updated_subscription and updated_subscription[field]:
+                        # Convert timestamp to datetime with timezone
+                        timestamp = updated_subscription[field]
+                        dt = datetime.fromtimestamp(timestamp)
+                        # Make it timezone aware
+                        setattr(djstripe_subscription, field, timezone.make_aware(dt))
+                
+                djstripe_subscription.save()
+        
+        # Update the subscription on the user
+        subscription_holder.subscription = djstripe_subscription
+        subscription_holder.save()
+        
+        return djstripe_subscription
+        
+    except InvalidRequestError as e:
+        log.error(f"Error updating Stripe subscription: {e.user_message}")
+        raise SubscriptionConfigError(_(f"Error updating subscription: {e.user_message}"))
+    except Exception as e:
+        log.error(f"Unexpected error updating subscription: {str(e)}")
+        raise SubscriptionConfigError(_(f"Unexpected error updating subscription. Please try again later."))

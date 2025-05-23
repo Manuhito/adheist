@@ -149,6 +149,8 @@ def translations(request):
             'pricing.most_popular': _('🔥 Most Popular'),
             'pricing.per_month': _('Per month'),
             'pricing.monthly': _('Monthly'),
+            'pricing.upgrade_to_plan': _('Upgrade to this plan'),
+            'pricing.downgrade_to_plan': _('Downgrade to this plan'),
             'pricing.yearly': _('Yearly'),
             
             # Billing page translations

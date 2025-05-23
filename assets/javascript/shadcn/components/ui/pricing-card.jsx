@@ -1,6 +1,6 @@
 "use client";
 import * as React from "react"
-import { BadgeCheck, ArrowRight } from "lucide-react"
+import { BadgeCheck, ArrowRight, ArrowUp, ArrowDown } from "lucide-react"
 import NumberFlow from "@number-flow/react"
 
 import { cn } from "@/utilities/shadcn"
@@ -12,6 +12,7 @@ export function PricingCard({
   tier,
   paymentFrequency,
   onSubscribe,
+  hasActiveSubscription,
   t
 }) {
   const price = tier.price[paymentFrequency]
@@ -20,25 +21,43 @@ export function PricingCard({
   const isCurrentPlan = tier.is_current_plan
   const isDisabled = tier.is_disabled
   console.log("Pricing card data:", { tier, paymentFrequency, onSubscribe, isDisabled })
+
   // Get the correct Stripe price ID based on payment frequency
-  const priceId = paymentFrequency === 'monthly' 
-    ? tier.price?.monthlyPriceId 
+  const priceId = paymentFrequency === 'monthly'
+    ? tier.price?.monthlyPriceId
     : tier.price?.yearlyPriceId;
+
+  // Determinar si es un upgrade o downgrade en relación al plan actual
+  const isUpgrade = hasActiveSubscription && !isCurrentPlan && !isDisabled;
+
+  // Determinar el texto del botón según el estado
+  const getButtonText = () => {
+    if (isCurrentPlan) {
+      return t('pricing.current_plan', 'Current Plan');
+    } else if (hasActiveSubscription) {
+      // Si ya tiene una suscripción y no es el plan actual, mostrar "Cambiar a este plan"
+      return isUpgrade 
+        ? t('pricing.upgrade_to_plan', 'Upgrade to this plan')
+        : t('pricing.downgrade_to_plan', 'Downgrade to this plan');
+    } else {
+      // Si no tiene suscripción, mostrar el CTA normal
+      return tier.cta;
+    }
+  };
 
   return (
     <Card
       className={cn(
-        "relative flex flex-col gap-8 overflow-hidden p-6", 
-        isHighlighted ? "bg-foreground text-background" : "bg-background text-foreground", 
-        isPopular && "ring-2 ring-primary",
-        isDisabled && "opacity-70")}>
+        "relative flex flex-col gap-8 overflow-hidden p-6",
+        isHighlighted ? "bg-foreground text-background" : "bg-background text-foreground",
+        isPopular && "ring-2 ring-primary")}>
       {isHighlighted && <HighlightedBackground />}
       {isPopular && <PopularBackground />}
       <h2 className="flex items-center gap-3 text-xl font-medium capitalize">
         {tier.name}
         {isCurrentPlan ? (
-          <Badge 
-            variant={isHighlighted ? "secondary" : "outline"} 
+          <Badge
+            variant={isHighlighted ? "secondary" : "outline"}
             className="mt-1 z-10"
           >
             {t('pricing.current_plan', 'Current Plan')}
@@ -84,15 +103,20 @@ export function PricingCard({
           ))}
         </ul>
       </div>
-      <Button 
-        variant={isHighlighted ? "secondary" : "default"} 
+      <Button
+        variant={isHighlighted ? "secondary" : "default"}
         className="w-full relative z-10"
         onClick={() => onSubscribe && onSubscribe(priceId)}
-        disabled={!onSubscribe || !priceId || isCurrentPlan || isDisabled}
+        disabled={!onSubscribe || !priceId || isCurrentPlan}
       >
-        {isCurrentPlan ? t('pricing.current_plan', 'Current Plan') : 
-         isDisabled ? t('pricing.lower_tier', 'Plan inferior') : tier.cta}
-        {!isCurrentPlan && !isDisabled && <ArrowRight className="ml-2 h-4 w-4" />}
+        {getButtonText()}
+        {!isCurrentPlan && (
+          hasActiveSubscription ? (
+            isUpgrade ? <ArrowUp className="ml-2 h-4 w-4" /> : <ArrowDown className="ml-2 h-4 w-4" />
+          ) : (
+            <ArrowRight className="ml-2 h-4 w-4" />
+          )
+        )}
       </Button>
     </Card>
   );

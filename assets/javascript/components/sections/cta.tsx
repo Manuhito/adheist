@@ -9,8 +9,8 @@ export default function CtaSection() {
   return (
     <Section
       id="cta"
-      title="Ready to get started?"
-      subtitle="5 Free Links - No Credit Card Required"
+      title="Ready to create winning ads?"
+      subtitle="Zero Risk, Full Refund - No Questions Asked"
       className="bg-primary/10 rounded-xl py-16"
     >
       <div className="flex flex-col w-full sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 pt-4">
@@ -21,7 +21,7 @@ export default function CtaSection() {
             "w-full sm:w-auto text-background flex gap-2 bg-primary hover:bg-primary/90"
           )}
         >
-          Start with 5 Free Links
+          Start Creating Winning Ads
         </a>
         <a
           href="/accounts/signup"

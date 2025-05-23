@@ -9,9 +9,9 @@ import { motion } from "framer-motion";
 
 const features = [
   {
-    title: "Comprehensive Backlink Database",
+    title: "Find Winning Ad Ideas",
     description:
-      "Get instant access to over 2,458 easy-to-win backlink opportunities, saving you weeks of research time.",
+      "Adheist scans the ads with the highest adspend to spot what ads are working right now.",
     className: "hover:bg-red-500/10 transition-all duration-500 ease-out",
     content: (
       <>
@@ -25,9 +25,9 @@ const features = [
     ),
   },
 {
-  title: "Link Quality Assessment",
+  title: "Ad Library",
     description:
-  "Easily evaluate the quality of potential backlinks with metrics like Domain Rating.",
+  "Browse 100's of winning templates - pick any and make it your own.",
     className:
   "order-3 xl:order-none hover:bg-blue-500/10 transition-all duration-500 ease-out",
     content: (
@@ -40,9 +40,9 @@ className = "-mb-32 mt-4 max-h-64 w-full px-4 select-none drop-shadow-[0_0_28px_
     ),
   },
 {
-  title: "Progress Tracking",
+  title: "Create Ads Automatically",
     description:
-  "Stay organized by tracking which backlinks you've secured and which ones are still pending.",
+  "Every format you need, made for you with instant editing tools to quickly polish any ad.",
     className:
   "md:row-span-2 hover:bg-orange-500/10 transition-all duration-500 ease-out",
     content: (
@@ -66,9 +66,9 @@ className = "-mb-32 mt-4 max-h-64 w-full px-4 select-none drop-shadow-[0_0_28px_
     ),
 },
 {
-  title: "Lifetime Updates",
+  title: "Safe, Simple Licensing",
     description:
-  "Enjoy regular updates with new backlink opportunities added at no extra cost, ensuring your SEO strategy stays current.",
+  "Every ad you make is yours to use, forever, with no messy rights issues to worry about.",
     className:
   "flex-row order-4 md:col-span-2 md:flex-row xl:order-none hover:bg-green-500/10 transition-all duration-500 ease-out",
     content: (
@@ -90,11 +90,11 @@ export default function Component() {
       title= "Solution"
   subtitle = {
         <>
-          Everything You Need for{ " "}
-    < span className = "text-primary" > Successful Link Building </span>
+          Everything You Need for{ " " }
+    < span className = "text-primary" > Successful Ad Creation </span>
       </>
 }
-description = "Stop wasting time on expensive backlinks and risky PBNs. Our platform provides vetted, high-quality backlink opportunities that are easy to secure."
+description = "Ads that actually sell. Adheist makes ads based on real data — competitor ads, industry leaders, and trends. 95% done for you with one clean app for everything."
 className = "bg-neutral-100 dark:bg-neutral-900"
   >
   <div className="mx-auto mt-16 grid max-w-sm grid-cols-1 gap-6 text-gray-500 md:max-w-3xl md:grid-cols-2 xl:grid-rows-2 md:grid-rows-3 xl:max-w-6xl xl:auto-rows-fr xl:grid-cols-3" >

@@ -7,23 +7,23 @@ import { Sparkles, Upload, Zap } from "lucide-react";
 const data = [
   {
     id: 1,
-    title: "Find Backlink Opportunities",
+    title: "Find Winning Ad Ideas",
     content:
-      "Explore 2,000+ pre-vetted backlink sources, organized by category and niche.",
+      "Discover high-performing ads from competitors and industry leaders with the highest ROI.",
     image: "/static/images/landing/dashboard.png",
     icon: <Upload className="w-6 h-6 text-primary" />,
   },
   {
     id: 2,
-    title: "Build Each Link in Minutes",
-    content: "Secure each backlink quickly and easily.",
+    title: "Create Ads Automatically",
+    content: "Turn winning ideas into your own ads with just a few clicks - 95% done for you.",
     image: "/static/images/landing/dashboard.png",
     icon: <Zap className="w-6 h-6 text-primary" />,
   },
   {
     id: 3,
-    title: "Track Your Progress",
-    content: "Stay organized and monitor your link-building efforts as you go.",
+    title: "Polish and Launch",
+    content: "Quickly adjust with AI tools and launch your new high-converting ads.",
     image: "/static/images/landing/dashboard.png",
     icon: <Sparkles className="w-6 h-6 text-primary" />,
   },
@@ -34,8 +34,8 @@ export default function Component() {
     <Section>
     <div className= "text-center space-y-4 pb-6 mx-auto" >
     <h2 className="mx-auto mt-4 max-w-xs text-3xl font-semibold sm:max-w-none sm:text-4xl md:text-5xl" >
-      Building Links with <span className= "text-primary" > AdHeist </span> is
-  Easy
+      Creating Ads with <span className= "text-primary" > AdHeist </span> is
+  Simple
     </h2>
     </div>
     < Features data = { data } />

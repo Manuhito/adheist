@@ -44,9 +44,9 @@ def _view_subscription(request, subscription_holder: SubscriptionModelBase):
     elif not subscription.cancel_at_period_end:
         stripe = get_stripe_module()
         try:
-            next_invoice = stripe.Invoice.upcoming(
-                subscription=subscription.id,
-            )
+            # Saltarse la obtención de la factura de vista previa
+            # ya que el método está deprecado y no es esencial para la funcionalidad principal
+            pass
         except InvalidRequestError:
             # this error is raised if you try to get an invoice but the subscription is canceled or deleted
             # check if this happened and redirect to the upgrade page if so

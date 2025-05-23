@@ -1,0 +1,21 @@
+{% extends "web/app/app_base.html" %}
+{% load static %}
+
+{% block extra_js %}
+{{ block.super }}
+<!-- Load Stripe.js -->
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+  // Ensure all data is available to the React component
+  window.__UPDATE_PAYMENT_METHOD_DATA__ = {
+    active_tab: "{{ active_tab }}"
+  };
+</script>
+<script src="{% static 'js/update-payment-method-bundle.js' %}" defer></script>
+{% endblock %}
+
+{% block app %}
+<div class="container mx-auto py-8">
+  <div id="update-payment-method-container"></div>
+</div>
+{% endblock %}

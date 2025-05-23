@@ -23,6 +23,7 @@ module.exports = {
     'revision-adrequest': './assets/javascript/app/revision-adrequest.jsx',  // entry point para la página de detalles de adrequest
     'billing': './assets/javascript/billing/index.js',  // entry point for the app billing page
     'payment': './assets/javascript/payment.js',  // entry point for the payment page
+    'update-payment-method': './assets/javascript/update-payment-method.js',  // entry point for the payment method update page
     'profile': './assets/javascript/profile/index.js',  // entry point for the user profile page
   },
   output: {

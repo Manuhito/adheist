@@ -1164,6 +1164,7 @@ def billing_page(request):
     Render the billing page with pricing information.
     """
     from apps.subscriptions.metadata import get_active_products_with_metadata, PlanInterval
+    logger = logging.getLogger(__name__)
     
     # Get products from the metadata system
     products_with_metadata = list(get_active_products_with_metadata())
@@ -1334,13 +1335,93 @@ def billing_page(request):
         key=lambda x: tier_order_without_free.index(x["name"]) if x["name"] in tier_order_without_free else 999
     )
         
+    # Get payment method information if user has a subscription
+    payment_method_data = {
+        "has_payment_method": False,
+        "payment_method": None,
+        "portal_url": None
+    }
+    
+    if request.user.is_authenticated and request.user.has_active_subscription() and request.user.customer:
+        from apps.subscriptions.helpers import create_stripe_portal_session
+        from apps.utils.billing import get_stripe_module
+        from djstripe.models import PaymentMethod
+        
+        # Get the default payment method
+        try:
+            # Try to get the default payment method from Stripe
+            stripe = get_stripe_module()
+            
+            # First, get the customer without expanding anything
+            customer = stripe.Customer.retrieve(request.user.customer.id)
+            print(f"Customer data: {customer}")
+            print(f"Customer ID: {request.user.customer.id}")
+            
+            # Get payment method ID from invoice_settings.default_payment_method or from the first available payment method
+            payment_method_id = None
+            
+            # First check invoice_settings.default_payment_method
+            if customer.get('invoice_settings', {}).get('default_payment_method'):
+                payment_method_id = customer['invoice_settings']['default_payment_method']
+                print(f"Default payment method ID from invoice_settings: {payment_method_id}")
+            # Then check direct default_payment_method (for backwards compatibility)
+            elif customer.get('default_payment_method'):
+                payment_method_id = customer['default_payment_method']
+                print(f"Default payment method ID: {payment_method_id}")
+            # If no default payment method, try to get the first available payment method
+            else:
+                print("No default payment method found, checking available payment methods")
+                payment_methods = stripe.PaymentMethod.list(
+                    customer=request.user.customer.id,
+                    type="card",
+                    limit=1
+                )
+                print(f"Available payment methods: {payment_methods}")
+                
+                if payment_methods and payment_methods.get('data') and len(payment_methods['data']) > 0:
+                    payment_method_id = payment_methods['data'][0]['id']
+                    print(f"Using first available payment method: {payment_method_id}")
+            
+            # If we found a payment method ID, get its details and format the data
+            if payment_method_id:
+                payment_method = stripe.PaymentMethod.retrieve(payment_method_id)
+                print(f"Payment method data: {payment_method}")
+                
+                payment_method_data = {
+                    "has_payment_method": True,
+                    "payment_method": {
+                        "type": payment_method.get('type', 'card'),
+                        "card": {
+                            "brand": payment_method.get('card', {}).get('brand', 'unknown'),
+                            "last4": payment_method.get('card', {}).get('last4', '****'),
+                            "exp_month": payment_method.get('card', {}).get('exp_month', 12),
+                            "exp_year": payment_method.get('card', {}).get('exp_year', 2025)
+                        }
+                    }
+                }
+                print(f"Payment method data formatted: {payment_method_data}")
+            else:
+                print("No payment method found for customer")
+                
+                # Create a portal session URL
+                try:
+                    portal_session = create_stripe_portal_session(request.user)
+                    payment_method_data["portal_url"] = portal_session.url
+                except Exception as e:
+                    logger.error(f"Error creating portal session: {str(e)}")
+        except Exception as e:
+            logger.error(f"Error retrieving payment method: {str(e)}")
+    
     # Convert pricing data to JSON for the React component
     pricing_json = json.dumps(pricing_data)
+    payment_method_json = json.dumps(payment_method_data)
     print(f"Pricing data: {pricing_json}")
+    print(f"Payment method data: {payment_method_json}")
         
     return render(request, 'ads/billing.html', {
         "active_tab": "billing",
-        "pricing_data": pricing_json
+        "pricing_data": pricing_json,
+        "payment_method_data": payment_method_json
     })
 
 
