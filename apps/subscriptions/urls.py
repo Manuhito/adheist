@@ -1,6 +1,7 @@
 from django.urls import path
 
 from . import views
+from .views import payment_method_views
 
 app_name = "subscriptions"
 
@@ -29,4 +30,9 @@ urlpatterns = [
     path("stripe/api/create-portal-session/", views.CreatePortalSession.as_view(), name="api_create_portal_session"),
     # subscription update api views
     path("api/update-subscription/", views.update_subscription_api, name="api_update_subscription"),
+    
+    # payment method update views
+    path("update-payment-method/", payment_method_views.update_payment_method_page, name="update_payment_method"),
+    path("api/create-setup-intent/", payment_method_views.create_setup_intent, name="create_setup_intent"),
+    path("api/set-default-payment-method/", payment_method_views.set_default_payment_method, name="set_default_payment_method"),
 ]

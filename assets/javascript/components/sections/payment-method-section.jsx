@@ -33,9 +33,8 @@ export function PaymentMethodSection({ paymentMethodData }) {
   
   // Manejar el clic en el botón para cambiar el método de pago
   const handleManagePaymentMethod = () => {
-    if (portal_url) {
-      window.location.href = portal_url;
-    }
+    // Redirigir a la página de actualización de método de pago
+    window.location.href = '/subscriptions/update-payment-method/';
   };
   
   return (
@@ -58,10 +57,11 @@ export function PaymentMethodSection({ paymentMethodData }) {
         <CardFooter>
           <Button 
             onClick={handleManagePaymentMethod} 
-            disabled={!has_payment_method || !portal_url}
             variant="outline"
           >
-            {t('billing.manage_payment_method', 'Manage Payment Method')}
+            {has_payment_method 
+              ? t('billing.manage_payment_method', 'Manage Payment Method')
+              : t('billing.add_payment_method', 'Add Payment Method')}
           </Button>
         </CardFooter>
       </div>
@@ -84,11 +84,12 @@ export function PaymentMethodSection({ paymentMethodData }) {
             
             <Button 
               onClick={handleManagePaymentMethod} 
-              disabled={!has_payment_method || !portal_url}
               variant="outline"
               className="ml-4"
             >
-              {t('billing.manage_payment_method', 'Manage Payment Method')}
+              {has_payment_method 
+                ? t('billing.manage_payment_method', 'Manage Payment Method')
+                : t('billing.add_payment_method', 'Add Payment Method')}
             </Button>
           </div>
         </div>
