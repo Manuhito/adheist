@@ -4,8 +4,9 @@
 {% block extra_js %}
 {{ block.super }}
 <script>
-  // Pass pricing data to the React component
+  // Pass data to the React components
   window.__PRICING_DATA__ = {{ pricing_data|safe }};
+  window.__PAYMENT_METHOD_DATA__ = {{ payment_method_data|safe }};
 </script>
 <script src="{% static 'js/billing-bundle.js' %}" defer></script>
 {% endblock %}

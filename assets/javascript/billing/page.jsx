@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { PricingSection } from '../components/blocks/pricing-section';
 import { InvoiceSection } from '../components/sections/invoice-section';
+import { PaymentMethodSection } from '../components/sections/payment-method-section';
 import { useTranslation } from '../lib/useTranslation';
 import { SubscriptionUpdateConfirmation } from './subscription-update-confirmation';
 
@@ -8,6 +9,12 @@ import { SubscriptionUpdateConfirmation } from './subscription-update-confirmati
  * Componente principal que contiene toda la página de facturación
  */
 export function BillingPage({ pricingData, onSubscribe }) {
+  // Obtener los datos del método de pago desde la ventana global
+  const paymentMethodData = window.__PAYMENT_METHOD_DATA__ || {
+    has_payment_method: false,
+    payment_method: null,
+    portal_url: null
+  };
   const { t } = useTranslation();
 
   // Estado para manejar la página de confirmación
@@ -102,8 +109,16 @@ export function BillingPage({ pricingData, onSubscribe }) {
         t={t}
       />
 
-      {/* Solo mostrar la sección de facturas si el usuario tiene una suscripción activa */}
-      {hasActiveSubscription && <InvoiceSection />}
+      {/* Solo mostrar las secciones adicionales si el usuario tiene una suscripción activa */}
+      {hasActiveSubscription && (
+        <>
+          {/* Sección de método de pago */}
+          <PaymentMethodSection paymentMethodData={paymentMethodData} />
+          
+          {/* Sección de facturas */}
+          <InvoiceSection />
+        </>
+      )}
     </div>
   );
 }
