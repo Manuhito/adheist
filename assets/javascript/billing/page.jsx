@@ -44,8 +44,13 @@ export function BillingPage({ pricingData, onSubscribe }) {
 
   // Función para manejar la confirmación de actualización
   const handleUpdateConfirm = (priceId) => {
-    onSubscribe && onSubscribe(priceId);
+    // No llamar a onSubscribe aquí - la actualización ya se realizó
+    // mediante la solicitud a /subscriptions/api/update-subscription/
+    
+    // Solo cerrar el diálogo de confirmación
     setShowConfirmation(false);
+    
+    // La redirección ya está manejada en subscription-update-confirmation.jsx
   };
 
   // Función para cancelar la actualización
