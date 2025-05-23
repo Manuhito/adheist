@@ -21,7 +21,7 @@ function HeroPill() {
       transition={{ duration: 0.8, ease }}
     >
       <p className="text-xs font-medium text-primary sm:text-sm">
-        Get Access to 2,000 + Backlinks
+        Create Winning Ads in Minutes
       </p>
       <svg
         width="12"
@@ -71,9 +71,9 @@ export function HeroHighlightDemo() {
             className="text-4xl font-bold tracking-tight sm:text-6xl text-neutral-700 dark:text-white max-w-4xl leading-relaxed lg:leading-snug text-center mx-auto mt-16"
           >
             <Highlight className="text-black dark:text-white">
-              Grow Your Traffic
+              Steal the Highest ROI Ads
             </Highlight>{" "}
-            with Easy - to - Win Backlinks
+            and Make Them Your Own
           </motion.h1>
 
           <motion.div
@@ -85,19 +85,19 @@ export function HeroHighlightDemo() {
             <div className="flex items-center gap-2">
               <span className="text-primary text-sm">✓</span>
               <span className="text-sm text-muted-foreground whitespace-nowrap">
-                Save <span className="font-medium">$1000s</span> on Links
+                Save <span className="font-medium">$2K-$30K</span>/month
               </span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-primary text-sm">✓</span>
               <span className="text-sm text-muted-foreground whitespace-nowrap">
-                <span className="font-medium">High Authority</span> Sites Only
+                <span className="font-medium">Create Ads</span> 24/7
               </span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-primary text-sm">✓</span>
               <span className="text-sm text-muted-foreground whitespace-nowrap">
-                No <span className="font-medium">SEO Skills</span> Required
+                <span className="font-medium">95%</span> Done For You
               </span>
             </div>
           </motion.div>
@@ -125,7 +125,7 @@ function HeroCTA() {
             "w-full sm:w-auto text-background flex gap-2 bg-primary hover:bg-primary/90 px-8 py-6 text-lg"
           )}
         >
-          Start with 5 Free Links
+          Start Creating Winning Ads
         </Link>
         <Link
           href="/accounts/signup"
@@ -143,7 +143,7 @@ function HeroCTA() {
         animate={{ opacity: 1 }}
         transition={{ delay: 1.0, duration: 0.8 }}
       >
-        5 Free Links - No Credit Card Required
+        Zero Risk, Full Refund - No Questions Asked
       </motion.p>
     </>
   );
