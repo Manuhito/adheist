@@ -128,7 +128,7 @@ def update_subscription_api(request):
         return JsonResponse({
             "success": True, 
             "message": f"Your subscription has been updated to {subscription_name}",
-            "redirect_url": get_subscription_urls(subscription_holder)["subscription_details"]
+            "redirect_url": "/ads/billing/"
         })
         
     except SubscriptionConfigError as e:
