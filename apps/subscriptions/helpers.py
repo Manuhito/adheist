@@ -189,9 +189,7 @@ def update_subscription(subscription_holder: CustomUser, new_price_id: str) -> S
         # Calculate the appropriate quantity
         quantity = _get_quantity(new_price_id, subscription_holder)
         
-        # Update the subscription in Stripe
-        # By default, Stripe will prorate and create an invoice immediately for upgrades
-        # For downgrades, it will apply a credit to the next invoice
+        # Update the subscription in Stripe with parameters for immediate billing
         updated_subscription = stripe.Subscription.modify(
             subscription_id,
             items=[{
@@ -199,9 +197,11 @@ def update_subscription(subscription_holder: CustomUser, new_price_id: str) -> S
                 'price': new_price_id,
                 'quantity': quantity,
             }],
-            # Create prorations by default - this can be customized if needed
-            proration_behavior='create_prorations',
-            # Ensure we get the expanded subscription items
+            # Crear prorrateos y cobrarlos inmediatamente
+            proration_behavior='always_invoice',  # Siempre crear factura para los prorrateos
+            payment_behavior='error_if_incomplete',  # Cobrar inmediatamente y devolver error si falla
+            billing_cycle_anchor='unchanged',  # Mantener el ciclo de facturación original
+            # Expandir los items para obtener información completa
             expand=['items'],
         )
         
