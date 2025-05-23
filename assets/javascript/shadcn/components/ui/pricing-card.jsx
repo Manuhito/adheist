@@ -34,11 +34,11 @@ export function PricingCard({
   const getButtonText = () => {
     if (isCurrentPlan) {
       return t('pricing.current_plan', 'Current Plan');
-    } else if (isDisabled) {
-      return t('pricing.lower_tier', 'Plan inferior');
     } else if (hasActiveSubscription) {
       // Si ya tiene una suscripción y no es el plan actual, mostrar "Cambiar a este plan"
-      return t('pricing.change_to_plan', 'Cambiar a este plan');
+      return isUpgrade 
+        ? t('pricing.upgrade_to_plan', 'Upgrade to this plan')
+        : t('pricing.downgrade_to_plan', 'Downgrade to this plan');
     } else {
       // Si no tiene suscripción, mostrar el CTA normal
       return tier.cta;
@@ -50,8 +50,7 @@ export function PricingCard({
       className={cn(
         "relative flex flex-col gap-8 overflow-hidden p-6",
         isHighlighted ? "bg-foreground text-background" : "bg-background text-foreground",
-        isPopular && "ring-2 ring-primary",
-        isDisabled && "opacity-70")}>
+        isPopular && "ring-2 ring-primary")}>
       {isHighlighted && <HighlightedBackground />}
       {isPopular && <PopularBackground />}
       <h2 className="flex items-center gap-3 text-xl font-medium capitalize">
@@ -108,10 +107,10 @@ export function PricingCard({
         variant={isHighlighted ? "secondary" : "default"}
         className="w-full relative z-10"
         onClick={() => onSubscribe && onSubscribe(priceId)}
-        disabled={!onSubscribe || !priceId || isCurrentPlan || isDisabled}
+        disabled={!onSubscribe || !priceId || isCurrentPlan}
       >
         {getButtonText()}
-        {!isCurrentPlan && !isDisabled && (
+        {!isCurrentPlan && (
           hasActiveSubscription ? (
             isUpgrade ? <ArrowUp className="ml-2 h-4 w-4" /> : <ArrowDown className="ml-2 h-4 w-4" />
           ) : (
