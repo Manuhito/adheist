@@ -375,7 +375,6 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
                         onClick={handleNextStep}
                         disabled={!selectedAdLibrary || !selectedCanvasSize || isSubmitting}
                         isLoading={isSubmitting}
-                        className="min-w-[150px]"
                       />
                     </div>
                   </TooltipTrigger>
