@@ -5,7 +5,6 @@ import { CompanyLogoUpload } from './CompanyLogoUpload.jsx';
 import { ProductImageUpload } from './ProductImageUpload.jsx';
 import { AppScreenshotUpload } from './AppScreenshotUpload.jsx';
 import { ProductTypeSelect } from './ProductTypeSelect.jsx';
-import { MarketingMaterialUpload } from './MarketingMaterialUpload.jsx';
 import { Input } from '../../components/ui/input.jsx';
 import { useTranslation } from '../../lib/useTranslation';
 
@@ -210,8 +209,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
         keyBenefits,
         brandColor: selectedColor,
         productImages: {}, // Will be populated with actual image data
-        appScreenshots: {}, // Will be populated with actual screenshot data
-        marketingMaterials: {} // Will be populated with additional marketing images
+        appScreenshots: {} // Will be populated with actual screenshot data
       });
     }
   };
@@ -504,88 +502,6 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     }
   };
 
-  // Handle marketing material uploads
-  const handleMarketingMaterialUpload = async (imageData) => {
-    console.log('Marketing material uploaded or deleted:', imageData);
-
-    // Only proceed if we have an ID
-    if (!initialData.id) return;
-
-    // If imageData is undefined, it means no action should be taken
-    if (imageData === undefined) return;
-
-    // If imageData.url is null, it means the image should be deleted
-    const isDeleteOperation = imageData?.url === null;
-
-    try {
-      // Get CSRF token from cookies
-      const csrfToken = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('csrftoken='))
-        ?.split('=')[1];
-
-      if (!csrfToken) {
-        console.error('CSRF token not found');
-        return;
-      }
-
-      // Create a FormData object
-      const formData = new FormData();
-
-      // Handle image deletion
-      if (isDeleteOperation) {
-        console.log('Deleting marketing material:', imageData.position);
-        // The backend expects the field name to be in POST data but not in FILES data
-        formData.append(`marketing_image_${imageData.position}`, ''); // Send empty value for the field
-      }
-      // Check if this is a blob URL (from a new upload) or a server URL (from initialData)
-      else if (imageData.url.startsWith('blob:')) {
-        console.log('Processing blob URL for marketing material...');
-
-        // Convert the blob URL to an actual file
-        const blobResponse = await fetch(imageData.url);
-        const blob = await blobResponse.blob();
-
-        // Create a file from the blob with a descriptive filename
-        const filename = `marketing_image_${imageData.position}_${Date.now()}.${blob.type.split('/')[1] || 'png'}`;
-        const file = new File([blob], filename, { type: blob.type });
-
-        console.log('Created file:', file.name, 'type:', file.type, 'size:', file.size);
-
-        // Add the file to the FormData with the field name based on position
-        formData.append(`marketing_image_${imageData.position}`, file);
-      } else {
-        // This is a server URL (from initialData)
-        console.log('Processing server URL for marketing material...');
-
-        // For server URLs, we'll send the URL directly
-        formData.append(`marketing_image_${imageData.position}_override_url`, imageData.url);
-      }
-
-      // Make the API call to update the marketing material
-      const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': csrfToken
-        },
-        body: formData
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error updating marketing material: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      console.log('Marketing material updated successfully:', data);
-
-      // If we have a refreshData function, call it to update the UI
-      if (refreshData) {
-        refreshData();
-      }
-    } catch (error) {
-      console.error('Error saving marketing material:', error);
-    }
-  };
 
   // Product type selection is no longer needed as both containers are always visible
 
@@ -1025,15 +941,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
         />
       </div>
 
-      {/* Marketing Materials Section - Always visible */}
-      <div className="container mx-auto px-4 my-8">
-        <div className="bg-card rounded-xl overflow-hidden">
-          <MarketingMaterialUpload
-            onUpload={handleMarketingMaterialUpload}
-            initialData={initialData}
-          />
-        </div>
-      </div>
+
 
       {/* Navigation buttons at the bottom */}
       <div className="w-full px-4 flex justify-between pb-8">
