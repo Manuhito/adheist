@@ -509,6 +509,7 @@ def get_adlibrary_filters(request):
         }
         adlibrary_list.append(adlibrary_data)
     
+    # Devolver la respuesta normal
     return JsonResponse({'adlibraries': adlibrary_list}, safe=True)
 
 
