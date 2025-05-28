@@ -46,8 +46,8 @@ class Command(BaseCommand):
         keyword = options['keyword']
         country = options['country']
         maxitems = options['maxitems']
-        start_date = options['start-date']
-        end_date = options['end-date'] or date.today().strftime('%Y-%m-%d')
+        start_date = options['start_date']  # Corregido: guión convertido a guión bajo
+        end_date = options['end_date'] or date.today().strftime('%Y-%m-%d')  # Corregido: guión convertido a guión bajo
         output_path = options['output']
 
         # Set default output path if not provided
@@ -70,7 +70,7 @@ class Command(BaseCommand):
 
         try:
             # Initialize the ApifyClient with your API token
-            client = ApifyClient("apify_api_bkPXUknHPidJPzmgMlox4GCs5hHOGz0aCMl0")
+            client = ApifyClient("apify_api_rwmiDK1rL7SIw8aDolEfbIecuFzfBp0j20ow")
 
             # Prepare the Actor input
             run_input = {
