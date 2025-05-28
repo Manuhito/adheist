@@ -29,14 +29,34 @@ class TagList(BaseModel):
 
 
 class AdLibrary(BaseModel):
-    company_name = models.CharField(max_length=100)
-    industries = models.ManyToManyField(IndustryList, related_name="adlibraries")
-    tags = models.ManyToManyField(TagList, related_name="adlibraries")
-    ad_image = models.ImageField(upload_to="adlibrary/", null=True, blank=True)
+    # Basic fields (adapted for Apify)
+    company_name = models.CharField(max_length=255, help_text="Ad's Page Name")
+    industries = models.ManyToManyField(IndustryList, related_name="adlibraries", help_text="Ad's Page Categories")
+    tags = models.ManyToManyField(TagList, related_name="adlibraries", help_text="Ad's Categories")
+    ad_image = models.JSONField(null=True, blank=True, help_text="List of ad image URLs")
     is_fav = models.BooleanField(default=False)
+    
+    # Additional Apify fields
+    ad_id = models.CharField(max_length=100, null=True, blank=True, help_text="Unique ad ID")
+    page_id = models.CharField(max_length=100, null=True, blank=True, help_text="Page ID")
+    ad_text = models.TextField(null=True, blank=True, help_text="Complete ad text")
+    ad_type = models.CharField(max_length=50, null=True, blank=True, help_text="Ad type")
+    ad_url = models.URLField(max_length=500, null=True, blank=True, help_text="Ad URL")
+    ad_snapshot_url = models.URLField(max_length=500, null=True, blank=True, help_text="Ad snapshot URL")
+    ad_creation_time = models.DateTimeField(null=True, blank=True, help_text="Ad creation date")
+    ad_delivery_start_time = models.DateTimeField(null=True, blank=True, help_text="Ad delivery start date")
+    ad_delivery_stop_time = models.DateTimeField(null=True, blank=True, help_text="Ad delivery end date")
+    country = models.CharField(max_length=100, null=True, blank=True, help_text="Ad country")
+    publisher_platforms = models.CharField(max_length=255, null=True, blank=True, help_text="Platforms where the ad was published")
+    cta_text = models.CharField(max_length=100, null=True, blank=True, help_text="Call-to-action text")
+    source = models.CharField(max_length=50, default="apify", help_text="Data source")
+    
+    # Additional metadata fields
+    raw_data = models.JSONField(null=True, blank=True, help_text="Complete data in JSON format")
+    last_updated = models.DateTimeField(auto_now=True, help_text="Last record update")
 
     def __str__(self):
-        return self.company_name
+        return f"{self.company_name} - {self.ad_id or 'No ID'}"
 
     def get_absolute_url(self):
         return reverse("ads:adlibrary_detail", kwargs={"pk": self.pk})
@@ -186,7 +206,7 @@ class AdRequest(BaseModel):
     ]
     
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    ad_library = models.ForeignKey(AdLibrary, on_delete=models.CASCADE, null=True, blank=True)
+    ad_library = models.TextField(null=True, blank=True)
     base_assets = models.ForeignKey(AdRequestAssets, on_delete=models.PROTECT, related_name="ad_requests", null=True, blank=True)
     asset_overrides = models.JSONField(default=dict, blank=True, encoder=DjangoJSONEncoder,
                                       help_text="Stores overrides for specific asset fields")

@@ -16,7 +16,7 @@ class Command(BaseCommand):
         )
         parser.add_argument(
             '--country',
-            default='ALL 🌍',
+            default='ALL ',
             help='Country to filter ads'
         )
         parser.add_argument(
@@ -92,6 +92,14 @@ class Command(BaseCommand):
                 results.append(item)
             
             self.stdout.write(self.style.SUCCESS(f'Fetched {len(results)} ads'))
+
+            # Process results to ensure JSON compatibility
+            for item in results:
+                # Handle ad_text field which often contains unescaped quotes
+                if 'ad_text' in item and isinstance(item['ad_text'], str):
+                    # Use json.dumps to properly escape the string
+                    escaped_text = json.dumps(item['ad_text'])[1:-1]  # Remove outer quotes
+                    item['ad_text'] = escaped_text
 
             # Save results to JSON file
             with open(output_path, 'w', encoding='utf-8') as f:
