@@ -774,22 +774,22 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
               <div className="group relative w-32 h-32 rounded-lg overflow-hidden shadow border bg-white dark:bg-gray-800">
                 {isAdLibraryLoading ? (
                   <div className="flex items-center justify-center w-full h-full text-gray-400 animate-pulse">{t('step_two.loading', 'Loading...')}</div>
-                ) : adLibraryData ? (
+                ) : initialData.adlibrary_image || adLibraryData ? (
                   <>
                     <img
-                      src={adLibraryData.ad_image || 'https://images.unsplash.com/photo-1557804506-669a67965ba0'}
-                      alt={adLibraryData.company_name || initialData.ad_library_name || 'Ad Preview'}
+                      src={initialData.adlibrary_image || (adLibraryData && adLibraryData.ad_image) || 'https://images.unsplash.com/photo-1557804506-669a67965ba0'}
+                      alt={adLibraryData?.company_name || initialData.ad_library_name || 'Ad Preview'}
                       className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
                     />
                     {/* Overlay info on hover */}
                     <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center items-center text-white p-2">
-                      <h4 className="text-sm font-semibold mb-1">{adLibraryData.company_name || initialData.ad_library_name || 'No name'}</h4>
-                      {adLibraryData.industries && adLibraryData.industries.length > 0 && (
+                      <h4 className="text-sm font-semibold mb-1">{adLibraryData?.company_name || initialData.ad_library_name || 'No name'}</h4>
+                      {adLibraryData?.industries && adLibraryData.industries.length > 0 && (
                         <p className="text-xs mb-1 text-center">
                           {adLibraryData.industries.join(', ')}
                         </p>
                       )}
-                      {adLibraryData.tags && adLibraryData.tags.length > 0 && (
+                      {adLibraryData?.tags && adLibraryData.tags.length > 0 && (
                         <p className="text-xs text-blue-200">{adLibraryData.tags.join(', ')}</p>
                       )}
                     </div>

@@ -678,6 +678,7 @@ def adrequest_get(request, pk):
         'user_id': safe_get(user, 'id'),
         'ad_library_id': safe_get(ad_library, 'id'),
         'ad_library_name': safe_get(ad_library, 'company_name'),
+        'adlibrary_image': safe_get(ad_request, 'adlibrary_image'),  # Include the selected image URL
         'canvas_size': safe_get(ad_request, 'canvas_size'),
         'status': safe_get(ad_request, 'status'),
         'created_at': created_at.isoformat() if created_at else None,
