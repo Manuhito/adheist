@@ -499,23 +499,39 @@ def get_adlibrary_filters(request):
         tag_names = [tag.name for tag in adlibrary.tags.all()]
         
         # Create dictionary with all fields
-        # Handle ad_image as a list of URLs
-        ad_image_url = None
+        # If we have multiple images, create one entry per image
         if adlibrary.ad_image and isinstance(adlibrary.ad_image, list) and len(adlibrary.ad_image) > 0:
-            # Use the first URL in the list
-            ad_image_url = adlibrary.ad_image[0]
-        
-        adlibrary_data = {
-            'id': adlibrary.id,
-            'company_name': adlibrary.company_name,
-            'industries': industry_names,
-            'tags': tag_names,
-            'ad_image': ad_image_url,
-            'is_fav': adlibrary.is_fav,
-            # Include the full list of images as a separate field for future use
-            'ad_images': adlibrary.ad_image if adlibrary.ad_image and isinstance(adlibrary.ad_image, list) else []
-        }
-        adlibrary_list.append(adlibrary_data)
+            # Create an entry for each image URL
+            for i, image_url in enumerate(adlibrary.ad_image):
+                # Create a unique ID by appending the image index
+                unique_id = f"{adlibrary.id}-{i}"
+                
+                adlibrary_data = {
+                    'id': unique_id,  # Unique ID for each image entry
+                    'original_id': adlibrary.id,  # Store the original AdLibrary ID
+                    'company_name': adlibrary.company_name,
+                    'industries': industry_names,
+                    'tags': tag_names,
+                    'ad_image': image_url,  # Individual image URL
+                    'is_fav': adlibrary.is_fav,
+                    'image_index': i,  # Store the index for reference
+                    'total_images': len(adlibrary.ad_image)  # Total number of images
+                }
+                adlibrary_list.append(adlibrary_data)
+        else:
+            # Fallback for ads without images
+            adlibrary_data = {
+                'id': adlibrary.id,
+                'original_id': adlibrary.id,
+                'company_name': adlibrary.company_name,
+                'industries': industry_names,
+                'tags': tag_names,
+                'ad_image': None,
+                'is_fav': adlibrary.is_fav,
+                'image_index': 0,
+                'total_images': 0
+            }
+            adlibrary_list.append(adlibrary_data)
     
     # Devolver la respuesta normal
     return JsonResponse({'adlibraries': adlibrary_list}, safe=True)
@@ -708,7 +724,16 @@ def adrequest_update(request, pk):
             ad_request.canvas_size = request.POST.get('canvas_size')
 
         if 'ad_library' in request.POST:
-            ad_request.ad_library = get_object_or_404(AdLibrary, id=request.POST.get('ad_library'))
+            ad_library_id = request.POST.get('ad_library')
+            ad_library = get_object_or_404(AdLibrary, id=ad_library_id)
+            ad_request.ad_library = ad_library
+            
+            # Save the selected image URL from frontend if provided
+            if 'adlibrary_image' in request.POST and request.POST.get('adlibrary_image'):
+                ad_request.adlibrary_image = request.POST.get('adlibrary_image')
+            # Fallback to first image if no specific image was selected
+            elif ad_library.ad_image and isinstance(ad_library.ad_image, list) and len(ad_library.ad_image) > 0:
+                ad_request.adlibrary_image = ad_library.ad_image[0]
             
         if 'status' in request.POST:
             new_status = request.POST.get('status')

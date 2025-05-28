@@ -23,6 +23,7 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
   // Initialize selected canvas size directly with the size value from initialData
   const [selectedCanvasSize, setSelectedCanvasSize] = useState(initialData.canvas_size || null);
   const [selectedAdLibrary, setSelectedAdLibrary] = useState(initialData.ad_library_id || null);
+  const [selectedAdLibraryImage, setSelectedAdLibraryImage] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
 
@@ -199,6 +200,11 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
       const formData = new FormData();
       formData.append('ad_library', selectedAdLibrary);
       formData.append('canvas_size', selectedCanvasSize);
+      
+      // Add the selected image URL if available
+      if (selectedAdLibraryImage) {
+        formData.append('adlibrary_image', selectedAdLibraryImage);
+      }
       formData.append('status', 'DRAFT'); // Set status to DRAFT to advance to next step
 
       let response;
@@ -328,7 +334,12 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
                 mediaItems={galleryItems}
                 title={t('step_one.gallery_title', 'Select Your Ideal Ad Style')}
                 description={t('step_one.gallery_description', 'Browse and choose the ad style that best matches your desired outcome')}
-                onItemSelect={(item) => setSelectedAdLibrary(item.id)}
+                onItemSelect={(item) => {
+                  // Extract original_id from the compound id if present
+                  const originalId = item.original_id || item.id.split('-')[0] || item.id;
+                  setSelectedAdLibrary(originalId);
+                  setSelectedAdLibraryImage(item.ad_image || item.url);
+                }}
                 selectedItemId={selectedAdLibrary}
               />
             </div>
