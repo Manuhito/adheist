@@ -53,8 +53,14 @@ class Command(BaseCommand):
         # Set default output path if not provided
         if not output_path:
             timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+            
+            # Create apify-files directory if it doesn't exist
+            apify_dir = os.path.join(settings.BASE_DIR, 'apify-files')
+            if not os.path.exists(apify_dir):
+                os.makedirs(apify_dir)
+                
             output_path = os.path.join(
-                settings.BASE_DIR, 
+                apify_dir,
                 f'apify_ads_{keyword}_{timestamp}.json'
             )
 
