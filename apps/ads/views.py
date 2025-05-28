@@ -499,13 +499,21 @@ def get_adlibrary_filters(request):
         tag_names = [tag.name for tag in adlibrary.tags.all()]
         
         # Create dictionary with all fields
+        # Handle ad_image as a list of URLs
+        ad_image_url = None
+        if adlibrary.ad_image and isinstance(adlibrary.ad_image, list) and len(adlibrary.ad_image) > 0:
+            # Use the first URL in the list
+            ad_image_url = adlibrary.ad_image[0]
+        
         adlibrary_data = {
             'id': adlibrary.id,
             'company_name': adlibrary.company_name,
             'industries': industry_names,
             'tags': tag_names,
-            'ad_image': adlibrary.ad_image.url if adlibrary.ad_image else None,
+            'ad_image': ad_image_url,
             'is_fav': adlibrary.is_fav,
+            # Include the full list of images as a separate field for future use
+            'ad_images': adlibrary.ad_image if adlibrary.ad_image and isinstance(adlibrary.ad_image, list) else []
         }
         adlibrary_list.append(adlibrary_data)
     
