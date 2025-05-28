@@ -54,6 +54,12 @@ class Command(BaseCommand):
                     if existing_ad and not update_existing:
                         skipped_count += 1
                         continue
+                    
+                    # Filtrar anuncios sin imágenes
+                    if 'image_urls' not in ad_data or not ad_data['image_urls'] or ad_data['image_urls'] == 'N/A':
+                        self.stdout.write(self.style.WARNING(f'Skipping ad {ad_id} - No images available'))
+                        skipped_count += 1
+                        continue
                         
                     # Crear o actualizar el anuncio
                     if existing_ad:
