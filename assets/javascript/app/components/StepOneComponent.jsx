@@ -127,7 +127,8 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
         title: title,
         desc: desc,
         url: imageUrl,
-        industry: industry
+        industry: industry,
+        is_fav: item.is_fav || false // Include the is_fav property
       };
     });
   };

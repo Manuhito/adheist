@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Check } from 'lucide-react';
+import { X, Check, Star } from 'lucide-react';
 import { useTranslation } from '../../lib/useTranslation';
 
 /**
  * MediaItem component renders an image with optional selection indicator
- * Simplified to focus only on images for ad selection
+ * Includes a star icon that indicates if the image is marked as favorite
  */
 const MediaItem = ({ item, className, onClick, isSelected }) => {
+    // Determine if this item is marked as favorite
+    const isFavorite = item.is_fav || false;
+    
     return (
         <div className={`${className} relative overflow-hidden group`}>
             <img
@@ -18,6 +21,7 @@ const MediaItem = ({ item, className, onClick, isSelected }) => {
                 loading="lazy"
                 decoding="async"
             />
+            {/* Selection indicator */}
             {isSelected && (
                 <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
                     <div className="bg-background rounded-full p-1">
@@ -25,6 +29,16 @@ const MediaItem = ({ item, className, onClick, isSelected }) => {
                     </div>
                 </div>
             )}
+            
+            {/* Favorite star icon - appears on hover */}
+            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer z-10">
+                <Star 
+                    className={`w-6 h-6 ${isFavorite ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
+                    strokeWidth={1.5}
+                />
+            </div>
+            
+            {/* Gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         </div>
     );
@@ -37,6 +51,9 @@ const MediaItem = ({ item, className, onClick, isSelected }) => {
 const GalleryModal = ({ selectedItem, isOpen, onClose, onSelect }) => {
     const { t } = useTranslation();
     if (!isOpen) return null;
+    
+    // Determine if this item is marked as favorite
+    const isFavorite = selectedItem?.is_fav || false;
 
     const handleBackdropClick = (e) => {
         if (e.target === e.currentTarget) {
@@ -79,6 +96,13 @@ const GalleryModal = ({ selectedItem, isOpen, onClose, onSelect }) => {
                             alt={selectedItem.title}
                             className="w-full h-full object-cover"
                         />
+                        {/* Favorite star icon in modal */}
+                        <div className="absolute top-3 right-3 cursor-pointer">
+                            <Star 
+                                className={`w-7 h-7 ${isFavorite ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
+                                strokeWidth={1.5}
+                            />
+                        </div>
                     </div>
 
                     {/* Details */}
