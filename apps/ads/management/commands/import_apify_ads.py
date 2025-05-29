@@ -110,7 +110,9 @@ class Command(BaseCommand):
                                 # Si falla, lo dejamos como lista vacía
                                 pass
                     
-                    ad.ad_image = image_urls  # Store as JSON list
+                    # Transform image URLs list into a dictionary with URL as key and True as value
+                    image_urls_dict = {url: True for url in image_urls}
+                    ad.ad_image = image_urls_dict  # Store as JSON dictionary
                     
                     # Guardar datos completos
                     ad.raw_data = ad_data

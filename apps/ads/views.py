@@ -500,9 +500,12 @@ def get_adlibrary_filters(request):
         
         # Create dictionary with all fields
         # If we have multiple images, create one entry per image
-        if adlibrary.ad_image and isinstance(adlibrary.ad_image, list) and len(adlibrary.ad_image) > 0:
-            # Create an entry for each image URL
-            for i, image_url in enumerate(adlibrary.ad_image):
+        if adlibrary.ad_image and isinstance(adlibrary.ad_image, dict) and len(adlibrary.ad_image) > 0:
+            # Create an entry for each active image URL in the dictionary
+            # Only include images where the value is True
+            active_images = [url for url, is_active in adlibrary.ad_image.items() if is_active]
+            
+            for i, image_url in enumerate(active_images):
                 # Create a unique ID by appending the image index
                 unique_id = f"{adlibrary.id}-{i}"
                 
@@ -515,7 +518,7 @@ def get_adlibrary_filters(request):
                     'ad_image': image_url,  # Individual image URL
                     'is_fav': adlibrary.is_fav,
                     'image_index': i,  # Store the index for reference
-                    'total_images': len(adlibrary.ad_image)  # Total number of images
+                    'total_images': len(active_images)  # Total number of active images
                 }
                 adlibrary_list.append(adlibrary_data)
         else:
