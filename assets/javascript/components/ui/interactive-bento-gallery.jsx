@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Check, Star } from 'lucide-react';
+import { X, Check, Star, Trash2 } from 'lucide-react';
 import { useTranslation } from '../../lib/useTranslation';
 
 /**
@@ -30,12 +30,23 @@ const MediaItem = ({ item, className, onClick, isSelected }) => {
                 </div>
             )}
             
-            {/* Favorite star icon - appears on hover */}
-            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer z-10">
-                <Star 
-                    className={`w-6 h-6 ${isFavorite ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
-                    strokeWidth={1.5}
-                />
+            {/* Action icons - appear on hover */}
+            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex space-x-2">
+                {/* Favorite star icon */}
+                <div className="cursor-pointer">
+                    <Star 
+                        className={`w-6 h-6 ${isFavorite ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
+                        strokeWidth={1.5}
+                    />
+                </div>
+                
+                {/* Delete trash icon */}
+                <div className="cursor-pointer">
+                    <Trash2 
+                        className="w-6 h-6 text-red-500 hover:text-red-600" 
+                        strokeWidth={1.5}
+                    />
+                </div>
             </div>
             
             {/* Gradient overlay */}
@@ -96,12 +107,23 @@ const GalleryModal = ({ selectedItem, isOpen, onClose, onSelect }) => {
                             alt={selectedItem.title}
                             className="w-full h-full object-cover"
                         />
-                        {/* Favorite star icon in modal */}
-                        <div className="absolute top-3 right-3 cursor-pointer">
-                            <Star 
-                                className={`w-7 h-7 ${isFavorite ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
-                                strokeWidth={1.5}
-                            />
+                        {/* Action icons in modal */}
+                        <div className="absolute top-3 right-3 flex space-x-3">
+                            {/* Favorite star icon */}
+                            <div className="cursor-pointer">
+                                <Star 
+                                    className={`w-7 h-7 ${isFavorite ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
+                                    strokeWidth={1.5}
+                                />
+                            </div>
+                            
+                            {/* Delete trash icon */}
+                            <div className="cursor-pointer">
+                                <Trash2 
+                                    className="w-7 h-7 text-red-500 hover:text-red-600" 
+                                    strokeWidth={1.5}
+                                />
+                            </div>
                         </div>
                     </div>
 
