@@ -12,7 +12,7 @@ const MediaItem = ({ item, className, onClick, isSelected, userPermissions = { i
     const isFavorite = item.is_fav || false;
     // Check if user has permission to manage items
     const canManageItems = userPermissions.isStaff;
-    
+
     // Handle star click to toggle favorite status
     const handleToggleFavorite = (e) => {
         e.stopPropagation(); // Prevent triggering the parent onClick
@@ -25,7 +25,7 @@ const MediaItem = ({ item, className, onClick, isSelected, userPermissions = { i
         }
         return false; // Prevent event bubbling
     };
-    
+
     // Handle trash click to deactivate image
     const handleDeactivateImage = (e) => {
         e.stopPropagation(); // Prevent triggering the parent onClick
@@ -38,7 +38,7 @@ const MediaItem = ({ item, className, onClick, isSelected, userPermissions = { i
         }
         return false; // Prevent event bubbling
     };
-    
+
     return (
         <div className={`${className} relative overflow-hidden group`}>
             <img
@@ -57,38 +57,38 @@ const MediaItem = ({ item, className, onClick, isSelected, userPermissions = { i
                     </div>
                 </div>
             )}
-            
+
             {/* Action icons - appear on hover only for staff users */}
             {canManageItems && (
                 <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex space-x-2">
                     {/* Favorite star icon */}
-                    <button 
+                    <button
                         type="button"
-                        className="cursor-pointer bg-transparent border-0 p-1 rounded-full hover:bg-gray-100/20" 
+                        className="cursor-pointer bg-transparent border-0 p-1 rounded-full hover:bg-gray-100/20"
                         onClick={handleToggleFavorite}
                         title={isFavorite ? "Remove from favorites" : "Add to favorites"}
                     >
-                        <Star 
-                            className={`w-6 h-6 ${isFavorite ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
+                        <Star
+                            className={`w-6 h-6 ${isFavorite ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
                             strokeWidth={1.5}
                         />
                     </button>
-                    
+
                     {/* Delete trash icon */}
-                    <button 
+                    <button
                         type="button"
                         className="cursor-pointer bg-transparent border-0 p-1 rounded-full hover:bg-gray-100/20"
                         onClick={handleDeactivateImage}
                         title="Deactivate this image"
                     >
-                        <Trash2 
-                            className="w-6 h-6 text-red-500 hover:text-red-600" 
+                        <Trash2
+                            className="w-6 h-6 text-red-500 hover:text-red-600"
                             strokeWidth={1.5}
                         />
                     </button>
                 </div>
             )}
-            
+
             {/* Gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         </div>
@@ -99,23 +99,23 @@ const MediaItem = ({ item, className, onClick, isSelected, userPermissions = { i
  * GalleryModal component displays the selected media item in a modal
  * Includes company information and tags
  */
-const GalleryModal = ({ 
-    selectedItem, 
-    isOpen, 
-    onClose, 
-    onSelect, 
+const GalleryModal = ({
+    selectedItem,
+    isOpen,
+    onClose,
+    onSelect,
     userPermissions = window.__USER_PERMISSIONS__ || { isStaff: false },
     onToggleFavorite,
     onDeactivateImage
 }) => {
     const { t } = useTranslation();
     if (!isOpen) return null;
-    
+
     // Determine if this item is marked as favorite
     const isFavorite = selectedItem?.is_fav || false;
     // Check if user has permission to manage items
     const canManageItems = userPermissions.isStaff;
-    
+
     // Handle star click to toggle favorite status
     const handleToggleFavorite = (e) => {
         e.stopPropagation(); // Prevent triggering the parent onClick
@@ -128,7 +128,7 @@ const GalleryModal = ({
         }
         return false; // Prevent event bubbling
     };
-    
+
     // Handle trash click to deactivate image
     const handleDeactivateImage = (e) => {
         e.stopPropagation(); // Prevent triggering the parent onClick
@@ -189,27 +189,27 @@ const GalleryModal = ({
                         {canManageItems && (
                             <div className="absolute top-3 right-3 flex space-x-3">
                                 {/* Favorite star icon */}
-                                <button 
+                                <button
                                     type="button"
                                     className="cursor-pointer bg-transparent border-0 p-1 rounded-full hover:bg-gray-100/20"
                                     onClick={handleToggleFavorite}
                                     title={isFavorite ? "Remove from favorites" : "Add to favorites"}
                                 >
-                                    <Star 
-                                        className={`w-7 h-7 ${isFavorite ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
+                                    <Star
+                                        className={`w-7 h-7 ${isFavorite ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
                                         strokeWidth={1.5}
                                     />
                                 </button>
-                                
+
                                 {/* Delete trash icon */}
-                                <button 
+                                <button
                                     type="button"
                                     className="cursor-pointer bg-transparent border-0 p-1 rounded-full hover:bg-gray-100/20"
                                     onClick={handleDeactivateImage}
                                     title="Deactivate this image"
                                 >
-                                    <Trash2 
-                                        className="w-7 h-7 text-red-500 hover:text-red-600" 
+                                    <Trash2
+                                        className="w-7 h-7 text-red-500 hover:text-red-600"
                                         strokeWidth={1.5}
                                     />
                                 </button>
@@ -290,25 +290,25 @@ const InteractiveBentoGallery = ({
     const handleSelectAdStyle = (item) => {
         setSelectedAdStyle(item);
         setSelectedItem(null);
-        
+
         // Call the external onItemSelect handler if provided
         if (onItemSelect && typeof onItemSelect === 'function') {
             onItemSelect(item);
         }
-        
+
         console.log('Selected ad style:', item);
     };
-    
+
     // Handle toggling favorite status
     const handleToggleFavorite = async (item) => {
         console.log('Toggle favorite clicked for item:', item);
-        
+
         // Check if we have the necessary data
         if (!item) {
             console.error('Item is undefined');
             return;
         }
-        
+
         // Extract the real ID from the compound ID if present
         // Format could be like "3325-0" where 3325 is the real ID
         let adlibraryId;
@@ -319,16 +319,16 @@ const InteractiveBentoGallery = ({
         } else {
             adlibraryId = item.id;
         }
-        
+
         if (!adlibraryId) {
             console.error('No adlibrary ID found in item:', item);
             return;
         }
-        
+
         setIsLoading(true);
         try {
             console.log('Sending toggle favorite request for adlibrary ID:', adlibraryId);
-            
+
             const response = await fetch('/ads/api/toggle-favorite/', {
                 method: 'POST',
                 headers: {
@@ -339,23 +339,23 @@ const InteractiveBentoGallery = ({
                     adlibrary_id: adlibraryId
                 })
             });
-            
+
             if (!response.ok) {
                 const errorText = await response.text();
                 throw new Error(`Failed to toggle favorite status: ${errorText}`);
             }
-            
+
             const data = await response.json();
             console.log('Toggled favorite status response:', data);
-            
+
             // Update the item in local state
             const updatedItem = { ...item, is_fav: data.is_fav };
-            
+
             // Update the selected item if it's the same one
             if (selectedItem && (selectedItem.id === item.id || selectedItem.original_id === item.original_id)) {
                 setSelectedItem(updatedItem);
             }
-            
+
             // Store the updated item to update the UI
             setUpdatedItems(prev => ({
                 ...prev,
@@ -368,17 +368,17 @@ const InteractiveBentoGallery = ({
             setIsLoading(false);
         }
     };
-    
+
     // Handle deactivating an image
     const handleDeactivateImage = async (item) => {
         console.log('Deactivate image clicked for item:', item);
-        
+
         // Check if we have the necessary data
         if (!item) {
             console.error('Item is undefined');
             return;
         }
-        
+
         // Extract the real ID from the compound ID if present
         // Format could be like "3325-0" where 3325 is the real ID
         let adlibraryId;
@@ -389,23 +389,23 @@ const InteractiveBentoGallery = ({
         } else {
             adlibraryId = item.id;
         }
-        
+
         if (!adlibraryId) {
             console.error('No adlibrary ID found in item:', item);
             return;
         }
-        
+
         // Get the image URL - it might be directly in ad_image or it might be in url
         const imageUrl = item.ad_image || item.url;
         if (!imageUrl) {
             console.error('No image URL found in item:', item);
             return;
         }
-        
+
         setIsLoading(true);
         try {
             console.log('Sending deactivate image request for:', { adlibraryId, imageUrl });
-            
+
             const response = await fetch('/ads/api/deactivate-image/', {
                 method: 'POST',
                 headers: {
@@ -417,24 +417,31 @@ const InteractiveBentoGallery = ({
                     image_url: imageUrl
                 })
             });
-            
+
             if (!response.ok) {
                 const errorText = await response.text();
                 throw new Error(`Failed to deactivate image: ${errorText}`);
             }
-            
+
             const data = await response.json();
             console.log('Deactivated image response:', data);
-            
-            // Remove the item from the UI
-            // This will be handled by the parent component when it refreshes the data
-            // For now, we'll just close the modal if it's open
+
+            // Remove the item from the UI immediately
+            // First, close the modal if it's open
             if (selectedItem && (selectedItem.id === item.id || selectedItem.original_id === item.original_id)) {
                 setSelectedItem(null);
             }
             
-            // Notify the user
-            alert('Image has been deactivated successfully.');
+            // Remove the item from mediaItems directly
+            // Note: This is not a standard React pattern, but it's the simplest solution
+            const index = mediaItems.findIndex(i => i.id === item.id);
+            if (index !== -1) {
+                mediaItems.splice(index, 1);
+                // Force a re-render
+                setIsLoading(prev => !prev);
+            }
+            
+            console.log('Image has been deactivated successfully');
         } catch (error) {
             console.error('Error deactivating image:', error);
             alert('Error deactivating image. See console for details.');
@@ -442,13 +449,13 @@ const InteractiveBentoGallery = ({
             setIsLoading(false);
         }
     };
-    
+
     // Helper function to get CSRF token
     const getCsrfToken = () => {
         const csrfCookie = document.cookie
             .split('; ')
             .find(row => row.startsWith('csrftoken='));
-        
+
         return csrfCookie ? csrfCookie.split('=')[1] : '';
     };
 
