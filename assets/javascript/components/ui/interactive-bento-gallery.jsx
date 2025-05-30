@@ -7,9 +7,11 @@ import { useTranslation } from '../../lib/useTranslation';
  * MediaItem component renders an image with optional selection indicator
  * Includes a star icon that indicates if the image is marked as favorite
  */
-const MediaItem = ({ item, className, onClick, isSelected }) => {
+const MediaItem = ({ item, className, onClick, isSelected, userPermissions = { isStaff: false } }) => {
     // Determine if this item is marked as favorite
     const isFavorite = item.is_fav || false;
+    // Check if user has permission to manage items
+    const canManageItems = userPermissions.isStaff;
     
     return (
         <div className={`${className} relative overflow-hidden group`}>
@@ -30,24 +32,26 @@ const MediaItem = ({ item, className, onClick, isSelected }) => {
                 </div>
             )}
             
-            {/* Action icons - appear on hover */}
-            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex space-x-2">
-                {/* Favorite star icon */}
-                <div className="cursor-pointer">
-                    <Star 
-                        className={`w-6 h-6 ${isFavorite ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
-                        strokeWidth={1.5}
-                    />
+            {/* Action icons - appear on hover only for staff users */}
+            {canManageItems && (
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex space-x-2">
+                    {/* Favorite star icon */}
+                    <div className="cursor-pointer">
+                        <Star 
+                            className={`w-6 h-6 ${isFavorite ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
+                            strokeWidth={1.5}
+                        />
+                    </div>
+                    
+                    {/* Delete trash icon */}
+                    <div className="cursor-pointer">
+                        <Trash2 
+                            className="w-6 h-6 text-red-500 hover:text-red-600" 
+                            strokeWidth={1.5}
+                        />
+                    </div>
                 </div>
-                
-                {/* Delete trash icon */}
-                <div className="cursor-pointer">
-                    <Trash2 
-                        className="w-6 h-6 text-red-500 hover:text-red-600" 
-                        strokeWidth={1.5}
-                    />
-                </div>
-            </div>
+            )}
             
             {/* Gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -59,12 +63,14 @@ const MediaItem = ({ item, className, onClick, isSelected }) => {
  * GalleryModal component displays the selected media item in a modal
  * Includes company information and tags
  */
-const GalleryModal = ({ selectedItem, isOpen, onClose, onSelect }) => {
+const GalleryModal = ({ selectedItem, isOpen, onClose, onSelect, userPermissions = window.__USER_PERMISSIONS__ || { isStaff: false } }) => {
     const { t } = useTranslation();
     if (!isOpen) return null;
     
     // Determine if this item is marked as favorite
     const isFavorite = selectedItem?.is_fav || false;
+    // Check if user has permission to manage items
+    const canManageItems = userPermissions.isStaff;
 
     const handleBackdropClick = (e) => {
         if (e.target === e.currentTarget) {
@@ -107,24 +113,26 @@ const GalleryModal = ({ selectedItem, isOpen, onClose, onSelect }) => {
                             alt={selectedItem.title}
                             className="w-full h-full object-cover"
                         />
-                        {/* Action icons in modal */}
-                        <div className="absolute top-3 right-3 flex space-x-3">
-                            {/* Favorite star icon */}
-                            <div className="cursor-pointer">
-                                <Star 
-                                    className={`w-7 h-7 ${isFavorite ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
-                                    strokeWidth={1.5}
-                                />
+                        {/* Action icons in modal - only visible for staff users */}
+                        {canManageItems && (
+                            <div className="absolute top-3 right-3 flex space-x-3">
+                                {/* Favorite star icon */}
+                                <div className="cursor-pointer">
+                                    <Star 
+                                        className={`w-7 h-7 ${isFavorite ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
+                                        strokeWidth={1.5}
+                                    />
+                                </div>
+                                
+                                {/* Delete trash icon */}
+                                <div className="cursor-pointer">
+                                    <Trash2 
+                                        className="w-7 h-7 text-red-500 hover:text-red-600" 
+                                        strokeWidth={1.5}
+                                    />
+                                </div>
                             </div>
-                            
-                            {/* Delete trash icon */}
-                            <div className="cursor-pointer">
-                                <Trash2 
-                                    className="w-7 h-7 text-red-500 hover:text-red-600" 
-                                    strokeWidth={1.5}
-                                />
-                            </div>
-                        </div>
+                        )}
                     </div>
 
                     {/* Details */}
@@ -188,7 +196,8 @@ const InteractiveBentoGallery = ({
     title = "Select Your Ideal Ad Style",
     description = "Browse and choose the ad style that best matches your desired outcome",
     onItemSelect,
-    selectedItemId
+    selectedItemId,
+    userPermissions = window.__USER_PERMISSIONS__ || { isStaff: false }
 }) => {
     const { t } = useTranslation();
     const [selectedItem, setSelectedItem] = useState(null);
@@ -253,9 +262,10 @@ const InteractiveBentoGallery = ({
                 {selectedItem && (
                     <GalleryModal
                         selectedItem={selectedItem}
-                        isOpen={true}
+                        isOpen={!!selectedItem}
                         onClose={() => setSelectedItem(null)}
                         onSelect={handleSelectAdStyle}
+                        userPermissions={userPermissions}
                     />
                 )}
             </AnimatePresence>
@@ -297,10 +307,12 @@ const InteractiveBentoGallery = ({
                         }}
                     >
                         <MediaItem
+                            key={item.id}
                             item={item}
-                            className="absolute inset-0 w-full h-full"
+                            className="w-full h-full"
                             onClick={() => setSelectedItem(item)}
-                            isSelected={selectedAdStyle && selectedAdStyle.id === item.id}
+                            isSelected={selectedAdStyle?.id === item.id}
+                            userPermissions={userPermissions}
                         />
                         <div className="absolute inset-x-0 bottom-0 p-3">
                             <div className="relative z-10">

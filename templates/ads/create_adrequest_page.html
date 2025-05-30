@@ -3,6 +3,12 @@
 
 {% block extra_js %}
 {{ block.super }}
+<script>
+  // Pass user permissions to the frontend
+  window.__USER_PERMISSIONS__ = {
+    isStaff: {{ request.user.is_staff|yesno:"true,false" }}
+  };
+</script>
 <script src="{% static 'js/create-adrequest-bundle.js' %}" defer></script>
 {% endblock %}
 
