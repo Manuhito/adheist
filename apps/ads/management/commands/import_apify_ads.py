@@ -73,11 +73,26 @@ class Command(BaseCommand):
                     ad.company_name = ad_data.get('Page Name', 'Unknown')
                     ad.ad_id = ad_data.get('ad archive ID')
                     ad.page_id = ad_data.get('Page ID')
+                    
+                    # Asignar el nuevo campo page_like_count
+                    if 'Page Like count' in ad_data and ad_data['Page Like count'] not in ('N/A', None):
+                        try:
+                            ad.page_like_count = int(ad_data['Page Like count'])
+                        except (ValueError, TypeError):
+                            # Si no se puede convertir a entero, dejarlo como None
+                            ad.page_like_count = None
+                    
                     ad.ad_text = ad_data.get('ad_text', '')
                     ad.ad_url = ad_data.get('link_url', '')
                     ad.ad_snapshot_url = ad_data.get('ad_snapshot_url', '')
                     ad.country = ad_data.get('country', '')
-                    ad.publisher_platforms = ','.join(ad_data.get('publisher_platforms', []))
+                    
+                    # Asignar publisher_platforms como JSONField en lugar de string
+                    ad.publisher_platforms = ad_data.get('publisher_platforms', [])
+                    
+                    # Asignar el nuevo campo contains_sensitive_content
+                    ad.contains_sensitive_content = ad_data.get('contains_sensitive_content', False)
+                    
                     ad.cta_text = ad_data.get('CTA Text', '')
                     ad.source = 'apify'
                     ad.is_fav = False

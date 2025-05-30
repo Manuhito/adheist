@@ -39,6 +39,7 @@ class AdLibrary(BaseModel):
     # Additional Apify fields
     ad_id = models.CharField(max_length=100, null=True, blank=True, help_text="Unique ad ID")
     page_id = models.CharField(max_length=100, null=True, blank=True, help_text="Page ID")
+    page_like_count = models.PositiveIntegerField(null=True, blank=True, help_text="Number of likes on the page")
     ad_text = models.TextField(null=True, blank=True, help_text="Complete ad text")
     ad_type = models.CharField(max_length=50, null=True, blank=True, help_text="Ad type")
     ad_url = models.URLField(max_length=500, null=True, blank=True, help_text="Ad URL")
@@ -47,7 +48,8 @@ class AdLibrary(BaseModel):
     ad_delivery_start_time = models.DateTimeField(null=True, blank=True, help_text="Ad delivery start date")
     ad_delivery_stop_time = models.DateTimeField(null=True, blank=True, help_text="Ad delivery end date")
     country = models.CharField(max_length=100, null=True, blank=True, help_text="Ad country")
-    publisher_platforms = models.CharField(max_length=255, null=True, blank=True, help_text="Platforms where the ad was published")
+    publisher_platforms = models.JSONField(null=True, blank=True, help_text="Platforms where the ad was published (array)")
+    contains_sensitive_content = models.BooleanField(default=False, help_text="Whether the ad contains sensitive content")
     cta_text = models.CharField(max_length=100, null=True, blank=True, help_text="Call-to-action text")
     source = models.CharField(max_length=50, default="apify", help_text="Data source")
     
