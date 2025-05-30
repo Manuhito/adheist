@@ -1,9 +1,12 @@
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.contrib import messages
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http.response import HttpResponseRedirect, JsonResponse, HttpResponse
 import logging
+
+# Configure logger
+logger = logging.getLogger(__name__)
 
 # Importar el servicio de generación de imágenes
 from apps.aiinterface.services import ImageGenerationService
@@ -1618,3 +1621,124 @@ def get_user_invoices(request):
             'error': str(e),
             'invoices': []
         }, status=400)
+
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+@require_POST
+def toggle_adlibrary_favorite(request):
+    """
+    Toggle the is_fav field of an AdLibrary.
+    Only accessible to staff users.
+    
+    POST Parameters:
+        adlibrary_id: The ID of the AdLibrary to toggle
+    
+    Returns: JSON with the updated is_fav status
+    """
+    try:
+        # Get the AdLibrary ID from the request
+        data = json.loads(request.body)
+        adlibrary_id = data.get('adlibrary_id')
+        
+        if not adlibrary_id:
+            return JsonResponse({'error': 'AdLibrary ID is required'}, status=400)
+        
+        # Log the received ID for debugging
+        logger.info(f"Toggling favorite for AdLibrary ID: {adlibrary_id} (type: {type(adlibrary_id).__name__})")
+        
+        # Try to find by different ID fields
+        try:
+            # First try with primary key (id)
+            adlibrary = AdLibrary.objects.get(id=adlibrary_id)
+        except (AdLibrary.DoesNotExist, ValueError):
+            try:
+                # Then try with ad_id field
+                adlibrary = AdLibrary.objects.get(ad_id=adlibrary_id)
+            except AdLibrary.DoesNotExist:
+                # Log all AdLibrary IDs for debugging
+                all_ids = list(AdLibrary.objects.values_list('id', 'ad_id'))
+                logger.error(f"Could not find AdLibrary with ID {adlibrary_id}. Available IDs: {all_ids[:10]}")
+                return JsonResponse({'error': f'AdLibrary with ID {adlibrary_id} not found'}, status=404)
+        
+        # Toggle the is_fav field
+        adlibrary.is_fav = not adlibrary.is_fav
+        adlibrary.save(update_fields=['is_fav'])
+        
+        # Return the updated status
+        return JsonResponse({
+            'success': True,
+            'is_fav': adlibrary.is_fav,
+            'adlibrary_id': adlibrary.id,
+            'ad_id': adlibrary.ad_id
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+@require_POST
+def deactivate_adlibrary_image(request):
+    """
+    Mark a specific image URL as inactive in the ad_image JSON field.
+    Only accessible to staff users.
+    
+    POST Parameters:
+        adlibrary_id: The ID of the AdLibrary
+        image_url: The URL of the image to mark as inactive
+    
+    Returns: JSON with success status
+    """
+    try:
+        # Get the AdLibrary ID and image URL from the request
+        data = json.loads(request.body)
+        adlibrary_id = data.get('adlibrary_id')
+        image_url = data.get('image_url')
+        
+        if not adlibrary_id or not image_url:
+            return JsonResponse({'error': 'AdLibrary ID and image URL are required'}, status=400)
+        
+        # Log the received data for debugging
+        logger.info(f"Deactivating image for AdLibrary ID: {adlibrary_id} (type: {type(adlibrary_id).__name__})")
+        logger.info(f"Image URL to deactivate: {image_url}")
+        
+        # Try to find by different ID fields
+        try:
+            # First try with primary key (id)
+            adlibrary = AdLibrary.objects.get(id=adlibrary_id)
+        except (AdLibrary.DoesNotExist, ValueError):
+            try:
+                # Then try with ad_id field
+                adlibrary = AdLibrary.objects.get(ad_id=adlibrary_id)
+            except AdLibrary.DoesNotExist:
+                # Log all AdLibrary IDs for debugging
+                all_ids = list(AdLibrary.objects.values_list('id', 'ad_id'))
+                logger.error(f"Could not find AdLibrary with ID {adlibrary_id}. Available IDs: {all_ids[:10]}")
+                return JsonResponse({'error': f'AdLibrary with ID {adlibrary_id} not found'}, status=404)
+        
+        # Get the current ad_image JSON
+        ad_image = adlibrary.ad_image or {}
+        
+        # Mark the image as inactive
+        if isinstance(ad_image, list):
+            # If ad_image is a list, convert it to a dict with all images active
+            ad_image = {url: True for url in ad_image}
+        
+        # Set the specific image URL to inactive
+        ad_image[image_url] = False
+        
+        # Save the updated ad_image JSON
+        adlibrary.ad_image = ad_image
+        adlibrary.save(update_fields=['ad_image'])
+        
+        # Return success response
+        return JsonResponse({
+            'success': True,
+            'adlibrary_id': adlibrary.id,
+            'ad_id': adlibrary.ad_id,
+            'image_url': image_url,
+            'is_active': False
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

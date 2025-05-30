@@ -28,4 +28,7 @@ urlpatterns = [
     path("api/invoices/", views.get_user_invoices, name="get_user_invoices"),
     path("sse/adrequest-updates/", sse.sse_adrequest_updates, name="sse_adrequest_updates"),
     path("proxy-image/", views.proxy_image_download, name="proxy_image_download"),
+    # Nuevas APIs para gestión de imágenes
+    path("api/toggle-favorite/", views.toggle_adlibrary_favorite, name="toggle_adlibrary_favorite"),
+    path("api/deactivate-image/", views.deactivate_adlibrary_image, name="deactivate_adlibrary_image"),
 ]
