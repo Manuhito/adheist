@@ -750,17 +750,9 @@ def adrequest_update(request, pk):
                 image_url = storage.url(saved_name)
                 ad_request.adlibrary_image = image_url
                 
-                # No actualizamos ad_library en modo de imagen personalizada
-                # pero necesitamos asegurarnos de que haya un valor válido
-                if not ad_request.ad_library_id and 'ad_library' in request.POST:
-                    try:
-                        # Intentamos usar un valor predeterminado
-                        default_library = AdLibrary.objects.first()
-                        if default_library:
-                            ad_request.ad_library = default_library
-                    except Exception as e:
-                        # Si falla, devolvemos un error
-                        return JsonResponse({'error': f'No default AdLibrary available: {str(e)}'}, status=400)
+                # Cuando se usa una imagen personalizada, limpiamos el campo ad_library
+                # para evitar mostrar información incorrecta en los componentes posteriores
+                ad_request.ad_library = Null
         else:
             # Modo normal - selección de galería
             if 'ad_library' in request.POST:
