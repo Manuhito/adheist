@@ -730,17 +730,50 @@ def adrequest_update(request, pk):
         if 'canvas_size' in request.POST:
             ad_request.canvas_size = request.POST.get('canvas_size')
 
-        if 'ad_library' in request.POST:
-            ad_library_id = request.POST.get('ad_library')
-            ad_library = get_object_or_404(AdLibrary, id=ad_library_id)
-            ad_request.ad_library = ad_library
-            
-            # Save the selected image URL from frontend if provided
-            if 'adlibrary_image' in request.POST and request.POST.get('adlibrary_image'):
-                ad_request.adlibrary_image = request.POST.get('adlibrary_image')
-            # Fallback to first image if no specific image was selected
-            elif ad_library.ad_image and isinstance(ad_library.ad_image, list) and len(ad_library.ad_image) > 0:
-                ad_request.adlibrary_image = ad_library.ad_image[0]
+        # Verificar si estamos en modo de imagen personalizada
+        is_custom_image = request.POST.get('is_custom_image') == 'true'
+        
+        # Manejar la imagen personalizada primero
+        if is_custom_image:
+            # Handle image upload for adlibrary_image if provided
+            if 'adlibrary_image' in request.FILES:
+                # Get the storage backend from settings
+                from apps.web.storage_backends import PublicMediaStorage
+                storage = PublicMediaStorage()
+                
+                # Save the uploaded image to S3
+                image_file = request.FILES['adlibrary_image']
+                file_name = f"adlibrary_images/{ad_request.id}/{image_file.name}"
+                saved_name = storage.save(file_name, image_file)
+                
+                # Get the URL of the saved image and store it
+                image_url = storage.url(saved_name)
+                ad_request.adlibrary_image = image_url
+                
+                # No actualizamos ad_library en modo de imagen personalizada
+                # pero necesitamos asegurarnos de que haya un valor válido
+                if not ad_request.ad_library_id and 'ad_library' in request.POST:
+                    try:
+                        # Intentamos usar un valor predeterminado
+                        default_library = AdLibrary.objects.first()
+                        if default_library:
+                            ad_request.ad_library = default_library
+                    except Exception as e:
+                        # Si falla, devolvemos un error
+                        return JsonResponse({'error': f'No default AdLibrary available: {str(e)}'}, status=400)
+        else:
+            # Modo normal - selección de galería
+            if 'ad_library' in request.POST:
+                ad_library_id = request.POST.get('ad_library')
+                ad_library = get_object_or_404(AdLibrary, id=ad_library_id)
+                ad_request.ad_library = ad_library
+                
+                # Save the selected image URL from frontend if provided
+                if 'adlibrary_image' in request.POST and request.POST.get('adlibrary_image'):
+                    ad_request.adlibrary_image = request.POST.get('adlibrary_image')
+                # Fallback to first image if no specific image was selected
+                elif ad_library.ad_image and isinstance(ad_library.ad_image, list) and len(ad_library.ad_image) > 0:
+                    ad_request.adlibrary_image = ad_library.ad_image[0]
             
         if 'status' in request.POST:
             new_status = request.POST.get('status')

@@ -5,6 +5,7 @@ import InteractiveBentoGallery from '../../components/ui/interactive-bento-galle
 import { Building, X } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../shadcn/components/ui/tooltip';
 import { NextButton } from '../../components/ui/next-button.jsx';
+import { ImageUpload } from '../../components/ui/image-upload';
 import { useTranslation } from '../../lib/useTranslation';
 
 /**
@@ -24,8 +25,11 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const [selectedCanvasSize, setSelectedCanvasSize] = useState(initialData.canvas_size || null);
   const [selectedAdLibrary, setSelectedAdLibrary] = useState(initialData.ad_library_id || null);
   const [selectedAdLibraryImage, setSelectedAdLibraryImage] = useState(null);
+  const [selectedAdLibraryImageFile, setSelectedAdLibraryImageFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
+  const [showImageUpload, setShowImageUpload] = useState(false);
+  const [isCustomImageMode, setIsCustomImageMode] = useState(false);
 
   // Function to call the API with all filters
   const fetchFilteredResults = () => {
@@ -187,9 +191,10 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
   // Handle next step (create or update ad request)
   const handleNextStep = async () => {
-    // Validate required fields
-    if (!selectedAdLibrary || !selectedCanvasSize) {
-      setSubmitError(t('step_one.validation_error', 'Please select both an ad style and canvas size'));
+    // Validate required fields - debe tener una imagen (de galería o personalizada) y un tamaño de canvas
+    if ((!selectedAdLibrary && !selectedAdLibraryImageFile) || !selectedCanvasSize) {
+      setSubmitError(t('step_one.validation_error', 
+        'Please select an image (from gallery or upload your own) and canvas size'));
       return;
     }
 
@@ -199,12 +204,29 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
     try {
       // Prepare form data
       const formData = new FormData();
-      formData.append('ad_library', selectedAdLibrary);
       formData.append('canvas_size', selectedCanvasSize);
       
-      // Add the selected image URL if available
-      if (selectedAdLibraryImage) {
-        formData.append('adlibrary_image', selectedAdLibraryImage);
+      // Indicador para el backend sobre si estamos usando una imagen personalizada
+      formData.append('is_custom_image', selectedAdLibraryImageFile ? 'true' : 'false');
+      
+      // Si tenemos una imagen personalizada
+      if (selectedAdLibraryImageFile) {
+        // Enviamos un valor predeterminado para ad_library (requerido por el modelo)
+        // El backend usará este valor solo si is_custom_image es false
+        formData.append('ad_library', selectedAdLibrary || '0');
+        
+        // Enviamos el archivo de imagen
+        formData.append('adlibrary_image', selectedAdLibraryImageFile);
+      } 
+      // Si seleccionamos una imagen de la galería
+      else {
+        // Enviamos el ID de la biblioteca de anuncios seleccionada
+        formData.append('ad_library', selectedAdLibrary);
+        
+        // Enviamos la URL de la imagen seleccionada
+        if (selectedAdLibraryImage) {
+          formData.append('adlibrary_image', selectedAdLibraryImage);
+        }
       }
       formData.append('status', 'DRAFT'); // Set status to DRAFT to advance to next step
 
@@ -340,6 +362,11 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
                   const originalId = item.original_id || item.id.split('-')[0] || item.id;
                   setSelectedAdLibrary(originalId);
                   setSelectedAdLibraryImage(item.ad_image || item.url);
+                  // Reset any previously selected image file when selecting from gallery
+                  setSelectedAdLibraryImageFile(null);
+                  setShowImageUpload(false);
+                  // Cambiar al modo de selección de galería
+                  setIsCustomImageMode(false);
                 }}
                 selectedItemId={selectedAdLibrary}
               />
@@ -378,21 +405,90 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
             </div>
 
             {/* Next button - in its own container */}
-            <div className="mt-8 w-full px-4 flex justify-end">
+            {/* Custom image upload option */}
+            <div className="mt-8 w-full flex flex-col items-center">
+              <button 
+                type="button"
+                onClick={() => {
+                  const newValue = !showImageUpload;
+                  setShowImageUpload(newValue);
+                  
+                  // Si estamos mostrando el uploader y no estamos en modo de imagen personalizada,
+                  // limpiar la selección de la galería
+                  if (newValue && !isCustomImageMode) {
+                    setSelectedAdLibrary(null);
+                  }
+                }}
+                className="text-sm text-primary hover:text-primary-dark flex items-center gap-1.5 mb-4"
+              >
+                {showImageUpload ? t('step_one.hide_upload', 'Hide custom image upload') : t('step_one.show_upload', 'Upload your own image')}
+              </button>
+              
+              {showImageUpload && (
+                <div className="w-full max-w-md p-6 border border-gray-200 rounded-lg shadow-sm mb-6">
+                  <div className="space-y-2 mb-4">
+                    <h3 className="text-lg font-medium">{t('step_one.custom_image', 'Custom Image')}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {t('step_one.upload_description', 'Upload your own image to use instead of the selected template')}
+                    </p>
+                  </div>
+                  
+                  <div className="flex justify-center">
+                    <ImageUpload 
+                      onUpload={(url) => {
+                        if (url) {
+                          // When a file is selected, we get a URL from the hook
+                          setSelectedAdLibraryImage(url);
+                          
+                          // Cuando se sube una imagen, siempre activamos el modo de imagen personalizada
+                          // y limpiamos la selección de galería
+                          setIsCustomImageMode(true);
+                          setSelectedAdLibrary(null);
+                          
+                          // Intentamos obtener el archivo para enviarlo al backend
+                          const fileInput = document.querySelector('input[type="file"][accept="image/jpeg,image/png,image/webp"]');
+                          if (fileInput && fileInput.files && fileInput.files[0]) {
+                            setSelectedAdLibraryImageFile(fileInput.files[0]);
+                          }
+                          
+                          console.log('Imagen personalizada seleccionada, modo personalizado:', true);
+                        } else {
+                          // When image is removed
+                          setSelectedAdLibraryImage(null);
+                          setSelectedAdLibraryImageFile(null);
+                          setIsCustomImageMode(false);
+                          console.log('Imagen personalizada eliminada, modo personalizado:', false);
+                        }
+                      }}
+                      customTitle={t('step_one.ad_image', 'Ad Image')}
+                      customDescription={t('step_one.image_description', 'Upload an image to use in your ad')}
+                      customPlaceholderText={t('step_one.select_image', 'Select image')}
+                      initialImage={selectedAdLibraryImage}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="w-full px-4 flex justify-end">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div>
                       <NextButton
                         onClick={handleNextStep}
-                        disabled={!selectedAdLibrary || !selectedCanvasSize || isSubmitting}
+                        disabled={((!selectedAdLibrary && !selectedAdLibraryImageFile) || !selectedCanvasSize || isSubmitting)}
                         isLoading={isSubmitting}
                       />
                     </div>
                   </TooltipTrigger>
-                  {(!selectedAdLibrary || !selectedCanvasSize) && (
+                  {((!selectedAdLibrary && !selectedAdLibraryImageFile) || !selectedCanvasSize) && (
                     <TooltipContent>
-                      <p>{t('step_one.tooltip_validation', 'Please select an image and canvas size')}</p>
+                      <p>
+                        {!selectedCanvasSize 
+                          ? t('step_one.tooltip_canvas', 'Please select a canvas size') 
+                          : t('step_one.tooltip_image', 'Please select an image from the gallery or upload your own image')}
+                      </p>
                     </TooltipContent>
                   )}
                 </Tooltip>
