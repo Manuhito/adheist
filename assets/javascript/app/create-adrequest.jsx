@@ -160,12 +160,12 @@ const CreateAdRequestApp = () => {
     <>
       {/* Delete confirmation dialog - Fuera del contenedor principal para evitar problemas de espaciado */}
       {showDeleteConfirmation && (
-        <div 
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" 
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
           style={{ margin: 0 }}
           onClick={() => setShowDeleteConfirmation(false)} // Cerrar al hacer clic fuera
         >
-          <div 
+          <div
             className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-md w-full mx-4"
             onClick={(e) => e.stopPropagation()} // Evitar que los clics dentro del modal lo cierren
           >
@@ -190,11 +190,11 @@ const CreateAdRequestApp = () => {
                     setShowDeleteConfirmation(false);
                     return;
                   }
-                  
+
                   try {
                     // Get CSRF token from cookies
                     const csrfToken = getCsrfToken();
-                    
+
                     // Call the delete endpoint
                     const response = await fetch(`/ads/adrequest/${adRequestData.id}/delete/`, {
                       method: 'DELETE',
@@ -202,16 +202,16 @@ const CreateAdRequestApp = () => {
                         'X-CSRFToken': csrfToken,
                       }
                     });
-                    
+
                     const data = await response.json();
-                    
+
                     if (!response.ok) {
                       throw new Error(data.error || t('create_adrequest.delete_failed', 'Failed to delete ad request'));
                     }
-                    
+
                     // Close the confirmation dialog
                     setShowDeleteConfirmation(false);
-                    
+
                     // Redirect to the ad requests list page
                     window.location.href = '/ads/';
                   } catch (error) {
@@ -226,67 +226,67 @@ const CreateAdRequestApp = () => {
           </div>
         </div>
       )}
-      
+
       <div className="space-y-8">
-      {/* Header row with title and delete button */}
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">{t('create_adrequest.title', 'Create Ad Request')}</h1>
-        <button 
-          type="button" 
-          className="p-2 text-gray-500 hover:text-red-500 transition-colors duration-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
-          aria-label="Delete ad request"
-          onClick={() => setShowDeleteConfirmation(true)}
-        >
-          <Trash2 className="w-5 h-5" />
-        </button>
-      </div>
-      
+        {/* Header row with title and delete button */}
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl font-bold">{t('create_adrequest.title', 'Create Ad Request')}</h1>
+          <button
+            type="button"
+            className="p-2 text-gray-500 hover:text-red-500 transition-colors duration-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+            aria-label="Delete ad request"
+            onClick={() => setShowDeleteConfirmation(true)}
+          >
+            <Trash2 className="w-5 h-5" />
+          </button>
+        </div>
 
-      
-      {/* Progress indicator */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          {/* Step 1: Select Ad Style */}
-          <div className="flex items-center">
-            <div className={`rounded-full h-8 w-8 flex items-center justify-center ${adRequestData.status === 'NEW' ? 'bg-primary text-white' : 'bg-green-500 text-white'}`}>
-              1
-            </div>
-            <div className="ml-2 text-sm font-medium">
-              {t('create_adrequest.step1', 'Select Ad Style')}
-            </div>
-          </div>
-          <div className="flex-1 mx-4 h-1 bg-gray-200">
-            <div className={`h-full ${adRequestData.status !== 'NEW' ? 'bg-green-500' : 'bg-gray-200'}`} style={{ width: adRequestData.status === 'NEW' ? '0%' : '100%' }}></div>
-          </div>
 
-          {/* Step 2: Configure Ad */}
-          <div className="flex items-center">
-            <div className={`rounded-full h-8 w-8 flex items-center justify-center ${adRequestData.status === 'DRAFT' ? 'bg-primary text-white' : (adRequestData.status === 'NEW' ? 'bg-gray-300 text-gray-600' : 'bg-green-500 text-white')}`}>
-              2
-            </div>
-            <div className="ml-2 text-sm font-medium">
-              {t('create_adrequest.step2', 'Configure Ad')}
-            </div>
-          </div>
-          <div className="flex-1 mx-4 h-1 bg-gray-200">
-            <div className={`h-full ${adRequestData.status === 'FILLED' ? 'bg-green-500' : 'bg-gray-200'}`} style={{ width: adRequestData.status === 'FILLED' ? '100%' : '0%' }}></div>
-          </div>
 
-          {/* Step 3: Review & Submit */}
-          <div className="flex items-center">
-            <div className={`rounded-full h-8 w-8 flex items-center justify-center ${adRequestData.status === 'FILLED' ? 'bg-primary text-white' : 'bg-gray-300 text-gray-600'}`}>
-              3
+        {/* Progress indicator */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            {/* Step 1: Select Ad Style */}
+            <div className="flex items-center">
+              <div className={`rounded-full h-8 w-8 flex items-center justify-center ${adRequestData.status === 'NEW' ? 'bg-primary text-white' : 'bg-green-500 text-white'}`}>
+                1
+              </div>
+              <div className="ml-2 text-sm font-medium">
+                {t('create_adrequest.step1', 'Select Ad Style')}
+              </div>
             </div>
-            <div className="ml-2 text-sm font-medium">
-              {t('create_adrequest.step3', 'Review & Submit')}
+            <div className="flex-1 mx-4 h-1 bg-gray-200">
+              <div className={`h-full ${adRequestData.status !== 'NEW' ? 'bg-green-500' : 'bg-gray-200'}`} style={{ width: adRequestData.status === 'NEW' ? '0%' : '100%' }}></div>
+            </div>
+
+            {/* Step 2: Configure Ad */}
+            <div className="flex items-center">
+              <div className={`rounded-full h-8 w-8 flex items-center justify-center ${adRequestData.status === 'DRAFT' ? 'bg-primary text-white' : (adRequestData.status === 'NEW' ? 'bg-gray-300 text-gray-600' : 'bg-green-500 text-white')}`}>
+                2
+              </div>
+              <div className="ml-2 text-sm font-medium">
+                {t('create_adrequest.step2', 'Configure Ad')}
+              </div>
+            </div>
+            <div className="flex-1 mx-4 h-1 bg-gray-200">
+              <div className={`h-full ${adRequestData.status === 'FILLED' ? 'bg-green-500' : 'bg-gray-200'}`} style={{ width: adRequestData.status === 'FILLED' ? '100%' : '0%' }}></div>
+            </div>
+
+            {/* Step 3: Review & Submit */}
+            <div className="flex items-center">
+              <div className={`rounded-full h-8 w-8 flex items-center justify-center ${adRequestData.status === 'FILLED' ? 'bg-primary text-white' : 'bg-gray-300 text-gray-600'}`}>
+                3
+              </div>
+              <div className="ml-2 text-sm font-medium">
+                {t('create_adrequest.step3', 'Review & Submit')}
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Current step component */}
-      {renderCurrentStep()}
-    </div>
+        {/* Current step component */}
+        {renderCurrentStep()}
+      </div>
     </>
   );
 };

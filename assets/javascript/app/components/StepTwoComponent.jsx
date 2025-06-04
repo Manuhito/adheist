@@ -72,9 +72,14 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     window.scrollTo(0, 0);
   }, []);
 
-  // Fetch adlibrary info cuando tengamos el nombre
+  // Fetch adlibrary info cuando tengamos el nombre o limpia adLibraryData cuando no lo tenemos
   useEffect(() => {
-    if (!initialData.ad_library_name) return;
+    if (!initialData.ad_library_name) {
+      // Si no hay ad_library_name, limpiamos adLibraryData para que se muestre la imagen cargada por el usuario
+      setAdLibraryData(null);
+      return;
+    }
+    
     setIsAdLibraryLoading(true);
     fetch(`/ads/adlibraries/?company_name=${encodeURIComponent(initialData.ad_library_name)}`)
       .then(res => res.json())
