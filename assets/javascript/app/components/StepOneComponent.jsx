@@ -29,6 +29,8 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const [userUploadedImage, setUserUploadedImage] = useState(null);
   const [userUploadedFile, setUserUploadedFile] = useState(null);
   const [imageSource, setImageSource] = useState(initialData.ad_library_id ? 'library' : 'upload');
+  // Key for forcing re-render of ImageUpload component
+  const [imageUploadKey, setImageUploadKey] = useState(Date.now());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
 
@@ -171,13 +173,52 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
   };
 
   // Handle image upload
-  const handleImageUpload = (imageUrl, imageFile) => {
-    setUserUploadedImage(imageUrl);
-    setUserUploadedFile(imageFile);
-    if (imageUrl) {
-      setImageSource('upload');
-      setSelectedAdLibrary(null);
+  const handleImageUpload = async (imageUrl, imageFile) => {
+    console.log('Image upload handler called with:', { imageUrl, imageFile });
+    
+    // If we're removing the image
+    if (!imageUrl) {
+      setUserUploadedImage(null);
+      setUserUploadedFile(null);
+      return;
     }
+    
+    // Process the image URL - similar to StepTwoComponent
+    if (imageUrl.startsWith('blob:')) {
+      try {
+        console.log('Processing blob URL...');
+        // Fetch the blob data
+        const blobResponse = await fetch(imageUrl);
+        const blob = await blobResponse.blob();
+        
+        // Create a File object from the blob
+        const filename = `user_uploaded_image_${Date.now()}.${blob.type.split('/')[1] || 'png'}`;
+        const file = new File([blob], filename, { type: blob.type });
+        
+        console.log('Created file:', file.name, 'type:', file.type, 'size:', file.size);
+        
+        // Store both the URL and the File
+        setUserUploadedImage(imageUrl);
+        setUserUploadedFile(file);
+      } catch (error) {
+        console.error('Error processing blob URL:', error);
+        // If there's an error, use the file provided by the hook if available
+        if (imageFile) {
+          console.log('Using file provided by hook:', imageFile.name);
+          setUserUploadedImage(imageUrl);
+          setUserUploadedFile(imageFile);
+        }
+      }
+    } else {
+      // For non-blob URLs (e.g., server URLs)
+      console.log('Using non-blob URL:', imageUrl);
+      setUserUploadedImage(imageUrl);
+      setUserUploadedFile(imageFile);
+    }
+    
+    // Update UI state
+    setImageSource('upload');
+    setSelectedAdLibrary(null);
   };
 
   // Handle image source change
@@ -185,8 +226,11 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
     setImageSource(value);
     if (value === 'library') {
       setUserUploadedImage(null);
+      setUserUploadedFile(null);
     } else if (value === 'upload') {
       setSelectedAdLibrary(null);
+      // Force re-render of ImageUpload component when switching to upload tab
+      setImageUploadKey(Date.now());
     }
   };
 
@@ -406,6 +450,7 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
           <TabsContent value="upload" className="mt-4">
             <div className="flex flex-col items-center justify-center p-8 border border-gray-200 rounded-lg shadow-sm">
               <ImageUpload 
+                key={imageUploadKey}
                 onUpload={handleImageUpload}
                 customTitle={t('step_one.upload_title', 'Upload Your Image')}
                 customDescription={t('step_one.upload_description', 'Upload an image to use as inspiration for your ad')}
