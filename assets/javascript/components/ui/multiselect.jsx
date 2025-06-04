@@ -112,6 +112,9 @@ export const MultipleSelector = React.forwardRef(
           className={`group relative min-h-[38px] rounded-md border border-input text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 ${value.length > 0 ? 'p-1' : 'px-3 py-2'} ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-text'} ${className || ''}`}
           onClick={() => {
             if (disabled) return;
+            if (!open) {
+              setOpen(true);
+            }
             inputRef?.current?.focus();
           }}
         >
@@ -183,6 +186,7 @@ export const MultipleSelector = React.forwardRef(
             <div 
               className="absolute top-2 z-10 w-full rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in"
               data-state="open"
+              onMouseLeave={() => setOpen(false)} // Close dropdown when mouse leaves the panel
             >
               <CommandList
                 className="bg-popover text-popover-foreground shadow-md outline-none max-h-[200px] overflow-y-auto"
@@ -199,11 +203,13 @@ export const MultipleSelector = React.forwardRef(
                           value={option.value}
                           onMouseDown={(e) => {
                             e.preventDefault();
-                            e.stopPropagation();
+                            e.stopPropagation(); // This is important
                           }}
                           onSelect={() => {
-                            setInputValue("");
+                            // Add the currently highlighted option to the selection
                             onChange([...value, option]);
+                            setInputValue(""); // Clear input after selection
+                            setOpen(false); // Close dropdown after selection
                           }}
                           disabled={option.disable || disabled}
                           className={`cursor-pointer ${option.disable ? "cursor-not-allowed opacity-50" : ""}`}
