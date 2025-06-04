@@ -794,8 +794,21 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
                       )}
                     </div>
                   </>
+                ) : initialData.user_uploaded_image ? (
+                  <>
+                    <img
+                      src={initialData.user_uploaded_image}
+                      alt={t('step_two.user_uploaded_image', 'User Uploaded Image')}
+                      className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
+                    />
+                    {/* Overlay info on hover for user uploaded image */}
+                    <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center items-center text-white p-2">
+                      <h4 className="text-sm font-semibold mb-1">{t('step_two.custom_image', 'Custom Image')}</h4>
+                      <p className="text-xs mb-1 text-center">{t('step_two.user_uploaded', 'User uploaded')}</p>
+                    </div>
+                  </>
                 ) : (
-                  <div className="flex items-center justify-center w-full h-full text-gray-400">{t('step_two.no_image', 'No image')}</div>
+                  <div className="flex items-center justify-center w-full h-full text-gray-400">{t('step_two.no_ad_selected', 'No ad style selected')}</div>
                 )}
               </div>
             </div>

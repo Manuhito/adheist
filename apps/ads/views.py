@@ -658,6 +658,7 @@ def adrequest_get(request, pk):
         'created_at': created_at.isoformat() if created_at else None,
         'updated_at': updated_at.isoformat() if updated_at else None,
         'asset_overrides': safe_get(ad_request, 'asset_overrides'),
+        'user_uploaded_image': safe_image_url(safe_get(ad_request, 'user_uploaded_image')),
         'logo_override': safe_image_url(safe_get(ad_request, 'logo_override')),
         'product_image_1_override': safe_image_url(safe_get(ad_request, 'product_image_1_override')),
         'product_image_2_override': safe_image_url(safe_get(ad_request, 'product_image_2_override')),
@@ -752,10 +753,18 @@ def adrequest_update(request, pk):
         # Save the updated AdRequest
         ad_request.save()
         
-        # Return success response
+        # Helper function to get image URL safely
+        def safe_image_url(image_field):
+            """Convert an ImageFieldFile to its URL string or return None if not available."""
+            if image_field and hasattr(image_field, 'url'):
+                return image_field.url
+            return None
+        
+        # Return success response with user_uploaded_image URL
         return JsonResponse({
             'id': ad_request.id,
             'status': ad_request.status,
+            'user_uploaded_image': safe_image_url(ad_request.user_uploaded_image),
             'message': 'AdRequest updated successfully'
         })
         

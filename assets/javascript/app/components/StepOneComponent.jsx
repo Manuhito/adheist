@@ -342,6 +342,17 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
           completeData.ad_library_id = selectedAdLibrary;
         } else if (imageSource === 'upload') {
           completeData.has_user_uploaded_image = true;
+          
+          // Include the user_uploaded_image URL in the data passed to StepTwoComponent
+          // If we have a response from the server with the URL, use that
+          if (data.user_uploaded_image) {
+            completeData.user_uploaded_image = data.user_uploaded_image;
+          } 
+          // Otherwise, if we have a local blob URL, use that
+          else if (userUploadedImage && userUploadedImage.startsWith('blob:')) {
+            completeData.user_uploaded_image = userUploadedImage;
+            console.log('Passing blob URL to StepTwoComponent:', userUploadedImage);
+          }
         }
         
         onComplete(completeData);
