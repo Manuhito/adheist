@@ -4,7 +4,7 @@ import ReactDOM from "react-dom/client";
 import { AlertNotification } from "../../components/ui/alert-notification";
 
 interface UseImageUploadProps {
-  onUpload?: (url: string | null) => void;
+  onUpload?: (url: string | null, file?: File | null) => void;
   initialImage?: string | null;
 }
 
@@ -77,7 +77,7 @@ export function useImageUpload({ onUpload, initialImage }: UseImageUploadProps =
         const url = URL.createObjectURL(file);
         setPreviewUrl(url);
         previewRef.current = url;
-        onUpload?.(url);
+        onUpload?.(url, file);
       }
     },
     [onUpload],
@@ -94,7 +94,7 @@ export function useImageUpload({ onUpload, initialImage }: UseImageUploadProps =
       fileInputRef.current.value = "";
     }
     // Call onUpload with null to indicate the image should be deleted
-    onUpload?.(null);
+    onUpload?.(null, null);
   }, [previewUrl, onUpload]);
 
   // Initialize with initialImage if provided

@@ -698,8 +698,17 @@ def adrequest_update(request, pk):
         if 'canvas_size' in request.POST:
             ad_request.canvas_size = request.POST.get('canvas_size')
 
-        if 'ad_library' in request.POST:
+        # Handle image source selection (either AdLibrary or user uploaded image)
+        if 'ad_library' in request.POST and request.POST.get('ad_library'):
+            # User selected an AdLibrary image
             ad_request.ad_library = get_object_or_404(AdLibrary, id=request.POST.get('ad_library'))
+            # Clear any user uploaded image to ensure only one source is used
+            ad_request.user_uploaded_image = None
+        elif 'user_uploaded_image' in request.FILES:
+            # User uploaded their own image
+            ad_request.user_uploaded_image = request.FILES['user_uploaded_image']
+            # Clear AdLibrary selection to ensure only one source is used
+            ad_request.ad_library = None
             
         if 'status' in request.POST:
             new_status = request.POST.get('status')

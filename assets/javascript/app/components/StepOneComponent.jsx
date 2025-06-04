@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { SearchComponent } from './SearchComponent';
 import { FilterFormComponent } from './FilterFormComponent';
 import InteractiveBentoGallery from '../../components/ui/interactive-bento-gallery.jsx';
-import { Building, X } from 'lucide-react';
+import { Building, X, Upload, ImageIcon } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../shadcn/components/ui/tooltip';
 import { NextButton } from '../../components/ui/next-button.jsx';
 import { useTranslation } from '../../lib/useTranslation';
+import { ImageUpload } from '../../components/ui/image-upload';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shadcn/components/ui/tabs';
 
 /**
  * Step One Component for the Create Ad Request flow
@@ -23,6 +25,10 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
   // Initialize selected canvas size directly with the size value from initialData
   const [selectedCanvasSize, setSelectedCanvasSize] = useState(initialData.canvas_size || null);
   const [selectedAdLibrary, setSelectedAdLibrary] = useState(initialData.ad_library_id || null);
+  // State for user uploaded image (both URL preview and File object)
+  const [userUploadedImage, setUserUploadedImage] = useState(null);
+  const [userUploadedFile, setUserUploadedFile] = useState(null);
+  const [imageSource, setImageSource] = useState(initialData.ad_library_id ? 'library' : 'upload');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
 
@@ -159,9 +165,29 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
   // Prepare media items for the gallery
   const galleryItems = transformToMediaItems(filteredResults);
 
-  // Handle canvas size selection
-  const handleCanvasSizeChange = (size) => {
-    setSelectedCanvasSize(size);
+  // Handle canvas size change
+  const handleCanvasSizeChange = (sizeId) => {
+    setSelectedCanvasSize(sizeId);
+  };
+
+  // Handle image upload
+  const handleImageUpload = (imageUrl, imageFile) => {
+    setUserUploadedImage(imageUrl);
+    setUserUploadedFile(imageFile);
+    if (imageUrl) {
+      setImageSource('upload');
+      setSelectedAdLibrary(null);
+    }
+  };
+
+  // Handle image source change
+  const handleImageSourceChange = (value) => {
+    setImageSource(value);
+    if (value === 'library') {
+      setUserUploadedImage(null);
+    } else if (value === 'upload') {
+      setSelectedAdLibrary(null);
+    }
   };
 
   // Canvas size options - using actual size values as IDs
@@ -186,8 +212,14 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
   // Handle next step (create or update ad request)
   const handleNextStep = async () => {
     // Validate required fields
-    if (!selectedAdLibrary || !selectedCanvasSize) {
-      setSubmitError(t('step_one.validation_error', 'Please select both an ad style and canvas size'));
+    if ((!selectedAdLibrary && !userUploadedImage) || !selectedCanvasSize) {
+      setSubmitError(t('step_one.validation_error', 'Please select both an image source (gallery or upload) and canvas size'));
+      return;
+    }
+    
+    // Additional validation for upload mode
+    if (imageSource === 'upload' && !userUploadedFile) {
+      setSubmitError(t('step_one.upload_error', 'There was a problem with your uploaded image. Please try again.'));
       return;
     }
 
@@ -197,9 +229,17 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
     try {
       // Prepare form data
       const formData = new FormData();
-      formData.append('ad_library', selectedAdLibrary);
       formData.append('canvas_size', selectedCanvasSize);
       formData.append('status', 'DRAFT'); // Set status to DRAFT to advance to next step
+      
+      // Add either ad_library or user_uploaded_image, but not both
+      if (imageSource === 'library' && selectedAdLibrary) {
+        formData.append('ad_library', selectedAdLibrary);
+      } else if (imageSource === 'upload' && userUploadedFile) {
+        // Append the File object directly
+        formData.append('user_uploaded_image', userUploadedFile);
+        console.log('Appending user uploaded file:', userUploadedFile.name, userUploadedFile.type, userUploadedFile.size);
+      }
 
       let response;
       let data;
@@ -247,12 +287,20 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
       // Call the onComplete callback with the updated ad request data
       if (onComplete) {
-        onComplete({
+        const completeData = {
           id: data.id,
           status: 'DRAFT', // Force status to DRAFT to ensure we move to step 2
-          ad_library_id: selectedAdLibrary,
           canvas_size: selectedCanvasSize
-        });
+        };
+        
+        // Add the appropriate image source data
+        if (imageSource === 'library') {
+          completeData.ad_library_id = selectedAdLibrary;
+        } else if (imageSource === 'upload') {
+          completeData.has_user_uploaded_image = true;
+        }
+        
+        onComplete(completeData);
       }
     } catch (error) {
       console.error('Error processing ad request:', error);
@@ -282,6 +330,8 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const handleGalleryItemSelect = (item) => {
     console.log('Selected gallery item:', item);
     setSelectedAdLibrary(item.id);
+    setImageSource('library');
+    setUserUploadedImage(null);
   };
 
   // Render the component
@@ -317,86 +367,115 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
         onTagsChange={handleTagsChange}
       />
       <div className="mt-8 w-full">
-        {isLoading ? (
-          <div className="flex justify-center my-12">
-            <div className="w-8 h-8 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
-          </div>
-        ) : galleryItems.length > 0 ? (
-          <>
-            <div className="overflow-y-auto max-h-[600px] border border-gray-200 rounded-lg shadow-sm">
-              <InteractiveBentoGallery
-                mediaItems={galleryItems}
-                title={t('step_one.gallery_title', 'Select Your Ideal Ad Style')}
-                description={t('step_one.gallery_description', 'Browse and choose the ad style that best matches your desired outcome')}
-                onItemSelect={(item) => setSelectedAdLibrary(item.id)}
-                selectedItemId={selectedAdLibrary}
-              />
-            </div>
+        <Tabs value={imageSource} onValueChange={handleImageSourceChange} className="w-full mb-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="library" className="flex items-center gap-2">
+              <ImageIcon className="h-4 w-4" />
+              {t('step_one.library_tab', 'Select from Library')}
+            </TabsTrigger>
+            <TabsTrigger value="upload" className="flex items-center gap-2">
+              <Upload className="h-4 w-4" />
+              {t('step_one.upload_tab', 'Upload Your Own')}
+            </TabsTrigger>
+          </TabsList>
 
-            <div className="mt-12 w-full max-w-4xl mx-auto">
-              <div className="space-y-4">
-                <p className="text-lg font-medium text-center">{t('step_one.select_canvas', 'Select a canvas size to proceed')}</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                  {canvasSizes.map((item) => (
-                    <div
-                      key={item.id}
-                      className={`cursor-pointer border-2 rounded-md p-4 flex flex-col items-center justify-center ${selectedCanvasSize === item.id ? "border-primary" : "border-gray-200"
-                        }`}
-                      onClick={() => handleCanvasSizeChange(item.id)}
-                    >
-                      {/* Shape preview that matches the aspect ratio */}
-                      {item.id === "1024x1024" && (
-                        <div className="w-12 h-12 border-2 border-gray-300 rounded-sm mb-2" />
-                      )}
-                      {item.id === "1536x1024" && (
-                        <div className="w-16 h-10 border-2 border-gray-300 rounded-sm mb-2" />
-                      )}
-                      {item.id === "1024x1536" && (
-                        <div className="w-10 h-16 border-2 border-gray-300 rounded-sm mb-2" />
-                      )}
-                      {item.id === "auto" && (
-                        <div className="w-12 h-12 border-2 border-dashed border-gray-300 rounded-full flex items-center justify-center mb-2 text-xs text-gray-400">{t('step_one.auto', 'Auto')}</div>
-                      )}
-                      <div className="font-semibold">{item.label}</div>
-                      <div className="text-sm text-gray-500">{item.size}</div>
-                    </div>
-                  ))}
-                </div>
+          <TabsContent value="library" className="mt-4">
+            {isLoading ? (
+              <div className="flex justify-center my-12">
+                <div className="w-8 h-8 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
               </div>
-            </div>
-
-            {/* Next button - in its own container */}
-            <div className="mt-8 w-full px-4 flex justify-end">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div>
-                      <NextButton
-                        onClick={handleNextStep}
-                        disabled={!selectedAdLibrary || !selectedCanvasSize || isSubmitting}
-                        isLoading={isSubmitting}
-                      />
-                    </div>
-                  </TooltipTrigger>
-                  {(!selectedAdLibrary || !selectedCanvasSize) && (
-                    <TooltipContent>
-                      <p>{t('step_one.tooltip_validation', 'Please select an image and canvas size')}</p>
-                    </TooltipContent>
-                  )}
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-
-            {/* Error message */}
-            {submitError && (
-              <div className="mt-4 w-full max-w-4xl mx-auto p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm">
-                {submitError}
+            ) : galleryItems.length > 0 ? (
+              <>
+                <div className="overflow-y-auto max-h-[600px] border border-gray-200 rounded-lg shadow-sm">
+                  <InteractiveBentoGallery
+                    mediaItems={galleryItems}
+                    title={t('step_one.gallery_title', 'Select Your Ideal Ad Style')}
+                    description={t('step_one.gallery_description', 'Browse and choose the ad style that best matches your desired outcome')}
+                    onItemSelect={handleGalleryItemSelect}
+                    selectedItemId={selectedAdLibrary}
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="p-8 text-center text-gray-500">
+                {t('step_one.no_results', 'No results found. Try adjusting your filters.')}
               </div>
             )}
-          </>
-        ) : (
-          <div className="text-center my-12 p-8 bg-gray-50 rounded-lg">
-            <p className="text-gray-500 text-lg">{t('step_one.no_results', 'No ad examples found. Try adjusting your filters.')}</p>
+          </TabsContent>
+
+          <TabsContent value="upload" className="mt-4">
+            <div className="flex flex-col items-center justify-center p-8 border border-gray-200 rounded-lg shadow-sm">
+              <ImageUpload 
+                onUpload={handleImageUpload}
+                customTitle={t('step_one.upload_title', 'Upload Your Image')}
+                customDescription={t('step_one.upload_description', 'Upload an image to use as inspiration for your ad')}
+                initialImage={userUploadedImage}
+              />
+              <p className="mt-4 text-sm text-muted-foreground text-center max-w-md">
+                {t('step_one.upload_help', 'Your uploaded image will be used as inspiration for generating your ad creative')}
+              </p>
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        {/* Canvas size selection */}
+        <div className="mt-12 w-full max-w-4xl mx-auto">
+          <div className="space-y-4">
+            <p className="text-lg font-medium text-center">{t('step_one.select_canvas', 'Select a canvas size to proceed')}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              {canvasSizes.map((item) => (
+                <div
+                  key={item.id}
+                  className={`cursor-pointer border-2 rounded-md p-4 flex flex-col items-center justify-center ${selectedCanvasSize === item.id ? "border-primary" : "border-gray-200"}`}
+                  onClick={() => handleCanvasSizeChange(item.id)}
+                >
+                  {/* Shape preview that matches the aspect ratio */}
+                  {item.id === "1024x1024" && (
+                    <div className="w-12 h-12 border-2 border-gray-300 rounded-sm mb-2" />
+                  )}
+                  {item.id === "1536x1024" && (
+                    <div className="w-16 h-10 border-2 border-gray-300 rounded-sm mb-2" />
+                  )}
+                  {item.id === "1024x1536" && (
+                    <div className="w-10 h-16 border-2 border-gray-300 rounded-sm mb-2" />
+                  )}
+                  {item.id === "auto" && (
+                    <div className="w-12 h-12 border-2 border-dashed border-gray-300 rounded-full flex items-center justify-center mb-2 text-xs text-gray-400">{t('step_one.auto', 'Auto')}</div>
+                  )}
+                  <div className="font-semibold">{item.label}</div>
+                  <div className="text-sm text-gray-500">{item.size}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Next button - in its own container */}
+        <div className="mt-8 w-full px-4 flex justify-end">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div>
+                  <NextButton
+                    onClick={handleNextStep}
+                    disabled={(!selectedAdLibrary && !userUploadedImage) || !selectedCanvasSize || isSubmitting}
+                    isLoading={isSubmitting}
+                  />
+                </div>
+              </TooltipTrigger>
+              {((!selectedAdLibrary && !userUploadedImage) || !selectedCanvasSize) && (
+                <TooltipContent>
+                  <p>{t('step_one.tooltip_validation', 'Please select an image source and canvas size')}</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+
+        {/* Error message */}
+        {submitError && (
+          <div className="mt-4 w-full max-w-4xl mx-auto p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm">
+            {submitError}
           </div>
         )}
       </div>
