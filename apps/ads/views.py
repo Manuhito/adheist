@@ -1218,9 +1218,9 @@ def billing_page(request):
     current_plan_name = None
     
     # Define the hierarchy of plans (including Free for reference)
-    tier_order = ["Free", "Starter", "Pro", "Enterprise"]
+    tier_order = ["Free", "Starter", "Pro"]
     # Define the hierarchy of plans without Free for the billing page
-    tier_order_without_free = ["Starter", "Pro", "Enterprise"]
+    tier_order_without_free = ["Starter", "Pro"]
     
     if request.user.is_authenticated and request.user.has_active_subscription():
         current_plan_id = request.user.active_stripe_subscription.plan.product.id
@@ -1318,36 +1318,10 @@ def billing_page(request):
             
             pricing_data["tiers"].append(tier)
     
-    # Add Enterprise plan with original values
-    # Check if Enterprise plan should be disabled
-    enterprise_disabled = False
-    if current_plan_name == "Enterprise":
-        enterprise_disabled = False  # Never disable current plan
+    # Enterprise plan has been removed
     
-    enterprise_plan = {
-        "name": "Enterprise",
-        "description": "For large organizations",
-        "price": {
-            "monthly": "Custom",
-            "yearly": "Custom"
-        },
-        "features": [
-            "Unlimited ad requests",
-            "Custom templates",
-            "Dedicated support",
-            "API access",
-            "Advanced analytics"
-        ],
-        "cta": "Contact Sales",
-        "highlighted": False,
-        "popular": False,
-        "is_current_plan": current_plan_name == "Enterprise",
-        "is_disabled": enterprise_disabled
-    }
-    pricing_data["tiers"].append(enterprise_plan)
-    
-    # Sort tiers in the correct order: Starter, Pro, Enterprise
-    tier_order_without_free = ["Starter", "Pro", "Enterprise"]
+    # Sort tiers in the correct order: Starter, Pro
+    tier_order_without_free = ["Starter", "Pro"]
     pricing_data["tiers"] = sorted(
         pricing_data["tiers"], 
         key=lambda x: tier_order_without_free.index(x["name"]) if x["name"] in tier_order_without_free else 999
