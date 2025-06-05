@@ -1210,8 +1210,36 @@ def billing_page(request):
     pricing_data = {
         "title": "Pricing Plans",
         "subtitle": "Choose the perfect plan for your needs",
-        "frequencies": ["monthly", "yearly"],
-        "tiers": []
+        "frequencies": ["monthly", "usage"],
+        "tiers": [],
+        "usagePackages": [
+            {
+                "name": "Package 1",
+                "description": "Basic usage package",
+                "price": 100,
+                "priceId": "price_package_1",
+                "features": [
+                    "100 images",
+                    "200 revisions"
+                ],
+                "cta": "Buy Package",
+                "highlighted": True,
+                "popular": False
+            },
+            {
+                "name": "Package 2",
+                "description": "Advanced usage package",
+                "price": 200,
+                "priceId": "price_package_2",
+                "features": [
+                    "200 images",
+                    "500 revisions"
+                ],
+                "cta": "Buy Package",
+                "highlighted": False,
+                "popular": True
+            }
+        ]
     }
     # Get current user's subscription plan ID if available
     current_plan_id = None
@@ -1264,7 +1292,7 @@ def billing_page(request):
         if slug in product_mapping:
             # Get prices
             monthly_price = product._get_price(PlanInterval.month, fail_hard=False)
-            yearly_price = product._get_price(PlanInterval.year, fail_hard=False)
+            # No more yearly prices
             
             # Check if this is the current plan
             is_current_plan = current_plan_id == product.product.id
@@ -1289,19 +1317,12 @@ def billing_page(request):
             else:
                 price_data["monthly"] = "Custom"
                 
-            if yearly_price:
-                try:
-                    price_data["yearly"] = int(yearly_price.unit_amount / 100)
-                except (TypeError, ValueError):
-                    price_data["yearly"] = product.get_price_display(yearly_price)
-            else:
-                price_data["yearly"] = "Custom"
+            # No more yearly prices
             
             # Add price IDs to price data
             if monthly_price:
                 price_data["monthlyPriceId"] = monthly_price.id
-            if yearly_price:
-                price_data["yearlyPriceId"] = yearly_price.id
+            # No more yearly price IDs
                 
             # Create tier data
             tier = {

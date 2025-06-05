@@ -1,6 +1,6 @@
-import * as React from "react"
+import * as React from "react";
 import { PricingCard } from "@/shadcn/components/ui/pricing-card";
-import { Tab } from "@/shadcn/components/ui/pricing-tab"
+import { Tab } from "@/shadcn/components/ui/pricing-tab";
 
 export function PricingSection({
   title,
@@ -11,13 +11,46 @@ export function PricingSection({
   hasActiveSubscription,
   t
 }) {
-  const [selectedFrequency, setSelectedFrequency] = React.useState(frequencies[0].key)
-  console.log("data on ps:", { title, subtitle, tiers, frequencies, onSubscribe })
-
-  // Función para manejar la suscripción que incluye la frecuencia y el plan
-  const handleSubscribe = (priceId, tier) => {
-    if (onSubscribe) {
-      onSubscribe(priceId, selectedFrequency, tier);
+  const [selectedFrequency, setSelectedFrequency] = React.useState(frequencies[0].key);
+  
+  // Determine which products to show based on selected frequency
+  const renderProducts = () => {
+    // Check if we're in usage mode and usagePackages exist in window.__PRICING_DATA__
+    if (selectedFrequency === "usage" && window.__PRICING_DATA__?.usagePackages) {
+      // Show usage-based packages
+      return window.__PRICING_DATA__.usagePackages.map((packageItem) => (
+        <PricingCard
+          key={packageItem.name}
+          tier={{
+            name: packageItem.name,
+            description: packageItem.description,
+            price: { monthly: packageItem.price },  // Use monthly field for display
+            features: packageItem.features,
+            cta: packageItem.cta,
+            highlighted: packageItem.highlighted,
+            popular: packageItem.popular,
+            is_current_plan: false,
+            is_disabled: false
+          }}
+          paymentFrequency="package"
+          priceId={packageItem.priceId}
+          onSubscribe={() => onSubscribe(packageItem.priceId, "usage", packageItem)}
+          hasActiveSubscription={false}
+          t={t}
+        />
+      ));
+    } else {
+      // Show subscription tiers
+      return tiers.map((tier) => (
+        <PricingCard
+          key={tier.name}
+          tier={tier}
+          paymentFrequency={selectedFrequency}
+          onSubscribe={(priceId) => onSubscribe(priceId, selectedFrequency, tier)}
+          hasActiveSubscription={hasActiveSubscription}
+          t={t}
+        />
+      ));
     }
   };
 
@@ -32,24 +65,15 @@ export function PricingSection({
           {frequencies.map((freq) => (
             <Tab
               key={freq.key}
-              text={freq.label}
+              text={freq.key === "usage" ? "Usage Based Packages" : freq.label}
               selected={selectedFrequency === freq.key}
               setSelected={() => setSelectedFrequency(freq.key)}
-              discount={freq.key === "yearly"} />
+              discount={freq.key === "usage"} />
           ))}
         </div>
       </div>
       <div className={`grid w-full max-w-6xl gap-6 sm:grid-cols-2 ${tiers.length === 3 ? 'xl:grid-cols-3' : 'xl:grid-cols-4'} justify-center`}>
-        {tiers.map((tier) => (
-          <PricingCard
-            key={tier.name}
-            tier={tier}
-            paymentFrequency={selectedFrequency}
-            onSubscribe={(priceId) => handleSubscribe(priceId, tier)}
-            hasActiveSubscription={hasActiveSubscription}
-            t={t}
-          />
-        ))}
+        {renderProducts()}
       </div>
     </section>
   );

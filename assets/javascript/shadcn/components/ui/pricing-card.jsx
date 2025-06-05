@@ -13,19 +13,21 @@ export function PricingCard({
   paymentFrequency,
   onSubscribe,
   hasActiveSubscription,
-  t
+  t,
+  priceId: externalPriceId
 }) {
-  const price = tier.price[paymentFrequency]
+  // Para paquetes basados en uso, usamos el precio mensual como base
+  const price = paymentFrequency === 'package' ? tier.price.monthly : tier.price[paymentFrequency]
   const isHighlighted = tier.highlighted
   const isPopular = tier.popular
   const isCurrentPlan = tier.is_current_plan
   const isDisabled = tier.is_disabled
   console.log("Pricing card data:", { tier, paymentFrequency, onSubscribe, isDisabled })
 
-  // Get the correct Stripe price ID based on payment frequency
-  const priceId = paymentFrequency === 'monthly'
+  // Get the correct Stripe price ID based on payment frequency or use provided priceId
+  const priceId = externalPriceId || (paymentFrequency === 'monthly'
     ? tier.price?.monthlyPriceId
-    : tier.price?.yearlyPriceId;
+    : tier.price?.usagePriceId);
 
   // Determinar si es un upgrade o downgrade en relación al plan actual
   const isUpgrade = hasActiveSubscription && !isCurrentPlan && !isDisabled;
@@ -36,7 +38,7 @@ export function PricingCard({
       return t('pricing.current_plan', 'Current Plan');
     } else if (hasActiveSubscription) {
       // Si ya tiene una suscripción y no es el plan actual, mostrar "Cambiar a este plan"
-      return isUpgrade 
+      return isUpgrade
         ? t('pricing.upgrade_to_plan', 'Upgrade to this plan')
         : t('pricing.downgrade_to_plan', 'Downgrade to this plan');
     } else {
@@ -80,7 +82,9 @@ export function PricingCard({
               value={price}
               className="text-4xl font-medium" />
             <p className="-mt-2 text-xs text-muted-foreground">
-              {t('pricing.per_month', 'Per month')}
+              {paymentFrequency === 'package' 
+                ? t('pricing.one_time', 'One-time package') 
+                : t('pricing.per_month', 'Per month')}
             </p>
           </>
         ) : (
