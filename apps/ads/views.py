@@ -21,7 +21,7 @@ from django.conf import settings
 
 from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion
 from .forms import AdLibraryForm
-from .services import can_create_ad_request, use_credit, can_create_ad_request_version, get_ad_request_version_limit
+from .services import can_create_ad_request, use_credit, can_create_ad_request_version, get_ad_request_version_limit, use_general_credit, use_version_credit, can_create_ad_version
 import boto3
 
 # A reasonable value for pagination would be 10 or 20 entries per page.
@@ -900,8 +900,8 @@ def adrequest_version_create(request):
             task_id = task.id
             print(f"Image generation task (ID: {task_id}) started for AdRequestVersion {version.id}")
             
-            # Use a credit
-            use_credit(request.user)
+            # Use a general credit for new versions created from StepThreeComponent.jsx
+            use_general_credit(request.user)
             
         except Exception as img_error:
             print(f"Error starting image generation task: {str(img_error)}")
@@ -1006,6 +1006,9 @@ def adrequest_revision_create(request):
             
             task_id = task.id
             print(f"Image revision task (ID: {task_id}) started for AdRequestVersion {version.id}")
+            
+            # Use a version credit for revisions created from revision-adrequest.jsx
+            use_version_credit(request.user)
             
         except Exception as img_error:
             print(f"Error starting image revision task: {str(img_error)}")

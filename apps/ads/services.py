@@ -3,10 +3,10 @@ from apps.subscriptions.metadata import ACTIVE_PRODUCTS_BY_ID
 from apps.ads.models import AppConfiguration
 
 def get_ad_request_limit(user):
-    """Get the AdRequest limit for a user based on their subscription"""
+    """Get the general credits limit for a user based on their subscription"""
     # Get all limits from configuration
     limits = AppConfiguration.get_limits()
-    default_limit = limits['default']['ad_request_limit']
+    default_limit = limits['default']['general_credits']
     
     if not user.has_active_subscription():
         return default_limit
@@ -21,44 +21,85 @@ def get_ad_request_limit(user):
     # Get plan type (slug) and return corresponding limit
     plan_type = product_meta.slug
     if plan_type in limits:
-        return limits[plan_type]['ad_request_limit']
+        return limits[plan_type]['general_credits']
     
     return default_limit
 
 def can_create_ad_request(user):
-    """Check if user can create a new AdRequest"""
+    """Check if user can create a new AdRequest (uses general_credits)"""
     from apps.ads.models import AdRequestUsage, ExtraCredit
     
     # Get current usage record
     usage = AdRequestUsage.get_current_usage(user)
     
-    # First check if user has remaining regular credits
-    if usage.remaining_credits > 0:
+    # First check if user has remaining general credits
+    if usage.general_credits > 0:
         return True
     
     # If no regular credits, check for extra credits
     extra_credits = ExtraCredit.get_or_create(user)
-    return extra_credits.credits > 0
+    return extra_credits.general_credits > 0
 
-def use_credit(user):
-    """Use one credit from the user's available credits"""
+def can_create_ad_version(user):
+    """Check if user can create a new version of an existing AdRequest (uses version_credits)"""
+    from apps.ads.models import AdRequestUsage, ExtraCredit
+    
+    # Get current usage record
+    usage = AdRequestUsage.get_current_usage(user)
+    
+    # First check if user has remaining version credits
+    if usage.version_credits > 0:
+        return True
+    
+    # If no regular credits, check for extra credits
+    extra_credits = ExtraCredit.get_or_create(user)
+    return extra_credits.version_credits > 0
+
+def use_general_credit(user):
+    """Use one general credit from the user's available credits"""
     from apps.ads.models import AdRequestUsage, ExtraCredit
     
     usage = AdRequestUsage.get_current_usage(user)
     
-    # First try to use regular credits
-    if usage.remaining_credits > 0:
-        usage.remaining_credits -= 1
+    # First try to use regular general credits
+    if usage.general_credits > 0:
+        usage.general_credits -= 1
         usage.save()
         return usage
     
     # If no regular credits, try to use extra credits
-    if ExtraCredit.use_credit(user):
+    if ExtraCredit.use_general_credit(user):
         # Return the usage object for consistency, even though we used an extra credit
         return usage
     
     # No credits available
     return usage
+
+def use_version_credit(user):
+    """Use one version credit from the user's available credits"""
+    from apps.ads.models import AdRequestUsage, ExtraCredit
+    
+    usage = AdRequestUsage.get_current_usage(user)
+    
+    # First try to use regular version credits
+    if usage.version_credits > 0:
+        usage.version_credits -= 1
+        usage.save()
+        return usage
+    
+    # If no regular credits, try to use extra credits
+    if ExtraCredit.use_version_credit(user):
+        # Return the usage object for consistency, even though we used an extra credit
+        return usage
+    
+    # No credits available
+    return usage
+
+# Mantener la función original para compatibilidad con código existente
+# pero ahora usa general_credits internamente
+def use_credit(user):
+    """Use one credit from the user's available credits (uses general_credits for backward compatibility)"""
+    return use_general_credit(user)
 
 # Funciones para el control de versiones de AdRequest
 
