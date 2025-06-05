@@ -98,9 +98,14 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const [adLibraryData, setAdLibraryData] = useState(null);
   const [isAdLibraryLoading, setIsAdLibraryLoading] = useState(false);
 
-  // Fetch adlibrary info cuando tengamos el nombre
+  // Fetch adlibrary info cuando tengamos el nombre o limpia adLibraryData cuando no lo tenemos
   useEffect(() => {
-    if (!initialData.ad_library_name) return;
+    if (!initialData.ad_library_name) {
+      // Si no hay ad_library_name, limpiamos adLibraryData para que se muestre la imagen cargada por el usuario
+      setAdLibraryData(null);
+      return;
+    }
+    
     setIsAdLibraryLoading(true);
     fetch(`/ads/adlibraries/?company_name=${encodeURIComponent(initialData.ad_library_name)}`)
       .then(res => res.json())
@@ -290,6 +295,19 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
                       {adLibraryData.tags && adLibraryData.tags.length > 0 && (
                         <p className="text-xs text-blue-200">{adLibraryData.tags.join(', ')}</p>
                       )}
+                    </div>
+                  </>
+                ) : initialData.user_uploaded_image ? (
+                  <>
+                    <img
+                      src={initialData.user_uploaded_image}
+                      alt={t('step_three.user_uploaded_image', 'User Uploaded Image')}
+                      className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
+                    />
+                    {/* Overlay info on hover for user uploaded image */}
+                    <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center items-center text-white p-2">
+                      <h4 className="text-sm font-semibold mb-1">{t('step_three.custom_image', 'Custom Image')}</h4>
+                      <p className="text-xs mb-1 text-center">{t('step_three.user_uploaded', 'User uploaded')}</p>
                     </div>
                   </>
                 ) : (

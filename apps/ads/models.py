@@ -187,6 +187,8 @@ class AdRequest(BaseModel):
     
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     ad_library = models.ForeignKey(AdLibrary, on_delete=models.CASCADE, null=True, blank=True)
+    user_uploaded_image = models.ImageField(upload_to="user_uploads/", null=True, blank=True, 
+                                          help_text="User uploaded image as an alternative to selecting from AdLibrary")
     base_assets = models.ForeignKey(AdRequestAssets, on_delete=models.PROTECT, related_name="ad_requests", null=True, blank=True)
     asset_overrides = models.JSONField(default=dict, blank=True, encoder=DjangoJSONEncoder,
                                       help_text="Stores overrides for specific asset fields")

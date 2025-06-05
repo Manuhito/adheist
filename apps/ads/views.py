@@ -658,6 +658,7 @@ def adrequest_get(request, pk):
         'created_at': created_at.isoformat() if created_at else None,
         'updated_at': updated_at.isoformat() if updated_at else None,
         'asset_overrides': safe_get(ad_request, 'asset_overrides'),
+        'user_uploaded_image': safe_image_url(safe_get(ad_request, 'user_uploaded_image')),
         'logo_override': safe_image_url(safe_get(ad_request, 'logo_override')),
         'product_image_1_override': safe_image_url(safe_get(ad_request, 'product_image_1_override')),
         'product_image_2_override': safe_image_url(safe_get(ad_request, 'product_image_2_override')),
@@ -698,8 +699,17 @@ def adrequest_update(request, pk):
         if 'canvas_size' in request.POST:
             ad_request.canvas_size = request.POST.get('canvas_size')
 
-        if 'ad_library' in request.POST:
+        # Handle image source selection (either AdLibrary or user uploaded image)
+        if 'ad_library' in request.POST and request.POST.get('ad_library'):
+            # User selected an AdLibrary image
             ad_request.ad_library = get_object_or_404(AdLibrary, id=request.POST.get('ad_library'))
+            # Clear any user uploaded image to ensure only one source is used
+            ad_request.user_uploaded_image = None
+        elif 'user_uploaded_image' in request.FILES:
+            # User uploaded their own image
+            ad_request.user_uploaded_image = request.FILES['user_uploaded_image']
+            # Clear AdLibrary selection to ensure only one source is used
+            ad_request.ad_library = None
             
         if 'status' in request.POST:
             new_status = request.POST.get('status')
@@ -743,10 +753,18 @@ def adrequest_update(request, pk):
         # Save the updated AdRequest
         ad_request.save()
         
-        # Return success response
+        # Helper function to get image URL safely
+        def safe_image_url(image_field):
+            """Convert an ImageFieldFile to its URL string or return None if not available."""
+            if image_field and hasattr(image_field, 'url'):
+                return image_field.url
+            return None
+        
+        # Return success response with user_uploaded_image URL
         return JsonResponse({
             'id': ad_request.id,
             'status': ad_request.status,
+            'user_uploaded_image': safe_image_url(ad_request.user_uploaded_image),
             'message': 'AdRequest updated successfully'
         })
         
