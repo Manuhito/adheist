@@ -68,12 +68,36 @@ export function PricingSection({
               text={freq.key === "usage" ? "Usage Based Packages" : freq.label}
               selected={selectedFrequency === freq.key}
               setSelected={() => setSelectedFrequency(freq.key)}
-              discount={freq.key === "usage"} />
+              discount={freq.key === "usage"}
+              isUsageTab={freq.key === "usage"} />
           ))}
         </div>
       </div>
-      <div className={`grid w-full max-w-6xl gap-6 sm:grid-cols-2 ${tiers.length === 3 ? 'xl:grid-cols-3' : 'xl:grid-cols-4'} justify-center`}>
-        {renderProducts()}
+      <div className="w-full max-w-6xl mx-auto">
+        <div className={`grid gap-6 sm:grid-cols-2 ${tiers.length === 3 ? 'xl:grid-cols-3' : 'xl:grid-cols-4'}`}>
+          {/* Renderizar productos con columnas vacías al inicio para centrar */}
+          {(() => {
+            const products = renderProducts();
+            const totalCols = tiers.length === 3 ? 3 : 4;
+            const productCount = products.length;
+            
+            // Si hay menos productos que columnas, agregar columnas vacías al inicio
+            if (productCount < totalCols) {
+              const emptyColsToAdd = Math.floor((totalCols - productCount) / 2);
+              const result = [];
+              
+              // Agregar columnas vacías al inicio
+              for (let i = 0; i < emptyColsToAdd; i++) {
+                result.push(<div key={`empty-${i}`} className="hidden xl:block"></div>);
+              }
+              
+              // Agregar los productos
+              return [...result, ...products];
+            }
+            
+            return products;
+          })()}
+        </div>
       </div>
     </section>
   );
