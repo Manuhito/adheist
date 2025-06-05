@@ -189,7 +189,7 @@ def update_subscription(subscription_holder: CustomUser, new_price_id: str) -> S
         # Calculate the appropriate quantity
         quantity = _get_quantity(new_price_id, subscription_holder)
         
-        # Update the subscription in Stripe with parameters for immediate billing
+        # Update the subscription in Stripe with parameters for a new billing period
         updated_subscription = stripe.Subscription.modify(
             subscription_id,
             items=[{
@@ -197,10 +197,10 @@ def update_subscription(subscription_holder: CustomUser, new_price_id: str) -> S
                 'price': new_price_id,
                 'quantity': quantity,
             }],
-            # Crear prorrateos y cobrarlos inmediatamente
-            proration_behavior='always_invoice',  # Siempre crear factura para los prorrateos
+            # Configuración para eliminar el prorrateo y comenzar un nuevo período de facturación
+            proration_behavior='none',  # No crear prorrateos
+            billing_cycle_anchor='now',  # Comenzar un nuevo período de facturación ahora
             payment_behavior='error_if_incomplete',  # Cobrar inmediatamente y devolver error si falla
-            billing_cycle_anchor='unchanged',  # Mantener el ciclo de facturación original
             # Expandir los items para obtener información completa
             expand=['items'],
         )

@@ -1210,17 +1210,45 @@ def billing_page(request):
     pricing_data = {
         "title": "Pricing Plans",
         "subtitle": "Choose the perfect plan for your needs",
-        "frequencies": ["monthly", "yearly"],
-        "tiers": []
+        "frequencies": ["monthly", "usage"],
+        "tiers": [],
+        "usagePackages": [
+            {
+                "name": "Package 1",
+                "description": "Basic usage package",
+                "price": 100,
+                "priceId": "price_package_1",
+                "features": [
+                    "100 images",
+                    "200 revisions"
+                ],
+                "cta": "Buy Package",
+                "highlighted": True,
+                "popular": False
+            },
+            {
+                "name": "Package 2",
+                "description": "Advanced usage package",
+                "price": 200,
+                "priceId": "price_package_2",
+                "features": [
+                    "200 images",
+                    "500 revisions"
+                ],
+                "cta": "Buy Package",
+                "highlighted": False,
+                "popular": True
+            }
+        ]
     }
     # Get current user's subscription plan ID if available
     current_plan_id = None
     current_plan_name = None
     
     # Define the hierarchy of plans (including Free for reference)
-    tier_order = ["Free", "Starter", "Pro", "Enterprise"]
+    tier_order = ["Free", "Starter", "Pro"]
     # Define the hierarchy of plans without Free for the billing page
-    tier_order_without_free = ["Starter", "Pro", "Enterprise"]
+    tier_order_without_free = ["Starter", "Pro"]
     
     if request.user.is_authenticated and request.user.has_active_subscription():
         current_plan_id = request.user.active_stripe_subscription.plan.product.id
@@ -1264,7 +1292,7 @@ def billing_page(request):
         if slug in product_mapping:
             # Get prices
             monthly_price = product._get_price(PlanInterval.month, fail_hard=False)
-            yearly_price = product._get_price(PlanInterval.year, fail_hard=False)
+            # No more yearly prices
             
             # Check if this is the current plan
             is_current_plan = current_plan_id == product.product.id
@@ -1289,19 +1317,12 @@ def billing_page(request):
             else:
                 price_data["monthly"] = "Custom"
                 
-            if yearly_price:
-                try:
-                    price_data["yearly"] = int(yearly_price.unit_amount / 100)
-                except (TypeError, ValueError):
-                    price_data["yearly"] = product.get_price_display(yearly_price)
-            else:
-                price_data["yearly"] = "Custom"
+            # No more yearly prices
             
             # Add price IDs to price data
             if monthly_price:
                 price_data["monthlyPriceId"] = monthly_price.id
-            if yearly_price:
-                price_data["yearlyPriceId"] = yearly_price.id
+            # No more yearly price IDs
                 
             # Create tier data
             tier = {
@@ -1318,36 +1339,10 @@ def billing_page(request):
             
             pricing_data["tiers"].append(tier)
     
-    # Add Enterprise plan with original values
-    # Check if Enterprise plan should be disabled
-    enterprise_disabled = False
-    if current_plan_name == "Enterprise":
-        enterprise_disabled = False  # Never disable current plan
+    # Enterprise plan has been removed
     
-    enterprise_plan = {
-        "name": "Enterprise",
-        "description": "For large organizations",
-        "price": {
-            "monthly": "Custom",
-            "yearly": "Custom"
-        },
-        "features": [
-            "Unlimited ad requests",
-            "Custom templates",
-            "Dedicated support",
-            "API access",
-            "Advanced analytics"
-        ],
-        "cta": "Contact Sales",
-        "highlighted": False,
-        "popular": False,
-        "is_current_plan": current_plan_name == "Enterprise",
-        "is_disabled": enterprise_disabled
-    }
-    pricing_data["tiers"].append(enterprise_plan)
-    
-    # Sort tiers in the correct order: Starter, Pro, Enterprise
-    tier_order_without_free = ["Starter", "Pro", "Enterprise"]
+    # Sort tiers in the correct order: Starter, Pro
+    tier_order_without_free = ["Starter", "Pro"]
     pricing_data["tiers"] = sorted(
         pricing_data["tiers"], 
         key=lambda x: tier_order_without_free.index(x["name"]) if x["name"] in tier_order_without_free else 999

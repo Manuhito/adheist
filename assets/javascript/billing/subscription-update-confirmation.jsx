@@ -141,7 +141,7 @@ export function SubscriptionUpdateConfirmation({ currentPlan, newPlan, frequency
             </h1>
 
             <p className="text-muted-foreground mb-8">
-                {t('billing.subscription_update_description', 'You are about to change your subscription plan. Stripe will automatically adjust your billing based on the remaining time in your current billing cycle.')}
+                {t('billing.subscription_update_description', 'You are about to change your subscription plan. This will start a new billing period immediately, and any remaining credits from your current plan will be transferred to your new subscription.')}
             </p>
 
             <div className="grid gap-8 md:grid-cols-2">
@@ -245,14 +245,15 @@ export function SubscriptionUpdateConfirmation({ currentPlan, newPlan, frequency
             </div>
 
             <div className="mt-8 p-6 bg-muted rounded-lg">
-                <h3 className="font-medium mb-2">{t('billing.price_adjustment', 'Price Adjustment')}</h3>
+                <h3 className="font-medium mb-2">{t('billing.plan_change', 'Plan Change Information')}</h3>
                 <p className="text-sm mb-4">
-                    {isUpgrade
-                        ? t('billing.upgrade_proration', 'You will be charged the prorated difference for the remainder of your current billing cycle.')
-                        : t('billing.downgrade_proration', 'You will receive a credit for the unused portion of your current plan that will be applied to your next invoice.')}
+                    {t('billing.new_billing_period', 'Your subscription will be updated immediately and a new billing period will begin today.')}
+                </p>
+                <p className="text-sm mb-4">
+                    {t('billing.credit_transfer', 'Any remaining credits from your current plan will be transferred to your new subscription.')}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                    {t('billing.stripe_calculation', 'Stripe will automatically calculate the exact amount based on your remaining days in the current billing cycle.')}
+                    {t('billing.immediate_change', 'This change will take effect immediately upon confirmation.')}
                 </p>
             </div>
 

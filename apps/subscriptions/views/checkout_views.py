@@ -89,7 +89,7 @@ def update_subscription_view(request):
         messages.success(
             request, 
             f"Your subscription has been updated to {subscription_name}. "
-            "The price adjustment will be reflected in your next invoice."
+            "A new billing period has started today and any remaining credits have been transferred."
         )
         
     except SubscriptionConfigError as e:
@@ -127,7 +127,7 @@ def update_subscription_api(request):
         # Return success response
         return JsonResponse({
             "success": True, 
-            "message": f"Your subscription has been updated to {subscription_name}",
+            "message": f"Your subscription has been updated to {subscription_name}. A new billing period has started today.",
             "redirect_url": "/ads/billing/"
         })
         

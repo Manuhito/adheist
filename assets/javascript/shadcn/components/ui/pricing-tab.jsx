@@ -8,7 +8,8 @@ export function Tab({
   text,
   selected,
   setSelected,
-  discount = false
+  discount = false,
+  isUsageTab = false
 }) {
   return (
     <button
@@ -28,7 +29,11 @@ export function Tab({
       {discount && (
         <Badge
           variant="secondary"
-          className={cn("relative z-10 whitespace-nowrap shadow-none", selected && "bg-muted")}>
+          className={cn(
+            "relative z-10 whitespace-nowrap shadow-none", 
+            selected && !isUsageTab && "bg-muted",
+            selected && isUsageTab && "bg-primary text-white"
+          )}>
           Save 20%
         </Badge>
       )}
