@@ -47,41 +47,41 @@ class AppConfiguration(BaseModel):
     Model to store application-wide configuration settings.
     Only one instance of this model should exist in the database.
     """
-    # AdRequest limits
-    default_ad_request_limit = models.PositiveIntegerField(
+    # Default credits (for users without subscription)
+    default_general_credits = models.PositiveIntegerField(
         default=5,
-        help_text="Default limit of AdRequests for users without subscription"
+        help_text="Default general credits for users without subscription"
     )
-    default_ad_request_version_limit = models.PositiveIntegerField(
+    default_version_credits = models.PositiveIntegerField(
         default=2,
-        help_text="Default limit of versions per AdRequest"
+        help_text="Default version credits for users without subscription"
     )
     
-    # Starter plan limits
-    starter_ad_request_limit = models.PositiveIntegerField(
+    # Starter plan credits
+    starter_general_credits = models.PositiveIntegerField(
         default=20,
-        help_text="Limit of AdRequests for users with Starter subscription"
+        help_text="General credits for users with Starter subscription"
     )
-    starter_ad_request_version_limit = models.PositiveIntegerField(
+    starter_version_credits = models.PositiveIntegerField(
         default=5,
-        help_text="Limit of versions per AdRequest for Starter plan"
+        help_text="Version credits for users with Starter subscription"
     )
     
-    # Pro plan limits
-    pro_ad_request_limit = models.PositiveIntegerField(
+    # Pro plan credits
+    pro_general_credits = models.PositiveIntegerField(
         default=50,
-        help_text="Limit of AdRequests for users with Pro subscription"
+        help_text="General credits for users with Pro subscription"
     )
-    pro_ad_request_version_limit = models.PositiveIntegerField(
+    pro_version_credits = models.PositiveIntegerField(
         default=10,
-        help_text="Limit of versions per AdRequest for Pro plan"
+        help_text="Version credits for users with Pro subscription"
     )    
     class Meta:
         verbose_name = "Application Configuration"
         verbose_name_plural = "Application Configuration"
     
     def __str__(self):
-        return f"Application Configuration (AdRequest Limit: {self.default_ad_request_limit}, Versions: {self.default_ad_request_version_limit})"
+        return f"Application Configuration (General Credits: {self.default_general_credits}, Version Credits: {self.default_version_credits})"
     
     def save(self, *args, **kwargs):
         # Ensure only one instance exists
@@ -100,22 +100,22 @@ class AppConfiguration(BaseModel):
         Get the configured limits, using cache to improve performance.
         
         Returns:
-            dict: Dictionary with all limit configurations
+            dict: Dictionary with all credit configurations
         """
         # Try to get from cache first
         config = cls.get_config()
         return {
             'default': {
-                'ad_request_limit': config.default_ad_request_limit,
-                'ad_request_version_limit': config.default_ad_request_version_limit
+                'general_credits': config.default_general_credits,
+                'version_credits': config.default_version_credits
             },
             'starter': {
-                'ad_request_limit': config.starter_ad_request_limit,
-                'ad_request_version_limit': config.starter_ad_request_version_limit
+                'general_credits': config.starter_general_credits,
+                'version_credits': config.starter_version_credits
             },
             'pro': {
-                'ad_request_limit': config.pro_ad_request_limit,
-                'ad_request_version_limit': config.pro_ad_request_version_limit
+                'general_credits': config.pro_general_credits,
+                'version_credits': config.pro_version_credits
             }
         }
     
@@ -420,8 +420,10 @@ class AdRequestUsage(BaseModel):
     # For paid users: tracks usage within a billing period
     billing_period_start = models.DateTimeField(null=True, blank=True)
     billing_period_end = models.DateTimeField(null=True, blank=True)
-    # Credits remaining for the user in this period
-    remaining_credits = models.PositiveIntegerField(default=0)
+    # Credits for creating new ad requests (used in StepThreeComponent.jsx)
+    general_credits = models.PositiveIntegerField(default=0)
+    # Credits for creating new versions of existing ad requests (used in revision-adrequest.jsx)
+    version_credits = models.PositiveIntegerField(default=0)
     # For free users: tracks lifetime usage
     is_free_tier = models.BooleanField(default=False)
     # Plan type for paid users (e.g., 'starter', 'pro')
@@ -451,8 +453,9 @@ class AdRequestUsage(BaseModel):
         # Get all limits from configuration
         limits = AppConfiguration.get_limits()
         
-        # Default limit for users without subscription
-        credit_limit = limits.get('default', {}).get('ad_request_limit', 5)  # 5 is fallback if all else fails
+        # Default credits for users without subscription
+        general_credits_default = limits.get('default', {}).get('general_credits', 5)  # 5 is fallback if all else fails
+        version_credits_default = limits.get('default', {}).get('version_credits', 2)  # 2 is fallback if all else fails
         
         # For users with active subscriptions, get plan-specific limit
         if user.has_active_subscription():
@@ -474,8 +477,9 @@ class AdRequestUsage(BaseModel):
             if product_meta:
                 plan_type = product_meta.slug
                 if plan_type in limits:
-                    credit_limit = limits[plan_type]['ad_request_limit']
-                    print(f"Setting credit limit to {credit_limit} for plan {plan_type}")
+                    general_credits_default = limits[plan_type]['general_credits']
+                    version_credits_default = limits[plan_type]['version_credits']
+                    print(f"Setting credits to general={general_credits_default}, version={version_credits_default} for plan {plan_type}")
                 else:
                     print(f"Plan type {plan_type} not found in limits: {limits.keys()}")
             else:
@@ -509,15 +513,29 @@ class AdRequestUsage(BaseModel):
                 usage = cls.objects.get(user=user, is_free_tier=False)
                 
                 # Check if the billing period has changed OR if the plan has changed
-                # ONLY reset credits if period changed or plan upgraded
+                # ONLY reset credits if period changed or plan changed
                 if usage.billing_period_start != period_start or usage.plan_type != plan_type:
+                    # Save remaining credits before resetting
+                    remaining_general_credits = usage.general_credits
+                    remaining_version_credits = usage.version_credits
+                    
+                    # Transfer remaining credits to ExtraCredit
+                    if remaining_general_credits > 0 or remaining_version_credits > 0:
+                        print(f"Transferring remaining credits to ExtraCredit: general={remaining_general_credits}, version={remaining_version_credits}")
+                        if remaining_general_credits > 0:
+                            ExtraCredit.add_general_credits(user, remaining_general_credits)
+                        if remaining_version_credits > 0:
+                            ExtraCredit.add_version_credits(user, remaining_version_credits)
+                    
                     # Update the billing period and reset credits
                     usage.billing_period_start = period_start
                     usage.billing_period_end = period_end
-                    usage.remaining_credits = credit_limit
+                    usage.general_credits = general_credits_default
+                    usage.version_credits = version_credits_default
                     usage.plan_type = plan_type
                     usage.save()
-                    print(f"Updated user plan from {usage.plan_type} to {plan_type} or period changed")
+                    print(f"Updated user credits: general={general_credits_default}, version={version_credits_default} (plan changed from {usage.plan_type} to {plan_type} or period changed)")
+                    print(f"Transferred {remaining_general_credits} general credits and {remaining_version_credits} version credits to ExtraCredit")
             except cls.DoesNotExist:
                 # Create a new record if none exists - initialize with full credits
                 usage = cls.objects.create(
@@ -525,7 +543,8 @@ class AdRequestUsage(BaseModel):
                     billing_period_start=period_start,
                     billing_period_end=period_end,
                     is_free_tier=False,
-                    remaining_credits=credit_limit,
+                    general_credits=general_credits_default,
+                    version_credits=version_credits_default,
                     plan_type=plan_type
                 )
             
@@ -543,7 +562,8 @@ class AdRequestUsage(BaseModel):
                     billing_period_start=None,
                     billing_period_end=None,
                     is_free_tier=True,
-                    remaining_credits=credit_limit
+                    general_credits=general_credits_default,
+                    version_credits=version_credits_default
                 )
             
             return usage
@@ -554,10 +574,11 @@ class ExtraCredit(BaseModel):
     These credits are used when a user has no remaining regular credits.
     """
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="extra_credits")
-    credits = models.PositiveIntegerField(default=0)
+    general_credits = models.PositiveIntegerField(default=0)
+    version_credits = models.PositiveIntegerField(default=0)
     
     def __str__(self):
-        return f"{self.user.email} - {self.credits} extra credits"
+        return f"{self.user.email} - {self.general_credits} general, {self.version_credits} version extra credits"
     
     @classmethod
     def get_or_create(cls, user):
@@ -566,24 +587,52 @@ class ExtraCredit(BaseModel):
         return extra_credits
     
     @classmethod
-    def add_credits(cls, user, amount):
-        """Add extra credits to a user"""
+    def add_general_credits(cls, user, amount):
+        """Add extra general credits to a user"""
         if amount <= 0:
             return
             
         extra_credits = cls.get_or_create(user)
-        extra_credits.credits += amount
+        extra_credits.general_credits += amount
+        extra_credits.save()
+        return extra_credits
+        
+    @classmethod
+    def add_version_credits(cls, user, amount):
+        """Add extra version credits to a user"""
+        if amount <= 0:
+            return
+            
+        extra_credits = cls.get_or_create(user)
+        extra_credits.version_credits += amount
         extra_credits.save()
         return extra_credits
     
     @classmethod
-    def use_credit(cls, user):
-        """Use one extra credit if available"""
+    def use_general_credit(cls, user):
+        """Use one extra general credit if available"""
         extra_credits = cls.get_or_create(user)
         
-        if extra_credits.credits > 0:
-            extra_credits.credits -= 1
+        if extra_credits.general_credits > 0:
+            extra_credits.general_credits -= 1
             extra_credits.save()
             return True
         
         return False
+        
+    @classmethod
+    def use_version_credit(cls, user):
+        """Use one extra version credit if available"""
+        extra_credits = cls.get_or_create(user)
+        
+        if extra_credits.version_credits > 0:
+            extra_credits.version_credits -= 1
+            extra_credits.save()
+            return True
+        
+        return False
+        
+    @classmethod
+    def use_credit(cls, user):
+        """Use one extra credit if available (uses general_credits for backward compatibility)"""
+        return cls.use_general_credit(user)

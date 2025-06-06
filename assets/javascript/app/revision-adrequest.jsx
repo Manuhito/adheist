@@ -21,7 +21,7 @@ const RevisionAdRequest = () => {
   const [currentVersionIndex, setCurrentVersionIndex] = useState(0);
   const [userPrompt, setUserPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [total_versions, setTotalVersions] = useState(2); // Default to 2 if not specified
+  const [availableVersionCredits, setAvailableVersionCredits] = useState(0); // Available credits for creating new versions
 
   useEffect(() => {
     const loadAdRequestData = () => {
@@ -46,10 +46,10 @@ const RevisionAdRequest = () => {
             setVersions(jsonData.versions);
             setCurrentVersionIndex(0); // Start with the first version (newest)
             
-            // Get total_versions from JSON data
-            if (jsonData.total_versions) {
-              console.log("Total versions:", jsonData.total_versions);
-              setTotalVersions(jsonData.total_versions);
+            // Get available version credits from JSON data
+            if (jsonData.available_version_credits !== undefined) {
+              console.log("Available version credits:", jsonData.available_version_credits);
+              setAvailableVersionCredits(jsonData.available_version_credits);
             }
           } else {
             setError("No versions found for this ad request");
@@ -253,7 +253,7 @@ const RevisionAdRequest = () => {
                         {new Date(currentVersion.created_at).toLocaleDateString()}
                       </div>
                       <div>
-                        {currentVersion.version_index}/{total_versions} {t("revision.revision", "Revision")}
+                        {currentVersion.version_index} {t("revision.revision", "Revision")} ({availableVersionCredits} {t("revision.credits_available", "credits available")})
                       </div>
                     </div>
                   </div>
@@ -278,13 +278,13 @@ const RevisionAdRequest = () => {
                         value={userPrompt}
                         onChange={e => setUserPrompt(e.target.value)}
                         rows={5}
-                        className={`w-full min-h-[120px] rounded-lg border ${versions.length >= total_versions ? 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 opacity-75 cursor-not-allowed border-gray-400 dark:border-gray-600' : 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700'} px-4 py-3 text-base placeholder:text-gray-400 dark:placeholder:text-gray-500 shadow-sm focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-200 dark:focus-visible:ring-blue-800 transition resize-y mb-2`}
+                        className={`w-full min-h-[120px] rounded-lg border ${availableVersionCredits <= 0 ? 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 opacity-75 cursor-not-allowed border-gray-400 dark:border-gray-600' : 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700'} px-4 py-3 text-base placeholder:text-gray-400 dark:placeholder:text-gray-500 shadow-sm focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-200 dark:focus-visible:ring-blue-800 transition resize-y mb-2`}
                         placeholder={t("revision.prompt_placeholder", "Write your prompt...")}
-                        disabled={versions.length >= total_versions}
+                        disabled={availableVersionCredits <= 0}
                       />
                     </div>
                   </TooltipTrigger>
-                  {versions.length >= total_versions && (
+                  {availableVersionCredits <= 0 && (
                     <TooltipContent>
                       <p>{t('revision.version_limit_reached', 'Version limit reached. No more versions can be generated.')}</p>
                     </TooltipContent>
@@ -320,7 +320,7 @@ const RevisionAdRequest = () => {
                       variant="outline"
                       className="group h-10 px-4 py-2 text-sm font-medium"
                       onClick={handleGenerateVersion}
-                      disabled={isGenerating || versions.length >= total_versions || !userPrompt.trim()}
+                      disabled={isGenerating || availableVersionCredits <= 0 || !userPrompt.trim()}
                     >
                       {isGenerating ? (
                         <span className="flex items-center"><Sparkles className="w-4 h-4 mr-1 animate-spin text-yellow-400 dark:text-yellow-300" strokeWidth={2.2} /> {t("revision.generating", "Generating...")}</span>
@@ -330,12 +330,12 @@ const RevisionAdRequest = () => {
                     </Button>
                   </div>
                 </TooltipTrigger>
-                {versions.length >= total_versions && (
+                {availableVersionCredits <= 0 && (
                   <TooltipContent>
                     <p>{t('revision.version_limit_reached', 'Version limit reached. No more versions can be generated.')}</p>
                   </TooltipContent>
                 )}
-                {!userPrompt.trim() && versions.length < total_versions && (
+                {!userPrompt.trim() && availableVersionCredits > 0 && (
                   <TooltipContent>
                     <p>{t('revision.prompt_required', 'Please enter a prompt before generating')}</p>
                   </TooltipContent>
