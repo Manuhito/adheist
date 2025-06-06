@@ -17,7 +17,13 @@ def generate_prompt(version):
     
     # Get non-image fields from AdRequest
     canvas_size = ad_request.canvas_size
-    company_name = ad_request.ad_library.company_name
+    
+    # Handle case when ad_library is None (user uploaded image)
+    if ad_request.ad_library:
+        company_name = ad_request.ad_library.company_name
+    else:
+        # Use a default value when using user uploaded image
+        company_name = "User Custom Image"
     
     # Get text fields from base_assets or overrides
     company_website = ad_request.get_company_website()
@@ -45,7 +51,9 @@ def generate_prompt(version):
         company_info.append(f"- Website: {company_website}")
     
     # Add industry information if available
-    industries = [industry.name for industry in ad_request.ad_library.industries.all()]
+    industries = []
+    if ad_request.ad_library:
+        industries = [industry.name for industry in ad_request.ad_library.industries.all()]
     if industries:
         industries_text = ", ".join(industries)
         company_info.append(f"- Industries: {industries_text}")
@@ -56,7 +64,9 @@ def generate_prompt(version):
         prompt_parts.append("")  # Add empty line
     
     # Add concepts to convey (tags)
-    tags = [tag.name for tag in ad_request.ad_library.tags.all()]
+    tags = []
+    if ad_request.ad_library:
+        tags = [tag.name for tag in ad_request.ad_library.tags.all()]
     if tags:
         tags_text = ", ".join(tags)
         prompt_parts.append("[CONCEPTS TO CONVEY]:")
