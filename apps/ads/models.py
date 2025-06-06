@@ -515,6 +515,18 @@ class AdRequestUsage(BaseModel):
                 # Check if the billing period has changed OR if the plan has changed
                 # ONLY reset credits if period changed or plan changed
                 if usage.billing_period_start != period_start or usage.plan_type != plan_type:
+                    # Save remaining credits before resetting
+                    remaining_general_credits = usage.general_credits
+                    remaining_version_credits = usage.version_credits
+                    
+                    # Transfer remaining credits to ExtraCredit
+                    if remaining_general_credits > 0 or remaining_version_credits > 0:
+                        print(f"Transferring remaining credits to ExtraCredit: general={remaining_general_credits}, version={remaining_version_credits}")
+                        if remaining_general_credits > 0:
+                            ExtraCredit.add_general_credits(user, remaining_general_credits)
+                        if remaining_version_credits > 0:
+                            ExtraCredit.add_version_credits(user, remaining_version_credits)
+                    
                     # Update the billing period and reset credits
                     usage.billing_period_start = period_start
                     usage.billing_period_end = period_end
@@ -523,6 +535,7 @@ class AdRequestUsage(BaseModel):
                     usage.plan_type = plan_type
                     usage.save()
                     print(f"Updated user credits: general={general_credits_default}, version={version_credits_default} (plan changed from {usage.plan_type} to {plan_type} or period changed)")
+                    print(f"Transferred {remaining_general_credits} general credits and {remaining_version_credits} version credits to ExtraCredit")
             except cls.DoesNotExist:
                 # Create a new record if none exists - initialize with full credits
                 usage = cls.objects.create(
