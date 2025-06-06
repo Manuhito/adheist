@@ -1143,8 +1143,8 @@ def adrequest_details_page(request, adrequest_id):
     # Log for debugging
     print(f"{versions=}")
     
-    # Get the version limit for this AdRequest based on the user's subscription
-    version_limit = get_ad_request_version_limit(ad_request)
+    # Get the available version credits for this user (regular + extra credits)
+    available_version_credits = get_ad_request_version_limit(ad_request)
     
     # Get all versions for display
     for i, version in enumerate(versions):
@@ -1172,7 +1172,7 @@ def adrequest_details_page(request, adrequest_id):
         "ad_request": ad_request,
         "versions": versions,
         "versions_json": versions_json,
-        "total_versions": version_limit,
+        "available_version_credits": available_version_credits,
         "current_versions_count": versions.count()
     }
         

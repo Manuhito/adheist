@@ -13,7 +13,7 @@
         "created_at": "{{ ad_request.created_at|date:'c'|default:"" }}",
         "updated_at": "{{ ad_request.updated_at|date:'c'|default:"" }}",
         "versions": {{ versions_json|safe }},
-        "total_versions": {{ total_versions }}
+        "available_version_credits": {{ available_version_credits }}
       }
     </script>
     
