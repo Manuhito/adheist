@@ -254,25 +254,25 @@ class ExtraCreditAdmin(admin.ModelAdmin):
 @admin.register(AppConfiguration)
 class AppConfigurationAdmin(admin.ModelAdmin):
     list_display = [
-        "default_ad_request_limit", "default_ad_request_version_limit", 
-        "starter_ad_request_limit", "starter_ad_request_version_limit",
-        "pro_ad_request_limit", "pro_ad_request_version_limit", 
+        "default_general_credits", "default_version_credits", 
+        "starter_general_credits", "starter_version_credits",
+        "pro_general_credits", "pro_version_credits", 
         "updated_at"
     ]
     fieldsets = [
-        ("Default Plan Limits", {
-            "fields": ["default_ad_request_limit", "default_ad_request_version_limit"],
-            "description": "Limits for users without an active subscription",
+        ("Default Plan Credits", {
+            "fields": ["default_general_credits", "default_version_credits"],
+            "description": "Credits for users without an active subscription",
             "classes": ["wide"]
         }),
-        ("Starter Plan Limits", {
-            "fields": ["starter_ad_request_limit", "starter_ad_request_version_limit"],
-            "description": "Limits for users with Starter subscription",
+        ("Starter Plan Credits", {
+            "fields": ["starter_general_credits", "starter_version_credits"],
+            "description": "Credits for users with Starter subscription",
             "classes": ["wide"]
         }),
-        ("Pro Plan Limits", {
-            "fields": ["pro_ad_request_limit", "pro_ad_request_version_limit"],
-            "description": "Limits for users with Pro subscription",
+        ("Pro Plan Credits", {
+            "fields": ["pro_general_credits", "pro_version_credits"],
+            "description": "Credits for users with Pro subscription",
             "classes": ["wide"]
         })
     ]
