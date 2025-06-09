@@ -38,11 +38,75 @@ def generate_image_task(
         
         # Generate the image
         service = ImageGenerationService()
-        result = service.generate_image_from_text_and_images(
-            text_prompt=text_prompt,
-            image_urls=image_urls,
-            canvas_size=canvas_size
-        )
+        try:
+            result = service.generate_image_from_text_and_images(
+                text_prompt=text_prompt,
+                image_urls=image_urls,
+                canvas_size=canvas_size
+            )
+        except Exception as service_error:
+            # Capturar cualquier excepción no manejada del servicio
+            logger.exception(f"Unhandled exception in image generation service: {str(service_error)}")
+            
+            # Si tenemos un version_id, actualizar su estado a fallido
+            if version_id:
+                try:
+                    from apps.ads.models import AdRequestVersion
+                    version = AdRequestVersion.objects.get(id=version_id)
+                    version.status = version.STATUS_FAILED
+                    version.error_logs = f"Error en el servicio de generación de imágenes: {str(service_error)}"
+                    version.save(update_fields=['status', 'error_logs'])
+                except Exception as e:
+                    logger.exception(f"Error al actualizar AdRequestVersion con error: {str(e)}")
+            
+            # Reintentamos la tarea
+            self.retry(exc=service_error, countdown=60)
+            
+            return {
+                "status": "error",
+                "error": str(service_error)
+            }
+        
+        # Check if result contains an error
+        if result and "error" in result:
+            logger.error(f"Image generation failed: {result['error']}")
+            
+            # If version_id is provided, update the version with the error
+            if version_id:
+                try:
+                    from apps.ads.models import AdRequestVersion
+                    version = AdRequestVersion.objects.get(id=version_id)
+                    version.status = version.STATUS_FAILED
+                    
+                    # Store detailed error information
+                    error_details = {
+                        "error_message": result['error'],
+                        "status_code": result.get('status_code'),
+                        "response_data": result.get('response_data')
+                    }
+                    
+                    # Format the error log with all available information
+                    error_log = f"Error generating image: {result['error']}\n"
+                    if 'status_code' in result:
+                        error_log += f"Status code: {result['status_code']}\n"
+                    if 'response_data' in result:
+                        error_log += f"Response data: {result['response_data']}"
+                    
+                    version.error_logs = error_log
+                    version.save(update_fields=['status', 'error_logs'])
+                    
+                    return {
+                        "status": "error",
+                        "error": result['error'],
+                        "details": error_details
+                    }
+                except Exception as e:
+                    logger.exception(f"Error updating AdRequestVersion with error details: {str(e)}")
+                    
+            return {
+                "status": "error",
+                "error": result['error']
+            }
         
         # If version_id is provided, update the version with the generated image
         if version_id:
@@ -129,17 +193,20 @@ def generate_image_task(
                     
                     logger.info(f"Image generated successfully for AdRequestVersion {version_id}")
                 else:
-                    logger.error(f"No binary image content found in result for AdRequestVersion {version_id}")
-                    version.status = "failed"
-                    version.save(update_fields=['status'])
+                    error_message = f"No binary image content found in result for AdRequestVersion {version_id}"
+                    logger.error(error_message)
+                    version.status = version.STATUS_FAILED
+                    version.error_logs = error_message
+                    version.save(update_fields=['status', 'error_logs'])
             except Exception as e:
                 logger.exception(f"Error updating AdRequestVersion {version_id}: {str(e)}")
                 # If we have a version ID, update its status to failed
                 try:
                     from apps.ads.models import AdRequestVersion
                     version = AdRequestVersion.objects.get(id=version_id)
-                    version.status = "failed"
-                    version.save(update_fields=['status'])
+                    version.status = version.STATUS_FAILED
+                    version.error_logs = f"Error updating AdRequestVersion: {str(e)}"
+                    version.save(update_fields=['status', 'error_logs'])
                 except Exception:
                     pass
         
@@ -157,8 +224,16 @@ def generate_image_task(
             try:
                 from apps.ads.models import AdRequestVersion
                 version = AdRequestVersion.objects.get(id=version_id)
-                version.status = "failed"
-                version.save(update_fields=['status'])
+                version.status = version.STATUS_FAILED
+                
+                # Determine the error message based on the type of error
+                if isinstance(e, Exception):
+                    error_message = f"Error in generate_image_task: {str(e)}"
+                else:
+                    error_message = f"Unknown error in generate_image_task"
+                    
+                version.error_logs = error_message
+                version.save(update_fields=['status', 'error_logs'])
             except Exception:
                 pass
         
