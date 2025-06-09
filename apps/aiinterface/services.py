@@ -60,10 +60,16 @@ class ImageGenerationService:
 
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
-            raise ValueError("OPENAI_API_KEY environment variable not set")
+            return {
+                "error": "OPENAI_API_KEY environment variable not set",
+                "status_code": 500
+            }
 
         if not image_urls or not image_urls[0]:
-            raise ValueError("At least one image URL or file path must be provided for edit mode.")
+            return {
+                "error": "At least one image URL or file path must be provided for edit mode.",
+                "status_code": 400
+            }
 
         import tempfile
         import shutil
@@ -81,8 +87,14 @@ class ImageGenerationService:
             supported_formats = ["PNG", "WEBP", "JPEG", "JPG"]
             
             if urlparse(image_source).scheme in ("http", "https"):
-                resp = requests.get(image_source, stream=True)
-                resp.raise_for_status()
+                try:
+                    resp = requests.get(image_source, stream=True)
+                    resp.raise_for_status()
+                except requests.exceptions.RequestException as e:
+                    return {
+                        "error": f"Error downloading image: {str(e)}",
+                        "status_code": getattr(e.response, 'status_code', 500) if hasattr(e, 'response') else 500
+                    }
                 
                 img = Image.open(io.BytesIO(resp.content))
                 img_format = img.format
@@ -144,7 +156,13 @@ class ImageGenerationService:
             files = {
                 "image": (filename, image_file, content_type)
             }
-            response = requests.post(edit_url, headers=headers, data=data, files=files, timeout=300)
+            try:
+                response = requests.post(edit_url, headers=headers, data=data, files=files, timeout=300)
+            except requests.exceptions.RequestException as e:
+                return {
+                    "error": f"Error making request to OpenAI API: {str(e)}",
+                    "status_code": getattr(e.response, 'status_code', 500) if hasattr(e, 'response') else 500
+                }
             if response.status_code == 200:
                 result = response.json()
                 if "data" in result and result["data"]:
@@ -190,9 +208,19 @@ class ImageGenerationService:
                     
                     return formatted_response
                 else:
-                    raise Exception("No image data returned in response")
+                    error_message = "No image data returned in response"
+                    return {
+                        "error": error_message,
+                        "response_data": result,
+                        "status_code": response.status_code
+                    }
             else:
-                raise Exception(f"OpenAI API error: {response.status_code} - {response.text}")
+                error_message = f"OpenAI API error: {response.status_code} - {response.text}"
+                return {
+                    "error": error_message,
+                    "response_data": response.text,
+                    "status_code": response.status_code
+                }
         finally:
             if image_file:
                 image_file.close()
