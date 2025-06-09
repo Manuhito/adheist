@@ -9,16 +9,17 @@ export function PricingSection({
   frequencies,
   onSubscribe,
   hasActiveSubscription,
+  usagePackages,
   t
 }) {
   const [selectedFrequency, setSelectedFrequency] = React.useState(frequencies[0].key);
   
   // Determine which products to show based on selected frequency
   const renderProducts = () => {
-    // Check if we're in usage mode and usagePackages exist in window.__PRICING_DATA__
-    if (selectedFrequency === "usage" && window.__PRICING_DATA__?.usagePackages) {
+    // Check if we're in usage mode and usagePackages exist
+    if (selectedFrequency === "usage" && usagePackages) {
       // Show usage-based packages
-      return window.__PRICING_DATA__.usagePackages.map((packageItem) => (
+      return usagePackages.map((packageItem) => (
         <PricingCard
           key={packageItem.name}
           tier={{
@@ -74,11 +75,14 @@ export function PricingSection({
         </div>
       </div>
       <div className="w-full max-w-6xl mx-auto">
-        <div className={`grid gap-6 sm:grid-cols-2 ${tiers.length === 3 ? 'xl:grid-cols-3' : 'xl:grid-cols-4'}`}>
+        <div className={`grid gap-6 sm:grid-cols-2 ${selectedFrequency === "usage" && usagePackages?.length === 2 ? 'xl:grid-cols-2' : tiers.length === 3 ? 'xl:grid-cols-3' : 'xl:grid-cols-4'}`}>
           {/* Renderizar productos con columnas vacías al inicio para centrar */}
           {(() => {
             const products = renderProducts();
-            const totalCols = tiers.length === 3 ? 3 : 4;
+            // Determinar el número total de columnas según la pestaña seleccionada
+            const totalCols = selectedFrequency === "usage" && usagePackages ? 
+              (usagePackages.length === 2 ? 2 : 4) : // Si hay 2 paquetes, usar 2 columnas, de lo contrario 4
+              (tiers.length === 3 ? 3 : 4); // Para planes de suscripción, usar 3 o 4 columnas
             const productCount = products.length;
             
             // Si hay menos productos que columnas, agregar columnas vacías al inicio

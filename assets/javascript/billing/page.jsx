@@ -67,7 +67,7 @@ export function BillingPage({ pricingData, onSubscribe }) {
     // Transformar el array de frequencies en el formato esperado por PricingSection
     frequencies: Array.isArray(pricingData.frequencies) ? pricingData.frequencies.map(freq => ({
       key: freq,
-      label: t(`pricing.${freq}`, freq.charAt(0).toUpperCase() + freq.slice(1))
+      label: freq === "usage" ? t('pricing.usage_packages', "Usage Based Packages") : t(`pricing.${freq}`, freq.charAt(0).toUpperCase() + freq.slice(1))
     })) : [],
     tiers: pricingData.tiers.map(tier => ({
       ...tier,
@@ -111,6 +111,7 @@ export function BillingPage({ pricingData, onSubscribe }) {
         frequencies={translatedPricingData.frequencies}
         onSubscribe={(priceId, frequency, tier) => handlePlanSelect(priceId, frequency, tier)}
         hasActiveSubscription={hasActiveSubscription}
+        usagePackages={pricingData.usagePackages}
         t={t}
       />
 

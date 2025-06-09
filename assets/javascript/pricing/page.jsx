@@ -4,8 +4,8 @@ import { useTranslation } from '../lib/useTranslation';
 
 // Manejador para redireccionar a la página de billing
 function handleSubscribe(priceId) {
-  // Redireccionar a la página de billing
-  window.location.href = '/ads/billing/';
+  // Redireccionar a la página de signup con parámetro para redirigir a billing después
+  window.location.href = '/accounts/signup/?next=/ads/billing/';
 }
 
 // Función para crear datos de precios con traducciones
@@ -13,7 +13,7 @@ function createDefaultPricingData(t) {
   return {
     title: t('pricing.title', "Pricing Plans"),
     subtitle: t('pricing.subtitle', "Choose the perfect plan for your needs"),
-    frequencies: ["monthly", "yearly"],
+    frequencies: ["monthly", "usage"],
     tiers: [
       {
         name: t('pricing.free', "Free"),
@@ -49,40 +49,48 @@ function createDefaultPricingData(t) {
         popular: true
       },
       {
-        name: t('pricing.team', "Team"),
-        description: t('pricing.team_description', "For teams and businesses"),
+        name: t('pricing.starter', "Starter"),
+        description: t('pricing.starter_description', "For small businesses"),
         price: {
-          monthly: 49,
-          yearly: 39
+          monthly: 19
         },
         features: [
-          t('pricing.feature_team_1', "50 ad requests per month"),
-          t('pricing.feature_team_2', "All premium templates"),
-          t('pricing.feature_team_3', "24/7 support"),
-          t('pricing.feature_team_4', "Custom branding"),
-          t('pricing.feature_team_5', "Team collaboration")
+          t('pricing.feature_starter_1', "10 ad requests per month"),
+          t('pricing.feature_starter_2', "Standard templates"),
+          t('pricing.feature_starter_3', "Email support"),
+          t('pricing.feature_starter_4', "Basic analytics")
         ],
-        cta: t('pricing.upgrade_to_team', "Upgrade to Team"),
+        cta: t('pricing.upgrade_to_starter', "Upgrade to Starter"),
         highlighted: false,
+        popular: false
+      }
+    ],
+    usagePackages: [
+      {
+        name: t('pricing.package_1', "Package 1"),
+        description: t('pricing.package_1_description', "Basic usage package"),
+        price: 100,
+        priceId: "price_package_1",
+        features: [
+          t('pricing.feature_package_1_1', "100 images"),
+          t('pricing.feature_package_1_2', "200 revisions")
+        ],
+        cta: t('pricing.buy_package', "Buy Package"),
+        highlighted: true,
         popular: false
       },
       {
-        name: t('pricing.enterprise', "Enterprise"),
-        description: t('pricing.enterprise_description', "For large organizations"),
-        price: {
-          monthly: t('pricing.custom', "Custom"),
-          yearly: t('pricing.custom', "Custom")
-        },
+        name: t('pricing.package_2', "Package 2"),
+        description: t('pricing.package_2_description', "Advanced usage package"),
+        price: 200,
+        priceId: "price_package_2",
         features: [
-          t('pricing.feature_enterprise_1', "Unlimited ad requests"),
-          t('pricing.feature_enterprise_2', "Custom templates"),
-          t('pricing.feature_enterprise_3', "Dedicated support"),
-          t('pricing.feature_enterprise_4', "API access"),
-          t('pricing.feature_enterprise_5', "Advanced analytics")
+          t('pricing.feature_package_2_1', "200 images"),
+          t('pricing.feature_package_2_2', "500 revisions")
         ],
-        cta: t('pricing.contact_sales', "Contact Sales"),
+        cta: t('pricing.buy_package', "Buy Package"),
         highlighted: false,
-        popular: false
+        popular: true
       }
     ]
   };
@@ -98,8 +106,13 @@ export default function PricingPage() {
   // Si hay datos del backend, traducir sus textos
   let pricingData;
   if (backendData) {
+    // Filtrar los tiers para mantener solo Free, Starter y Pro
+    const filteredTiers = backendData.tiers.filter(tier => 
+      ['Free', 'Starter', 'Pro'].includes(tier.name)
+    );
+    
     // Traducir los tiers del backend
-    const translatedTiers = backendData.tiers.map(tier => ({
+    const translatedTiers = filteredTiers.map(tier => ({
       ...tier,
       name: t(`pricing.${tier.name.toLowerCase()}`, tier.name),
       description: t(`pricing.${tier.name.toLowerCase()}_description`, tier.description),
@@ -109,23 +122,36 @@ export default function PricingPage() {
       cta: t(`pricing.${tier.cta.toLowerCase().replace(/ /g, '_')}`, tier.cta)
     }));
     
+    // Usar los paquetes de uso de los datos predeterminados
     pricingData = {
       ...backendData,
       title: t('pricing.title', backendData.title),
       subtitle: t('pricing.subtitle', backendData.subtitle),
-      tiers: translatedTiers
+      // Forzar las frecuencias a ser "monthly" y "usage"
+      frequencies: ["monthly", "usage"],
+      tiers: translatedTiers,
+      // Agregar los paquetes de uso de los datos predeterminados
+      usagePackages: defaultData.usagePackages
     };
   } else {
     pricingData = defaultData;
   }
   
   console.log("Pricing data after translation:", pricingData);
+  
+  // Asegurarse de que no haya frecuencia "yearly"
+  if (pricingData.frequencies.includes("yearly")) {
+    pricingData.frequencies = pricingData.frequencies.filter(freq => freq !== "yearly");
+    if (!pricingData.frequencies.includes("usage")) {
+      pricingData.frequencies.push("usage");
+    }
+  }
 
   // Traducir las frecuencias
   const translatedFrequencies = pricingData.frequencies.map(freq => {
     return {
       key: freq,
-      label: t(`pricing.${freq}`, freq)
+      label: freq === "usage" ? t('pricing.usage_packages', "Usage Based Packages") : t(`pricing.${freq}`, freq)
     };
   });
 
@@ -137,6 +163,7 @@ export default function PricingPage() {
         tiers={pricingData.tiers}
         frequencies={translatedFrequencies}
         onSubscribe={handleSubscribe}
+        usagePackages={pricingData.usagePackages}
         t={t}
       />
     </div>
