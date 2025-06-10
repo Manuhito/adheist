@@ -138,14 +138,53 @@ def provision_subscription(subscription_holder: CustomUser, subscription_id: str
     return djstripe_subscription
 
 
-def cancel_subscription(subscription_id: str):
+def cancel_subscription(subscription_id: str, cancel_at_period_end: bool = True):
+    """
+    Cancel a subscription, either at the end of the billing period or immediately.
+    
+    Args:
+        subscription_id: The Stripe ID of the subscription to cancel
+        cancel_at_period_end: If True, the subscription will remain active until the end of the billing period.
+                             If False, the subscription will be canceled immediately.
+    
+    Returns:
+        The updated Subscription object or None if there was an error
+    """
     try:
-        subscription = get_stripe_module().Subscription.delete(subscription_id)
+        # First, get the current subscription to preserve important fields
+        db_subscription = Subscription.objects.filter(id=subscription_id).first()
+        if not db_subscription:
+            log.error(f"Subscription with ID {subscription_id} not found in database")
+            return None
+            
+        # Store the current period end before modifying
+        current_period_end = db_subscription.current_period_end
+        
+        stripe = get_stripe_module()
+        if cancel_at_period_end:
+            # Cancel at the end of the billing period
+            subscription = stripe.Subscription.modify(
+                subscription_id,
+                cancel_at_period_end=True
+            )
+        else:
+            # Cancel immediately
+            subscription = stripe.Subscription.delete(subscription_id)
+        
+        # Sync the updated subscription with the local database
+        updated_subscription = Subscription.sync_from_stripe_data(subscription)
+        
+        # If current_period_end is None after sync, restore the original value
+        if updated_subscription and updated_subscription.current_period_end is None and current_period_end is not None:
+            updated_subscription.current_period_end = current_period_end
+            updated_subscription.save()
+            log.info(f"Restored current_period_end for subscription {subscription_id}")
+            
+        return updated_subscription
     except InvalidRequestError as e:
         if e.code != "resource_missing":
-            log.error("Error deleting Stripe subscription: %s", e.user_message)
-    else:
-        Subscription.sync_from_stripe_data(subscription)
+            log.error("Error canceling Stripe subscription: %s", e.user_message)
+        return None
 
 
 def update_subscription(subscription_holder: CustomUser, new_price_id: str) -> Subscription:

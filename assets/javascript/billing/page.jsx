@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { PricingSection } from '../components/blocks/pricing-section';
 import { InvoiceSection } from '../components/sections/invoice-section';
 import { PaymentMethodSection } from '../components/sections/payment-method-section';
+import { SubscriptionCancelSection } from '../components/sections/subscription-cancel-section';
 import { useTranslation } from '../lib/useTranslation';
 import { SubscriptionUpdateConfirmation } from './subscription-update-confirmation';
 
@@ -28,6 +29,10 @@ export function BillingPage({ pricingData, onSubscribe }) {
 
   // Obtener el plan actual si existe
   const currentPlan = pricingData.tiers.find(tier => tier.is_current_plan);
+  console.log('Current Plan:', currentPlan);
+  if (currentPlan) {
+    console.log('Current Period End:', currentPlan.current_period_end);
+  }
 
   // Función para manejar la selección de un nuevo plan
   const handlePlanSelect = (priceId, frequency, tier) => {
@@ -123,6 +128,11 @@ export function BillingPage({ pricingData, onSubscribe }) {
           
           {/* Sección de facturas */}
           <InvoiceSection />
+          
+          {/* Sección de cancelación de suscripción */}
+          {currentPlan && (
+            <SubscriptionCancelSection currentPeriodEnd={currentPlan.current_period_end} />
+          )}
         </>
       )}
     </div>

@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from ..exceptions import SubscriptionConfigError
-from ..helpers import create_stripe_checkout_session, create_stripe_portal_session
+from ..helpers import create_stripe_checkout_session, create_stripe_portal_session, cancel_subscription
 from ..metadata import get_active_products_with_metadata, ProductWithMetadata
 
 
@@ -53,3 +53,49 @@ class CreatePortalSession(APIView):
             return Response(portal_session.url)
         except SubscriptionConfigError as e:
             return Response(str(e), status=500)
+
+
+@extend_schema(tags=["subscriptions"], exclude=True)
+class CancelSubscription(APIView):
+    @extend_schema(
+        operation_id="cancel_subscription",
+        request=inline_serializer("CancelSubscription", {
+            "cancel_at_period_end": rest_framework.serializers.BooleanField(default=True)
+        }),
+        responses={
+            200: inline_serializer("CancelSubscriptionResponse", {
+                "success": rest_framework.serializers.BooleanField(),
+                "message": rest_framework.serializers.CharField(),
+            }),
+            400: inline_serializer("CancelSubscriptionError", {
+                "error": rest_framework.serializers.CharField(),
+            }),
+        },
+    )
+    def post(self, request):
+        subscription_holder = request.user
+        
+        # Check if user has an active subscription
+        if not subscription_holder.subscription:
+            return Response({"error": "No active subscription found."}, status=400)
+        
+        # Get cancel_at_period_end parameter (default to True)
+        cancel_at_period_end = request.data.get("cancel_at_period_end", True)
+        
+        # Get the subscription ID
+        subscription_id = subscription_holder.subscription.id
+        
+        # Cancel the subscription
+        updated_subscription = cancel_subscription(subscription_id, cancel_at_period_end)
+        
+        if updated_subscription:
+            message = "Your subscription has been scheduled for cancellation at the end of the current billing period." \
+                if cancel_at_period_end else "Your subscription has been canceled immediately."
+            return Response({
+                "success": True,
+                "message": message,
+                "cancel_at_period_end": cancel_at_period_end,
+                "current_period_end": updated_subscription.current_period_end.timestamp() if updated_subscription.current_period_end else None
+            })
+        else:
+            return Response({"error": "Failed to cancel subscription. Please try again later."}, status=400)
