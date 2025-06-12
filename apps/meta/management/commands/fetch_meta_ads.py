@@ -13,9 +13,9 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional
 
 from django.core.management.base import BaseCommand, CommandError
-from django.conf import settings
+from django.utils import timezone
 
-from apps.meta.models import FacebookPage
+from apps.meta.models import FacebookPage, MetaApiToken
 
 
 class Command(BaseCommand):
@@ -24,8 +24,8 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument(
             "--token", 
-            required=True, 
-            help="Access token for the Meta API"
+            required=False, 
+            help="Access token for the Meta API. If not provided, will use the active token from the database."
         )
         parser.add_argument(
             "--output-dir", 
@@ -75,7 +75,15 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        # Obtener los IDs de página
+        # Get token from options or from the database
+        token = options["token"]
+        if not token:
+            token = MetaApiToken.get_active_token()
+            if not token:
+                raise CommandError("No token provided and no active token found in the database. Please provide a token or add one in the admin.")
+            self.stdout.write(f"Using active token from database")
+            
+        # Obtener IDs de página
         if options["page_ids"]:
             page_ids = options["page_ids"]
             self.stdout.write(f"Using {len(page_ids)} page IDs provided via command line")
@@ -109,7 +117,7 @@ class Command(BaseCommand):
         try:
             ads = self.fetch_ads_for_page_ids(
                 page_ids=page_ids,
-                access_token=options["token"],
+                access_token=token,
                 ad_reached_countries=ad_reached_countries,
                 content_languages=content_languages,
                 media_types=media_types,

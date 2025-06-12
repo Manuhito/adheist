@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.core.management import call_command
 from django.utils.safestring import mark_safe
 
-from .models import FacebookPage, Backload, Periodicload
+from .models import FacebookPage, Backload, Periodicload, MetaApiToken
 
 
 class MetaAdsQueryBaseAdmin(admin.ModelAdmin):
@@ -72,9 +72,15 @@ class MetaAdsQueryBaseAdmin(admin.ModelAdmin):
             # Preparar argumentos para el comando
             output_dir = f"meta_ads_results_{obj._meta.model_name}_{obj.pk}"
             
-            # Ejecutar el comando (normalmente aquí se usaría un token real)
-            # Nota: En producción, se debería obtener el token de un sistema seguro
-            token = "DEMO_TOKEN"  # Esto debe reemplazarse con un token real en producción
+            # Obtener el token activo del modelo MetaApiToken
+            token = MetaApiToken.get_active_token()
+            
+            if not token:
+                messages.error(request, "No active API token found. Please add a token in the Meta API Tokens section.")
+                return HttpResponseRedirect(reverse(
+                    f'admin:{self.model._meta.app_label}_{self.model._meta.model_name}_change', 
+                    args=[object_id]
+                ))
             
             # Llamar al comando de Django
             call_command(
@@ -180,6 +186,27 @@ class PeriodicloadAdmin(MetaAdsQueryBaseAdmin):
             ''')
         return "-"
     run_query_button.short_description = "Run Query"
+
+
+@admin.register(MetaApiToken)
+class MetaApiTokenAdmin(admin.ModelAdmin):
+    list_display = ["name", "is_active", "expires_at", "created_at"]
+    list_filter = ["is_active", "created_at", "expires_at"]
+    search_fields = ["name", "notes"]
+    readonly_fields = ["created_at", "updated_at"]
+    
+    fieldsets = (
+        (None, {
+            "fields": ("name", "token", "is_active")
+        }),
+        ("Additional Information", {
+            "fields": ("expires_at", "notes")
+        }),
+        ("Audit Information", {
+            "fields": ("created_at", "updated_at"),
+            "classes": ("collapse",)
+        }),
+    )
 
 
 @admin.register(FacebookPage)

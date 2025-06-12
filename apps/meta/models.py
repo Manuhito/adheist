@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
 from django.urls import reverse
+from django.core.exceptions import ValidationError
 
 from apps.utils.models import BaseModel
 
@@ -131,3 +132,58 @@ class Periodicload(MetaAdsQueryBase):
     
     def get_admin_url(self):
         return reverse('admin:meta_periodicload_change', args=[self.pk])
+
+
+class MetaApiToken(BaseModel):
+    """
+    Stores and manages Meta API access tokens.
+    """
+    name = models.CharField(
+        max_length=100,
+        help_text="Name for this token configuration"
+    )
+    token = models.CharField(
+        max_length=500,
+        help_text="Meta API access token"
+    )
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Whether this token is currently active and should be used for API calls"
+    )
+    expires_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When this token expires (if known)"
+    )
+    notes = models.TextField(
+        blank=True,
+        help_text="Additional notes about this token"
+    )
+    
+    class Meta:
+        verbose_name = "Meta API Token"
+        verbose_name_plural = "Meta API Tokens"
+    
+    def __str__(self):
+        return f"{self.name} {'(Active)' if self.is_active else ''}"
+    
+    def clean(self):
+        # Ensure only one token is active at a time
+        if self.is_active:
+            active_tokens = MetaApiToken.objects.filter(is_active=True)
+            if self.pk:
+                active_tokens = active_tokens.exclude(pk=self.pk)
+            if active_tokens.exists():
+                raise ValidationError({
+                    'is_active': 'Only one token can be active at a time. Please deactivate other tokens first.'
+                })
+    
+    @classmethod
+    def get_active_token(cls):
+        """
+        Returns the currently active token string, or None if no active token exists.
+        """
+        try:
+            return cls.objects.get(is_active=True).token
+        except cls.DoesNotExist:
+            return None
