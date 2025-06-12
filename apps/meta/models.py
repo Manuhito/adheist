@@ -103,15 +103,15 @@ class MetaAdsQueryBase(BaseModel):
 
 class Backload(MetaAdsQueryBase):
     """
-    Configuration for historical or complete ad data loads.
+    Configuration for complete ad data loads.
     """
     
     class Meta:
-        verbose_name = "Carga histórica"
-        verbose_name_plural = "Cargas históricas"
+        verbose_name = "Historical load"
+        verbose_name_plural = "Historical loads"
     
     def __str__(self):
-        return f"Carga histórica #{self.pk} ({self.created_at.strftime('%Y-%m-%d')})"
+        return f"Historical load #{self.pk} ({self.created_at.strftime('%Y-%m-%d')})"
     
     def get_admin_url(self):
         return reverse('admin:meta_backload_change', args=[self.pk])
@@ -127,7 +127,7 @@ class Periodicload(MetaAdsQueryBase):
         verbose_name_plural = "Periodic loads"
     
     def __str__(self):
-        return f"Carga periódica #{self.pk} ({self.created_at.strftime('%Y-%m-%d')})"
+        return f"Periodic load #{self.pk} ({self.created_at.strftime('%Y-%m-%d')})"
     
     def get_admin_url(self):
         return reverse('admin:meta_periodicload_change', args=[self.pk])
