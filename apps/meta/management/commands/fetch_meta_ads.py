@@ -170,27 +170,36 @@ class Command(BaseCommand):
             batch_ids = page_ids[i:i+10]
             self.stdout.write(f"Querying ads for pages {i+1}-{i+len(batch_ids)} of {len(page_ids)}...")
             
+            # Construir los parámetros exactamente como en Postman
             params = {
                 "access_token": access_token,
-                "ad_reached_countries": json.dumps(ad_reached_countries),
                 "fields": fields,
                 "limit": limit
             }
             
-            # Añadir content_languages si se proporciona
+            # Añadir parámetros en el mismo orden que Postman
+            if ad_reached_countries:
+                params["ad_reached_countries"] = json.dumps(ad_reached_countries)
+                
             if content_languages:
-                for idx, lang in enumerate(content_languages):
-                    params[f"content_languages[{idx}]"] = json.dumps([lang])
+                # Usar solo el primer idioma como valor simple, no como lista JSON
+                params["languages"] = content_languages[0] if content_languages else None
             
-            # Añadir media_types si se proporciona
             if media_types:
-                for media_type in media_types:
-                    params["media_type"] = media_type
-            
-            # Añadir search_page_ids
-            params["search_page_ids"] = ",".join(batch_ids)
+                # Usar solo el primer tipo de medio como valor simple, no como lista JSON
+                params["media_type"] = media_types[0] if media_types else None
+                
+            # Añadir page_ids al final como en Postman
+            params["search_page_ids"] = json.dumps(batch_ids)
             
             try:
+                # Construir la URL completa para el log (sin el token)
+                log_params = params.copy()
+                log_params["access_token"] = "[TOKEN_HIDDEN]"
+                log_url = base_url + "?" + "&".join([f"{k}={v}" for k, v in log_params.items()])
+                self.stdout.write(f"  API Call URL: {log_url}")
+                
+                # Realizar la consulta a la API
                 response = requests.get(base_url, params=params)
                 response.raise_for_status()
                 data = response.json()
@@ -200,11 +209,15 @@ class Command(BaseCommand):
                     self.stdout.write(f"  Found {len(data['data'])} ads")
                 else:
                     self.stdout.write(self.style.WARNING(f"  No ads found for this group of pages"))
-                
+                    
                 # Implementar paginación si hay más resultados
                 next_page = data.get("paging", {}).get("next")
                 while next_page:
                     self.stdout.write("  Getting additional page of results...")
+                    # Log de la URL de paginación (ocultando el token)
+                    log_next_page = next_page.replace(access_token, "[TOKEN_HIDDEN]")
+                    self.stdout.write(f"  API Call URL (pagination): {log_next_page}")
+                    
                     response = requests.get(next_page)
                     response.raise_for_status()
                     data = response.json()
@@ -221,7 +234,15 @@ class Command(BaseCommand):
             except requests.RequestException as e:
                 self.stdout.write(self.style.ERROR(f"Error querying API for pages {batch_ids}: {e}"))
                 if hasattr(e, 'response') and e.response:
-                    self.stdout.write(self.style.ERROR(f"Error response: {e.response.text}"))
+                    try:
+                        error_json = e.response.json()
+                        self.stdout.write(self.style.ERROR(f"Error details: {json.dumps(error_json, indent=2)}"))
+                    except:
+                        self.stdout.write(self.style.ERROR(f"Error response: {e.response.text}"))
+                        
+                # Mostrar la URL exacta que causó el error (sin el token)
+                error_url = e.request.url.replace(access_token, "[TOKEN_HIDDEN]")
+                self.stdout.write(self.style.ERROR(f"Failed URL: {error_url}"))
             
             # Small pause between batches to avoid rate limits
             time.sleep(delay)
