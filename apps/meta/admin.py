@@ -11,16 +11,13 @@ from .models import FacebookPage, Backload, MetaApiToken
 
 @admin.register(Backload)
 class BackloadAdmin(admin.ModelAdmin):
-    list_display = ["__str__", "description_short", "last_run", "created_at"]
+    list_display = ["__str__", "last_run", "created_at"]
     list_filter = ["created_at", "last_run"]
-    search_fields = ["description"]
+    search_fields = []
     readonly_fields = ["created_at", "updated_at", "last_run", "output_file", "run_query_button"]
     filter_horizontal = ["pages"]
     
     fieldsets = (
-        (None, {
-            "fields": ("description",)
-        }),
         ("Pages to query", {
             "fields": ("pages",)
         }),
@@ -47,11 +44,6 @@ class BackloadAdmin(admin.ModelAdmin):
         ]
         return custom_urls + urls
     
-    def description_short(self, obj):
-        if obj.description and len(obj.description) > 50:
-            return f"{obj.description[:50]}..."
-        return obj.description or "-"
-    description_short.short_description = "Description"
     
     def run_query_button(self, obj):
         if obj.pk:

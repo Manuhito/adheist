@@ -83,10 +83,6 @@ class Backload(BaseModel):
         help_text="Facebook pages to query",
         related_name="backload_loads"
     )
-    description = models.TextField(
-        blank=True,
-        help_text="Description or notes about this query configuration"
-    )
     last_run = models.DateTimeField(
         null=True,
         blank=True,
