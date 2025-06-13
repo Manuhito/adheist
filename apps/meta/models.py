@@ -71,7 +71,7 @@ class Backload(BaseModel):
         help_text="Media types to include in the search"
     )
     fields = models.TextField(
-        default="page_name,ad_creative_bodies,ad_snapshot_url,impressions,spend",
+        default="id,ad_creation_time,ad_creative_bodies,ad_creative_link_captions,ad_creative_link_descriptions,ad_creative_link_titles,ad_delivery_start_time,ad_delivery_stop_time,ad_snapshot_url,age_country_gender_reach_breakdown,beneficiary_payers,br_total_reach,bylines,currency,delivery_by_region,demographic_distribution,estimated_audience_size,eu_total_reach,impressions,languages,page_id,page_name,publisher_platforms,spend,target_ages,target_gender,target_locations",
         help_text="Fields to include in the response, comma-separated"
     )
     limit = models.PositiveIntegerField(
