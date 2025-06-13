@@ -6,14 +6,15 @@ from django.contrib import messages
 from django.core.management import call_command
 from django.utils.safestring import mark_safe
 
-from .models import FacebookPage, Backload, Periodicload, MetaApiToken
+from .models import FacebookPage, Backload, MetaApiToken
 
 
-class MetaAdsQueryBaseAdmin(admin.ModelAdmin):
+@admin.register(Backload)
+class BackloadAdmin(admin.ModelAdmin):
     list_display = ["__str__", "description_short", "last_run", "created_at"]
     list_filter = ["created_at", "last_run"]
     search_fields = ["description"]
-    readonly_fields = ["created_at", "updated_at", "last_run", "output_file"]
+    readonly_fields = ["created_at", "updated_at", "last_run", "output_file", "run_query_button"]
     filter_horizontal = ["pages"]
     
     fieldsets = (
@@ -27,7 +28,7 @@ class MetaAdsQueryBaseAdmin(admin.ModelAdmin):
             "fields": ("ad_reached_countries", "content_languages", "media_types", "fields", "limit")
         }),
         ("Execution Information", {
-            "fields": ("last_run", "output_file")
+            "fields": ("last_run", "output_file", "run_query_button")
         }),
         ("Audit Information", {
             "fields": ("created_at", "updated_at"),
@@ -51,6 +52,20 @@ class MetaAdsQueryBaseAdmin(admin.ModelAdmin):
             return f"{obj.description[:50]}..."
         return obj.description or "-"
     description_short.short_description = "Description"
+    
+    def run_query_button(self, obj):
+        if obj.pk:
+            url = reverse(
+                f'admin:{self.model._meta.app_label}_{self.model._meta.model_name}_run',
+                args=[obj.pk]
+            )
+            return mark_safe(f'''
+            <a class="button" href="{url}">
+                Run Query
+            </a>
+            ''')
+        return "-"
+    run_query_button.short_description = "Run Query"
     
     def run_fetch_command(self, request, object_id):
         # Obtener el objeto
@@ -108,84 +123,6 @@ class MetaAdsQueryBaseAdmin(admin.ModelAdmin):
             f'admin:{self.model._meta.app_label}_{self.model._meta.model_name}_change', 
             args=[object_id]
         ))
-    
-
-
-
-@admin.register(Backload)
-class BackloadAdmin(MetaAdsQueryBaseAdmin):
-    readonly_fields = ["created_at", "updated_at", "last_run", "output_file", "run_query_button"]
-    
-    fieldsets = (
-        (None, {
-            "fields": ("description",)
-        }),
-        ("Pages to query", {
-            "fields": ("pages",)
-        }),
-        ("API Parameters", {
-            "fields": ("ad_reached_countries", "content_languages", "media_types", "fields", "limit")
-        }),
-        ("Execution Information", {
-            "fields": ("last_run", "output_file", "run_query_button")
-        }),
-        ("Audit Information", {
-            "fields": ("created_at", "updated_at"),
-            "classes": ("collapse",)
-        }),
-    )
-    
-    def run_query_button(self, obj):
-        if obj.pk:
-            url = reverse(
-                f'admin:{self.model._meta.app_label}_{self.model._meta.model_name}_run',
-                args=[obj.pk]
-            )
-            return mark_safe(f'''
-            <a class="button" href="{url}">
-                Run Query
-            </a>
-            ''')
-        return "-"
-    run_query_button.short_description = "Run Query"
-
-
-@admin.register(Periodicload)
-class PeriodicloadAdmin(MetaAdsQueryBaseAdmin):
-    readonly_fields = ["created_at", "updated_at", "last_run", "output_file", "run_query_button"]
-    
-    fieldsets = (
-        (None, {
-            "fields": ("description",)
-        }),
-        ("Pages to query", {
-            "fields": ("pages",)
-        }),
-        ("API Parameters", {
-            "fields": ("ad_reached_countries", "content_languages", "media_types", "fields", "limit")
-        }),
-        ("Execution Information", {
-            "fields": ("last_run", "output_file", "run_query_button")
-        }),
-        ("Audit Information", {
-            "fields": ("created_at", "updated_at"),
-            "classes": ("collapse",)
-        }),
-    )
-    
-    def run_query_button(self, obj):
-        if obj.pk:
-            url = reverse(
-                f'admin:{self.model._meta.app_label}_{self.model._meta.model_name}_run',
-                args=[obj.pk]
-            )
-            return mark_safe(f'''
-            <a class="button" href="{url}">
-                Run Query
-            </a>
-            ''')
-        return "-"
-    run_query_button.short_description = "Run Query"
 
 
 @admin.register(MetaApiToken)

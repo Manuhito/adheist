@@ -1,7 +1,7 @@
 """
 Django command to query the Meta Ad Library API using configuration models.
 
-This command uses the Backload, Periodicload, and FacebookPage models to query the API
+This command uses the Backload and FacebookPage models to query the Meta Ads Library API
 and save the results to a JSON file.
 """
 

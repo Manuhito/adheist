@@ -51,9 +51,9 @@ class FacebookPage(BaseModel):
         return self.page_id
 
 
-class MetaAdsQueryBase(BaseModel):
+class Backload(BaseModel):
     """
-    Base class for Meta Ad Library query configurations.
+    Configuration for Meta Ad Library data loads.
     """
     ad_reached_countries = ArrayField(
         models.CharField(max_length=2), 
@@ -81,7 +81,7 @@ class MetaAdsQueryBase(BaseModel):
     pages = models.ManyToManyField(
         FacebookPage,
         help_text="Facebook pages to query",
-        related_name="%(class)s_loads"
+        related_name="backload_loads"
     )
     description = models.TextField(
         blank=True,
@@ -99,39 +99,14 @@ class MetaAdsQueryBase(BaseModel):
     )
     
     class Meta:
-        abstract = True
-
-
-class Backload(MetaAdsQueryBase):
-    """
-    Configuration for complete ad data loads.
-    """
-    
-    class Meta:
-        verbose_name = "Historical load"
-        verbose_name_plural = "Historical loads"
+        verbose_name = "Meta Ads Query"
+        verbose_name_plural = "Meta Ads Queries"
     
     def __str__(self):
-        return f"Historical load #{self.pk} ({self.created_at.strftime('%Y-%m-%d')})"
+        return f"Meta Ads Query #{self.pk} ({self.created_at.strftime('%Y-%m-%d')})"
     
     def get_admin_url(self):
         return reverse('admin:meta_backload_change', args=[self.pk])
-
-
-class Periodicload(MetaAdsQueryBase):
-    """
-    Configuration for periodic ad data loads.
-    """
-    
-    class Meta:
-        verbose_name = "Periodic load"
-        verbose_name_plural = "Periodic loads"
-    
-    def __str__(self):
-        return f"Periodic load #{self.pk} ({self.created_at.strftime('%Y-%m-%d')})"
-    
-    def get_admin_url(self):
-        return reverse('admin:meta_periodicload_change', args=[self.pk])
 
 
 class MetaApiToken(BaseModel):
