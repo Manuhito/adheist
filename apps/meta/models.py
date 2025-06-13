@@ -56,9 +56,9 @@ class Backload(BaseModel):
     Configuration for Meta Ad Library data loads.
     """
     ad_reached_countries = ArrayField(
-        models.CharField(max_length=2), 
-        default=list(['US', 'GB']),
-        help_text="List of country codes where ads are shown (e.g.: US, GB, ES)"
+        models.CharField(max_length=3), 
+        default=list(['ALL']),
+        help_text="Country codes where ads are shown (default: ALL)"
     )
     content_languages = ArrayField(
         models.CharField(max_length=2), 
