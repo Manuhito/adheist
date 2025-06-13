@@ -11,8 +11,8 @@ from .models import FacebookPage, Backload, MetaApiToken
 
 @admin.register(Backload)
 class BackloadAdmin(admin.ModelAdmin):
-    list_display = ["__str__", "last_run", "created_at"]
-    list_filter = ["created_at", "last_run"]
+    list_display = ["__str__", "status", "last_run", "created_at"]
+    list_filter = ["status", "created_at", "last_run"]
     search_fields = []
     readonly_fields = ["created_at", "updated_at", "last_run", "output_file", "error_log", "run_query_button", "ad_reached_countries"]
     filter_horizontal = ["pages"]
@@ -25,7 +25,7 @@ class BackloadAdmin(admin.ModelAdmin):
             "fields": ("ad_reached_countries", "content_languages", "media_types", "fields", "limit")
         }),
         ("Execution Information", {
-            "fields": ("last_run", "output_file", "error_log", "run_query_button")
+            "fields": ("status", "last_run", "output_file", "error_log", "run_query_button")
         }),
         ("Audit Information", {
             "fields": ("created_at", "updated_at"),
@@ -76,6 +76,10 @@ class BackloadAdmin(admin.ModelAdmin):
                     args=[object_id]
                 ))
             
+            # Set status to pending before starting execution
+            obj.status = Backload.STATUS_PENDING
+            obj.save(update_fields=['status'])
+            
             # Preparar argumentos para el comando
             output_dir = f"meta_ads_results_{obj._meta.model_name}_{obj.pk}"
             
@@ -88,6 +92,10 @@ class BackloadAdmin(admin.ModelAdmin):
                     f'admin:{self.model._meta.app_label}_{self.model._meta.model_name}_change', 
                     args=[object_id]
                 ))
+            
+            # Actualizar last_run
+            obj.last_run = timezone.now()
+            obj.save(update_fields=['last_run'])
             
             # Llamar al comando de Django
             call_command(
@@ -104,9 +112,8 @@ class BackloadAdmin(admin.ModelAdmin):
             )
             
             # Actualizar información de ejecución
-            obj.last_run = timezone.now()
             obj.output_file = output_dir
-            obj.save(update_fields=['last_run', 'output_file'])
+            obj.save(update_fields=['output_file'])
             
             messages.success(request, f"Command executed successfully. Results saved in {output_dir}")
         except Exception as e:

@@ -149,8 +149,16 @@ class Command(BaseCommand):
                 try:
                     backload = Backload.objects.get(id=backload_id)
                     backload.error_log = "\n".join(error_messages)
+                    
+                    # Update status based on execution result
+                    if error_messages:
+                        backload.status = Backload.STATUS_FAILED
+                    else:
+                        backload.status = Backload.STATUS_SUCCESS
+                        
                     backload.save()
                     self.stdout.write(self.style.SUCCESS(f"Error logs saved to Backload {backload_id}"))
+                    self.stdout.write(self.style.SUCCESS(f"Status updated to: {backload.get_status_display()}"))
                 except Backload.DoesNotExist:
                     self.stdout.write(self.style.ERROR(f"Backload {backload_id} not found"))
             
