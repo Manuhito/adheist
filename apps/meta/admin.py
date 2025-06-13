@@ -14,7 +14,7 @@ class BackloadAdmin(admin.ModelAdmin):
     list_display = ["__str__", "last_run", "created_at"]
     list_filter = ["created_at", "last_run"]
     search_fields = []
-    readonly_fields = ["created_at", "updated_at", "last_run", "output_file", "run_query_button", "ad_reached_countries"]
+    readonly_fields = ["created_at", "updated_at", "last_run", "output_file", "error_log", "run_query_button", "ad_reached_countries"]
     filter_horizontal = ["pages"]
     
     fieldsets = (
@@ -25,7 +25,7 @@ class BackloadAdmin(admin.ModelAdmin):
             "fields": ("ad_reached_countries", "content_languages", "media_types", "fields", "limit")
         }),
         ("Execution Information", {
-            "fields": ("last_run", "output_file", "run_query_button")
+            "fields": ("last_run", "output_file", "error_log", "run_query_button")
         }),
         ("Audit Information", {
             "fields": ("created_at", "updated_at"),
@@ -99,7 +99,8 @@ class BackloadAdmin(admin.ModelAdmin):
                 content_languages=obj.content_languages,
                 media_types=obj.media_types,
                 fields=obj.fields,
-                limit=obj.limit
+                limit=obj.limit,
+                backload_id=obj.pk
             )
             
             # Actualizar información de ejecución

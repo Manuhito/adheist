@@ -15,7 +15,7 @@ from typing import Dict, List, Any, Optional
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
-from apps.meta.models import FacebookPage, MetaApiToken
+from apps.meta.models import FacebookPage, MetaApiToken, Backload
 
 
 class Command(BaseCommand):
@@ -73,6 +73,11 @@ class Command(BaseCommand):
             type=int,
             help="Maximum number of ads per page in the response"
         )
+        parser.add_argument(
+            "--backload-id",
+            type=int,
+            help="ID of the Backload object to update with error logs"
+        )
 
     def handle(self, *args, **options):
         # Debug logs para identificar el error
@@ -81,28 +86,6 @@ class Command(BaseCommand):
             if key != "token":  # No mostrar el token por seguridad
                 self.stdout.write(f"DEBUG - {key}: type={type(value)}, value={value}")
                 
-        # Capturar errores de endswith en listas
-        try:
-            if isinstance(options.get("content_languages"), list):
-                self.stdout.write("DEBUG - Testing content_languages for endswith")
-                options["content_languages"][0].endswith("")
-        except AttributeError as e:
-            self.stdout.write(self.style.ERROR(f"ERROR: content_languages[0].endswith() failed: {e}"))
-            
-        try:
-            if isinstance(options.get("media_types"), list):
-                self.stdout.write("DEBUG - Testing media_types for endswith")
-                options["media_types"][0].endswith("")
-        except AttributeError as e:
-            self.stdout.write(self.style.ERROR(f"ERROR: media_types[0].endswith() failed: {e}"))
-            
-        try:
-            if isinstance(options.get("ad_reached_countries"), list):
-                self.stdout.write("DEBUG - Testing ad_reached_countries for endswith")
-                options["ad_reached_countries"][0].endswith("")
-        except AttributeError as e:
-            self.stdout.write(self.style.ERROR(f"ERROR: ad_reached_countries[0].endswith() failed: {e}"))
-        
         # Get token from options or from the database
         token = options["token"]
         if not token:
@@ -159,6 +142,17 @@ class Command(BaseCommand):
             # Save the results
             output_file = self.save_results_to_json(ads, output_dir)
             self.stdout.write(self.style.SUCCESS(f"Results saved to {output_file}"))
+            
+            # Update Backload object with error logs if provided
+            backload_id = options.get("backload_id")
+            if backload_id:
+                try:
+                    backload = Backload.objects.get(id=backload_id)
+                    backload.error_log = "\n".join(error_messages)
+                    backload.save()
+                    self.stdout.write(self.style.SUCCESS(f"Error logs saved to Backload {backload_id}"))
+                except Backload.DoesNotExist:
+                    self.stdout.write(self.style.ERROR(f"Backload {backload_id} not found"))
             
             # Return any error messages
             return error_messages
