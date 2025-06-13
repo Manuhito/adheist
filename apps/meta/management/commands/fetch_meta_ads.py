@@ -75,6 +75,34 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        # Debug logs para identificar el error
+        self.stdout.write("DEBUG - Command options:")
+        for key, value in options.items():
+            if key != "token":  # No mostrar el token por seguridad
+                self.stdout.write(f"DEBUG - {key}: type={type(value)}, value={value}")
+                
+        # Capturar errores de endswith en listas
+        try:
+            if isinstance(options.get("content_languages"), list):
+                self.stdout.write("DEBUG - Testing content_languages for endswith")
+                options["content_languages"][0].endswith("")
+        except AttributeError as e:
+            self.stdout.write(self.style.ERROR(f"ERROR: content_languages[0].endswith() failed: {e}"))
+            
+        try:
+            if isinstance(options.get("media_types"), list):
+                self.stdout.write("DEBUG - Testing media_types for endswith")
+                options["media_types"][0].endswith("")
+        except AttributeError as e:
+            self.stdout.write(self.style.ERROR(f"ERROR: media_types[0].endswith() failed: {e}"))
+            
+        try:
+            if isinstance(options.get("ad_reached_countries"), list):
+                self.stdout.write("DEBUG - Testing ad_reached_countries for endswith")
+                options["ad_reached_countries"][0].endswith("")
+        except AttributeError as e:
+            self.stdout.write(self.style.ERROR(f"ERROR: ad_reached_countries[0].endswith() failed: {e}"))
+        
         # Get token from options or from the database
         token = options["token"]
         if not token:
@@ -115,7 +143,7 @@ class Command(BaseCommand):
         
         # Consultar la API y guardar los resultados
         try:
-            ads = self.fetch_ads_for_page_ids(
+            ads, error_messages = self.fetch_ads_for_page_ids(
                 page_ids=page_ids,
                 access_token=token,
                 ad_reached_countries=ad_reached_countries,
@@ -129,8 +157,11 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"Total ads found: {len(ads)}"))
             
             # Save the results
-            output_path = self.save_results_to_json(ads, output_dir)
-            self.stdout.write(self.style.SUCCESS(f"Results saved to {output_path}"))
+            output_file = self.save_results_to_json(ads, output_dir)
+            self.stdout.write(self.style.SUCCESS(f"Results saved to {output_file}"))
+            
+            # Return any error messages
+            return error_messages
             
         except Exception as e:
             raise CommandError(f"Error during API query: {e}")
@@ -139,13 +170,13 @@ class Command(BaseCommand):
         self,
         page_ids: List[str],
         access_token: str,
-        ad_reached_countries: List[str],
-        content_languages: List[str],
-        media_types: List[str],
-        fields: str,
-        limit: int,
+        ad_reached_countries: List[str] = None,
+        content_languages: List[str] = None,
+        media_types: List[str] = None,
+        fields: str = None,
+        limit: int = 100,
         delay: int = 2
-    ) -> List[Dict[str, Any]]:
+    ) -> tuple[List[Dict[str, Any]], List[str]]:
         """
         Query the Meta Ad Library API to get ads for the specified pages.
         
@@ -160,16 +191,25 @@ class Command(BaseCommand):
             delay: Seconds to wait between batches
             
         Returns:
-            List of ads
+            Tuple containing (list of ads, list of error messages)
         """
         base_url = "https://graph.facebook.com/v23.0/ads_archive"
         all_ads = []
+        error_messages = []
         
         # Procesar los page_ids en grupos de 10 (límite de la API)
         for i in range(0, len(page_ids), 10):
             batch_ids = page_ids[i:i+10]
             self.stdout.write(f"Querying ads for pages {i+1}-{i+len(batch_ids)} of {len(page_ids)}...")
             
+            # Debug logs para identificar el error
+            self.stdout.write("DEBUG - fetch_ads_for_page_ids parameters:")
+            self.stdout.write(f"DEBUG - ad_reached_countries: type={type(ad_reached_countries)}, value={ad_reached_countries}")
+            self.stdout.write(f"DEBUG - content_languages: type={type(content_languages)}, value={content_languages}")
+            self.stdout.write(f"DEBUG - media_types: type={type(media_types)}, value={media_types}")
+            self.stdout.write(f"DEBUG - fields: type={type(fields)}, value={fields}")
+            self.stdout.write(f"DEBUG - limit: type={type(limit)}, value={limit}")
+        
             # Construir los parámetros exactamente como en Postman
             params = {
                 "access_token": access_token,
@@ -179,15 +219,65 @@ class Command(BaseCommand):
             
             # Añadir parámetros en el mismo orden que Postman
             if ad_reached_countries:
-                params["ad_reached_countries"] = json.dumps(ad_reached_countries)
-                
+                try:
+                    self.stdout.write(f"DEBUG - Processing ad_reached_countries: {ad_reached_countries}")
+                    # Manejar el campo ad_reached_countries que ahora es un TextField con JSON
+                    if isinstance(ad_reached_countries, str):
+                        # Si es un string, verificar si ya es JSON o necesita ser parseado
+                        if ad_reached_countries.startswith('[') and ad_reached_countries.endswith(']'):
+                            # Ya es una cadena JSON, usarla directamente
+                            params["ad_reached_countries"] = ad_reached_countries
+                        else:
+                            try:
+                                # Intentar parsear como JSON
+                                countries = json.loads(ad_reached_countries)
+                                params["ad_reached_countries"] = json.dumps(countries)
+                            except json.JSONDecodeError:
+                                # Si no es JSON válido, tratarlo como un solo país
+                                params["ad_reached_countries"] = f'["{ad_reached_countries}"]'
+                    elif isinstance(ad_reached_countries, list):
+                        # Si es una lista, convertirla a JSON
+                        params["ad_reached_countries"] = json.dumps(ad_reached_countries)
+                    else:
+                        # Valor por defecto: todos los países
+                        all_countries = ["BR","IN","GB","US","CA","AR","AU","AT","BE","CL","CN","CO","HR","DK","DO","EG","FI","FR","DE","GR","HK","ID","IE","IL","IT","JP","JO","KW","LB","MY","MX","NL","NZ","NG","NO","PK","PA","PE","PH","PL","RU","SA","RS","SG","ZA","KR","ES","SE","CH","TW","TH","TR","AE","VE","PT","LU","BG","CZ","SI","IS","SK","LT","TT","BD","LK","KE","HU","MA","CY","JM","EC","RO","BO","GT","CR","QA","SV","HN","NI","PY","UY","PR","BA","PS","TN","BH","VN","GH","MU","UA","MT","BS","MV","OM","MK","LV","EE","IQ","DZ","AL","NP","MO","ME","SN","GE","BN","UG","GP","BB","AZ","TZ","LY","MQ","CM","BW","ET","KZ","NA","MG","NC","MD","FJ","BY","JE","GU","YE","ZM","IM","HT","KH","AW","PF","AF","BM","GY","AM","MW","AG","RW","GG","GM","FO","LC","KY","BJ","AD","GD","VI","BZ","VC","MN","MZ","ML","AO","GF","UZ","DJ","BF","MC","TG","GL","GA","GI","CD","KG","PG","BT","KN","SZ","LS","LA","LI","MP","SR","SC","VG","TC","DM","MR","AX","SM","SL","NE","CG","AI","YT","CV","GN","TM","BI","TJ","VU","SB","ER","WS","AS","FK","GQ","TO","KM","PW","FM","CF","SO","MH","VA","TD","KI","ST","TV","NR","RE","LR","ZW","CI","MM","AN","AQ","BQ","BV","IO","CX","CC","CK","CW","TF","GW","HM","XK","MS","NU","NF","PN","BL","SH","MF","PM","SX","GS","SS","SJ","TL","TK","UM","WF","EH"]
+                        params["ad_reached_countries"] = json.dumps(all_countries)
+                    self.stdout.write(f"DEBUG - Final ad_reached_countries param: {params['ad_reached_countries']}")
+                except Exception as e:
+                    self.stdout.write(self.style.ERROR(f"ERROR processing ad_reached_countries: {e}"))
+                    # En caso de error, usar el valor por defecto
+                    all_countries = ["BR","IN","GB","US","CA","AR","AU","AT","BE","CL","CN","CO","HR","DK","DO","EG","FI","FR","DE","GR","HK","ID","IE","IL","IT","JP","JO","KW","LB","MY","MX","NL","NZ","NG","NO","PK","PA","PE","PH","PL","RU","SA","RS","SG","ZA","KR","ES","SE","CH","TW","TH","TR","AE","VE","PT","LU","BG","CZ","SI","IS","SK","LT","TT","BD","LK","KE","HU","MA","CY","JM","EC","RO","BO","GT","CR","QA","SV","HN","NI","PY","UY","PR","BA","PS","TN","BH","VN","GH","MU","UA","MT","BS","MV","OM","MK","LV","EE","IQ","DZ","AL","NP","MO","ME","SN","GE","BN","UG","GP","BB","AZ","TZ","LY","MQ","CM","BW","ET","KZ","NA","MG","NC","MD","FJ","BY","JE","GU","YE","ZM","IM","HT","KH","AW","PF","AF","BM","GY","AM","MW","AG","RW","GG","GM","FO","LC","KY","BJ","AD","GD","VI","BZ","VC","MN","MZ","ML","AO","GF","UZ","DJ","BF","MC","TG","GL","GA","GI","CD","KG","PG","BT","KN","SZ","LS","LA","LI","MP","SR","SC","VG","TC","DM","MR","AX","SM","SL","NE","CG","AI","YT","CV","GN","TM","BI","TJ","VU","SB","ER","WS","AS","FK","GQ","TO","KM","PW","FM","CF","SO","MH","VA","TD","KI","ST","TV","NR","RE","LR","ZW","CI","MM","AN","AQ","BQ","BV","IO","CX","CC","CK","CW","TF","GW","HM","XK","MS","NU","NF","PN","BL","SH","MF","PM","SX","GS","SS","SJ","TL","TK","UM","WF","EH"]
+                    params["ad_reached_countries"] = json.dumps(all_countries)
+                    
             if content_languages:
-                # Usar solo el primer idioma como valor simple, no como lista JSON
-                params["languages"] = content_languages[0] if content_languages else None
+                try:
+                    self.stdout.write(f"DEBUG - Processing content_languages: {content_languages}")
+                    # Usar solo el primer idioma como valor simple, no como lista JSON
+                    if isinstance(content_languages, list) and content_languages:
+                        params["languages"] = content_languages[0]
+                    elif isinstance(content_languages, str):
+                        params["languages"] = content_languages
+                    else:
+                        params["languages"] = "EN"  # Valor por defecto
+                    self.stdout.write(f"DEBUG - Final languages param: {params['languages']}")
+                except Exception as e:
+                    self.stdout.write(self.style.ERROR(f"ERROR processing content_languages: {e}"))
+                    params["languages"] = "EN"  # Valor por defecto en caso de error
             
             if media_types:
-                # Usar solo el primer tipo de medio como valor simple, no como lista JSON
-                params["media_type"] = media_types[0] if media_types else None
+                try:
+                    self.stdout.write(f"DEBUG - Processing media_types: {media_types}")
+                    # Usar solo el primer tipo de medio como valor simple, no como lista JSON
+                    if isinstance(media_types, list) and media_types:
+                        params["media_type"] = media_types[0]
+                    elif isinstance(media_types, str):
+                        params["media_type"] = media_types
+                    else:
+                        params["media_type"] = "MEME"  # Valor por defecto
+                    self.stdout.write(f"DEBUG - Final media_type param: {params['media_type']}")
+                except Exception as e:
+                    self.stdout.write(self.style.ERROR(f"ERROR processing media_types: {e}"))
+                    params["media_type"] = "MEME"  # Valor por defecto en caso de error
                 
             # Añadir page_ids al final como en Postman
             params["search_page_ids"] = json.dumps(batch_ids)
@@ -232,22 +322,31 @@ class Command(BaseCommand):
                     time.sleep(1)
             
             except requests.RequestException as e:
-                self.stdout.write(self.style.ERROR(f"Error querying API for pages {batch_ids}: {e}"))
+                error_msg = f"Error querying API for pages {batch_ids}: {e}"
+                self.stdout.write(self.style.ERROR(error_msg))
+                error_messages.append(error_msg)
+                
                 if hasattr(e, 'response') and e.response:
                     try:
                         error_json = e.response.json()
-                        self.stdout.write(self.style.ERROR(f"Error details: {json.dumps(error_json, indent=2)}"))
+                        error_details = f"Error details: {json.dumps(error_json, indent=2)}"
+                        self.stdout.write(self.style.ERROR(error_details))
+                        error_messages.append(error_details)
                     except:
-                        self.stdout.write(self.style.ERROR(f"Error response: {e.response.text}"))
+                        error_response = f"Error response: {e.response.text}"
+                        self.stdout.write(self.style.ERROR(error_response))
+                        error_messages.append(error_response)
                         
                 # Mostrar la URL exacta que causó el error (sin el token)
                 error_url = e.request.url.replace(access_token, "[TOKEN_HIDDEN]")
-                self.stdout.write(self.style.ERROR(f"Failed URL: {error_url}"))
+                failed_url = f"Failed URL: {error_url}"
+                self.stdout.write(self.style.ERROR(failed_url))
+                error_messages.append(failed_url)
             
             # Small pause between batches to avoid rate limits
             time.sleep(delay)
         
-        return all_ads
+        return all_ads, error_messages
 
     def save_results_to_json(self, ads: List[Dict[str, Any]], output_dir: str) -> str:
         """
