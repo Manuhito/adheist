@@ -48,6 +48,7 @@ class AdLibrary(BaseModel):
         help_text="Lista de plataformas donde se publicó el anuncio"
     )
     meta_ad_id = models.CharField(max_length=20, blank=True, help_text="Identificador único del anuncio en Meta")
+    ad_creation_time = models.DateField(null=True, blank=True, help_text="Fecha de creación del anuncio en formato YYYY-MM-DD")
 
     def __str__(self):
         return f"Ad Library for {self.facebook_page}"
