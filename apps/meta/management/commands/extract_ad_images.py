@@ -146,11 +146,20 @@ class Command(BaseCommand):
             URL de la imagen o None si no se encuentra
         """
         try:
-            # NO eliminar el token de acceso - es necesario para autenticar la solicitud
-            # Asegurarse de que la URL esté completa
+            # Asegurarse de que la URL esté completa y tenga el token de acceso
             if not snapshot_url or 'facebook.com' not in snapshot_url:
                 self.stderr.write(self.style.ERROR(f"URL de snapshot inválida: {snapshot_url}"))
                 return None
+            
+            # Imprimir la URL completa para depuración (ocultando el token por seguridad)
+            debug_url = snapshot_url
+            if 'access_token=' in debug_url:
+                token_part = debug_url.split('access_token=')[1]
+                if '&' in token_part:
+                    token_part = token_part.split('&')[0]
+                masked_token = token_part[:5] + '...' + token_part[-5:] if len(token_part) > 10 else '...'
+                debug_url = debug_url.replace(token_part, masked_token)
+            self.stdout.write(f"Accediendo a URL: {debug_url}")
             
             headers = {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -168,54 +177,87 @@ class Command(BaseCommand):
             # Añadir un pequeño retraso para evitar bloqueos
             time.sleep(1.5)
             
-            # Imprimir la URL completa para depuración
-            self.stdout.write(f"Accediendo a URL: {snapshot_url}")
-            
             response = requests.get(snapshot_url, headers=headers, timeout=15)
             response.raise_for_status()
             
             soup = BeautifulSoup(response.text, 'html.parser')
             
-            # Estrategia 1: Buscar imágenes dentro de contenedores de anuncios
-            ad_containers = soup.select('div[data-testid="ad_creative"]')
-            if ad_containers:
-                for container in ad_containers:
-                    images = container.select('img')
-                    if images and len(images) > 0:
-                        for img in images:
-                            if img.get('src') and not img.get('src').endswith('.svg'):
-                                return img.get('src')
+            # Para depuración, guardar el HTML en un archivo temporal
+            # with open(f"facebook_ad_{int(time.time())}.html", "w", encoding="utf-8") as f:
+            #     f.write(response.text)
             
-            # Estrategia 2: Buscar imágenes grandes que probablemente sean del anuncio
+            # Estrategia 1: Buscar imágenes con URLs de Facebook (scontent o fbcdn)
             all_images = soup.select('img')
-            ad_images = []
+            facebook_images = []
+            
+            # Contar imágenes encontradas para depuración
+            total_images = len(all_images)
+            self.stdout.write(f"Total de imágenes en la página: {total_images}")
             
             for img in all_images:
                 src = img.get('src')
-                if not src or src.endswith('.svg'):
+                if not src:
                     continue
-                    
-                # Filtrar imágenes pequeñas o iconos
-                width = img.get('width')
-                height = img.get('height')
                 
-                if width and height:
-                    try:
-                        w, h = int(width), int(height)
-                        if w >= 200 and h >= 200:  # Imágenes de tamaño significativo
-                            ad_images.append(src)
-                    except ValueError:
-                        pass
-                elif 'scontent' in src:  # URLs de imágenes de Facebook suelen contener 'scontent'
-                    ad_images.append(src)
+                # No filtrar SVGs aquí, ya que algunas imágenes de anuncios podrían ser SVGs
+                
+                # Buscar específicamente URLs que contengan scontent o fbcdn
+                if 'scontent' in src or 'fbcdn' in src:
+                    facebook_images.append(src)
+                    self.stdout.write(f"Imagen de Facebook encontrada: {src[:50]}...")
             
-            if ad_images:
-                return ad_images[0]  # Devolver la primera imagen grande encontrada
+            # Si encontramos imágenes de Facebook, ordenarlas por tamaño de URL
+            if facebook_images:
+                # Ordenar por longitud de URL (descendente)
+                facebook_images.sort(key=len, reverse=True)
                 
-            self.stdout.write(self.style.WARNING(f"No se encontró imagen para {snapshot_url}"))
+                # Eliminar duplicados manteniendo el orden
+                unique_images = []
+                for img in facebook_images:
+                    if img not in unique_images:
+                        unique_images.append(img)
+                
+                self.stdout.write(self.style.SUCCESS(f"Imagen encontrada para {debug_url}"))
+                return unique_images[0]  # Devolver la primera imagen
+            
+            # Estrategia 2: Buscar imágenes con clases específicas de Facebook
+            # Basado en el ejemplo: class="x15mokao x1ga7v0g x16uus16 xbiv7yw xz62fqu xh8yej3 x9ybwvh x19kjcj4"
+            for img in all_images:
+                src = img.get('src')
+                if not src:
+                    continue
+                
+                # Verificar si tiene clases que empiezan con 'x' seguido de caracteres alfanuméricos
+                # (patrón común en las clases de Facebook)
+                img_class = img.get('class', [])
+                if img_class:
+                    # Convertir a lista si es un string
+                    if isinstance(img_class, str):
+                        img_class = img_class.split()
+                    
+                    # Verificar si hay al menos 3 clases que empiezan con 'x' seguido de caracteres alfanuméricos
+                    x_classes = [cls for cls in img_class if cls.startswith('x') and len(cls) > 1]
+                    if len(x_classes) >= 3:
+                        self.stdout.write(f"Imagen con clases de Facebook encontrada: {src[:50]}...")
+                        return src
+            
+            # Estrategia 3: Buscar cualquier imagen que no sea un icono
+            for img in all_images:
+                src = img.get('src')
+                if not src or src.endswith('.svg') or src.endswith('.ico'):
+                    continue
+                
+                # Verificar si la URL parece ser una imagen de contenido (no un icono)
+                if '.jpg' in src or '.jpeg' in src or '.png' in src or '.gif' in src:
+                    # Evitar imágenes que parecen ser iconos por su URL
+                    if 'icon' not in src.lower() and 'logo' not in src.lower():
+                        self.stdout.write(f"Imagen de contenido encontrada: {src[:50]}...")
+                        return src
+            
+            self.stdout.write(self.style.WARNING(f"No se encontró imagen para {debug_url}"))
             return None
         except Exception as e:
-            self.stderr.write(self.style.ERROR(f"Error al extraer imagen de {snapshot_url}: {str(e)}"))
+            self.stderr.write(self.style.ERROR(f"Error al extraer imagen de {debug_url}: {str(e)}"))
             return None
 
     def process_ad(self, ad_data):
