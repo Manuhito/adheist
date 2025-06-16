@@ -29,14 +29,14 @@ class TagList(BaseModel):
 
 
 class AdLibrary(BaseModel):
-    company_name = models.CharField(max_length=100)
+    facebook_page = models.ForeignKey('meta.FacebookPage', on_delete=models.CASCADE, related_name="adlibraries")
     industries = models.ManyToManyField(IndustryList, related_name="adlibraries")
     tags = models.ManyToManyField(TagList, related_name="adlibraries")
     ad_image = models.ImageField(upload_to="adlibrary/", null=True, blank=True)
     is_fav = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.company_name
+        return f"Ad Library for {self.facebook_page}"
 
     def get_absolute_url(self):
         return reverse("ads:adlibrary_detail", kwargs={"pk": self.pk})

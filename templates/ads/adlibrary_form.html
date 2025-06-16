@@ -13,7 +13,7 @@
       </li>
       {% if object %}
         <li>
-          <a href="{{ object.get_absolute_url }}">{{ object.company_name }}</a>
+          <a href="{{ object.get_absolute_url }}">{{ object.facebook_page.page_name }}</a>
         </li>
         <li class="pg-breadcrumb-active" aria-current="page">{% translate "Edit" %}</li>
       {% else %}
@@ -24,7 +24,7 @@
   <section class="app-card">
     <h3 class="pg-subtitle">
       {% if object %}
-        {% blocktranslate with name=object.company_name %}Edit {{ name }}{% endblocktranslate %}
+        {% blocktranslate with name=object.facebook_page.page_name %}Edit {{ name }}{% endblocktranslate %}
       {% else %}
         {% translate "New AdLibrary" %}
       {% endif %}
@@ -60,7 +60,7 @@
         {% if object.ad_image %}
           <div class="mt-2">
             <p class="text-sm text-gray-500">{% translate "Current image:" %}</p>
-            <img src="{{ object.ad_image.url }}" alt="{{ object.company_name }}" class="mt-1 max-h-48 rounded">
+            <img src="{{ object.ad_image.url }}" alt="{{ object.facebook_page.page_name }}" class="mt-1 max-h-48 rounded">
           </div>
         {% endif %}
       </div>

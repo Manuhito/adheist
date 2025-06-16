@@ -367,7 +367,7 @@ def home(request):
         # Create request data dictionary
         request_data = {
             'ad_request_id': req.id,
-            'ad_library_name': req.ad_library.company_name if req.ad_library else None,
+            'ad_library_name': req.ad_library.facebook_page.page_name if req.ad_library else None,
             'status': req.status,
             'display_status': display_status,
             'created_at': req.created_at.isoformat() if req.created_at else None,
@@ -501,7 +501,7 @@ def get_adlibrary_filters(request):
         # Create dictionary with all fields
         adlibrary_data = {
             'id': adlibrary.id,
-            'company_name': adlibrary.company_name,
+            'company_name': adlibrary.facebook_page.page_name,
             'industries': industry_names,
             'tags': tag_names,
             'ad_image': adlibrary.ad_image.url if adlibrary.ad_image else None,
@@ -530,7 +530,7 @@ def get_adlibrary_company_list(request):
     # If not in cache, get from database and cache it
     if company_names is None:
         adlibraries = AdLibrary.objects.all()
-        company_names = [adlibrary.company_name for adlibrary in adlibraries]
+        company_names = [adlibrary.facebook_page.page_name for adlibrary in adlibraries]
         # Cache for 1 hour (3600 seconds) - I will set to none for now
         cache.set(cache_key, company_names, None)
     
@@ -652,7 +652,7 @@ def adrequest_get(request, pk):
         'id': safe_get(ad_request, 'id'),
         'user_id': safe_get(user, 'id'),
         'ad_library_id': safe_get(ad_library, 'id'),
-        'ad_library_name': safe_get(ad_library, 'company_name'),
+        'ad_library_name': safe_get(ad_library, 'facebook_page.page_name'),
         'canvas_size': safe_get(ad_request, 'canvas_size'),
         'status': safe_get(ad_request, 'status'),
         'created_at': created_at.isoformat() if created_at else None,
@@ -782,7 +782,7 @@ def user_ad_requests(request):
     # Serialize the ad requests to JSON
     requests_data = [{
         'ad_request_id': req.id,
-        'ad_library_name': req.ad_library.company_name,
+        'ad_library_name': req.ad_library.facebook_page.page_name,
         'status': req.status,
         'created_at': req.created_at.isoformat(),
         'updated_at': req.updated_at.isoformat(),
@@ -1058,7 +1058,7 @@ def create_adrequest_page(request, adrequest_id=None):
                 'id': ad_request.id,
                 'user_id': ad_request.user.id,
                 'ad_library_id': ad_request.ad_library.id if ad_request.ad_library else None,
-                'ad_library_name': ad_request.ad_library.company_name if ad_request.ad_library else None,
+                'ad_library_name': ad_request.ad_library.facebook_page.page_name if ad_request.ad_library else None,
                 'canvas_size': ad_request.canvas_size,
                 'status': ad_request.status,
                 'created_at': ad_request.created_at.isoformat() if ad_request.created_at else None,
