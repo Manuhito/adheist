@@ -6,4 +6,4 @@ from .models import AdLibrary, IndustryList, TagList
 class AdLibraryForm(forms.ModelForm):
     class Meta:
         model = AdLibrary
-        fields = ["facebook_page", "tags"]
+        fields = ["facebook_page", "tags", "language", "ad_image", "is_fav"]

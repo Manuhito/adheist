@@ -24,9 +24,9 @@ from .models import (
 
 @admin.register(AdLibrary)
 class AdLibraryAdmin(admin.ModelAdmin):
-    list_display = ["facebook_page", "is_fav", "get_industries", "get_tags", "created_at", "updated_at"]
+    list_display = ["facebook_page", "is_fav", "get_industries", "get_tags", "get_languages", "created_at", "updated_at"]
     search_fields = ["facebook_page__page_name", "facebook_page__page_id"]
-    list_filter = ["facebook_page__industries", "tags"]
+    list_filter = ["facebook_page__industries", "tags", "language"]
     filter_horizontal = ["tags"]
     
     def get_industries(self, obj):
@@ -36,6 +36,12 @@ class AdLibraryAdmin(admin.ModelAdmin):
     def get_tags(self, obj):
         return ", ".join([t.name for t in obj.tags.all()])
     get_tags.short_description = "Tags"
+    
+    def get_languages(self, obj):
+        if obj.language:
+            return ", ".join(obj.language)
+        return ""
+    get_languages.short_description = "Languages"
 
 
 @admin.register(IndustryList)

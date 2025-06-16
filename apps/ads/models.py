@@ -6,6 +6,7 @@ import json
 
 from apps.utils.models import BaseModel
 from django.core.cache import cache
+from django.contrib.postgres.fields import ArrayField
 
 
 class IndustryList(BaseModel):
@@ -33,6 +34,12 @@ class AdLibrary(BaseModel):
     tags = models.ManyToManyField(TagList, related_name="adlibraries")
     ad_image = models.ImageField(upload_to="adlibrary/", null=True, blank=True)
     is_fav = models.BooleanField(default=False)
+    language = ArrayField(
+        models.CharField(max_length=2),
+        blank=True,
+        null=True,
+        help_text="Lista de códigos de países ISO que indican el idioma del anuncio"
+    )
 
     def __str__(self):
         return f"Ad Library for {self.facebook_page}"
