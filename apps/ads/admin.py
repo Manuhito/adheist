@@ -24,9 +24,9 @@ from .models import (
 
 @admin.register(AdLibrary)
 class AdLibraryAdmin(admin.ModelAdmin):
-    list_display = ["facebook_page", "meta_ad_id", "ad_creation_time", "is_fav", "get_industries", "get_tags", "get_languages", "media_type", "get_publisher_platforms", "created_at", "updated_at"]
+    list_display = ["facebook_page", "meta_ad_id", "ad_creation_time", "ad_delivery_start_time", "ad_delivery_stop_time", "is_fav", "get_industries", "get_tags", "get_languages", "media_type", "get_publisher_platforms", "created_at", "updated_at"]
     search_fields = ["facebook_page__page_name", "facebook_page__page_id", "media_type", "meta_ad_id"]
-    list_filter = ["facebook_page__industries", "tags", "language", "media_type", "publisher_platform", "ad_creation_time"]
+    list_filter = ["facebook_page__industries", "tags", "language", "media_type", "publisher_platform", "ad_creation_time", "ad_delivery_start_time", "ad_delivery_stop_time"]
     filter_horizontal = ["tags"]
     
     def get_industries(self, obj):
