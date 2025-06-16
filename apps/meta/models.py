@@ -40,6 +40,7 @@ class FacebookPage(BaseModel):
         blank=True,
         help_text="Industry or category of the page"
     )
+    industries = models.ManyToManyField('ads.IndustryList', related_name="facebook_pages", blank=True)
     country = models.CharField(
         max_length=2, 
         blank=True,

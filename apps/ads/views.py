@@ -351,7 +351,7 @@ def home(request):
         industries = []
         if req.ad_library:
             tags = [tag.name for tag in req.ad_library.tags.all()]
-            industries = [industry.name for industry in req.ad_library.industries.all()]
+            industries = [industry.name for industry in req.ad_library.facebook_page.industries.all()]
         
         # Map status to display status
         status_mapping = {
@@ -479,7 +479,7 @@ def get_adlibrary_filters(request):
     if industries:
         for industry in industries:
             if industry:
-                combined_query |= Q(industries__name=industry)
+                combined_query |= Q(facebook_page__industries__name=industry)
     
     # Add tag conditions to combined query
     if tags:
@@ -495,7 +495,7 @@ def get_adlibrary_filters(request):
     adlibrary_list = []
     for adlibrary in adlibraries:
         # Get industries and tags as lists of names
-        industry_names = [industry.name for industry in adlibrary.industries.all()]
+        industry_names = [industry.name for industry in adlibrary.facebook_page.industries.all()]
         tag_names = [tag.name for tag in adlibrary.tags.all()]
         
         # Create dictionary with all fields

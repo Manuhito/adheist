@@ -26,11 +26,11 @@ from .models import (
 class AdLibraryAdmin(admin.ModelAdmin):
     list_display = ["facebook_page", "is_fav", "get_industries", "get_tags", "created_at", "updated_at"]
     search_fields = ["facebook_page__page_name", "facebook_page__page_id"]
-    list_filter = ["industries", "tags"]
-    filter_horizontal = ["industries", "tags"]
+    list_filter = ["facebook_page__industries", "tags"]
+    filter_horizontal = ["tags"]
     
     def get_industries(self, obj):
-        return ", ".join([i.name for i in obj.industries.all()])
+        return ", ".join([i.name for i in obj.facebook_page.industries.all()])
     get_industries.short_description = "Industries"
     
     def get_tags(self, obj):
