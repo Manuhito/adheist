@@ -47,6 +47,7 @@ class AdLibrary(BaseModel):
         null=True,
         help_text="Lista de plataformas donde se publicó el anuncio"
     )
+    meta_ad_id = models.CharField(max_length=20, blank=True, help_text="Identificador único del anuncio en Meta")
 
     def __str__(self):
         return f"Ad Library for {self.facebook_page}"
