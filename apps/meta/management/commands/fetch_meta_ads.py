@@ -13,6 +13,7 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional
 
 from django.core.management.base import BaseCommand, CommandError
+from django.core.management import call_command
 from django.utils import timezone
 
 from apps.meta.models import FacebookPage, MetaApiToken, Backload
@@ -142,6 +143,11 @@ class Command(BaseCommand):
             # Save the results
             output_file = self.save_results_to_json(ads, output_dir)
             self.stdout.write(self.style.SUCCESS(f"Results saved to {output_file}"))
+            
+            # Automatically extract ad images from the newly created JSON file
+            if output_file:
+                self.stdout.write(self.style.SUCCESS("Starting automatic extraction of ad images..."))
+                self.extract_ad_images(output_file)
             
             # Update Backload object with error logs if provided
             backload_id = options.get("backload_id")
@@ -392,3 +398,23 @@ class Command(BaseCommand):
             except Exception as e2:
                 self.stdout.write(self.style.ERROR(f"Critical error saving results: {e2}"))
                 return ""
+
+    def extract_ad_images(self, json_file: str) -> None:
+        """
+        Extract ad images from the JSON file.
+        
+        Args:
+            json_file: Path to the JSON file containing ads
+        """
+        try:
+            from apps.meta.management.commands.extract_ad_images import Command as ExtractCommand
+            cmd = ExtractCommand()
+            cmd.handle(json_file=json_file)
+            self.stdout.write(self.style.SUCCESS("Ad image extraction completed (direct method)"))
+        except Exception as e:
+            self.stdout.write(self.style.WARNING(f"Could not extract images using direct method: {e}"))
+            try:
+                call_command('extract_ad_images', json_file=json_file)
+                self.stdout.write(self.style.SUCCESS("Ad image extraction completed (call_command)"))
+            except Exception as e2:
+                self.stdout.write(self.style.ERROR(f"Failed to extract ad images: {e2}"))
