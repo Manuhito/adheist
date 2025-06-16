@@ -41,6 +41,12 @@ class AdLibrary(BaseModel):
         help_text="Lista de códigos de países ISO que indican el idioma del anuncio"
     )
     media_type = models.CharField(max_length=50, blank=True, help_text="Tipo de medio del anuncio (ej: imagen, video, carrusel)")
+    publisher_platform = ArrayField(
+        models.CharField(max_length=50),
+        blank=True,
+        null=True,
+        help_text="Lista de plataformas donde se publicó el anuncio"
+    )
 
     def __str__(self):
         return f"Ad Library for {self.facebook_page}"
