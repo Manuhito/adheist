@@ -328,7 +328,8 @@ class Command(BaseCommand):
                     all_ads.extend(data["data"])
                     self.stdout.write(f"  Found {len(data['data'])} ads")
                     # Check if ads already exist in the database
-                    self.check_existing_ads(data["data"])
+                    media_type_value = media_types[0] if isinstance(media_types, list) and media_types else "MEME"
+                    self.check_existing_ads(data["data"], media_type=media_type_value)
                 else:
                     self.stdout.write(self.style.WARNING(f"  No ads found for this group of pages"))
                     
@@ -348,7 +349,8 @@ class Command(BaseCommand):
                         all_ads.extend(data["data"])
                         self.stdout.write(f"  Found {len(data['data'])} additional ads")
                         # Check if ads already exist in the database
-                        self.check_existing_ads(data["data"])
+                        media_type_value = media_types[0] if isinstance(media_types, list) and media_types else "MEME"
+                        self.check_existing_ads(data["data"], media_type=media_type_value)
                     
                     next_page = data.get("paging", {}).get("next")
                     
@@ -382,14 +384,17 @@ class Command(BaseCommand):
         
         return all_ads, error_messages
 
-    def check_existing_ads(self, ads_data: List[Dict[str, Any]]) -> None:
+    def check_existing_ads(self, ads_data: List[Dict[str, Any]], media_type: str = "MEME") -> None:
         """
         Check if ads already exist in the AdLibrary model.
+        If an ad doesn't exist, create a Celery task to add it.
         
         Args:
             ads_data: List of ads from the API response
+            media_type: The media type of the ad (default: MEME)
         """
         from apps.ads.models import AdLibrary
+        from apps.meta.tasks import create_ad_library_entry
         
         if not ads_data:
             self.stdout.write(self.style.WARNING("No ads data to check"))
@@ -409,6 +414,9 @@ class Command(BaseCommand):
                 self.stdout.write(f"Ad with ID {ad_id} already exists in the database")
             else:
                 self.stdout.write(f"Ad with ID {ad_id} does not exist in the database")
+                # Create a Celery task to add the ad to the database
+                self.stdout.write(f"Creating Celery task to add ad with ID {ad_id}")
+                create_ad_library_entry.delay(ad_data=ad, media_type=media_type)
 
     def save_results_to_json(self, ads: List[Dict[str, Any]], output_dir: str) -> str:
         """

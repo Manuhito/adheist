@@ -32,6 +32,7 @@ class TagList(BaseModel):
 class AdLibrary(BaseModel):
     facebook_page = models.ForeignKey('meta.FacebookPage', on_delete=models.CASCADE, related_name="adlibraries")
     tags = models.ManyToManyField(TagList, related_name="adlibraries")
+    ad_creative_link_titles = models.TextField(blank=True, help_text="Ad creative link titles from Meta API")
     ad_image = models.ImageField(upload_to="adlibrary/", null=True, blank=True)
     is_fav = models.BooleanField(default=False)
     language = ArrayField(

@@ -128,3 +128,96 @@ def fetch_meta_ads(
         }
         
         return result
+
+@shared_task
+def create_ad_library_entry(ad_data: dict, media_type: str = "MEME") -> Dict[str, Any]:
+    """
+    Celery task to create a new AdLibrary entry from Meta Ad data.
+    
+    Args:
+        ad_data: Dictionary containing the ad data from Meta API
+        media_type: The media type of the ad (default: MEME)
+        
+    Returns:
+        Dictionary with task execution information
+    """
+    import logging
+    from apps.ads.models import AdLibrary
+    from apps.meta.models import FacebookPage
+    
+    logger = logging.getLogger(__name__)
+    logger.info(f"Creating new AdLibrary entry for ad ID: {ad_data.get('id')}")
+    
+    try:
+        # Check if the ad already exists (double check to prevent duplicates)
+        meta_ad_id = ad_data.get('id')
+        if not meta_ad_id:
+            logger.error("Ad data missing ID field")
+            return {
+                'success': False,
+                'error': 'Ad data missing ID field',
+                'ad_id': None
+            }
+            
+        if AdLibrary.objects.filter(meta_ad_id=meta_ad_id).exists():
+            logger.info(f"Ad with ID {meta_ad_id} already exists, skipping creation")
+            return {
+                'success': True,
+                'message': 'Ad already exists',
+                'ad_id': meta_ad_id
+            }
+            
+        # Find the related FacebookPage
+        page_id = ad_data.get('page_id')
+        if not page_id:
+            logger.error(f"Ad data missing page_id field: {ad_data}")
+            return {
+                'success': False,
+                'error': 'Ad data missing page_id field',
+                'ad_id': meta_ad_id
+            }
+            
+        try:
+            facebook_page = FacebookPage.objects.get(page_id=page_id)
+        except FacebookPage.DoesNotExist:
+            logger.error(f"FacebookPage with ID {page_id} not found, skipping ad creation")
+            return {
+                'success': False,
+                'error': f'FacebookPage with ID {page_id} not found',
+                'ad_id': meta_ad_id
+            }
+            
+        # Create the AdLibrary entry with the mapped fields
+        # Note: We don't set the ManyToMany field 'tags' here
+        ad_library = AdLibrary(
+            facebook_page=facebook_page,
+            ad_creative_link_titles=ad_data.get('ad_creative_link_titles', ''),  # Store ad_creative_link_titles in the dedicated field
+            ad_image=None,  # Empty for now
+            is_fav=False,
+            language=ad_data.get('languages', []),
+            media_type=media_type,  # From the parameter
+            publisher_platform=ad_data.get('publisher_platforms', []),
+            meta_ad_id=meta_ad_id,
+            ad_creation_time=ad_data.get('ad_creation_time'),
+            ad_delivery_start_time=ad_data.get('ad_delivery_start_time'),
+            ad_delivery_stop_time=ad_data.get('ad_delivery_stop_time')
+        )
+        
+        # Save the object first (required before setting ManyToMany fields)
+        ad_library.save()
+        
+        logger.info(f"Successfully created AdLibrary entry for ad ID: {meta_ad_id}")
+        
+        return {
+            'success': True,
+            'message': 'Ad created successfully',
+            'ad_id': meta_ad_id
+        }
+        
+    except Exception as e:
+        logger.exception(f"Error creating AdLibrary entry: {str(e)}")
+        return {
+            'success': False,
+            'error': str(e),
+            'ad_id': ad_data.get('id')
+        }
