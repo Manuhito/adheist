@@ -327,6 +327,8 @@ class Command(BaseCommand):
                 if "data" in data:
                     all_ads.extend(data["data"])
                     self.stdout.write(f"  Found {len(data['data'])} ads")
+                    # Check if ads already exist in the database
+                    self.check_existing_ads(data["data"])
                 else:
                     self.stdout.write(self.style.WARNING(f"  No ads found for this group of pages"))
                     
@@ -345,6 +347,8 @@ class Command(BaseCommand):
                     if "data" in data:
                         all_ads.extend(data["data"])
                         self.stdout.write(f"  Found {len(data['data'])} additional ads")
+                        # Check if ads already exist in the database
+                        self.check_existing_ads(data["data"])
                     
                     next_page = data.get("paging", {}).get("next")
                     
@@ -377,6 +381,34 @@ class Command(BaseCommand):
             time.sleep(delay)
         
         return all_ads, error_messages
+
+    def check_existing_ads(self, ads_data: List[Dict[str, Any]]) -> None:
+        """
+        Check if ads already exist in the AdLibrary model.
+        
+        Args:
+            ads_data: List of ads from the API response
+        """
+        from apps.ads.models import AdLibrary
+        
+        if not ads_data:
+            self.stdout.write(self.style.WARNING("No ads data to check"))
+            return
+            
+        for ad in ads_data:
+            # Get the ad ID from the JSON response
+            ad_id = ad.get('id')
+            if not ad_id:
+                self.stdout.write(self.style.WARNING(f"Ad without ID found: {ad}"))
+                continue
+                
+            # Check if the ad already exists in the database
+            exists = AdLibrary.objects.filter(meta_ad_id=ad_id).exists()
+            
+            if exists:
+                self.stdout.write(f"Ad with ID {ad_id} already exists in the database")
+            else:
+                self.stdout.write(f"Ad with ID {ad_id} does not exist in the database")
 
     def save_results_to_json(self, ads: List[Dict[str, Any]], output_dir: str) -> str:
         """
