@@ -2,7 +2,7 @@
 Django command to query the Meta Ad Library API using configuration models.
 
 This command uses the Backload and FacebookPage models to query the Meta Ads Library API
-and save the results to a JSON file.
+and save the results to a JSON file. It can be run directly or through a Celery task.
 """
 
 import json
@@ -81,6 +81,9 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        # Inicializar lista de mensajes de error para devolver al final
+        error_messages = []
+        
         # Debug logs para identificar el error
         self.stdout.write("DEBUG - Command options:")
         for key, value in options.items():
@@ -88,21 +91,24 @@ class Command(BaseCommand):
                 self.stdout.write(f"DEBUG - {key}: type={type(value)}, value={value}")
                 
         # Get token from options or from the database
-        token = options["token"]
+        token = options.get("token")
         if not token:
             token = MetaApiToken.get_active_token()
             if not token:
-                raise CommandError("No token provided and no active token found in the database. Please provide a token or add one in the admin.")
+                error_msg = "No token provided and no active token found in the database. Please provide a token or add one in the admin."
+                self.stdout.write(self.style.ERROR(error_msg))
+                error_messages.append(error_msg)
+                return "\n".join(error_messages)  
             self.stdout.write(f"Using active token from database")
             
         # Obtener IDs de página
-        if options["page_ids"]:
+        if options.get("page_ids"):
             page_ids = options["page_ids"]
             self.stdout.write(f"Using {len(page_ids)} page IDs provided via command line")
         else:
             # Filtrar páginas según la opción active-only
             pages_query = FacebookPage.objects.all()
-            if options["active_only"]:
+            if options.get("active_only"):
                 pages_query = pages_query.filter(is_active=True)
             
             # Obtener los IDs de página
@@ -110,12 +116,15 @@ class Command(BaseCommand):
             page_ids = list(pages)
             
             if not page_ids:
-                raise CommandError("No page IDs found. Add pages in the admin or provide IDs with --page-ids")
+                error_msg = "No page IDs found. Add pages in the admin or provide IDs with --page-ids"
+                self.stdout.write(self.style.ERROR(error_msg))
+                error_messages.append(error_msg)
+                return "\n".join(error_messages)  
             
             self.stdout.write(f"Using {len(page_ids)} page IDs from the database")
 
         # Crear el directorio de salida si no existe
-        output_dir = options["output_dir"]
+        output_dir = options.get("output_dir", "meta_ads_results")
         os.makedirs(output_dir, exist_ok=True)
         
         # Configure API parameters
@@ -127,7 +136,7 @@ class Command(BaseCommand):
         
         # Consultar la API y guardar los resultados
         try:
-            ads, error_messages = self.fetch_ads_for_page_ids(
+            ads, fetch_errors = self.fetch_ads_for_page_ids(
                 page_ids=page_ids,
                 access_token=token,
                 ad_reached_countries=ad_reached_countries,
@@ -135,8 +144,11 @@ class Command(BaseCommand):
                 media_types=media_types,
                 fields=fields,
                 limit=limit,
-                delay=options["delay"]
+                delay=options.get("delay", 2)
             )
+            
+            # Añadir errores de la consulta a la lista principal de errores
+            error_messages.extend(fetch_errors)
             
             self.stdout.write(self.style.SUCCESS(f"Total ads found: {len(ads)}"))
             
@@ -147,7 +159,12 @@ class Command(BaseCommand):
             # Automatically extract ad images from the newly created JSON file
             if output_file:
                 self.stdout.write(self.style.SUCCESS("Starting automatic extraction of ad images..."))
-                self.extract_ad_images(output_file)
+                try:
+                    self.extract_ad_images(output_file)
+                except Exception as ex:
+                    error_msg = f"Error extracting ad images: {ex}"
+                    self.stdout.write(self.style.ERROR(error_msg))
+                    error_messages.append(error_msg)
             
             # Update Backload object with error logs if provided
             backload_id = options.get("backload_id")
@@ -166,13 +183,18 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.SUCCESS(f"Error logs saved to Backload {backload_id}"))
                     self.stdout.write(self.style.SUCCESS(f"Status updated to: {backload.get_status_display()}"))
                 except Backload.DoesNotExist:
-                    self.stdout.write(self.style.ERROR(f"Backload {backload_id} not found"))
+                    error_msg = f"Backload {backload_id} not found"
+                    self.stdout.write(self.style.ERROR(error_msg))
+                    error_messages.append(error_msg)
             
             # Return any error messages
-            return error_messages
+            return "\n".join(error_messages)  
             
         except Exception as e:
-            raise CommandError(f"Error during API query: {e}")
+            error_msg = f"Error during API query: {e}"
+            self.stdout.write(self.style.ERROR(error_msg))
+            error_messages.append(error_msg)
+            return "\n".join(error_messages)  
 
     def fetch_ads_for_page_ids(
         self,
@@ -411,10 +433,13 @@ class Command(BaseCommand):
             cmd = ExtractCommand()
             cmd.handle(json_file=json_file)
             self.stdout.write(self.style.SUCCESS("Ad image extraction completed (direct method)"))
+            return
         except Exception as e:
             self.stdout.write(self.style.WARNING(f"Could not extract images using direct method: {e}"))
-            try:
-                call_command('extract_ad_images', json_file=json_file)
-                self.stdout.write(self.style.SUCCESS("Ad image extraction completed (call_command)"))
-            except Exception as e2:
-                self.stdout.write(self.style.ERROR(f"Failed to extract ad images: {e2}"))
+        
+        try:
+            call_command('extract_ad_images', json_file=json_file)
+            self.stdout.write(self.style.SUCCESS("Ad image extraction completed (call_command)"))
+        except Exception as e2:
+            self.stdout.write(self.style.ERROR(f"Failed to extract ad images: {e2}"))
+            raise e2

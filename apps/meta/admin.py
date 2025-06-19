@@ -7,6 +7,7 @@ from django.core.management import call_command
 from django.utils.safestring import mark_safe
 
 from .models import FacebookPage, Backload, MetaApiToken
+from .tasks import fetch_meta_ads
 
 
 @admin.register(Backload)
@@ -93,13 +94,17 @@ class BackloadAdmin(admin.ModelAdmin):
                     args=[object_id]
                 ))
             
-            # Actualizar last_run
+            # Actualizar last_run y status
             obj.last_run = timezone.now()
-            obj.save(update_fields=['last_run'])
+            obj.status = Backload.STATUS_PENDING
+            obj.save(update_fields=['last_run', 'status'])
             
-            # Llamar al comando de Django
-            call_command(
-                'fetch_meta_ads',
+            # Actualizar información de ejecución
+            obj.output_file = output_dir
+            obj.save(update_fields=['output_file'])
+            
+            # Ejecutar la tarea de Celery en segundo plano
+            fetch_meta_ads.delay(
                 token=token,
                 output_dir=output_dir,
                 page_ids=page_ids,
@@ -111,11 +116,7 @@ class BackloadAdmin(admin.ModelAdmin):
                 backload_id=obj.pk
             )
             
-            # Actualizar información de ejecución
-            obj.output_file = output_dir
-            obj.save(update_fields=['output_file'])
-            
-            messages.success(request, f"Command executed successfully. Results saved in {output_dir}")
+            messages.success(request, f"La tarea de consulta a la API de Meta se ha iniciado en segundo plano. Los resultados se guardarán en {output_dir}. El estado se actualizará automáticamente cuando finalice.")
         except Exception as e:
             messages.error(request, f"Error executing command: {str(e)}")
         
