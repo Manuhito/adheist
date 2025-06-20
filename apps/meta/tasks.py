@@ -9,6 +9,7 @@ from typing import Dict, List, Any, Optional
 
 from celery import shared_task
 from django.core.management import call_command
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 
 from apps.meta.models import Backload
 
@@ -144,6 +145,7 @@ def create_ad_library_entry(ad_data: dict, media_type: str = "MEME") -> Dict[str
     import logging
     from apps.ads.models import AdLibrary
     from apps.meta.models import FacebookPage
+    from django.core.files import File
     
     logger = logging.getLogger(__name__)
     logger.info(f"Creating new AdLibrary entry for ad ID: {ad_data.get('id')}")
@@ -186,16 +188,36 @@ def create_ad_library_entry(ad_data: dict, media_type: str = "MEME") -> Dict[str
                 'error': f'FacebookPage with ID {page_id} not found',
                 'ad_id': meta_ad_id
             }
+        
+        # Extract image URL from ad snapshot page
+        snapshot_url = ad_data.get('ad_snapshot_url')
+        if not snapshot_url:
+            logger.error(f"Ad data missing ad_snapshot_url field: {ad_data}")
+            return {
+                'success': False,
+                'error': 'Ad data missing ad_snapshot_url field',
+                'ad_id': meta_ad_id
+            }
+        
+        # Extract and download image using Playwright
+        image_temp_file = extract_image_from_ad_page(snapshot_url, logger)
+        
+        # Only create AdLibrary entry if image was successfully retrieved
+        if not image_temp_file:
+            logger.warning(f"No image found for ad ID {meta_ad_id}, skipping creation")
+            return {
+                'success': False,
+                'error': 'No image found for ad',
+                'ad_id': meta_ad_id
+            }
             
         # Create the AdLibrary entry with the mapped fields
-        # Note: We don't set the ManyToMany field 'tags' here
         ad_library = AdLibrary(
             facebook_page=facebook_page,
-            ad_creative_link_titles=ad_data.get('ad_creative_link_titles', ''),  # Store ad_creative_link_titles in the dedicated field
-            ad_image=None,  # Empty for now
+            ad_creative_link_titles=ad_data.get('ad_creative_link_titles', ''),
             is_fav=False,
             language=ad_data.get('languages', []),
-            media_type=media_type,  # From the parameter
+            media_type=media_type,
             publisher_platform=ad_data.get('publisher_platforms', []),
             meta_ad_id=meta_ad_id,
             ad_creation_time=ad_data.get('ad_creation_time'),
@@ -203,14 +225,25 @@ def create_ad_library_entry(ad_data: dict, media_type: str = "MEME") -> Dict[str
             ad_delivery_stop_time=ad_data.get('ad_delivery_stop_time')
         )
         
-        # Save the object first (required before setting ManyToMany fields)
+        # Generate a filename for the image
+        import os
+        from datetime import datetime
+        filename = f"ad_{meta_ad_id}_{datetime.now().strftime('%Y%m%d%H%M%S')}.jpg"
+        
+        # Save the image to the ad_image field
+        ad_library.ad_image.save(filename, File(image_temp_file))
+        
+        # Save the object
         ad_library.save()
         
-        logger.info(f"Successfully created AdLibrary entry for ad ID: {meta_ad_id}")
+        # Close the temporary file
+        image_temp_file.close()
+        
+        logger.info(f"Successfully created AdLibrary entry with image for ad ID: {meta_ad_id}")
         
         return {
             'success': True,
-            'message': 'Ad created successfully',
+            'message': 'Ad created successfully with image',
             'ad_id': meta_ad_id
         }
         
@@ -221,3 +254,182 @@ def create_ad_library_entry(ad_data: dict, media_type: str = "MEME") -> Dict[str
             'error': str(e),
             'ad_id': ad_data.get('id')
         }
+
+def extract_image_from_ad_page(snapshot_url: str, logger) -> Optional[str]:
+    """
+    Extracts the URL of the main image from an ad page using Playwright,
+    then downloads the image and returns a file path for saving to ImageField
+    
+    Args:
+        snapshot_url: URL of the Meta ad snapshot page
+        logger: Logger instance for logging messages
+        
+    Returns:
+        Path to downloaded image or None if not found/downloaded
+    """
+    try:
+        # Skip if URL is invalid
+        if not snapshot_url or 'facebook.com' not in snapshot_url:
+            logger.error(f"Invalid snapshot URL: {snapshot_url}")
+            return None
+        
+        # Debug URL (hiding token for security)
+        debug_url = snapshot_url
+        if 'access_token=' in debug_url:
+            token_part = debug_url.split('access_token=')[1]
+            if '&' in token_part:
+                token_part = token_part.split('&')[0]
+            masked_token = token_part[:5] + '...' + token_part[-5:] if len(token_part) > 10 else '...'
+            debug_url = debug_url.replace(token_part, masked_token)
+        logger.info(f"Accessing URL with Playwright: {debug_url}")
+        
+        # Initialize Playwright
+        with sync_playwright() as playwright:
+            # Launch browser with optimized options
+            browser = playwright.chromium.launch(
+                headless=True,
+                args=[
+                    '--disable-gpu',
+                    '--disable-dev-shm-usage',
+                    '--disable-setuid-sandbox',
+                    '--no-sandbox',
+                    '--disable-extensions',
+                ]
+            )
+            
+            try:
+                # Create a new page
+                page = browser.new_page()
+                
+                try:
+                    # Navigate to the URL with appropriate timeout
+                    page.goto(snapshot_url, timeout=30000)
+                    
+                    # Wait for content to load
+                    page.wait_for_load_state('networkidle', timeout=10000)
+                    
+                    # Strategy 1: Look for Facebook images (scontent or fbcdn)
+                    image_urls = page.evaluate("""() => {
+                        const images = Array.from(document.querySelectorAll('img'));
+                        return images
+                            .filter(img => img.src && (img.src.includes('scontent') || img.src.includes('fbcdn')))
+                            .map(img => img.src);
+                    }""")
+                    
+                    if image_urls and len(image_urls) > 0:
+                        # Sort by length (longer URLs often have more info/quality)
+                        image_urls.sort(key=len, reverse=True)
+                        
+                        # Remove duplicates while maintaining order
+                        unique_urls = []
+                        for url in image_urls:
+                            if url not in unique_urls:
+                                unique_urls.append(url)
+                        
+                        if unique_urls:
+                            best_image_url = unique_urls[0]
+                            logger.info(f"Image found for {debug_url}: {best_image_url[:50]}...")
+                            
+                            # Download the image
+                            return download_image(best_image_url, logger)
+                    
+                    # Strategy 2: Look for any image that's not an icon/logo
+                    fallback_image_urls = page.evaluate("""() => {
+                        const images = Array.from(document.querySelectorAll('img'));
+                        return images
+                            .filter(img => {
+                                if (!img.src) return false;
+                                const src = img.src.toLowerCase();
+                                // Exclude SVGs, icons and logos
+                                if (src.endsWith('.svg') || src.endsWith('.ico')) return false;
+                                if (src.includes('icon') || src.includes('logo')) return false;
+                                // Exclude very small images
+                                if (img.width < 50 || img.height < 50) return false;
+                                return true;
+                            })
+                            .map(img => img.src);
+                    }""")
+                    
+                    if fallback_image_urls and len(fallback_image_urls) > 0:
+                        best_fallback = fallback_image_urls[0]
+                        logger.info(f"Fallback image found for {debug_url}: {best_fallback[:50]}...")
+                        
+                        # Download the fallback image
+                        return download_image(best_fallback, logger)
+                    
+                    logger.warning(f"No image found for {debug_url}")
+                    return None
+                    
+                except PlaywrightTimeoutError as e:
+                    logger.error(f"Timeout loading {debug_url}: {e}")
+                    return None
+                except Exception as e:
+                    logger.error(f"Error processing {debug_url}: {e}")
+                    return None
+                finally:
+                    # Close the page to free resources
+                    page.close()
+            finally:
+                # Close the browser
+                browser.close()
+                
+    except Exception as e:
+        logger.error(f"General error extracting image from {snapshot_url}: {e}")
+        return None
+
+def download_image(image_url: str, logger) -> Optional[str]:
+    """
+    Downloads an image from a URL and saves it to a temporary file
+    
+    Args:
+        image_url: URL of the image to download
+        logger: Logger instance for logging messages
+        
+    Returns:
+        Path to the downloaded image or None if download failed
+    """
+    import requests
+    import tempfile
+    import os
+    from django.core.files import File
+    from django.core.files.temp import NamedTemporaryFile
+    
+    try:
+        # Create a temporary file with the correct extension
+        img_temp = NamedTemporaryFile(delete=True)
+        
+        # Download the image
+        response = requests.get(image_url, stream=True)
+        if response.status_code != 200:
+            logger.error(f"Failed to download image from {image_url}: HTTP {response.status_code}")
+            return None
+        
+        # Write the image to the temporary file
+        for block in response.iter_content(1024 * 8):
+            if not block:
+                break
+            img_temp.write(block)
+        
+        # Reset file pointer to beginning of file
+        img_temp.flush()
+        img_temp.seek(0)
+        
+        # Get the filename from the URL or generate a unique name
+        if '?' in image_url:
+            url_path = image_url.split('?')[0]
+        else:
+            url_path = image_url
+            
+        filename = os.path.basename(url_path)
+        if not filename or '.' not in filename:
+            # Generate a filename with .jpg extension if none exists
+            filename = f"ad_image_{tempfile.NamedTemporaryFile().name.split('/')[-1]}.jpg"
+        
+        logger.info(f"Image downloaded successfully: {filename}")
+        
+        # Return the temporary file
+        return img_temp
+        
+    except Exception as e:
+        logger.error(f"Error downloading image from {image_url}: {e}")
+        return None

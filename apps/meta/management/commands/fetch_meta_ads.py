@@ -156,15 +156,15 @@ class Command(BaseCommand):
             output_file = self.save_results_to_json(ads, output_dir)
             self.stdout.write(self.style.SUCCESS(f"Results saved to {output_file}"))
             
-            # Automatically extract ad images from the newly created JSON file
-            if output_file:
-                self.stdout.write(self.style.SUCCESS("Starting automatic extraction of ad images..."))
-                try:
-                    self.extract_ad_images(output_file)
-                except Exception as ex:
-                    error_msg = f"Error extracting ad images: {ex}"
-                    self.stdout.write(self.style.ERROR(error_msg))
-                    error_messages.append(error_msg)
+            # Comment out automatic extraction of ad images since we now do it individually
+            # self.stdout.write(self.style.SUCCESS("Starting automatic extraction of ad images..."))
+            # try:
+            #     self.extract_ad_images(output_file)
+            # except Exception as ex:
+            #     error_msg = f"Error extracting ad images: {ex}"
+            #     self.stdout.write(self.style.ERROR(error_msg))
+            #     error_messages.append(error_msg)
+            self.stdout.write(self.style.SUCCESS("Skipping batch image extraction - images are now extracted individually during ad creation"))
             
             # Update Backload object with error logs if provided
             backload_id = options.get("backload_id")
