@@ -516,10 +516,10 @@ def get_adlibrary_filters(request):
 
 def get_adlibrary_company_list(request):
     """
-    Get a simple list of all company names from AdLibrary.
+    Get a simple list of all unique company names from AdLibrary.
     Uses Redis caching for improved performance.
     
-    Returns: JSON with list of all company names
+    Returns: JSON with list of unique company names
     """
     from django.core.cache import cache
     
@@ -530,7 +530,8 @@ def get_adlibrary_company_list(request):
     # If not in cache, get from database and cache it
     if company_names is None:
         adlibraries = AdLibrary.objects.all()
-        company_names = [adlibrary.facebook_page.page_name for adlibrary in adlibraries]
+        # Use a set to eliminate duplicates, then convert back to list
+        company_names = list(set([adlibrary.facebook_page.page_name for adlibrary in adlibraries]))
         # Cache for 1 hour (3600 seconds) - I will set to none for now
         cache.set(cache_key, company_names, None)
     
