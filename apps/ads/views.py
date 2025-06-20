@@ -477,9 +477,10 @@ def get_adlibrary_filters(request):
     
     # Add industry conditions to combined query
     if industries:
-        for industry in industries:
-            if industry:
-                combined_query |= Q(facebook_page__industries__name=industry)
+        # Filter by industries using a more efficient in-query
+        valid_industries = [industry for industry in industries if industry]
+        if valid_industries:
+            combined_query |= Q(facebook_page__industries__name__in=valid_industries)
     
     # Add tag conditions to combined query
     if tags:

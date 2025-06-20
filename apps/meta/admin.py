@@ -153,12 +153,13 @@ class FacebookPageAdmin(admin.ModelAdmin):
     list_filter = ["industry", "country", "is_active"]
     search_fields = ["page_id", "page_name", "industry"]
     readonly_fields = ["created_at", "updated_at"]
+    filter_horizontal = ["industries"]
     fieldsets = (
         (None, {
             "fields": ("page_id", "page_name", "is_active")
         }),
         ("Additional Information", {
-            "fields": ("industry", "country", "notes")
+            "fields": ("industry", "industries", "country", "notes")
         }),
         ("Audit Information", {
             "fields": ("created_at", "updated_at"),
