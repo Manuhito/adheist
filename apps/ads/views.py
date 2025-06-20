@@ -482,11 +482,12 @@ def get_adlibrary_filters(request):
         if valid_industries:
             combined_query |= Q(facebook_page__industries__name__in=valid_industries)
     
-    # Add tag conditions to combined query
+    # Add tag conditions to combined query - search in ad_creative_link_titles
     if tags:
-        for tag in tags:
-            if tag:
-                combined_query |= Q(tags__name=tag)
+        valid_tags = [tag for tag in tags if tag]
+        if valid_tags:
+            for tag in valid_tags:
+                combined_query |= Q(ad_creative_link_titles__icontains=tag)
     
     # Apply the combined filter if any conditions exist
     if combined_query:
