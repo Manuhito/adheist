@@ -470,7 +470,7 @@ def get_adlibrary_filters(request):
     
     # Apply company name filter if provided (AND logic)
     if company_name:
-        adlibraries = adlibraries.filter(company_name__icontains=company_name)
+        adlibraries = adlibraries.filter(facebook_page__page_name__icontains=company_name)
     
     # Create combined query for industries and tags (OR logic between them)
     combined_query = Q()
