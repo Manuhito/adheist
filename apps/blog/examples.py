@@ -9,6 +9,7 @@ Usage:
 from datetime import date
 
 from django.core.files.base import ContentFile
+from django.core.files.images import ImageFile
 from wagtail.images.models import Image
 
 from apps.blog.api_utils import create_blog_post, upload_image_for_blog
@@ -44,20 +45,29 @@ def create_example_blog_post():
 
 def create_blog_post_with_image():
     """Create a blog post with an embedded image."""
-    # First, create a sample image (in production, you'd use a real image file)
-    # This is just for demonstration purposes
+    # First, check if we already have the example image or use the app's logo
     try:
         # Check if we already have the example image
         image = Image.objects.filter(title="Example API Image").first()
         
         if not image:
-            # Create a simple image for demonstration
-            # In real usage, you'd load an actual image file
-            image_content = ContentFile(b"Example image content")
-            image = upload_image_for_blog(
-                image_file=image_content, 
-                title="Example API Image"
-            )
+            # Use the app's logo as the image
+            logo_path = "static/images/web/logo-adheist.png"
+            
+            try:
+                with open(logo_path, "rb") as f:
+                    image = upload_image_for_blog(
+                        image_file=ImageFile(f), 
+                        title="Example API Image"
+                    )
+            except FileNotFoundError:
+                print(f"Logo file not found at {logo_path}. Using fallback.")
+                # Fallback to a simple content file if logo not found
+                image_content = ContentFile(b"Example image content", name="example_image.jpg")
+                image = upload_image_for_blog(
+                    image_file=image_content, 
+                    title="Example API Image"
+                )
     except Exception as e:
         print(f"Error creating image: {e}")
         return None
@@ -73,7 +83,7 @@ def create_blog_post_with_image():
             },
             {
                 "type": "image", 
-                "value": image.id  # Use the image ID in the StreamField
+                "value": image  # Use the image object in the StreamField
             },
             {
                 "type": "paragraph", 
