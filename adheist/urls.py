@@ -26,9 +26,20 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, Sp
 from wagtail.admin import urls as wagtailadmin_urls
 from wagtail import urls as wagtail_urls
 from wagtail.api.v2.views import PagesAPIViewSet
+from wagtail.documents.api.v2.views import DocumentsAPIViewSet
+from wagtail.images.api.v2.views import ImagesAPIViewSet
+from wagtail.api.v2.router import WagtailAPIRouter
 from wagtail.contrib.sitemaps import Sitemap
 from wagtail.documents import urls as wagtaildocs_urls
 from apps.web.sitemaps import StaticViewSitemap
+
+# Create the API router
+api_router = WagtailAPIRouter('wagtailapi')
+
+# Register the API endpoints
+api_router.register_endpoint('pages', PagesAPIViewSet)
+api_router.register_endpoint('documents', DocumentsAPIViewSet)
+api_router.register_endpoint('images', ImagesAPIViewSet)
 
 PagesAPIViewSet.schema = None  # hacky workaround for https://github.com/wagtail/wagtail/issues/8583
 
@@ -57,6 +68,8 @@ urlpatterns = [
     # Optional UI - you may wish to remove one of these depending on your preference
     path("api/schema/swagger-ui/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
     path("api/schema/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
+    # Wagtail API
+    path('api/v2/', api_router.urls),
     # djstripe urls - for webhooks
     path("stripe/", include("djstripe.urls", namespace="djstripe")),
     # wagtail config

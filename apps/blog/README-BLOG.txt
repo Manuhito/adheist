@@ -1,3 +1,10 @@
+# quick launch -------------
+
+after make init, open the /cms admin site and: 
+- delete the existing root page
+- delete the existing 'site' (/settings/site - open site and delete)
+then run the command python manage.py bootstrap_blog
+
 # Wagtail Blog Setup Instructions
 
 This folder contains a simple blog implementation using Wagtail CMS. It provides a blog index page and individual blog posts with support for rich text content, images, and galleries.
@@ -114,3 +121,34 @@ You can customize the blog by:
 - Blog posts will be accessible at `/blog/post-slug`
 - Images are handled by Wagtail's image management system
 - All content can be edited through the Wagtail admin interface at `/cms`
+
+## API Access
+
+This blog implementation includes Wagtail API v2 support, allowing you to programmatically create and manage blog posts.
+
+### REST API Endpoints
+
+- Blog pages: `/api/v2/pages/?type=blog.BlogPage`
+- Blog index: `/api/v2/pages/?type=blog.BlogIndexPage`
+- Images: `/api/v2/images/`
+- Documents: `/api/v2/documents/`
+
+### Programmatic Creation
+
+You can create blog posts programmatically using the provided utility functions in `api_utils.py`:
+
+```python
+from apps.blog.api_utils import create_blog_post
+
+# Create a simple blog post
+create_blog_post(
+    title="API Created Post",
+    intro="This post was created via API",
+    body_content=[
+        {"type": "paragraph", "value": "<p>First paragraph content</p>"},
+        {"type": "paragraph", "value": "<p>Second paragraph with <b>bold</b> text</p>"},
+    ]
+)
+```
+
+See `examples.py` for more detailed examples of creating posts with images and other content types.
