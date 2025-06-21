@@ -20,7 +20,7 @@ def generate_prompt(version):
     
     # Handle case when ad_library is None (user uploaded image)
     if ad_request.ad_library:
-        company_name = ad_request.ad_library.company_name
+        company_name = ad_request.ad_library.facebook_page.page_name
     else:
         # Use a default value when using user uploaded image
         company_name = "User Custom Image"

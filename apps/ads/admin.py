@@ -24,18 +24,30 @@ from .models import (
 
 @admin.register(AdLibrary)
 class AdLibraryAdmin(admin.ModelAdmin):
-    list_display = ["company_name", "is_fav", "get_industries", "get_tags", "created_at", "updated_at"]
-    search_fields = ["company_name"]
-    list_filter = ["industries", "tags"]
-    filter_horizontal = ["industries", "tags"]
+    list_display = ["facebook_page", "meta_ad_id", "ad_creation_time", "ad_delivery_start_time", "ad_delivery_stop_time", "is_fav", "get_industries", "get_tags", "get_languages", "media_type", "get_publisher_platforms", "created_at", "updated_at"]
+    search_fields = ["facebook_page__page_name", "facebook_page__page_id", "media_type", "meta_ad_id"]
+    list_filter = ["facebook_page__industries", "tags", "language", "media_type", "publisher_platform", "ad_creation_time", "ad_delivery_start_time", "ad_delivery_stop_time"]
+    filter_horizontal = ["tags"]
     
     def get_industries(self, obj):
-        return ", ".join([i.name for i in obj.industries.all()])
+        return ", ".join([i.name for i in obj.facebook_page.industries.all()])
     get_industries.short_description = "Industries"
     
     def get_tags(self, obj):
         return ", ".join([t.name for t in obj.tags.all()])
     get_tags.short_description = "Tags"
+    
+    def get_languages(self, obj):
+        if obj.language:
+            return ", ".join(obj.language)
+        return ""
+    get_languages.short_description = "Languages"
+    
+    def get_publisher_platforms(self, obj):
+        if obj.publisher_platform:
+            return ", ".join(obj.publisher_platform)
+        return ""
+    get_publisher_platforms.short_description = "Publisher Platforms"
 
 
 @admin.register(IndustryList)
@@ -55,7 +67,7 @@ class AdRequestAdmin(admin.ModelAdmin):
     def get_version_id(self, obj):
         return f"Ad Request #{obj.id}"
     list_display = ["get_version_id", "user", "ad_library", "status", "created_at", "updated_at"]
-    search_fields = ["user__email", "ad_library__company_name"]
+    search_fields = ["user__email", "ad_library__facebook_page__page_name"]
     list_filter = ["status", "canvas_size"]
 
 
@@ -71,7 +83,7 @@ class AdRequestVersionAdmin(admin.ModelAdmin):
         return f"Ad Request #{obj.id}"
     get_version_id.short_description = "Version ID"
     list_display = ["get_version_id", "status", "user_admin_assigned", "created_at", "updated_at"]
-    search_fields = ["ad_request__ad_library__company_name", "status"]
+    search_fields = ["ad_request__ad_library__facebook_page__page_name", "status"]
     list_filter = ["status", "user_admin_assigned"]
     readonly_fields = ["user_admin_assigned", "generated_prompt_with_copy", "status", "download_overrides_button"]
     # readonly_fields = ["ad_request", "generated_prompt", "status", "download_overrides_button"]

@@ -2,8 +2,14 @@
 #    uv pip compile --no-strip-extras requirements/requirements.in -o requirements/requirements.txt
 amqp==5.3.1
     # via kombu
+annotated-types==0.7.0
+    # via pydantic
 anyascii==0.3.2
     # via wagtail
+anyio==4.9.0
+    # via
+    #   httpx
+    #   openai
 asgiref==3.8.1
     # via
     #   django
@@ -12,6 +18,7 @@ attrs==24.3.0
     # via
     #   jsonschema
     #   referencing
+    #   svix
 beautifulsoup4==4.12.3
     # via wagtail
 billiard==4.2.1
@@ -29,7 +36,10 @@ celery[redis]==5.4.0
 celery-progress==0.5
     # via -r requirements/requirements.in
 certifi==2024.12.14
-    # via requests
+    # via
+    #   httpcore
+    #   httpx
+    #   requests
 cffi==1.17.1
     # via cryptography
 charset-normalizer==3.4.1
@@ -54,6 +64,10 @@ cryptography==44.0.0
     #   pyjwt
 defusedxml==0.7.1
     # via willow
+deprecated==1.2.18
+    # via svix
+distro==1.9.0
+    # via openai
 dj-stripe==2.8.4
     # via -r requirements/requirements.in
 django==5.1.5
@@ -114,10 +128,25 @@ fido2==1.2.0
     # via django-allauth
 filetype==1.2.0
     # via willow
+greenlet==3.2.3
+    # via playwright
+h11==0.16.0
+    # via httpcore
+httpcore==1.0.9
+    # via httpx
+httpx==0.28.1
+    # via
+    #   openai
+    #   svix
 idna==3.10
-    # via requests
+    # via
+    #   anyio
+    #   httpx
+    #   requests
 inflection==0.5.1
     # via drf-spectacular
+jiter==0.10.0
+    # via openai
 jmespath==1.0.1
     # via
     #   boto3
@@ -134,6 +163,8 @@ laces==0.1.2
     # via wagtail
 oauthlib==3.2.2
     # via requests-oauthlib
+openai==1.77.0
+    # via -r requirements/requirements.in
 openpyxl==3.1.5
     # via wagtail
 pillow==11.1.0
@@ -142,12 +173,22 @@ pillow==11.1.0
     #   wagtail
 pillow-heif==0.21.0
     # via willow
+playwright==1.52.0
+    # via -r requirements/requirements.in
 prompt-toolkit==3.0.50
     # via click-repl
 psycopg2-binary==2.9.10
     # via -r requirements/requirements.in
 pycparser==2.22
     # via cffi
+pydantic==2.11.7
+    # via
+    #   openai
+    #   svix
+pydantic-core==2.33.2
+    # via pydantic
+pyee==13.0.0
+    # via playwright
 pyjwt[crypto]==2.10.1
     # via django-allauth
 python-crontab==3.2.0
@@ -157,6 +198,7 @@ python-dateutil==2.9.0.post0
     #   botocore
     #   celery
     #   python-crontab
+    #   svix
 pytz==2024.2
     # via l18n
 pyyaml==6.0.2
@@ -190,6 +232,10 @@ six==1.17.0
     # via
     #   l18n
     #   python-dateutil
+sniffio==1.3.1
+    # via
+    #   anyio
+    #   openai
 soupsieve==2.6
     # via beautifulsoup4
 sqlparse==0.5.3
@@ -198,10 +244,27 @@ stripe==4.2.0
     # via
     #   -r requirements/requirements.in
     #   dj-stripe
+svix==1.67.0
+    # via django-anymail
 telepath==0.3.1
     # via wagtail
+tqdm==4.67.1
+    # via openai
+types-deprecated==1.2.15.20250304
+    # via svix
+types-python-dateutil==2.9.0.20250516
+    # via svix
 typing-extensions==4.12.2
-    # via referencing
+    # via
+    #   anyio
+    #   openai
+    #   pydantic
+    #   pydantic-core
+    #   pyee
+    #   referencing
+    #   typing-inspection
+typing-inspection==0.4.1
+    # via pydantic
 tzdata==2024.2
     # via
     #   celery
@@ -225,5 +288,5 @@ wcwidth==0.2.13
     # via prompt-toolkit
 willow[heif]==1.9.0
     # via wagtail
-openai==1.77.0
-    
+wrapt==1.17.2
+    # via deprecated

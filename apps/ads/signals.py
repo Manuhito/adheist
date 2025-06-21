@@ -17,7 +17,7 @@ def invalidate_adlibrary_cache(sender, instance, **kwargs):
     when an AdLibrary instance is created, updated, or deleted.
     """
     # Delete the cache key to force regeneration on next request
-    cache.delete('adlibrary_company_names')
+    cache.delete('adlibrary_page_names')
 
 
 @receiver([post_save, post_delete], sender=IndustryList)
@@ -73,7 +73,7 @@ def track_adrequest_status_changes(sender, instance, **kwargs):
                     'display_status': status_mapping.get(instance.status, instance.status),
                     'timestamp': instance.updated_at.isoformat() if instance.updated_at else None,
                     # Include additional data needed for UI updates
-                    'ad_library_name': instance.ad_library.company_name if instance.ad_library else None,
+                    'ad_library_name': instance.ad_library.facebook_page.page_name if instance.ad_library else None,
                     'canvas_size': instance.canvas_size,
                 }
                 
