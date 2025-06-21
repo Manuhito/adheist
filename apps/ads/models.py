@@ -6,6 +6,7 @@ import json
 
 from apps.utils.models import BaseModel
 from django.core.cache import cache
+from django.contrib.postgres.fields import ArrayField
 
 
 class IndustryList(BaseModel):
@@ -29,14 +30,31 @@ class TagList(BaseModel):
 
 
 class AdLibrary(BaseModel):
-    company_name = models.CharField(max_length=100)
-    industries = models.ManyToManyField(IndustryList, related_name="adlibraries")
+    facebook_page = models.ForeignKey('meta.FacebookPage', on_delete=models.CASCADE, related_name="adlibraries")
     tags = models.ManyToManyField(TagList, related_name="adlibraries")
+    ad_creative_link_titles = models.TextField(blank=True, help_text="Ad creative link titles from Meta API")
     ad_image = models.ImageField(upload_to="adlibrary/", null=True, blank=True)
     is_fav = models.BooleanField(default=False)
+    language = ArrayField(
+        models.CharField(max_length=2),
+        blank=True,
+        null=True,
+        help_text="Lista de códigos de países ISO que indican el idioma del anuncio"
+    )
+    media_type = models.CharField(max_length=50, blank=True, help_text="Tipo de medio del anuncio (ej: imagen, video, carrusel)")
+    publisher_platform = ArrayField(
+        models.CharField(max_length=50),
+        blank=True,
+        null=True,
+        help_text="Lista de plataformas donde se publicó el anuncio"
+    )
+    meta_ad_id = models.CharField(max_length=20, blank=True, help_text="Identificador único del anuncio en Meta")
+    ad_creation_time = models.DateField(null=True, blank=True, help_text="Fecha de creación del anuncio en formato YYYY-MM-DD")
+    ad_delivery_start_time = models.DateField(null=True, blank=True, help_text="Fecha de inicio de entrega del anuncio en formato YYYY-MM-DD")
+    ad_delivery_stop_time = models.DateField(null=True, blank=True, help_text="Fecha de finalización de entrega del anuncio en formato YYYY-MM-DD")
 
     def __str__(self):
-        return self.company_name
+        return f"Ad Library for {self.facebook_page}"
 
     def get_absolute_url(self):
         return reverse("ads:adlibrary_detail", kwargs={"pk": self.pk})

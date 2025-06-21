@@ -24,3 +24,4 @@ _dist/
 *.pem
 static/css/
 static/js/
+meta_ads*
