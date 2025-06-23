@@ -298,8 +298,8 @@ def translations(request):
             'filter.select_industries': _('Select industries'),
             'filter.loading_industries': _('Loading industries...'),
             'filter.no_industries': _('No industries available'),
-            'filter.tags': _('Tags'),
-            'filter.select_tags': _('Select tags'),
+            'filter.tags': _('Ad description Keywords'),
+            'filter.select_tags': _('Select Ad description Keywords'),
             'filter.loading_tags': _('Loading tags...'),
             'filter.no_tags': _('No tags available'),
             

@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-23 17:48+0000\n"
+"POT-Creation-Date: 2025-06-23 17:26+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -12,23 +12,23 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: adheist/settings.py:277 apps/web/context_processors.py:63
+#: adheist/settings.py:278 apps/web/context_processors.py:63
 msgid "English"
 msgstr ""
 
-#: adheist/settings.py:278 apps/web/context_processors.py:64
+#: adheist/settings.py:279 apps/web/context_processors.py:64
 msgid "French"
 msgstr ""
 
-#: adheist/settings.py:279 apps/web/context_processors.py:65
+#: adheist/settings.py:280 apps/web/context_processors.py:65
 msgid "Spanish"
 msgstr ""
 
-#: adheist/settings.py:406
+#: adheist/settings.py:407
 msgid "AdHeist"
 msgstr ""
 
-#: adheist/settings.py:408
+#: adheist/settings.py:409
 msgid "AdHeist description"
 msgstr ""
 
@@ -58,20 +58,20 @@ msgstr ""
 msgid "Whoops, we couldn't find a subscription associated with your account!"
 msgstr ""
 
-#: apps/subscriptions/helpers.py:170
+#: apps/subscriptions/helpers.py:209
 msgid "No active subscription found to update."
 msgstr ""
 
-#: apps/subscriptions/helpers.py:181
+#: apps/subscriptions/helpers.py:220
 msgid "No subscription items found for this subscription."
 msgstr ""
 
-#: apps/subscriptions/helpers.py:262
+#: apps/subscriptions/helpers.py:301
 #, python-brace-format
 msgid "Error updating subscription: {e.user_message}"
 msgstr ""
 
-#: apps/subscriptions/helpers.py:265
+#: apps/subscriptions/helpers.py:304
 #, fuzzy
 #| msgid "An unexpected error occurred. Please try again."
 msgid "Unexpected error updating subscription. Please try again later."
@@ -666,7 +666,7 @@ msgid "No library"
 msgstr ""
 
 #: apps/web/context_processors.py:208 apps/web/context_processors.py:297
-#: templates/ads/adlibrary_form.html:40
+#: templates/ads/adlibrary_form.html:42
 msgid "Industries"
 msgstr ""
 
@@ -753,7 +753,7 @@ msgstr ""
 
 #: apps/web/context_processors.py:232
 #: templates/account/components/profile_form.html:43
-#: templates/ads/adlibrary_form.html:69
+#: templates/ads/adlibrary_form.html:78
 msgid "Save"
 msgstr ""
 
@@ -929,8 +929,7 @@ msgstr ""
 msgid "Industry"
 msgstr ""
 
-#: apps/web/context_processors.py:286 apps/web/context_processors.py:301
-#: templates/ads/adlibrary_form.html:49
+#: apps/web/context_processors.py:286 templates/ads/adlibrary_form.html:55
 msgid "Tags"
 msgstr ""
 
@@ -971,8 +970,12 @@ msgstr ""
 msgid "No industries available"
 msgstr ""
 
+#: apps/web/context_processors.py:301
+msgid "Ad description Keywords"
+msgstr ""
+
 #: apps/web/context_processors.py:302
-msgid "Select tags"
+msgid "Select Ad description Keywords"
 msgstr ""
 
 #: apps/web/context_processors.py:303
@@ -1683,15 +1686,11 @@ msgstr ""
 msgid "New AdLibrary"
 msgstr ""
 
-#: templates/ads/adlibrary_form.html:40 templates/ads/adlibrary_form.html:49
-msgid "Hold Ctrl/Cmd to select multiple"
-msgstr ""
-
-#: templates/ads/adlibrary_form.html:58
+#: templates/ads/adlibrary_form.html:67
 msgid "Ad Image"
 msgstr ""
 
-#: templates/ads/adlibrary_form.html:62
+#: templates/ads/adlibrary_form.html:71
 msgid "Current image:"
 msgstr ""
 
@@ -1699,11 +1698,11 @@ msgstr ""
 msgid "All AdLibraries"
 msgstr ""
 
-#: templates/ads/adlibrary_list.html:61
+#: templates/ads/adlibrary_list.html:64
 msgid "There aren't any adlibraries! Add one below."
 msgstr ""
 
-#: templates/ads/adlibrary_list.html:67
+#: templates/ads/adlibrary_list.html:70
 msgid "Add AdLibrary"
 msgstr ""
 
