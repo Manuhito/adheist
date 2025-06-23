@@ -126,6 +126,8 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
         industry = item.industry;
       } else if (item.industries && Array.isArray(item.industries) && item.industries.length > 0) {
         industry = item.industries.join(", ");
+      } else if (item.facebook_page && item.facebook_page.industries && Array.isArray(item.facebook_page.industries) && item.facebook_page.industries.length > 0) {
+        industry = item.facebook_page.industries.join(", ");
       }
 
       return {

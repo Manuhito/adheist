@@ -53,7 +53,7 @@ def generate_prompt(version):
     # Add industry information if available
     industries = []
     if ad_request.ad_library:
-        industries = [industry.name for industry in ad_request.ad_library.industries.all()]
+        industries = [industry.name for industry in ad_request.ad_library.facebook_page.industries.all()]
     if industries:
         industries_text = ", ".join(industries)
         company_info.append(f"- Industries: {industries_text}")

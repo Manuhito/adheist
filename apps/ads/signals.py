@@ -80,7 +80,7 @@ def track_adrequest_status_changes(sender, instance, **kwargs):
                 # Get tags and industries if ad_library exists
                 if instance.ad_library:
                     notification_data['tags'] = [tag.name for tag in instance.ad_library.tags.all()]
-                    notification_data['industries'] = [industry.name for industry in instance.ad_library.industries.all()]
+                    notification_data['industries'] = [industry.name for industry in instance.ad_library.facebook_page.industries.all()]
                 else:
                     notification_data['tags'] = []
                     notification_data['industries'] = []
