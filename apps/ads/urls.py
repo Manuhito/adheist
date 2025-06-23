@@ -17,6 +17,7 @@ urlpatterns = [
     path("industries/", views.get_all_industries, name="get_all_industries"),
     path("tags/", views.get_all_tags, name="get_all_tags"),
     path("adlibraries/", views.get_adlibrary_filters, name="get_adlibrary_filters"),
+    path("adlibraries/<int:adlibrary_id>/", views.get_adlibrary_by_id, name="get_adlibrary_by_id"),
     path("companies/", views.get_adlibrary_company_list, name="get_adlibrary_company_list"),
     path("create/", views.create_adrequest_page, name="create_adrequest_page"),
     path("create/<int:adrequest_id>/", views.create_adrequest_page, name="create_adrequest_page_with_id"),

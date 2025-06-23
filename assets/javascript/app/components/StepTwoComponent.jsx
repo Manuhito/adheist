@@ -72,28 +72,38 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     window.scrollTo(0, 0);
   }, []);
 
-  // Fetch adlibrary info cuando tengamos el nombre o limpia adLibraryData cuando no lo tenemos
+  // Fetch adlibrary info cuando tengamos el ID o limpia adLibraryData cuando no lo tenemos
   useEffect(() => {
-    if (!initialData.ad_library_name) {
-      // Si no hay ad_library_name, limpiamos adLibraryData para que se muestre la imagen cargada por el usuario
+    if (!initialData.ad_library_id) {
+      // Si no hay ad_library_id, limpiamos adLibraryData para que se muestre la imagen cargada por el usuario
       setAdLibraryData(null);
       return;
     }
     
     setIsAdLibraryLoading(true);
-    fetch(`/ads/adlibraries/?company_name=${encodeURIComponent(initialData.ad_library_name)}`)
+    // Usamos el ID específico para garantizar que obtenemos exactamente el adlibrary seleccionado
+    fetch(`/ads/adlibraries/${initialData.ad_library_id}/`)
       .then(res => res.json())
       .then(data => {
-        // Puede venir como array directa, results, o adlibraries
-        let found = null;
-        if (Array.isArray(data) && data.length > 0) found = data[0];
-        else if (Array.isArray(data?.results) && data.results.length > 0) found = data.results[0];
-        else if (Array.isArray(data?.adlibraries) && data.adlibraries.length > 0) found = data.adlibraries[0];
-        setAdLibraryData(found);
+        // Si la respuesta es directamente el objeto adlibrary
+        if (data && data.id) {
+          setAdLibraryData(data);
+        } 
+        // Si la respuesta viene en un formato diferente, intentamos encontrar el adlibrary
+        else {
+          let found = null;
+          if (Array.isArray(data) && data.length > 0) found = data[0];
+          else if (Array.isArray(data?.results) && data.results.length > 0) found = data.results[0];
+          else if (Array.isArray(data?.adlibraries) && data.adlibraries.length > 0) found = data.adlibraries[0];
+          setAdLibraryData(found);
+        }
       })
-      .catch(() => setAdLibraryData(null))
+      .catch((error) => {
+        console.error('Error fetching adlibrary:', error);
+        setAdLibraryData(null);
+      })
       .finally(() => setIsAdLibraryLoading(false));
-  }, [initialData.ad_library_name]);
+  }, [initialData.ad_library_id]);
 
   // Clean up debounce timers when component unmounts
   useEffect(() => {
@@ -783,19 +793,21 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
                   <>
                     <img
                       src={adLibraryData.ad_image || 'https://images.unsplash.com/photo-1557804506-669a67965ba0'}
-                      alt={adLibraryData.company_name || initialData.ad_library_name || 'Ad Preview'}
+                      alt={adLibraryData.company_name || 'Ad Preview'}
                       className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
                     />
                     {/* Overlay info on hover */}
                     <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center items-center text-white p-2">
-                      <h4 className="text-sm font-semibold mb-1">{adLibraryData.company_name || initialData.ad_library_name || 'No name'}</h4>
+                      <h4 className="text-sm font-semibold mb-1">{adLibraryData.company_name || 'Ad Library'}</h4>
                       {adLibraryData.industries && adLibraryData.industries.length > 0 && (
                         <p className="text-xs mb-1 text-center">
-                          {adLibraryData.industries.join(', ')}
+                          {Array.isArray(adLibraryData.industries) ? adLibraryData.industries.join(', ') : adLibraryData.industries}
                         </p>
                       )}
-                      {adLibraryData.tags && adLibraryData.tags.length > 0 && (
-                        <p className="text-xs text-blue-200">{adLibraryData.tags.join(', ')}</p>
+                      {adLibraryData.tags && (
+                        <p className="text-xs text-blue-200">
+                          {Array.isArray(adLibraryData.tags) ? adLibraryData.tags.join(', ') : adLibraryData.tags}
+                        </p>
                       )}
                     </div>
                   </>

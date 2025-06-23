@@ -434,6 +434,39 @@ def get_all_tags(request):
     return JsonResponse({'tags': tag_list}, safe=True)
 
 
+def get_adlibrary_by_id(request, adlibrary_id):
+    """
+    Get a specific AdLibrary object by its ID.
+    
+    Args:
+        request: The HTTP request
+        adlibrary_id: The primary key of the AdLibrary to retrieve
+        
+    Returns: JSON with the AdLibrary data
+    """
+    try:
+        # Get the AdLibrary object by ID
+        adlibrary = get_object_or_404(AdLibrary, id=adlibrary_id)
+        
+        # Get industries and tags as lists of names
+        industry_names = [industry.name for industry in adlibrary.facebook_page.industries.all()]
+        tag_names = [tag.name for tag in adlibrary.tags.all()]
+        
+        # Create dictionary with all fields
+        adlibrary_data = {
+            'id': adlibrary.id,
+            'company_name': adlibrary.facebook_page.page_name,
+            'industries': industry_names,
+            'tags': tag_names,
+            'ad_image': adlibrary.ad_image.url if adlibrary.ad_image else None,
+            'is_fav': adlibrary.is_fav,
+        }
+        
+        return JsonResponse(adlibrary_data, safe=True)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=404)
+
+
 def get_adlibrary_filters(request):
     """
     Get list of AdLibrary objects with flexible filtering options.

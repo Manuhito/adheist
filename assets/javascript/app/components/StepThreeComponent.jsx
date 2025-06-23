@@ -98,28 +98,32 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const [adLibraryData, setAdLibraryData] = useState(null);
   const [isAdLibraryLoading, setIsAdLibraryLoading] = useState(false);
 
-  // Fetch adlibrary info cuando tengamos el nombre o limpia adLibraryData cuando no lo tenemos
+  // Fetch adlibrary info cuando tengamos el ID o limpia adLibraryData cuando no lo tenemos
   useEffect(() => {
-    if (!initialData.ad_library_name) {
-      // Si no hay ad_library_name, limpiamos adLibraryData para que se muestre la imagen cargada por el usuario
+    if (!initialData.ad_library_id) {
+      // Si no hay ad_library_id, limpiamos adLibraryData para que se muestre la imagen cargada por el usuario
       setAdLibraryData(null);
       return;
     }
     
     setIsAdLibraryLoading(true);
-    fetch(`/ads/adlibraries/?company_name=${encodeURIComponent(initialData.ad_library_name)}`)
+    fetch(`/ads/adlibraries/${initialData.ad_library_id}/`)
       .then(res => res.json())
       .then(data => {
-        // Puede venir como array directa, results, o adlibraries
-        let found = null;
-        if (Array.isArray(data) && data.length > 0) found = data[0];
-        else if (Array.isArray(data?.results) && data.results.length > 0) found = data.results[0];
-        else if (Array.isArray(data?.adlibraries) && data.adlibraries.length > 0) found = data.adlibraries[0];
-        setAdLibraryData(found);
+        // Verificar que tenemos datos válidos con un ID
+        if (data && data.id) {
+          setAdLibraryData(data);
+        } else {
+          console.error('No se encontró el adlibrary con ID:', initialData.ad_library_id);
+          setAdLibraryData(null);
+        }
       })
-      .catch(() => setAdLibraryData(null))
+      .catch(error => {
+        console.error('Error al cargar el adlibrary:', error);
+        setAdLibraryData(null);
+      })
       .finally(() => setIsAdLibraryLoading(false));
-  }, [initialData.ad_library_name]);
+  }, [initialData.ad_library_id]);
 
   // Fetch fresh data when component mounts
   useEffect(() => {
