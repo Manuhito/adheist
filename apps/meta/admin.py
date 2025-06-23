@@ -15,7 +15,7 @@ class BackloadAdmin(admin.ModelAdmin):
     list_display = ["__str__", "status", "last_run", "created_at"]
     list_filter = ["status", "created_at", "last_run"]
     search_fields = []
-    readonly_fields = ["created_at", "updated_at", "last_run", "output_file", "error_log", "run_query_button", "ad_reached_countries"]
+    readonly_fields = ["created_at", "updated_at", "last_run", "output_file", "error_log", "run_query_button", "status"]
     filter_horizontal = ["pages"]
     
     fieldsets = (
