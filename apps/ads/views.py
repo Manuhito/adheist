@@ -893,6 +893,14 @@ def adrequest_version_create(request):
             # Collect image URLs from AdRequest for context
             image_urls = []
             
+            # First, check if ad_library has an image and add it if present
+            if ad_request.ad_library and ad_request.ad_library.ad_image and ad_request.ad_library.ad_image.url:
+                # Get the full URL for the ad_library image
+                image_urls.append(request.build_absolute_uri(ad_request.ad_library.ad_image.url))
+            # If user uploaded an image directly, use that
+            elif ad_request.user_uploaded_image and ad_request.user_uploaded_image.url:
+                image_urls.append(request.build_absolute_uri(ad_request.user_uploaded_image.url))
+            
             # Check each image field and add to context if it exists
             image_fields = [
                 'logo_override',

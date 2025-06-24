@@ -80,7 +80,11 @@ def track_adrequest_status_changes(sender, instance, **kwargs):
                 # Get tags and industries if ad_library exists
                 if instance.ad_library:
                     notification_data['tags'] = [tag.name for tag in instance.ad_library.tags.all()]
-                    notification_data['industries'] = [industry.name for industry in instance.ad_library.facebook_page.industries.all()]
+                    # Manejar el caso donde facebook_page existe pero no tiene industrias asociadas
+                    try:
+                        notification_data['industries'] = [industry.name for industry in instance.ad_library.facebook_page.industries.all()]
+                    except (AttributeError, Exception):
+                        notification_data['industries'] = []
                 else:
                     notification_data['tags'] = []
                     notification_data['industries'] = []
