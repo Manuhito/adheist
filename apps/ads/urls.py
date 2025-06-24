@@ -29,4 +29,6 @@ urlpatterns = [
     path("api/invoices/", views.get_user_invoices, name="get_user_invoices"),
     path("sse/adrequest-updates/", sse.sse_adrequest_updates, name="sse_adrequest_updates"),
     path("proxy-image/", views.proxy_image_download, name="proxy_image_download"),
+    path("api/toggle-favorite/", views.toggle_favorite, name="toggle_favorite"),
+    path("api/deactivate-image/", views.deactivate_image, name="deactivate_image"),
 ]

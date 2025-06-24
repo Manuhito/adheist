@@ -35,6 +35,7 @@ class AdLibrary(BaseModel):
     ad_creative_link_titles = models.TextField(blank=True, help_text="Ad creative link titles from Meta API")
     ad_image = models.ImageField(upload_to="adlibrary/", null=True, blank=True)
     is_fav = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True, help_text="Indica si el anuncio está activo o ha sido desactivado")
     language = ArrayField(
         models.CharField(max_length=2),
         blank=True,

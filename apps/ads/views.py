@@ -495,11 +495,11 @@ def get_adlibrary_filters(request):
     # Check if any filter parameters are provided
     has_filters = company_name or industries or tags
     
-    # Start with all AdLibrary objects or just favorites if no filters
+    # Start with all active AdLibrary objects or just favorites if no filters
     if has_filters:
-        adlibraries = AdLibrary.objects.all()
+        adlibraries = AdLibrary.objects.filter(is_active=True)
     else:
-        adlibraries = AdLibrary.objects.filter(is_fav=True)
+        adlibraries = AdLibrary.objects.filter(is_fav=True, is_active=True)
     
     # Apply company name filter if provided (AND logic)
     if company_name:
@@ -1640,3 +1640,85 @@ def get_user_invoices(request):
             'error': str(e),
             'invoices': []
         }, status=400)
+
+
+@require_POST
+@login_required
+def toggle_favorite(request):
+    """
+    Toggle the is_fav status of an AdLibrary item.
+    
+    POST Parameters:
+    - id: The ID of the AdLibrary item to toggle favorite status
+    
+    Returns: JSON with success status and updated is_fav value
+    """
+    try:
+        data = json.loads(request.body)
+        item_id = data.get('adlibrary_id')
+        
+        if not item_id:
+            return JsonResponse({'error': 'Missing adlibrary_id parameter'}, status=400)
+        
+        # Check if the ID contains a separator (original_id format)
+        if '_' in str(item_id):
+            # Extract the actual ID from the format
+            item_id = item_id.split('_')[0]
+        
+        # Get the AdLibrary item
+        item = get_object_or_404(AdLibrary, pk=item_id)
+        
+        # Toggle the is_fav status
+        item.is_fav = not item.is_fav
+        item.save()
+        
+        return JsonResponse({
+            'success': True,
+            'id': item.id,
+            'is_fav': item.is_fav
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@require_POST
+@login_required
+def deactivate_image(request):
+    """
+    Deactivate (soft delete) an AdLibrary item.
+    Only staff users can deactivate images.
+    
+    POST Parameters:
+    - id: The ID of the AdLibrary item to deactivate
+    
+    Returns: JSON with success status
+    """
+    try:
+        if not request.user.is_staff:
+            return JsonResponse({'error': 'Permission denied'}, status=403)
+        
+        data = json.loads(request.body)
+        item_id = data.get('adlibrary_id')
+        
+        if not item_id:
+            return JsonResponse({'error': 'Missing adlibrary_id parameter'}, status=400)
+        
+        # Check if the ID contains a separator (original_id format)
+        if '_' in str(item_id):
+            # Extract the actual ID from the format
+            item_id = item_id.split('_')[0]
+        
+        # Get the AdLibrary item
+        item = get_object_or_404(AdLibrary, pk=item_id)
+        
+        # Mark the item as inactive instead of deleting it
+        item.is_active = False
+        item.save()
+        
+        return JsonResponse({
+            'success': True,
+            'id': item_id,
+            'message': 'Image deactivated successfully'
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

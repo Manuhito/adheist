@@ -19,5 +19,12 @@
   {% if adrequest_data %}
     {{ adrequest_data|json_script:"adrequest-data" }}
   {% endif %}
+  
+  <!-- Pass user permissions to JavaScript -->
+  <script>
+    window.__USER_PERMISSIONS__ = {
+      isStaff: {% if request.user.is_staff %}true{% else %}false{% endif %}
+    };
+  </script>
 </div>
 {% endblock %}

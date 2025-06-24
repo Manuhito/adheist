@@ -28,7 +28,7 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
   // State for user uploaded image (both URL preview and File object)
   const [userUploadedImage, setUserUploadedImage] = useState(null);
   const [userUploadedFile, setUserUploadedFile] = useState(null);
-  const [imageSource, setImageSource] = useState(initialData.ad_library_id ? 'library' : 'upload');
+  const [imageSource, setImageSource] = useState('library'); // Por defecto, mostrar la pestaña 'Select from Library'
   // Key for forcing re-render of ImageUpload component
   const [imageUploadKey, setImageUploadKey] = useState(Date.now());
   const [isSubmitting, setIsSubmitting] = useState(false);
