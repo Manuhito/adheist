@@ -132,10 +132,8 @@ def generate_image_task(
                     # Save the OpenAI responses in the new fields
                     update_fields = []
                     
-                    # Save the enhanced prompt in the new field
-                    if 'enhanced_prompt' in result:
-                        version.openai_gpt4_prompt = result['enhanced_prompt']
-                        update_fields.append('openai_gpt4_prompt')
+                    # Enhanced prompt is now handled differently
+                    # The openai_gpt4_prompt field has been removed
                         
                     # Save the response metadata if available
                     if 'response_metadata' in result:
