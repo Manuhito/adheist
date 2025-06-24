@@ -18,7 +18,7 @@ def default_content_languages():
 
 
 def default_media_types():
-    return ['MEME', 'IMAGE']
+    return ['MEME']
 
 
 class FacebookPage(BaseModel):
@@ -34,11 +34,6 @@ class FacebookPage(BaseModel):
         max_length=255, 
         blank=True,
         help_text="Facebook page name"
-    )
-    industry = models.CharField(
-        max_length=100, 
-        blank=True,
-        help_text="Industry or category of the page"
     )
     industries = models.ManyToManyField('ads.IndustryList', related_name="facebook_pages", blank=True)
     country = models.CharField(
@@ -99,7 +94,7 @@ class Backload(BaseModel):
     media_types = ArrayField(
         models.CharField(max_length=20), 
         default=default_media_types,
-        help_text="Media types to include in the search"
+        help_text="MEME or IMAGE"
     )
     fields = models.CharField(
         max_length=1000,

@@ -149,9 +149,9 @@ class MetaApiTokenAdmin(admin.ModelAdmin):
 
 @admin.register(FacebookPage)
 class FacebookPageAdmin(admin.ModelAdmin):
-    list_display = ["page_id", "page_name", "industry", "country", "is_active"]
-    list_filter = ["industry", "country", "is_active"]
-    search_fields = ["page_id", "page_name", "industry"]
+    list_display = ["page_id", "page_name", "country", "is_active"]
+    list_filter = ["country", "is_active", "industries"]
+    search_fields = ["page_id", "page_name"]
     readonly_fields = ["created_at", "updated_at"]
     filter_horizontal = ["industries"]
     fieldsets = (
@@ -159,7 +159,7 @@ class FacebookPageAdmin(admin.ModelAdmin):
             "fields": ("page_id", "page_name", "is_active")
         }),
         ("Additional Information", {
-            "fields": ("industry", "industries", "country", "notes")
+            "fields": ("industries", "country", "notes")
         }),
         ("Audit Information", {
             "fields": ("created_at", "updated_at"),
