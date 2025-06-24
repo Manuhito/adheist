@@ -49,7 +49,7 @@ class AdLibrary(BaseModel):
         null=True,
         help_text="Lista de plataformas donde se publicó el anuncio"
     )
-    meta_ad_id = models.CharField(max_length=20, blank=True, help_text="Identificador único del anuncio en Meta")
+    meta_ad_id = models.CharField(max_length=20, blank=True, unique=True, help_text="Identificador único del anuncio en Meta")
     ad_creation_time = models.DateField(null=True, blank=True, help_text="Fecha de creación del anuncio en formato YYYY-MM-DD")
     ad_delivery_start_time = models.DateField(null=True, blank=True, help_text="Fecha de inicio de entrega del anuncio en formato YYYY-MM-DD")
     ad_delivery_stop_time = models.DateField(null=True, blank=True, help_text="Fecha de finalización de entrega del anuncio en formato YYYY-MM-DD")
