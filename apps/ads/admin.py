@@ -260,7 +260,6 @@ class AdRequestUsageAdmin(admin.ModelAdmin):
 class ExtraCreditAdmin(admin.ModelAdmin):
     list_display = ["user", "general_credits", "version_credits", "created_at", "updated_at"]
     search_fields = ["user__email"]
-    readonly_fields = ["user"]
 
 
 @admin.register(AppConfiguration)
