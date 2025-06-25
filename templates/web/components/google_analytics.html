@@ -5,3 +5,38 @@
   'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
   })(window,document,'script','dataLayer','{{GOOGLE_ANALYTICS_ID}}');</script>
 <!-- End Google Tag Manager -->
+
+<!-- PostHog User Identification and Tracking -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    if (typeof posthog !== 'undefined') {
+      {% if user.is_authenticated %}
+      // Identify user by email
+      posthog.identify('{{ user.email }}', {
+        name: '{{ user.get_full_name|default:user.username }}',
+        email: '{{ user.email }}',
+        id: '{{ user.id }}',
+        last_login: '{{ user.last_login|date:"c" }}'
+      });
+      
+      // Set user properties
+      posthog.people.set({
+        $name: '{{ user.get_full_name|default:user.username }}',
+        $email: '{{ user.email }}',
+        user_id: '{{ user.id }}',
+        date_joined: '{{ user.date_joined|date:"c" }}'
+      });
+      {% endif %}
+      
+      // Automatic page view tracking from middleware
+      {% if posthog_tracking and posthog_tracking.event == 'page_view' %}
+      posthog.capture(
+        '{% if user.is_authenticated %}{{ user.email }}{% else %}anonymous_user{% endif %}',
+        'Page View',
+        {{ posthog_tracking.properties|safe }}
+      );
+      {% endif %}
+    }
+  });
+</script>
+<!-- End PostHog User Identification and Tracking -->

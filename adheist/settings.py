@@ -109,6 +109,8 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "wagtail.contrib.redirects.middleware.RedirectMiddleware",
     "waffle.middleware.WaffleMiddleware",
+    # PostHog tracking middleware for automatic page view tracking
+    "apps.web.middleware.posthog_middleware.PostHogTrackingMiddleware",
 ]
 
 
@@ -139,6 +141,8 @@ TEMPLATES = [
                 "apps.web.context_processors.project_meta",
                 # this line can be removed if not using google analytics
                 "apps.web.context_processors.google_analytics_id",
+                # PostHog tracking context processor
+                "apps.web.context_processors.posthog_tracking",
                 # translations for i18n in React components
                 "apps.web.context_processors.translations",
             ],
