@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -14,6 +14,7 @@ import {
 import MultipleSelector from '../../components/ui/multiselect';
 import { Tag, Factory } from 'lucide-react';
 import { useTranslation } from '../../lib/useTranslation';
+import { useFilterCache } from './StepOneComponent';
 
 // Esquema de validación con zod
 const FilterFormSchema = z.object({
@@ -37,9 +38,8 @@ export const FilterFormComponent = ({
   onTagsChange
 }) => {
   const { t } = useTranslation();
-  const [industriesList, setIndustriesList] = useState([]);
-  const [tagsList, setTagsList] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  // Usar el contexto de caché para obtener industrias y etiquetas
+  const { industries: industriesList, tags: tagsList, isLoading, loadFilterData } = useFilterCache();
 
   // Configurar el formulario con react-hook-form
   const form = useForm({
@@ -49,44 +49,51 @@ export const FilterFormComponent = ({
       tags: selectedTags,
     },
   });
-
-  // Cargar industrias y etiquetas al montar el componente
+  
+  // Asegurar que los datos estén cargados
   useEffect(() => {
-    setIsLoading(true);
-
-    // Cargar industrias y etiquetas en paralelo
-    const fetchIndustries = fetch('/ads/industries/').then(res => res.json());
-    const fetchTags = fetch('/ads/tags/').then(res => res.json());
-
-    Promise.all([fetchIndustries, fetchTags])
-      .then(([industriesData, tagsData]) => {
-        // Procesar datos de industrias
-        const industryList = industriesData.industries || [];
-        // Convertir a formato de opciones para MultipleSelector
-        const industryOptions = industryList.map(industry => ({
-          value: industry,
-          label: industry
-        }));
-        setIndustriesList(industryOptions);
-        console.log('Industries loaded:', industryList.length);
-
-        // Procesar datos de etiquetas
-        const tagList = tagsData.tags || [];
-        // Convertir a formato de opciones para MultipleSelector
-        const tagOptions = tagList.map(tag => ({
-          value: tag,
-          label: tag
-        }));
-        setTagsList(tagOptions);
-        console.log('Tags loaded:', tagList.length);
-
-        setIsLoading(false);
-      })
-      .catch(error => {
-        console.error('Error loading filter data:', error);
-        setIsLoading(false);
+    const componentMountTime = performance.now();
+    const cacheId = window._filterCacheId || 'unknown';
+    
+    console.log(`[FILTER FORM] 📊 [${cacheId}] Componente montado - timestamp: ${new Date().toISOString()}`);
+    
+    // Cargar datos si aún no están disponibles
+    if (industriesList.length === 0 || tagsList.length === 0) {
+      console.log(`[FILTER FORM] 🔄 [${cacheId}] Solicitando datos de filtros - caché vacía`);
+      const startTime = performance.now();
+      
+      loadFilterData().then((data) => {
+        const endTime = performance.now();
+        console.log(`[FILTER FORM] ⏱️ [${cacheId}] Datos recibidos en ${(endTime - startTime).toFixed(2)}ms`);
+        console.log(`[FILTER FORM] 💾 [${cacheId}] Total tiempo desde montaje: ${(endTime - componentMountTime).toFixed(2)}ms`);
       });
-  }, []);
+    } else {
+      console.log(`[FILTER FORM] ✅ [${cacheId}] Usando datos en caché - industries: ${industriesList.length}, tags: ${tagsList.length}`);
+      console.log(`[FILTER FORM] 💾 [${cacheId}] Tiempo de montaje con caché: ${(performance.now() - componentMountTime).toFixed(2)}ms`);
+      
+      // Medir el tiempo de renderizado inicial de los componentes MultipleSelector
+      setTimeout(() => {
+        const renderTime = performance.now() - componentMountTime;
+        console.log(`[PERF] ⚡️ [${cacheId}] Tiempo total de renderizado con virtualización: ${renderTime.toFixed(2)}ms`);
+      }, 0);
+    }
+    
+    // Registrar el rendimiento en localStorage para diagnóstico
+    try {
+      const formPerfData = JSON.parse(localStorage.getItem('filterFormPerfData') || '[]');
+      formPerfData.push({
+        timestamp: new Date().toISOString(),
+        cacheId,
+        hasCachedData: industriesList.length > 0 && tagsList.length > 0,
+        industriesCount: industriesList.length,
+        tagsCount: tagsList.length,
+        mountTime: performance.now() - componentMountTime
+      });
+      localStorage.setItem('filterFormPerfData', JSON.stringify(formPerfData.slice(-10))); // Guardar solo los últimos 10
+    } catch (e) {
+      console.error('Error guardando datos de rendimiento del formulario:', e);
+    }
+  }, [industriesList.length, tagsList.length, loadFilterData]);
 
   // Sincronizar el formulario cuando cambian las props
   useEffect(() => {
@@ -136,16 +143,22 @@ export const FilterFormComponent = ({
                         emptyIndicator={
                           isLoading ? (
                             <p className="text-center text-sm">{t('filter.loading_industries', 'Loading industries...')}</p>
-                          ) : (
+                          ) : industriesList.length === 0 ? (
                             <p className="text-center text-sm">{t('filter.no_industries', 'No industries available')}</p>
+                          ) : (
+                            <p className="text-center text-sm">{t('filter.no_matching_industries', 'No matching industries')}</p>
                           )
                         }
+                        // Mostrar indicador de optimización
+                        className={industriesList.length > 100 ? 'border-green-500 border-opacity-50' : ''}
                         disabled={isLoading}
                         onChange={(options) => {
+                          const startTime = performance.now();
                           const values = options.map(option => option.value);
                           field.onChange(values);
                           // Notificar al componente padre sobre el cambio
                           onIndustriesChange(values);
+                          console.log(`[FILTER FORM] 📈 Cambio de industrias procesado en ${(performance.now() - startTime).toFixed(2)}ms`);
                         }}
                       />
                     </FormControl>
@@ -187,16 +200,22 @@ export const FilterFormComponent = ({
                         emptyIndicator={
                           isLoading ? (
                             <p className="text-center text-sm">{t('filter.loading_tags', 'Loading tags...')}</p>
-                          ) : (
+                          ) : tagsList.length === 0 ? (
                             <p className="text-center text-sm">{t('filter.no_tags', 'No tags available')}</p>
+                          ) : (
+                            <p className="text-center text-sm">{t('filter.no_matching_tags', 'No matching tags')}</p>
                           )
                         }
+                        // Mostrar indicador de optimización
+                        className={tagsList.length > 100 ? 'border-green-500 border-opacity-50' : ''}
                         disabled={isLoading}
                         onChange={(options) => {
+                          const startTime = performance.now();
                           const values = options.map(option => option.value);
                           field.onChange(values);
                           // Notificar al componente padre sobre el cambio
                           onTagsChange(values);
+                          console.log(`[FILTER FORM] 🏷️ Cambio de tags procesado en ${(performance.now() - startTime).toFixed(2)}ms`);
                         }}
                       />
                     </FormControl>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, createContext, useContext } from 'react';
 import { SearchComponent } from './SearchComponent';
 import { FilterFormComponent } from './FilterFormComponent';
 import InteractiveBentoGallery from '../../components/ui/interactive-bento-gallery.jsx';
@@ -8,6 +8,114 @@ import { NextButton } from '../../components/ui/next-button.jsx';
 import { useTranslation } from '../../lib/useTranslation';
 import { ImageUpload } from '../../components/ui/image-upload';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shadcn/components/ui/tabs';
+
+// Contexto para almacenar en caché las industrias y etiquetas
+const FilterCacheContext = createContext({
+  industries: [],
+  tags: [],
+  isLoading: false,
+  loadFilterData: () => {}
+});
+
+/**
+ * Proveedor de caché para filtros que carga y almacena datos de industrias y etiquetas
+ */
+export const FilterCacheProvider = ({ children }) => {
+  const [industries, setIndustries] = useState([]);
+  const [tags, setTags] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Función para cargar los datos de filtros
+  const loadFilterData = () => {
+    // Si ya están cargados, no hacer nada
+    if (isLoaded) {
+      const cacheId = window._filterCacheId || 'unknown';
+      console.log(`[CACHE HIT] ✅ [${cacheId}] Usando datos en caché - industries: ${industries.length}, tags: ${tags.length}`);
+      return Promise.resolve({ industries, tags });
+    }
+    
+    const startTime = performance.now();
+    const cacheId = window._filterCacheId || 'unknown';
+    console.log(`[CACHE MISS] ⏳ [${cacheId}] Cargando datos desde la API - timestamp: ${new Date().toISOString()}`);
+    setIsLoading(true);
+
+    // Cargar industrias y etiquetas en paralelo
+    const fetchIndustries = fetch('/ads/industries/').then(res => res.json());
+    const fetchTags = fetch('/ads/tags/').then(res => res.json());
+
+    return Promise.all([fetchIndustries, fetchTags])
+      .then(([industriesData, tagsData]) => {
+        // Procesar datos de industrias
+        const industryList = industriesData.industries || [];
+        // Convertir a formato de opciones para MultipleSelector
+        const industryOptions = industryList.map(industry => ({
+          value: industry,
+          label: industry
+        }));
+        setIndustries(industryOptions);
+        console.log('Industries loaded:', industryList.length);
+
+        // Procesar datos de etiquetas
+        const tagList = tagsData.tags || [];
+        // Convertir a formato de opciones para MultipleSelector
+        const tagOptions = tagList.map(tag => ({
+          value: tag,
+          label: tag
+        }));
+        setTags(tagOptions);
+        console.log('Tags loaded:', tagList.length);
+
+        const endTime = performance.now();
+        const loadTime = (endTime - startTime).toFixed(2);
+        const cacheId = window._filterCacheId || 'unknown';
+        console.log(`[CACHE LOADED] ✅ [${cacheId}] Datos cargados en ${loadTime}ms - industries: ${industryOptions.length}, tags: ${tagOptions.length}`);
+        // Guardar en localStorage para diagnóstico
+        try {
+          const perfData = JSON.parse(localStorage.getItem('filterCachePerfData') || '[]');
+          perfData.push({
+            timestamp: new Date().toISOString(),
+            loadTime: parseFloat(loadTime),
+            industriesCount: industryOptions.length,
+            tagsCount: tagOptions.length,
+            cacheId
+          });
+          localStorage.setItem('filterCachePerfData', JSON.stringify(perfData.slice(-10))); // Guardar solo los últimos 10
+        } catch (e) {
+          console.error('Error guardando datos de rendimiento:', e);
+        }
+        setIsLoading(false);
+        setIsLoaded(true);
+        
+        return { industries: industryOptions, tags: tagOptions };
+      })
+      .catch(error => {
+        console.error('Error loading filter data:', error);
+        setIsLoading(false);
+        return { industries: [], tags: [] };
+      });
+  };
+
+  // Cargar datos al montar el componente (una sola vez)
+  useEffect(() => {
+    console.log('[CACHE INIT] 🚀 Inicializando caché de filtros - timestamp:', new Date().toISOString());
+    // Añadir un identificador único para esta sesión para rastrear en los logs
+    window._filterCacheId = Math.random().toString(36).substring(2, 8);
+    console.log(`[CACHE ID] 🔑 ID de sesión de caché: ${window._filterCacheId}`);
+    loadFilterData();
+  }, []);
+
+  return (
+    <FilterCacheContext.Provider value={{ industries, tags, isLoading, loadFilterData }}>
+      {children}
+    </FilterCacheContext.Provider>
+  );
+};
+
+/**
+ * Hook personalizado para acceder a los datos de caché de filtros
+ */
+export const useFilterCache = () => useContext(FilterCacheContext);
 
 /**
  * Step One Component for the Create Ad Request flow
@@ -541,4 +649,11 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
   );
 };
 
-export default StepOneComponent;
+// Componente envuelto con el proveedor de caché
+const StepOneComponentWithCache = (props) => (
+  <FilterCacheProvider>
+    <StepOneComponent {...props} />
+  </FilterCacheProvider>
+);
+
+export default StepOneComponentWithCache;

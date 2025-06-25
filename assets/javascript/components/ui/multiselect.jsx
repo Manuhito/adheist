@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Command as CommandPrimitive } from "cmdk";
-import { X } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
+import { useVirtualizer } from '@tanstack/react-virtual';
 
 import { Badge } from "./badge";
 import { Command, CommandGroup, CommandItem, CommandList, CommandEmpty } from "./command";
@@ -81,21 +82,65 @@ export const MultipleSelector = React.forwardRef(
       [value, handleUnselect]
     );
 
+    // Estado para controlar la carga perezosa
+    const [isSearching, setIsSearching] = React.useState(false);
+    const [debouncedInputValue, setDebouncedInputValue] = React.useState("");
+    
+    // Aplicar debounce al input para evitar filtrados excesivos
+    React.useEffect(() => {
+      const timer = setTimeout(() => {
+        setDebouncedInputValue(inputValue);
+        setIsSearching(false);
+      }, 300);
+      
+      if (inputValue !== debouncedInputValue) {
+        setIsSearching(true);
+      }
+      
+      return () => clearTimeout(timer);
+    }, [inputValue]);
+    
+    // Mostrar todas las opciones disponibles
+    const INITIAL_OPTIONS_LIMIT = 1000; // Un número suficientemente grande para mostrar todas las opciones
+    
     // Filter out options that are already selected
     const selectables = React.useMemo(() => {
+      // Performance optimization: only filter out selected items
       return options.filter(
         (option) => !value.some((item) => item.value === option.value)
       );
     }, [options, value]);
 
-    // Filter options based on input value
+    // Filter options based on input value with optimized search
     const displayOptions = React.useMemo(() => {
-      if (!inputValue) return selectables;
+      // Si no hay input, mostrar todas las opciones
+      if (!debouncedInputValue) {
+        return selectables;
+      }
       
-      return selectables.filter((option) =>
-        option.label.toLowerCase().includes(inputValue.toLowerCase())
+      // Optimizar la búsqueda para grandes conjuntos de datos
+      const searchLower = debouncedInputValue.toLowerCase();
+      return selectables.filter(option => 
+        option.label.toLowerCase().includes(searchLower)
       );
-    }, [selectables, inputValue]);
+    }, [selectables, debouncedInputValue]);
+    
+    // Referencia para la virtualización
+    const parentRef = React.useRef(null);
+    
+    // Configurar el virtualizador para renderizar solo los elementos visibles
+    const rowVirtualizer = useVirtualizer({
+      count: displayOptions.length,
+      getScrollElement: () => parentRef.current,
+      estimateSize: () => 36, // altura aproximada de cada elemento en px
+      overscan: 10, // número de elementos a pre-renderizar fuera de la vista (aumentado)
+      initialOffset: 0,
+      scrollToFn: (offset, { behavior }) => {
+        if (parentRef.current) {
+          parentRef.current.scrollTop = offset;
+        }
+      }
+    });
 
     return (
       <Command
@@ -118,7 +163,7 @@ export const MultipleSelector = React.forwardRef(
             inputRef?.current?.focus();
           }}
         >
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1" style={{ maxHeight: value.length > 10 ? '100px' : 'auto', overflowY: value.length > 10 ? 'auto' : 'visible' }}>
             {value.map((option) => {
               return (
                 <div
@@ -189,35 +234,66 @@ export const MultipleSelector = React.forwardRef(
               onMouseLeave={() => setOpen(false)} // Close dropdown when mouse leaves the panel
             >
               <CommandList
+                ref={parentRef}
                 className="bg-popover text-popover-foreground shadow-md outline-none max-h-[200px] overflow-y-auto"
                 onMouseLeave={() => setOnScrollbar(false)}
                 onMouseEnter={() => setOnScrollbar(true)}
                 onMouseUp={() => inputRef?.current?.focus()}
+                style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(0,0,0,0.3) transparent' }}
+                onScroll={() => {
+                  // Forzar actualización del virtualizador cuando se hace scroll
+                  if (parentRef.current) {
+                    rowVirtualizer.measure();
+                  }
+                }}
               >
-                {displayOptions.length > 0 ? (
-                  <CommandGroup className="overflow-auto">
-                    {displayOptions.map((option) => {
-                      return (
-                        <CommandItem
-                          key={option.value}
-                          value={option.value}
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation(); // This is important
-                          }}
-                          onSelect={() => {
-                            // Add the currently highlighted option to the selection
-                            onChange([...value, option]);
-                            setInputValue(""); // Clear input after selection
-                            setOpen(false); // Close dropdown after selection
-                          }}
-                          disabled={option.disable || disabled}
-                          className={`cursor-pointer ${option.disable ? "cursor-not-allowed opacity-50" : ""}`}
-                        >
-                          {option.label}
-                        </CommandItem>
-                      );
-                    })}
+                {isSearching ? (
+                  <div className="flex items-center justify-center py-6">
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    <span className="text-sm">Buscando...</span>
+                  </div>
+                ) : displayOptions.length > 0 ? (
+                  <CommandGroup className="overflow-auto relative">
+                    {/* Eliminar el mensaje de número de opciones */}
+                    
+                    {/* Lista virtualizada para mejor rendimiento */}
+                    <div className="w-full">
+                      <div 
+                        style={{
+                          height: `${rowVirtualizer.getTotalSize()}px`,
+                          width: '100%',
+                          position: 'relative',
+                        }}
+                      >
+                        {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                          const option = displayOptions[virtualRow.index];
+                          return (
+                            <CommandItem
+                              key={option.value}
+                              value={option.value}
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation(); // This is important
+                              }}
+                              onSelect={() => {
+                                // Add the currently highlighted option to the selection
+                                onChange([...value, option]);
+                                setInputValue(""); // Clear input after selection
+                                setOpen(false); // Close dropdown after selection
+                              }}
+                              disabled={option.disable || disabled}
+                              className={`cursor-pointer absolute top-0 left-0 w-full ${option.disable ? "cursor-not-allowed opacity-50" : ""}`}
+                              style={{
+                                height: `${virtualRow.size}px`,
+                                transform: `translateY(${virtualRow.start}px)`
+                              }}
+                            >
+                              {option.label}
+                            </CommandItem>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </CommandGroup>
                 ) : (
                   <CommandEmpty className="py-6 text-center text-sm">
