@@ -546,8 +546,11 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
           <TabsContent value="library" className="mt-4">
             {isLoading ? (
-              <div className="flex justify-center my-12">
-                <div className="w-8 h-8 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+              <div className="overflow-y-auto max-h-[600px] border border-gray-200 rounded-lg shadow-sm flex justify-center items-center py-20">
+                <div className="flex flex-col items-center">
+                  <div className="w-12 h-12 border-3 border-primary/30 border-t-primary rounded-full animate-spin mb-4"></div>
+                  <p className="text-muted-foreground">{t('step_one.loading', 'Loading results...')}</p>
+                </div>
               </div>
             ) : galleryItems.length > 0 ? (
               <>
