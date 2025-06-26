@@ -23,7 +23,7 @@ class BackloadAdmin(admin.ModelAdmin):
             "fields": ("pages",)
         }),
         ("API Parameters", {
-            "fields": ("ad_reached_countries", "content_languages", "media_types", "fields", "limit")
+            "fields": ("ad_reached_countries", "content_languages", "media_types", "fields", "limit", "ad_delivery_date_min")
         }),
         ("Execution Information", {
             "fields": ("status", "last_run", "output_file", "error_log", "run_query_button")
@@ -113,7 +113,8 @@ class BackloadAdmin(admin.ModelAdmin):
                 media_types=obj.media_types,
                 fields=obj.fields,
                 limit=obj.limit,
-                backload_id=obj.pk
+                backload_id=obj.pk,
+                ad_delivery_date_min=obj.ad_delivery_date_min
             )
             
             messages.success(request, f"La tarea de consulta a la API de Meta se ha iniciado en segundo plano. Los resultados se guardarán en {output_dir}. El estado se actualizará automáticamente cuando finalice.")
