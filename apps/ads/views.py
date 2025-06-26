@@ -515,12 +515,17 @@ def get_adlibrary_filters(request):
         if valid_industries:
             combined_query |= Q(facebook_page__industries__name__in=valid_industries)
     
-    # Add tag conditions to combined query - search in ad_creative_link_titles
+    # Add tag conditions to combined query - search in ad_creative_bodies
     if tags:
         valid_tags = [tag for tag in tags if tag]
         if valid_tags:
             for tag in valid_tags:
-                combined_query |= Q(ad_creative_link_titles__icontains=tag)
+                # Buscar en ad_creative_bodies usando la función de PostgreSQL para buscar en arrays
+                # Esta es la forma más eficiente y directa para buscar en ArrayField
+                combined_query |= Q(pk__in=AdLibrary.objects.extra(
+                    where=["EXISTS (SELECT 1 FROM unnest(ad_creative_bodies) AS body WHERE body ILIKE %s)"],
+                    params=['%' + tag + '%']
+                ).values('pk'))
     
     # Apply the combined filter if any conditions exist
     if combined_query:
