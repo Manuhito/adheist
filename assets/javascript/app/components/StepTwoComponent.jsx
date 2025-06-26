@@ -141,6 +141,14 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   // Handle going back to step 1 (NEW)
   const handleBack = async () => {
     setIsBackSubmitting(true);
+    
+    // Track event in PostHog when user clicks Back button to return to Step One
+    if (window.posthog) {
+      window.posthog.capture('Back Button pressed', {
+        page: 'Step 2',
+      });
+    }
+    
     try {
       const formData = new FormData();
       formData.append('status', 'NEW');
@@ -219,6 +227,14 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
     // Pass the data to the next step
     if (onComplete) {
+      // Track event in PostHog when user advances from Step Two
+      if (window.posthog) {
+        window.posthog.capture('Ad Creation Step 2 Completed', {
+          timestamp: new Date().toISOString(),
+          ad_request_id: initialData.id,
+        });
+      }
+      
       onComplete({
         websiteUrl,
         keyBenefits,

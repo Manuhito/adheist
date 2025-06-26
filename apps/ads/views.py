@@ -18,6 +18,7 @@ import requests
 import urllib.parse
 import os
 from django.conf import settings
+import posthog
 
 from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion
 from .forms import AdLibraryForm
@@ -616,6 +617,16 @@ def adrequest_create(request):
         
         # Create the AdRequest with all fields at once
         ad_request = AdRequest.objects.create(**create_params)
+        
+        # Track event in PostHog when AdRequest is created
+        posthog.capture(
+            request.user.id,  # Distinct ID (user ID)
+            'Ad Request Created',
+            properties={
+                'ad_request_id': ad_request.id,
+                'timestamp': ad_request.created_at.isoformat() if hasattr(ad_request, 'created_at') else None
+            }
+        )
         
         # Return the AdRequest instance ID
         return JsonResponse({'id': ad_request.id}, status=201)

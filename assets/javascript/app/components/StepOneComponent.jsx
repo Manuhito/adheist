@@ -465,6 +465,17 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
           }
         }
         
+        // Track event in PostHog when user advances to Step Two
+        if (window.posthog) {
+          window.posthog.capture('Ad Creation Step One Completed', {
+            timestamp: new Date().toISOString(),
+            ad_request_id: data.id,
+            canvas_size: selectedCanvasSize,
+            ad_library_id: completeData.ad_library_id || null,
+            user_uploaded_img: !!completeData.has_user_uploaded_image
+          });
+        }
+        
         onComplete(completeData);
       }
     } catch (error) {

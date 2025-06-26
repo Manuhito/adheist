@@ -105,7 +105,7 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
       setAdLibraryData(null);
       return;
     }
-    
+
     setIsAdLibraryLoading(true);
     fetch(`/ads/adlibraries/${initialData.ad_library_id}/`)
       .then(res => res.json())
@@ -181,6 +181,14 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
   // Handle going back to step 2 (DRAFT)
   const handleBack = async () => {
     setIsBackSubmitting(true);
+
+    // Track event in PostHog when user clicks Back button to return to Step Two
+    if (window.posthog) {
+      window.posthog.capture('Back Button pressed', {
+        page: 'Step 3',
+      });
+    }
+
     try {
       const formData = new FormData();
       formData.append('status', 'DRAFT');
