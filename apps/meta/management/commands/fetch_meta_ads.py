@@ -426,6 +426,24 @@ class Command(BaseCommand):
             
             if exists:
                 self.stdout.write(f"Ad with ID {ad_id} already exists in the database")
+                
+                # Check if we received ad_delivery_stop_time in the API response
+                ad_delivery_stop_time = ad.get('ad_delivery_stop_time')
+                
+                # Get the existing AdLibrary object to update it
+                ad_library = AdLibrary.objects.get(meta_ad_id=ad_id)
+                
+                if ad_delivery_stop_time:
+                    # Update ad_delivery_stop_time and set meta_status to inactive
+                    self.stdout.write(f"Updating ad {ad_id} with stop time {ad_delivery_stop_time} and setting to inactive")
+                    ad_library.ad_delivery_stop_time = ad_delivery_stop_time
+                    ad_library.meta_status = AdLibrary.STATUS_INACTIVE
+                    ad_library.save()
+                else:
+                    # No stop time received, ensure meta_status is active
+                    self.stdout.write(f"Updating ad {ad_id} status to active")
+                    ad_library.meta_status = AdLibrary.STATUS_ACTIVE
+                    ad_library.save()
             else:
                 self.stdout.write(f"Ad with ID {ad_id} does not exist in the database")
                 # Create a Celery task to add the ad to the database
