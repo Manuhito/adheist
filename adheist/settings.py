@@ -33,6 +33,18 @@ DEBUG = env.bool("DEBUG", default=True)
 # Note: It is not recommended to set ALLOWED_HOSTS to "*" in production
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*"])
 
+# CSRF Settings
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=["http://localhost:8000"])
+SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=False)
+SESSION_COOKIE_SECURE = env.bool("SESSION_COOKIE_SECURE", default=False)
+CSRF_COOKIE_SECURE = env.bool("CSRF_COOKIE_SECURE", default=False)
+SECURE_PROXY_SSL_HEADER = tuple(env.list("SECURE_PROXY_SSL_HEADER", default=None)) if env("SECURE_PROXY_SSL_HEADER", default=None) else None
+SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", default=False)
+USE_HTTPS_IN_ABSOLUTE_URLS = env.bool("USE_HTTPS_IN_ABSOLUTE_URLS", default=False)
+# Controls whether robots meta tag is added to templates
+# If True, no robots meta tag will be added
+# If False, <meta name="robots" content="noindex, nofollow"> will be added
+ROBOT_INDEX = env.bool("ROBOT_INDEX", default=False)
 
 # Application definition
 
@@ -139,6 +151,7 @@ TEMPLATES = [
                 "apps.web.context_processors.project_meta",
                 # this line can be removed if not using google analytics
                 "apps.web.context_processors.google_analytics_id",
+                "apps.web.context_processors.robot_index",
                 # translations for i18n in React components
                 "apps.web.context_processors.translations",
             ],
