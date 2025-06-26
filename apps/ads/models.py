@@ -7,6 +7,7 @@ import json
 from apps.utils.models import BaseModel
 from django.core.cache import cache
 from django.contrib.postgres.fields import ArrayField
+from django.db.models import JSONField
 
 
 class IndustryList(BaseModel):
@@ -43,7 +44,6 @@ class AdLibrary(BaseModel):
     ad_image = models.ImageField(upload_to="adlibrary/", null=True, blank=True)
     is_fav = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True, help_text="Indica si el anuncio está activo o ha sido desactivado")
-    meta_status = models.CharField(max_length=10, choices=META_STATUS_CHOICES, default=STATUS_ACTIVE, help_text="Status of the ad in Meta's system")
     language = ArrayField(
         models.CharField(max_length=2),
         blank=True,
@@ -61,6 +61,100 @@ class AdLibrary(BaseModel):
     ad_creation_time = models.DateField(null=True, blank=True, help_text="Fecha de creación del anuncio en formato YYYY-MM-DD")
     ad_delivery_start_time = models.DateField(null=True, blank=True, help_text="Fecha de inicio de entrega del anuncio en formato YYYY-MM-DD")
     ad_delivery_stop_time = models.DateField(null=True, blank=True, help_text="Fecha de finalización de entrega del anuncio en formato YYYY-MM-DD")
+    meta_status = models.CharField(
+        max_length=10,
+        choices=META_STATUS_CHOICES,
+        default=STATUS_ACTIVE,
+        help_text="Status of the ad in Meta's system"
+    )
+    # New fields based on Meta API data
+    ad_creative_bodies = ArrayField(
+        models.TextField(),
+        blank=True,
+        null=True,
+        help_text="List of ad creative body texts"
+    )
+    ad_creative_link_captions = ArrayField(
+        models.TextField(),
+        blank=True,
+        null=True,
+        help_text="List of ad creative link captions"
+    )
+    ad_creative_link_descriptions = ArrayField(
+        models.TextField(),
+        blank=True,
+        null=True,
+        help_text="List of ad creative link descriptions"
+    )
+    age_country_gender_reach_breakdown = JSONField(
+        blank=True,
+        null=True,
+        help_text="Breakdown of reach by age, country, and gender"
+    )
+    beneficiary_payers = JSONField(
+        blank=True,
+        null=True,
+        help_text="Information about who paid for and benefited from the ad"
+    )
+    br_total_reach = models.TextField(
+        blank=True,
+        help_text="Total reach in Brazil"
+    )
+    bylines = models.TextField(
+        blank=True,
+        help_text="Bylines for the ad"
+    )
+    currency = models.CharField(
+        max_length=3,
+        blank=True,
+        help_text="Currency used for ad spend"
+    )
+    delivery_by_region = JSONField(
+        blank=True,
+        null=True,
+        help_text="Breakdown of ad delivery by geographic region"
+    )
+    demographic_distribution = JSONField(
+        blank=True,
+        null=True,
+        help_text="Distribution of demographics for the ad audience"
+    )
+    estimated_audience_size = JSONField(
+        blank=True,
+        null=True,
+        help_text="Estimated size of the audience"
+    )
+    eu_total_reach = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text="Total reach in European Union"
+    )
+    impressions = JSONField(
+        blank=True,
+        null=True,
+        help_text="Information about ad impressions"
+    )
+    spend = JSONField(
+        blank=True,
+        null=True,
+        help_text="Information about ad spend"
+    )
+    target_ages = ArrayField(
+        models.CharField(max_length=10),
+        blank=True,
+        null=True,
+        help_text="Age ranges targeted by the ad"
+    )
+    target_gender = models.CharField(
+        max_length=10,
+        blank=True,
+        help_text="Gender targeted by the ad"
+    )
+    target_locations = JSONField(
+        blank=True,
+        null=True,
+        help_text="Locations targeted by the ad"
+    )
 
     def __str__(self):
         return f"Ad Library for {self.facebook_page}"
