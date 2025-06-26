@@ -98,15 +98,18 @@ class AdLibrary(BaseModel):
     )
     br_total_reach = models.TextField(
         blank=True,
+        null=True,
         help_text="Total reach in Brazil"
     )
     bylines = models.TextField(
         blank=True,
+        null=True,
         help_text="Bylines for the ad"
     )
     currency = models.CharField(
         max_length=3,
         blank=True,
+        null=True,
         help_text="Currency used for ad spend"
     )
     delivery_by_region = JSONField(
@@ -148,6 +151,7 @@ class AdLibrary(BaseModel):
     target_gender = models.CharField(
         max_length=10,
         blank=True,
+        null=True,
         help_text="Gender targeted by the ad"
     )
     target_locations = JSONField(
