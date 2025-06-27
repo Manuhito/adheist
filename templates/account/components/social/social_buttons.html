@@ -5,5 +5,5 @@
 <p class="text-center text-gray-500 my-2">{% translate "or" %}</p>
 {% endif %}
 {% for provider in socialapps %}
-  {% include 'account/components/social/login_with_social_button.html' with app=app %}
+  {% include 'account/components/social/login_with_social_button.html' with provider=provider %}
 {% endfor %}
