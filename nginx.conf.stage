@@ -1,0 +1,39 @@
+# For EC2 deployment (SSL):
+server {
+    server_name stage.adheist.ai www.stage.adheist.ai;
+
+    location /static/ {
+        alias /code/static_root/;
+        access_log off;
+        expires 30d;
+    }
+
+    location /media/ {
+        alias /code/media/;
+        access_log off;
+        expires 30d;
+    }
+
+    # Make sure we forward the original protocol (https) to Django
+    location / {
+        proxy_pass http://127.0.0.1:8000;  # Django is running on port 8000
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;  # Pass HTTPS protocol info to Django
+    }
+
+    listen 443 ssl; # SSL enabled on port 443
+    ssl_certificate /etc/letsencrypt/live/stage.adheist.ai/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/stage.adheist.ai/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+}
+
+# Redirect HTTP to HTTPS for production
+server {
+    listen 80;
+    server_name stage.adheist.ai www.stage.adheist.ai;
+    # Redirect all HTTP requests to HTTPS
+    return 301 https://$host$request_uri;
+}
