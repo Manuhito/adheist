@@ -79,6 +79,10 @@ class Command(BaseCommand):
             type=int,
             help="ID of the Backload object to update with error logs"
         )
+        parser.add_argument(
+            "--ad-delivery-date-min",
+            help="Minimum ad delivery date in YYYY-MM-DD format"
+        )
 
     def handle(self, *args, **options):
         # Inicializar lista de mensajes de error para devolver al final
@@ -133,6 +137,7 @@ class Command(BaseCommand):
         media_types = options.get("media_types") or ["MEME", "IMAGE"]
         fields = options.get("fields") or "page_name,ad_creative_bodies,ad_snapshot_url,impressions,spend"
         limit = options.get("limit") or 100
+        ad_delivery_date_min = options.get("ad_delivery_date_min")
         
         # Consultar la API y guardar los resultados
         try:
@@ -144,7 +149,8 @@ class Command(BaseCommand):
                 media_types=media_types,
                 fields=fields,
                 limit=limit,
-                delay=options.get("delay", 2)
+                delay=options.get("delay", 2),
+                ad_delivery_date_min=ad_delivery_date_min
             )
             
             # Añadir errores de la consulta a la lista principal de errores
@@ -205,7 +211,8 @@ class Command(BaseCommand):
         media_types: List[str] = None,
         fields: str = None,
         limit: int = 100,
-        delay: int = 2
+        delay: int = 2,
+        ad_delivery_date_min: str = None
     ) -> tuple[List[Dict[str, Any]], List[str]]:
         """
         Query the Meta Ad Library API to get ads for the specified pages.
@@ -219,6 +226,7 @@ class Command(BaseCommand):
             fields: Fields to include in the response
             limit: Maximum number of ads per page
             delay: Seconds to wait between batches
+            ad_delivery_date_min: Minimum ad delivery date in YYYY-MM-DD format
             
         Returns:
             Tuple containing (list of ads, list of error messages)
@@ -239,6 +247,7 @@ class Command(BaseCommand):
             self.stdout.write(f"DEBUG - media_types: type={type(media_types)}, value={media_types}")
             self.stdout.write(f"DEBUG - fields: type={type(fields)}, value={fields}")
             self.stdout.write(f"DEBUG - limit: type={type(limit)}, value={limit}")
+            self.stdout.write(f"DEBUG - ad_delivery_date_min: type={type(ad_delivery_date_min)}, value={ad_delivery_date_min}")
         
             # Construir los parámetros exactamente como en Postman
             params = {
@@ -246,6 +255,11 @@ class Command(BaseCommand):
                 "fields": fields,
                 "limit": limit
             }
+            
+            # Add ad_delivery_date_min if provided
+            if ad_delivery_date_min:
+                self.stdout.write(f"DEBUG - Adding ad_delivery_date_min: {ad_delivery_date_min}")
+                params["ad_delivery_date_min"] = ad_delivery_date_min
             
             # Añadir parámetros en el mismo orden que Postman
             if ad_reached_countries:
@@ -412,6 +426,24 @@ class Command(BaseCommand):
             
             if exists:
                 self.stdout.write(f"Ad with ID {ad_id} already exists in the database")
+                
+                # Check if we received ad_delivery_stop_time in the API response
+                ad_delivery_stop_time = ad.get('ad_delivery_stop_time')
+                
+                # Get the existing AdLibrary object to update it
+                ad_library = AdLibrary.objects.get(meta_ad_id=ad_id)
+                
+                if ad_delivery_stop_time:
+                    # Update ad_delivery_stop_time and set meta_status to inactive
+                    self.stdout.write(f"Updating ad {ad_id} with stop time {ad_delivery_stop_time} and setting to inactive")
+                    ad_library.ad_delivery_stop_time = ad_delivery_stop_time
+                    ad_library.meta_status = AdLibrary.STATUS_INACTIVE
+                    ad_library.save()
+                else:
+                    # No stop time received, ensure meta_status is active
+                    self.stdout.write(f"Updating ad {ad_id} status to active")
+                    ad_library.meta_status = AdLibrary.STATUS_ACTIVE
+                    ad_library.save()
             else:
                 self.stdout.write(f"Ad with ID {ad_id} does not exist in the database")
                 # Create a Celery task to add the ad to the database

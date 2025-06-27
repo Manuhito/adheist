@@ -429,3 +429,11 @@ def translations(request):
             # Add more translations as needed
         }
     }
+
+def robot_index(request):
+    """
+    Makes robot_index setting available to templates
+    """
+    return {
+        "ROBOT_INDEX": settings.ROBOT_INDEX,
+    }

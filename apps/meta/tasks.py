@@ -28,7 +28,8 @@ def fetch_meta_ads(
     media_types: List[str] = None,
     fields: str = None,
     limit: int = None,
-    backload_id: int = None
+    backload_id: int = None,
+    ad_delivery_date_min: str = None
 ) -> Dict[str, Any]:
     """
     Celery task to fetch ads from Meta Ad Library API.
@@ -47,6 +48,7 @@ def fetch_meta_ads(
         fields: Fields to include in the response
         limit: Maximum number of ads per page in the response
         backload_id: ID of the Backload object to update with error logs
+        ad_delivery_date_min: Minimum ad delivery date in YYYY-MM-DD format
     
     Returns:
         Dictionary with task execution information
@@ -87,6 +89,8 @@ def fetch_meta_ads(
         command_kwargs['limit'] = limit
     if backload_id:
         command_kwargs['backload_id'] = backload_id
+    if ad_delivery_date_min:
+        command_kwargs['ad_delivery_date_min'] = ad_delivery_date_min
     
     try:
         # Execute the management command
@@ -211,6 +215,14 @@ def create_ad_library_entry(ad_data: dict, media_type: str = "MEME") -> Dict[str
                 'ad_id': meta_ad_id
             }
             
+        # Determine meta_status based on ad_delivery_stop_time
+        # If ad_delivery_stop_time exists and has a value, the ad is INACTIVE, otherwise it's ACTIVE
+        ad_delivery_stop_time = ad_data.get('ad_delivery_stop_time')
+        # Ensure meta_status always has a value, defaulting to ACTIVE if the logic fails
+        meta_status = AdLibrary.STATUS_INACTIVE if ad_delivery_stop_time else AdLibrary.STATUS_ACTIVE
+        if not meta_status:  # Extra safety check
+            meta_status = AdLibrary.STATUS_ACTIVE
+        
         # Create the AdLibrary entry with the mapped fields
         ad_library = AdLibrary(
             facebook_page=facebook_page,
@@ -222,7 +234,27 @@ def create_ad_library_entry(ad_data: dict, media_type: str = "MEME") -> Dict[str
             meta_ad_id=meta_ad_id,
             ad_creation_time=ad_data.get('ad_creation_time'),
             ad_delivery_start_time=ad_data.get('ad_delivery_start_time'),
-            ad_delivery_stop_time=ad_data.get('ad_delivery_stop_time')
+            ad_delivery_stop_time=ad_delivery_stop_time,
+            # New fields from Meta API
+            ad_creative_bodies=ad_data.get('ad_creative_bodies'),
+            ad_creative_link_captions=ad_data.get('ad_creative_link_captions'),
+            ad_creative_link_descriptions=ad_data.get('ad_creative_link_descriptions'),
+            age_country_gender_reach_breakdown=ad_data.get('age_country_gender_reach_breakdown'),
+            beneficiary_payers=ad_data.get('beneficiary_payers'),
+            br_total_reach=ad_data.get('br_total_reach'),
+            bylines=ad_data.get('bylines'),
+            currency=ad_data.get('currency'),
+            delivery_by_region=ad_data.get('delivery_by_region'),
+            demographic_distribution=ad_data.get('demographic_distribution'),
+            estimated_audience_size=ad_data.get('estimated_audience_size'),
+            eu_total_reach=ad_data.get('eu_total_reach'),
+            impressions=ad_data.get('impressions'),
+            spend=ad_data.get('spend'),
+            target_ages=ad_data.get('target_ages'),
+            target_gender=ad_data.get('target_gender'),
+            target_locations=ad_data.get('target_locations'),
+            # Set meta_status based on ad_delivery_stop_time
+            meta_status=meta_status
         )
         
         # Generate a filename for the image

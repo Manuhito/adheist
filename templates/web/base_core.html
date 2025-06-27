@@ -9,6 +9,9 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <!--Mobile friendly-->
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% if not ROBOT_INDEX %}
+  <meta name="robots" content="noindex, nofollow">
+  {% endif %}
   {% block meta %}
   {% if project_meta %}
   {% with project_meta|get_title:page_title as title %}
