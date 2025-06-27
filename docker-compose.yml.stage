@@ -5,6 +5,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     environment:
+      - DB_HOST=${DB_HOST:-db}
       - POSTGRES_DB=adheist
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=${DJANGO_DATABASE_PASSWORD:-postgres}
