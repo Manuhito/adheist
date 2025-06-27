@@ -244,22 +244,23 @@ AUTHENTICATION_BACKENDS = (
 
 # enable social login
 SOCIALACCOUNT_PROVIDERS = {
-    "google": {
-        "APPS": [
-            {
-                "client_id": env("GOOGLE_CLIENT_ID", default=""),
-                "secret": env("GOOGLE_SECRET_ID", default=""),
-                "key": "",
-            },
-        ],
-        "SCOPE": [
-            "profile",
-            "email",
-        ],
-        "AUTH_PARAMS": {
-            "access_type": "online",
-        },
-    },
+    # Configuración de Google comentada para evitar duplicados con la configuración del admin
+    # "google": {
+    #     "APPS": [
+    #         {
+    #             "client_id": env("GOOGLE_CLIENT_ID", default=""),
+    #             "secret": env("GOOGLE_SECRET_ID", default=""),
+    #             "key": "",
+    #         },
+    #     ],
+    #     "SCOPE": [
+    #         "profile",
+    #         "email",
+    #     ],
+    #     "AUTH_PARAMS": {
+    #         "access_type": "online",
+    #     },
+    # },
 }
 
 # Email setup
