@@ -47,7 +47,7 @@ dbshell: ## Get a Database shell
 test: ## Run Django tests
 	@docker compose run --rm web python manage.py test ${ARGS}
 
-init: setup-env start-bg migrations migrate bootstrap_content npm-install npm-dev  ## Quickly get up and running (start containers and bootstrap DB and front end)
+init: setup-env start-bg migrations migrate bootstrap_blog npm-install npm-dev  ## Quickly get up and running (start containers and bootstrap DB and front end)
 
 pip_compile_cmd = uv pip compile --no-strip-extras
 pip-compile: ## Compiles your requirements.in file to requirements.txt
@@ -81,8 +81,8 @@ build-api-client:  ## Update the JavaScript API client code.
 	-g typescript-fetch \
 	-o /local/
 
-bootstrap_content:  ## Initializes your Wagtail content with some example pages and blog posts
-	@docker compose run --rm web python manage.py bootstrap_content
+bootstrap_blog:  ## Initializes your Wagtail content with some example pages and blog posts
+	@docker compose run --rm web python manage.py bootstrap_blog
 
 upgrade: requirements migrations migrate npm-install npm-dev  ## Run after a Pegasus upgrade to update requirements, migrate the database, and rebuild the front end
 
