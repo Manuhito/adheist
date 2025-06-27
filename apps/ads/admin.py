@@ -24,9 +24,9 @@ from .models import (
 
 @admin.register(AdLibrary)
 class AdLibraryAdmin(admin.ModelAdmin):
-    list_display = ["facebook_page", "meta_ad_id", "meta_status", "ad_creation_time", "ad_delivery_start_time", "ad_delivery_stop_time", "is_fav", "get_industries", "get_tags", "get_languages", "media_type", "get_publisher_platforms", "created_at", "updated_at"]
+    list_display = ["facebook_page__page_name", "meta_ad_id", "meta_status", "ad_creation_time", "ad_delivery_start_time", "ad_delivery_stop_time", "is_fav", "get_industries", "get_tags", "get_languages", "media_type", "get_publisher_platforms", "created_at", "updated_at", "is_active"]
     search_fields = ["facebook_page__page_name", "facebook_page__page_id", "media_type", "meta_ad_id", "meta_status", "currency"]
-    list_filter = ["facebook_page", "facebook_page__industries", "language", "media_type", "publisher_platform", "ad_creation_time", "ad_delivery_start_time", "ad_delivery_stop_time", "meta_status", "target_gender"]
+    list_filter = ["facebook_page", "facebook_page__industries", "language", "media_type", "publisher_platform", "ad_creation_time", "ad_delivery_start_time", "ad_delivery_stop_time", "meta_status", "target_gender", "is_active"]
     filter_horizontal = ["tags"]
     
     # Mostrar todos los campos en el formulario de edición
