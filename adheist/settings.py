@@ -121,8 +121,6 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "wagtail.contrib.redirects.middleware.RedirectMiddleware",
     "waffle.middleware.WaffleMiddleware",
-    # PostHog tracking middleware for automatic page view tracking
-    "apps.web.middleware.posthog_middleware.PostHogTrackingMiddleware",
 ]
 
 
@@ -156,6 +154,7 @@ TEMPLATES = [
                 "apps.web.context_processors.robot_index",
                 # translations for i18n in React components
                 "apps.web.context_processors.translations",
+                "apps.web.context_processors.posthog_settings",
             ],
             "loaders": _DEFAULT_LOADERS if DEBUG else _CACHED_LOADERS,
         },
@@ -284,9 +283,9 @@ TURNSTILE_KEY = env("TURNSTILE_KEY", default=None)
 TURNSTILE_SECRET = env("TURNSTILE_SECRET", default=None)
 
 # PostHog configuration
-POSTHOG_API_KEY = env("POSTHOG_API_KEY", default=None)
+POSTHOG_KEY = env("POSTHOG_KEY", default=None)
 POSTHOG_HOST = env("POSTHOG_HOST", default="https://app.posthog.com")
-POSTHOG_ENABLED = POSTHOG_API_KEY is not None
+POSTHOG_ENABLED = POSTHOG_KEY is not None
 
 
 # Internationalization

@@ -43,16 +43,14 @@ def google_analytics_id(request):
         return {}
 
 
-def posthog_tracking(request):
-    """
-    Adds PostHog tracking data to the context if present in the request.
-    This is used by the PostHogTrackingMiddleware to automatically track page views.
-    """
-    if hasattr(request, 'posthog_tracking'):
-        return {
-            'posthog_tracking': request.posthog_tracking
+def posthog_settings(request):
+    """Make PostHog settings available to all templates."""
+    return {
+        'settings': {
+            'POSTHOG_KEY': settings.POSTHOG_KEY,
+            'POSTHOG_HOST': settings.POSTHOG_HOST,
         }
-    return {}
+    }
 
 
 def translations(request):
