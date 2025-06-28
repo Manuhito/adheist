@@ -12,7 +12,7 @@ from .tasks import fetch_meta_ads
 
 @admin.register(Backload)
 class BackloadAdmin(admin.ModelAdmin):
-    list_display = ["__str__", "status", "last_run", "created_at"]
+    list_display = ["get_page_names","ad_delivery_date_min", "content_languages", "media_types", "status", "last_run", "created_at"]
     list_filter = ["status", "created_at", "last_run"]
     search_fields = []
     readonly_fields = ["created_at", "updated_at", "last_run", "output_file", "error_log", "run_query_button", "status"]
@@ -45,6 +45,16 @@ class BackloadAdmin(admin.ModelAdmin):
         ]
         return custom_urls + urls
     
+    
+    def get_page_names(self, obj):
+        pages = obj.pages.all()
+        if not pages:
+            return "-"
+        page_names = ", ".join([page.page_name for page in pages[:3]])
+        if pages.count() > 3:
+            page_names += f" and {pages.count() - 3} more"
+        return page_names
+    get_page_names.short_description = "Pages"
     
     def run_query_button(self, obj):
         if obj.pk:
