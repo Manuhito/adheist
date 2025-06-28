@@ -110,41 +110,54 @@ export function HeroHighlightDemo() {
 }
 
 function HeroCTA() {
+  const getCookie = (name: string): string => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop()?.split(';').shift() || '';
+    return '';
+  };
   return (
     <>
-      <motion.div
-        className="mx-auto mt-12 flex w-full max-w-2xl flex-col items-center justify-center space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.8, duration: 0.8, ease }}
+    <motion.div
+        className= "mx-auto mt-12 flex w-full max-w-2xl flex-col items-center justify-center space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0"
+  initial = {{ opacity: 0, y: 20 }
+}
+animate = {{ opacity: 1, y: 0 }}
+transition = {{ delay: 0.8, duration: 0.8, ease }}
       >
-        <Link
+  <Link
           href="/accounts/signup"
-          className={cn(
-            buttonVariants({ variant: "default" }),
-            "w-full sm:w-auto text-background flex gap-2 bg-primary hover:bg-primary/90 px-8 py-6 text-lg"
+className = {
+  cn(
+    buttonVariants({ variant: "default" }),
+  "w-full sm:w-auto text-background flex gap-2 bg-primary hover:bg-primary/90 px-8 py-6 text-lg"
           )}
         >
-          Start Creating Winning Ads
-        </Link>
-        <Link
-          href="/accounts/signup"
-          className={cn(
-            buttonVariants({ variant: "outline" }),
-            "w-full sm:w-auto flex gap-2 bg-white text-gray-600 hover:text-gray-600 hover:bg-gray-50 border-gray-300 px-8 py-6 text-lg"
-          )}
-        >
+  Start with 5 Free Links
+    </Link>
+    < form method = "post" action = "/accounts/google/login/" >
+      <input type="hidden" name = "csrfmiddlewaretoken" value = { getCookie('csrftoken') } />
+        <button
+            type="submit"
+className = {
+  cn(
+    buttonVariants({ variant: "outline" }),
+  "w-full sm:w-auto flex items-center gap-2 bg-white text-gray-600 hover:text-gray-600 hover:bg-gray-50 border-gray-300 px-8 py-6 text-lg"
+            )}
+          >
+          <Icons.google className="h-5 w-5" />
           Start Free with Google
-        </Link>
-      </motion.div>
-      <motion.p
-        className="mt-6 text-sm text-muted-foreground"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.0, duration: 0.8 }}
+  </button>
+  </form>
+  </motion.div>
+  < motion.p
+        className = "mt-6 text-sm text-muted-foreground"
+initial = {{ opacity: 0 }}
+animate = {{ opacity: 1 }}
+transition = {{ delay: 1.0, duration: 0.8 }}
       >
-        Zero Risk, Full Refund - No Questions Asked
-      </motion.p>
+  5 Free Links - No Credit Card Required
+    </motion.p>
     </>
   );
 }
