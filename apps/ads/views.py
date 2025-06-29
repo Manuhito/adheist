@@ -629,19 +629,27 @@ def adrequest_create(request):
         return JsonResponse({'error': str(e)}, status=500)
 
 
-def _get_user_adrequest(request, pk):
+def _get_user_adrequest(request, pk, select_related_fields=None):
     """
     Helper function to get an AdRequest and check user permissions.
     
     Args:
         request: The HTTP request
         pk: The primary key of the AdRequest
+        select_related_fields: Optional list of fields to select_related
         
     Returns:
         AdRequest object if the user has permission, or JsonResponse with error
     """
-    # Get the AdRequest instance
-    ad_request = get_object_or_404(AdRequest, id=pk)
+    # Get the AdRequest instance with optimized query if select_related_fields provided
+    try:
+        if select_related_fields:
+            queryset = AdRequest.objects.select_related(*select_related_fields)
+            ad_request = queryset.get(id=pk)
+        else:
+            ad_request = AdRequest.objects.get(id=pk)
+    except AdRequest.DoesNotExist:
+        return JsonResponse({'error': 'Ad request not found'}, status=404)
     
     # Check if the user has permission to access this AdRequest
     if ad_request.user != request.user:
@@ -663,8 +671,20 @@ def adrequest_get(request, pk):
     Returns:
         JsonResponse with the AdRequest data
     """
-    # Get the AdRequest and check permissions
-    result = _get_user_adrequest(request, pk)
+    # Try to get from cache first
+    from django.core.cache import cache
+    cache_key = f"adrequest_{pk}_{request.user.id}"
+    cached_data = cache.get(cache_key)
+    
+    if cached_data:
+        return JsonResponse(cached_data)
+    
+    # If not in cache, get the AdRequest with optimized query and check permissions
+    result = _get_user_adrequest(
+        request, 
+        pk, 
+        select_related_fields=['user', 'ad_library', 'ad_library__facebook_page', 'base_assets']
+    )
     
     # If result is a JsonResponse, it means there was an error
     if isinstance(result, JsonResponse):
@@ -689,7 +709,8 @@ def adrequest_get(request, pk):
     created_at = safe_get(ad_request, 'created_at')
     updated_at = safe_get(ad_request, 'updated_at')
 
-    return JsonResponse({
+    # Prepare response data
+    response_data = {
         'id': safe_get(ad_request, 'id'),
         'user_id': safe_get(user, 'id'),
         'ad_library_id': safe_get(ad_library, 'id'),
@@ -708,7 +729,13 @@ def adrequest_get(request, pk):
         'marketing_image_1_override': safe_image_url(safe_get(ad_request, 'marketing_image_1_override')),
         'marketing_image_2_override': safe_image_url(safe_get(ad_request, 'marketing_image_2_override')),
         'marketing_image_3_override': safe_image_url(safe_get(ad_request, 'marketing_image_3_override')),
-    })
+    }
+    
+    # Cache the result for 5 minutes
+    from django.core.cache import cache
+    cache.set(cache_key, response_data, 300)  # 300 seconds = 5 minutes
+    
+    return JsonResponse(response_data)
 
 
 @login_required
