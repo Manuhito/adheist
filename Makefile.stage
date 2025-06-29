@@ -1,10 +1,15 @@
 include custom.mk
 
-setup-env:
-	@[ ! -f ./.env ] && cp ./.env.example ./.env || echo ".env file already exists."
+setup-compose:
+	@rm -f docker-compose.yml
+	@cp docker-compose.yml.stage docker-compose.yml
+	@echo "Copied docker-compose.yml.stage to docker-compose.yml"
 
-start: ## Start the docker containers
-	@echo "Starting the docker containers"
+setup-env: setup-compose
+	@[ ! -f ./.env ] && cp ./.env.stage ./.env || echo ".env file already exists."
+
+start: ## Start the docker containers with stage configuration
+	@echo "Starting the docker containers for staging"
 	@docker compose up
 
 stop: ## Stop Containers
@@ -15,7 +20,7 @@ restart: stop start ## Restart Containers
 start-bg:  ## Run containers in the background
 	@docker compose up -d
 
-build: ## Build Containers
+build: ## Build Containers for staging
 	@docker compose build
 
 ssh: ## SSH into running web container
@@ -47,18 +52,17 @@ dbshell: ## Get a Database shell
 test: ## Run Django tests
 	@docker compose run --rm web python manage.py test ${ARGS}
 
-init: setup-env start-bg migrations migrate bootstrap_blog npm-install npm-dev  ## Quickly get up and running (start containers and bootstrap DB and front end)
+init: setup-env start-bg migrations migrate npm-install npm-build  ## Initialize staging environment (start containers, set up DB, and build production-ready assets)
 
 pip_compile_cmd = uv pip compile --no-strip-extras
 pip-compile: ## Compiles your requirements.in file to requirements.txt
 	@docker compose run --rm --no-deps web $(pip_compile_cmd) requirements/requirements.in -o requirements/requirements.txt
-	@docker compose run --rm --no-deps web $(pip_compile_cmd) requirements/dev-requirements.in -o requirements/dev-requirements.txt
 	@docker compose run --rm --no-deps web $(pip_compile_cmd) requirements/prod-requirements.in -o requirements/prod-requirements.txt
 
 requirements: pip-compile build stop start-bg  ## Rebuild your requirements and restart your containers
 
 npm-install: ## Runs npm install in the container
-	@docker compose run --rm --no-deps web npm install $(filter-out $@,$(MAKECMDGOALS))
+	@docker compose run --rm --no-deps web npm install --production $(filter-out $@,$(MAKECMDGOALS))
 
 npm-uninstall: ## Runs npm uninstall in the container
 	@docker compose run --rm --no-deps web npm uninstall $(filter-out $@,$(MAKECMDGOALS))
@@ -66,24 +70,18 @@ npm-uninstall: ## Runs npm uninstall in the container
 npm-build: ## Runs npm build in the container (for production assets)
 	@docker compose run --rm --no-deps web npm run build
 
-npm-dev: ## Runs npm dev in the container
-	@docker compose run --rm --no-deps web npm run dev
-
-npm-watch: ## Runs npm watch in the container (recommended for dev)
-	@docker compose run --rm --no-deps web npm run dev-watch
-
 npm-type-check: ## Runs the type checker on the front end TypeScript code
 	@docker compose run --rm --no-deps web npm run type-check
 
 build-api-client:  ## Update the JavaScript API client code.
 	@docker run --rm --network host -v $(shell pwd)/api-client:/local openapitools/openapi-generator-cli:v7.9.0 generate \
-	-i http://localhost:8000/api/schema/ \
+	-i https://$(APP_NAME)-$(STAGE_ENV).aws-domain.com/api/schema/ \
 	-g typescript-fetch \
 	-o /local/
 
-upgrade: requirements migrations migrate npm-install npm-dev  ## Run after a Pegasus upgrade to update requirements, migrate the database, and rebuild the front end
+upgrade: requirements migrations migrate npm-install npm-build
 
-.PHONY: help
+.PHONY: help setup-compose
 .DEFAULT_GOAL := help
 
 help:
