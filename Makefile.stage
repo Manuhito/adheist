@@ -68,7 +68,8 @@ npm-uninstall: ## Runs npm uninstall in the container
 	@docker compose run --rm --no-deps web npm uninstall $(filter-out $@,$(MAKECMDGOALS))
 
 npm-build: ## Runs npm build in the container (for production assets)
-	@docker compose run --rm --no-deps web npm run build
+	@docker compose run --rm web npm install
+	@docker compose run --rm web npm run build
 
 npm-type-check: ## Runs the type checker on the front end TypeScript code
 	@docker compose run --rm --no-deps web npm run type-check
