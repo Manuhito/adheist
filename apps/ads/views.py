@@ -658,6 +658,13 @@ def _get_user_adrequest(request, pk, select_related_fields=None):
     return ad_request
 
 
+import time
+import logging
+import traceback
+from django.conf import settings
+
+logger = logging.getLogger(__name__)
+
 @login_required
 @require_http_methods(["GET"])
 def adrequest_get(request, pk):
@@ -671,71 +678,118 @@ def adrequest_get(request, pk):
     Returns:
         JsonResponse with the AdRequest data
     """
-    # Try to get from cache first
-    from django.core.cache import cache
-    cache_key = f"adrequest_{pk}_{request.user.id}"
-    cached_data = cache.get(cache_key)
+    # Start timing
+    start_time = time.time()
+    timing_data = {}
     
-    if cached_data:
-        return JsonResponse(cached_data)
-    
-    # If not in cache, get the AdRequest with optimized query and check permissions
-    result = _get_user_adrequest(
-        request, 
-        pk, 
-        select_related_fields=['user', 'ad_library', 'ad_library__facebook_page', 'base_assets']
-    )
-    
-    # If result is a JsonResponse, it means there was an error
-    if isinstance(result, JsonResponse):
-        return result
-    
-    # Otherwise, result is the ad_request object
-    ad_request = result
-    
-    # Return the AdRequest with minimal processing
-    def safe_get(obj, attr, default=None):
-        return getattr(obj, attr, default) if obj is not None else default
-    
-    def safe_image_url(image_field):
-        """Convert an ImageFieldFile to its URL string or return None if not available."""
-        if image_field and hasattr(image_field, 'url'):
-            return image_field.url
-        return None
+    try:
+        # Try to get from cache first
+        from django.core.cache import cache
+        cache_key = f"adrequest_{pk}_{request.user.id}"
+        cache_start = time.time()
+        cached_data = cache.get(cache_key)
+        timing_data['cache_lookup'] = time.time() - cache_start
+        
+        if cached_data:
+            timing_data['total'] = time.time() - start_time
+            logger.info(f"Cache hit for adrequest_get {pk}: {timing_data}")
+            return JsonResponse(cached_data)
+        
+        # If not in cache, get the AdRequest with optimized query and check permissions
+        db_start = time.time()
+        result = _get_user_adrequest(
+            request, 
+            pk, 
+            select_related_fields=['user', 'ad_library', 'ad_library__facebook_page', 'base_assets']
+        )
+        timing_data['database_query'] = time.time() - db_start
+        
+        # If result is a JsonResponse, it means there was an error
+        if isinstance(result, JsonResponse):
+            timing_data['total'] = time.time() - start_time
+            logger.info(f"Error in adrequest_get {pk}: {timing_data}")
+            return result
+        
+        # Otherwise, result is the ad_request object
+        ad_request = result
+        
+        # Return the AdRequest with minimal processing
+        def safe_get(obj, attr, default=None):
+            return getattr(obj, attr, default) if obj is not None else default
+        
+        def safe_image_url(image_field):
+            """Convert an ImageFieldFile to its URL string or return None if not available."""
+            if image_field and hasattr(image_field, 'url'):
+                return image_field.url
+            return None
 
-    ad_library = safe_get(ad_request, 'ad_library')
-    user = safe_get(ad_request, 'user')
+        ad_library = safe_get(ad_request, 'ad_library')
+        user = safe_get(ad_request, 'user')
 
-    created_at = safe_get(ad_request, 'created_at')
-    updated_at = safe_get(ad_request, 'updated_at')
+        created_at = safe_get(ad_request, 'created_at')
+        updated_at = safe_get(ad_request, 'updated_at')
 
-    # Prepare response data
-    response_data = {
-        'id': safe_get(ad_request, 'id'),
-        'user_id': safe_get(user, 'id'),
-        'ad_library_id': safe_get(ad_library, 'id'),
-        'ad_library_name': safe_get(ad_library, 'facebook_page.page_name'),
-        'canvas_size': safe_get(ad_request, 'canvas_size'),
-        'status': safe_get(ad_request, 'status'),
-        'created_at': created_at.isoformat() if created_at else None,
-        'updated_at': updated_at.isoformat() if updated_at else None,
-        'asset_overrides': safe_get(ad_request, 'asset_overrides'),
-        'user_uploaded_image': safe_image_url(safe_get(ad_request, 'user_uploaded_image')),
-        'logo_override': safe_image_url(safe_get(ad_request, 'logo_override')),
-        'product_image_1_override': safe_image_url(safe_get(ad_request, 'product_image_1_override')),
-        'product_image_2_override': safe_image_url(safe_get(ad_request, 'product_image_2_override')),
-        'app_image_1_override': safe_image_url(safe_get(ad_request, 'app_image_1_override')),
-        'app_image_2_override': safe_image_url(safe_get(ad_request, 'app_image_2_override')),
-        'marketing_image_1_override': safe_image_url(safe_get(ad_request, 'marketing_image_1_override')),
-        'marketing_image_2_override': safe_image_url(safe_get(ad_request, 'marketing_image_2_override')),
-        'marketing_image_3_override': safe_image_url(safe_get(ad_request, 'marketing_image_3_override')),
-    }
-    
-    # Cache the result for 5 minutes
-    from django.core.cache import cache
-    cache.set(cache_key, response_data, 300)  # 300 seconds = 5 minutes
-    
-    return JsonResponse(response_data)
+        # Time the serialization process
+        serialize_start = time.time()
+        
+        # Prepare response data
+        response_data = {
+            'id': safe_get(ad_request, 'id'),
+            'user_id': safe_get(user, 'id'),
+            'ad_library_id': safe_get(ad_library, 'id'),
+            'ad_library_name': safe_get(ad_library, 'facebook_page.page_name'),
+            'canvas_size': safe_get(ad_request, 'canvas_size'),
+            'status': safe_get(ad_request, 'status'),
+            'created_at': created_at.isoformat() if created_at else None,
+            'updated_at': updated_at.isoformat() if updated_at else None,
+            'asset_overrides': safe_get(ad_request, 'asset_overrides'),
+        }
+        
+        timing_data['basic_serialization'] = time.time() - serialize_start
+        
+        # Time the image URL processing separately
+        image_start = time.time()
+        
+        # Add image fields
+        image_fields = [
+            ('user_uploaded_image', safe_get(ad_request, 'user_uploaded_image')),
+            ('logo_override', safe_get(ad_request, 'logo_override')),
+            ('product_image_1_override', safe_get(ad_request, 'product_image_1_override')),
+            ('product_image_2_override', safe_get(ad_request, 'product_image_2_override')),
+            ('app_image_1_override', safe_get(ad_request, 'app_image_1_override')),
+            ('app_image_2_override', safe_get(ad_request, 'app_image_2_override')),
+            ('marketing_image_1_override', safe_get(ad_request, 'marketing_image_1_override')),
+            ('marketing_image_2_override', safe_get(ad_request, 'marketing_image_2_override')),
+            ('marketing_image_3_override', safe_get(ad_request, 'marketing_image_3_override')),
+        ]
+        
+        for field_name, field_value in image_fields:
+            response_data[field_name] = safe_image_url(field_value)
+        
+        timing_data['image_url_processing'] = time.time() - image_start
+        
+        # Time the caching process
+        cache_start = time.time()
+        cache.set(cache_key, response_data, 300)  # 300 seconds = 5 minutes
+        timing_data['cache_set'] = time.time() - cache_start
+        
+        # Calculate total time
+        timing_data['total'] = time.time() - start_time
+        
+        # Log timing information
+        logger.info(f"adrequest_get {pk} timing: {timing_data}")
+        
+        # Add timing info to response in development
+        if settings.DEBUG:
+            response_data['_debug_timing'] = timing_data
+        
+        return JsonResponse(response_data)
+        
+    except Exception as e:
+        # Log any exceptions with timing information
+        timing_data['total'] = time.time() - start_time
+        logger.error(f"Exception in adrequest_get {pk}: {str(e)}\nTiming: {timing_data}\n{traceback.format_exc()}")
+        raise
 
 
 @login_required
