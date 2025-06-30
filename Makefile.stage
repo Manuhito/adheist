@@ -68,7 +68,7 @@ pip-compile: ## Compiles your requirements.in file to requirements.txt
 requirements: pip-compile build stop start-bg  ## Rebuild your requirements and restart your containers
 
 npm-install: ## Runs npm install in the container
-	@docker compose run --rm --no-deps web npm install --production $(filter-out $@,$(MAKECMDGOALS))
+	@docker compose run --rm --no-deps web npm install $(filter-out $@,$(MAKECMDGOALS))
 
 npm-uninstall: ## Runs npm uninstall in the container
 	@docker compose run --rm --no-deps web npm uninstall $(filter-out $@,$(MAKECMDGOALS))
