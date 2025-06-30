@@ -980,7 +980,8 @@ def adrequest_version_create(request):
                 text_prompt=complete_prompt,
                 image_urls=image_urls,
                 canvas_size=canvas_size,
-                version_id=version.id
+                version_id=version.id,
+                version_type="initial"
             )
             
             task_id = task.id
@@ -1087,7 +1088,8 @@ def adrequest_revision_create(request):
                 text_prompt=user_prompt,
                 image_urls=image_urls,
                 canvas_size=canvas_size,
-                version_id=version.id
+                version_id=version.id,
+                version_type="revision"
             )
             
             task_id = task.id
