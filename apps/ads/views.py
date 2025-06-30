@@ -816,6 +816,21 @@ def adrequest_update(request, pk):
         # Save the updated AdRequest
         ad_request.save()
         
+        # Track event in PostHog when AdRequest is updated
+        posthog.capture(
+            request.user.id,  # Distinct ID (user ID)
+            'Ad Request Updated',
+            properties={
+                'ad_request_id': ad_request.id,
+                'status': ad_request.status,
+                'canvas_size': ad_request.canvas_size,
+                'ad_library_id': ad_request.ad_library.id if ad_request.ad_library else None,
+                'has_user_uploaded_image': bool(ad_request.user_uploaded_image),
+                'asset_overrides': ad_request.asset_overrides,
+                'timestamp': ad_request.updated_at.isoformat() if hasattr(ad_request, 'updated_at') else None
+            }
+        )
+        
         # Helper function to get image URL safely
         def safe_image_url(image_field):
             """Convert an ImageFieldFile to its URL string or return None if not available."""
