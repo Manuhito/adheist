@@ -1,5 +1,6 @@
 import logging
 import time
+import posthog
 from datetime import datetime
 
 from django.db import transaction
@@ -271,6 +272,32 @@ def update_subscription(subscription_holder: CustomUser, new_price_id: str) -> S
         try:
             with transaction.atomic():
                 djstripe_subscription = Subscription.sync_from_stripe_data(updated_subscription)
+                
+                # Añadir evento de PostHog para seguimiento de actualización de suscripción
+                try:
+                    # Obtener información del plan antiguo y nuevo
+                    new_price = Price.objects.get(id=new_price_id)
+                    new_plan_name = new_price.product.name if new_price.product else "Unknown"
+                    
+                    # Obtener información del plan anterior si está disponible
+                    old_plan_name = "Unknown"
+                    
+                    if subscription_holder.subscription and subscription_holder.subscription.plan:
+                        old_plan_name = subscription_holder.subscription.plan.product.name if subscription_holder.subscription.plan.product else "Unknown"
+                    
+                    # Capturar el evento en PostHog
+                    posthog.capture(
+                        subscription_holder.id,
+                        'Sub Updated',
+                        properties={
+                            'previous_plan': old_plan_name,
+                            'current_plan': new_plan_name,
+                            'subscription_id': djstripe_subscription.id,
+                            'timestamp': datetime.now().isoformat()
+                        }
+                    )
+                except Exception as posthog_error:
+                    log.error(f"Error tracking subscription update in PostHog: {str(posthog_error)}")
         except Exception as sync_error:
             log.error(f"Error syncing subscription from Stripe: {str(sync_error)}")
             # Try a more direct approach if sync fails

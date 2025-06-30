@@ -18,6 +18,7 @@ import requests
 import urllib.parse
 import os
 from django.conf import settings
+import posthog
 
 from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion
 from .forms import AdLibraryForm
@@ -274,6 +275,18 @@ def payment_success(request):
                     }
                 )
                 print(f"Subscription created successfully with ID: {subscription.id}")
+                
+                # Track event in PostHog when a subscription is created
+                posthog.capture(
+                    request.user.id,
+                    'Sub Created',
+                    properties={
+                        'plan': product.name,  # Plan name from the product object
+                        'subscription_id': subscription.id,
+                        'price_id': price_id,
+                        'customer_id': customer_id
+                    }
+                )
             except Exception as e:
                 print(f"Error creating subscription with standard billing: {str(e)}")
                 print("Falling back to invoice collection method")
@@ -549,6 +562,17 @@ def get_adlibrary_filters(request):
         }
         adlibrary_list.append(adlibrary_data)
     
+    # Track event in PostHog for filter query
+    posthog.capture(
+        request.user.id if request.user.is_authenticated else 'anonymous',  # Distinct ID (user ID or anonymous)
+        'Step 1 Filter query',
+        properties={
+            'company_name': company_name,
+            'industries': industries,
+            'tags': tags
+        }
+    )
+    
     return JsonResponse({'adlibraries': adlibrary_list}, safe=True)
 
 
@@ -621,6 +645,16 @@ def adrequest_create(request):
         
         # Create the AdRequest with all fields at once
         ad_request = AdRequest.objects.create(**create_params)
+        
+        # Track event in PostHog when AdRequest is created
+        posthog.capture(
+            request.user.id,  # Distinct ID (user ID)
+            'Ad Request Created',
+            properties={
+                'ad_request_id': ad_request.id,
+                'timestamp': ad_request.created_at.isoformat() if hasattr(ad_request, 'created_at') else None
+            }
+        )
         
         # Return the AdRequest instance ID
         return JsonResponse({'id': ad_request.id}, status=201)
@@ -794,6 +828,21 @@ def adrequest_update(request, pk):
         # Save the updated AdRequest
         ad_request.save()
         
+        # Track event in PostHog when AdRequest is updated
+        posthog.capture(
+            request.user.id,  # Distinct ID (user ID)
+            'Ad Request Updated',
+            properties={
+                'ad_request_id': ad_request.id,
+                'status': ad_request.status,
+                'canvas_size': ad_request.canvas_size,
+                'ad_library_id': ad_request.ad_library.id if ad_request.ad_library else None,
+                'has_user_uploaded_image': bool(ad_request.user_uploaded_image),
+                'asset_overrides': ad_request.asset_overrides,
+                'timestamp': ad_request.updated_at.isoformat() if hasattr(ad_request, 'updated_at') else None
+            }
+        )
+        
         # Helper function to get image URL safely
         def safe_image_url(image_field):
             """Convert an ImageFieldFile to its URL string or return None if not available."""
@@ -890,6 +939,19 @@ def adrequest_version_create(request):
             status=AdRequestVersion.STATUS_UNASSIGNED
         )
         print("Version created: ", version)
+        
+        # Track event in PostHog when a new AdRequestVersion is created
+        posthog.capture(
+            request.user.id,
+            'Ad Version Created',
+            properties={
+                'version_type': 'initial',
+                'ad_request_id': ad_request.id,
+                'version_id': version.id,
+                'has_user_prompt': bool(user_prompt),
+                'timestamp': version.created_at.isoformat() if hasattr(version, 'created_at') else None
+            }
+        )
         # Generate image using OpenAI if user_prompt is provided
         image_generated = False
         task_id = None
@@ -943,7 +1005,8 @@ def adrequest_version_create(request):
                 text_prompt=complete_prompt,
                 image_urls=image_urls,
                 canvas_size=canvas_size,
-                version_id=version.id
+                version_id=version.id,
+                version_type="initial"
             )
             
             task_id = task.id
@@ -1026,6 +1089,20 @@ def adrequest_revision_create(request):
             user_prompt=user_prompt,
             status=AdRequestVersion.STATUS_UNASSIGNED
         )
+        print("Revision created: ", version)
+        
+        # Track event in PostHog when a new AdRequestVersion revision is created
+        posthog.capture(
+            request.user.id,
+            'Ad Version Created',
+            properties={
+                'version_type': 'revision',
+                'ad_request_id': ad_request.id,
+                'version_id': version.id,
+                'has_user_prompt': bool(user_prompt),
+                'timestamp': version.created_at.isoformat() if hasattr(version, 'created_at') else None
+            }
+        )
         
         # Generate image using OpenAI if user_prompt is provided
         image_generated = False
@@ -1050,7 +1127,8 @@ def adrequest_revision_create(request):
                 text_prompt=user_prompt,
                 image_urls=image_urls,
                 canvas_size=canvas_size,
-                version_id=version.id
+                version_id=version.id,
+                version_type="revision"
             )
             
             task_id = task.id

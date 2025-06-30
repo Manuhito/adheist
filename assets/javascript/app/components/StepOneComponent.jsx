@@ -365,6 +365,13 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
   // Handle next step (create or update ad request)
   const handleNextStep = async () => {
+    // Track event in PostHog when Next button is pressed
+    if (window.posthog) {
+      window.posthog.capture('Next Button pressed', {
+        page: 'Step 1'
+      });
+    }
+    
     // Validate required fields
     if ((!selectedAdLibrary && !userUploadedImage) || !selectedCanvasSize) {
       setSubmitError(t('step_one.validation_error', 'Please select both an image source (gallery or upload) and canvas size'));
@@ -463,6 +470,17 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
             completeData.user_uploaded_image = userUploadedImage;
             console.log('Passing blob URL to StepTwoComponent:', userUploadedImage);
           }
+        }
+        
+        // Track event in PostHog when user advances to Step Two
+        if (window.posthog) {
+          window.posthog.capture('Ad Creation Step One Completed', {
+            timestamp: new Date().toISOString(),
+            ad_request_id: data.id,
+            canvas_size: selectedCanvasSize,
+            ad_library_id: completeData.ad_library_id || null,
+            user_uploaded_img: !!completeData.has_user_uploaded_image
+          });
         }
         
         onComplete(completeData);

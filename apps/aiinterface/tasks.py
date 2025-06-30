@@ -7,6 +7,7 @@ from decimal import Decimal
 
 from celery import shared_task
 from django.core.files.base import ContentFile
+import posthog
 
 from .services import ImageGenerationService
 from .models import OpenAIConfiguration
@@ -19,7 +20,8 @@ def generate_image_task(
     text_prompt: str,
     image_urls: List[str] = None,
     canvas_size: str = "1024x1024",
-    version_id: Optional[int] = None
+    version_id: Optional[int] = None,
+    version_type: str = "initial"
 ) -> dict:
     """
     Celery task to generate an image using OpenAI's GPT-image-1 model.
@@ -29,6 +31,7 @@ def generate_image_task(
         image_urls: List of image URLs or file paths to use as base images.
         canvas_size: The desired image size (e.g., "1024x1024").
         version_id: Optional ID of the AdRequestVersion to update with the generated image.
+        version_type: Type of version being generated ('initial' or 'revision').
         
     Returns:
         A dictionary containing the image data and metadata.
@@ -143,8 +146,10 @@ def generate_image_task(
                         # Calculate costs based on token usage
                         metadata = result['response_metadata']
                         
-                        # Initialize costs dictionary
+                        # Initialize costs dictionary and cost variables for later use in PostHog event
                         costs = {}
+                        image_output_cost = 0
+                        total_cost = 0
                         
                         # Calculate costs only if usage information is available
                         if 'usage' in metadata:
@@ -190,6 +195,36 @@ def generate_image_task(
                         version.save(update_fields=update_fields)
                     
                     logger.info(f"Image generated successfully for AdRequestVersion {version_id}")
+                    
+                    # Track event in PostHog when image is generated successfully
+                    try:
+                        # Get the OpenAI configuration for pricing and model info
+                        openai_config = OpenAIConfiguration.get_config()
+                        
+                        # Use the already calculated costs directly from the variables defined above
+                        # No need to extract them from metadata again
+                        
+                        # Get the S3 URL of the generated image
+                        generated_image_url = version.generated_image.url if version.generated_image else None
+                        
+                        # Capture the event in PostHog
+                        posthog.capture(
+                            version.ad_request.user.id,  # Distinct ID (user ID)
+                            'Ad Generated',
+                            properties={
+                                'version_type': version_type,
+                                'image_output_cost': str(image_output_cost),
+                                'total_cost': str(total_cost),
+                                'model': openai_config.openai_image_model,
+                                'generated_image': generated_image_url,
+                                'ad_request_id': version.ad_request.id,
+                                'version_id': version.id,
+                                'timestamp': version.updated_at.isoformat() if hasattr(version, 'updated_at') else None
+                            }
+                        )
+                    except Exception as e:
+                        logger.exception(f"Error tracking PostHog event for AdRequestVersion {version_id}: {str(e)}")
+                    
                 else:
                     error_message = f"No binary image content found in result for AdRequestVersion {version_id}"
                     logger.error(error_message)

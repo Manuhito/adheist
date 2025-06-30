@@ -43,6 +43,16 @@ def google_analytics_id(request):
         return {}
 
 
+def posthog_settings(request):
+    """Make PostHog settings available to all templates."""
+    return {
+        'settings': {
+            'POSTHOG_KEY': settings.POSTHOG_KEY,
+            'POSTHOG_HOST': settings.POSTHOG_HOST,
+        }
+    }
+
+
 def translations(request):
     """
     Adds common translations to the context for use in templates and JavaScript.

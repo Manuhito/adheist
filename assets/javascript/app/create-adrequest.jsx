@@ -95,6 +95,12 @@ const CreateAdRequestApp = () => {
     // Map status to step components
     switch (status) {
       case 'NEW':
+        // Track Step 1 page view
+        if (window.posthog) {
+          window.posthog.capture('Step 1 page viewed', {
+            timestamp: new Date().toISOString()
+          });
+        }
         return (
           <StepOneComponent
             onComplete={handleStepComplete}
@@ -103,6 +109,12 @@ const CreateAdRequestApp = () => {
           />
         );
       case 'DRAFT':
+        // Track Step 2 page view
+        if (window.posthog) {
+          window.posthog.capture('Step 2 page viewed', {
+            timestamp: new Date().toISOString()
+          });
+        }
         return (
           <StepTwoComponent
             onComplete={handleStepComplete}
@@ -111,6 +123,12 @@ const CreateAdRequestApp = () => {
           />
         );
       case 'FILLED':
+        // Track Step 3 page view
+        if (window.posthog) {
+          window.posthog.capture('Step 3 page viewed', {
+            timestamp: new Date().toISOString()
+          });
+        }
         return (
           <StepThreeComponent
             onComplete={handleStepComplete}
@@ -119,6 +137,12 @@ const CreateAdRequestApp = () => {
           />
         );
       default:
+        // Track Step 1 page view (default case)
+        if (window.posthog) {
+          window.posthog.capture('Step 1 page viewed', {
+            timestamp: new Date().toISOString()
+          });
+        }
         return (
           <StepOneComponent
             onComplete={handleStepComplete}
@@ -195,6 +219,15 @@ const CreateAdRequestApp = () => {
                     // Get CSRF token from cookies
                     const csrfToken = getCsrfToken();
 
+                    // Track event in PostHog when user confirms ad request deletion
+                    if (window.posthog) {
+                      window.posthog.capture('Ad Request Deleted', {
+                        timestamp: new Date().toISOString(),
+                        ad_request_id: adRequestData.id,
+                        ad_request_status: adRequestData.status,
+                      });
+                    }
+                    
                     // Call the delete endpoint
                     const response = await fetch(`/ads/adrequest/${adRequestData.id}/delete/`, {
                       method: 'DELETE',

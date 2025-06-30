@@ -3,8 +3,22 @@ import ReactDOM from "react-dom/client";
 import { BentoGrid, BentoItem } from "../components/ui/bento-grid";
 import { ButtonColorful } from "../components/ui/button-colorful";
 import { AlertNotification } from "../components/ui/alert-notification";
+
 import { cn } from "../lib/utils";
 import { useTranslation } from "../lib/useTranslation";
+
+// Declare PostHog types for TypeScript
+declare global {
+    interface Window {
+        posthog?: {
+            capture: (event: string, properties?: Record<string, any>) => void;
+            identify: (distinctId: string, userProperties?: Record<string, any>) => void;
+            people: {
+                set: (properties: Record<string, any>) => void;
+            };
+        };
+    }
+}
 
 // Componente para mostrar solicitudes de anuncios
 import {
@@ -331,7 +345,17 @@ function AdRequestsGrid() {
             <div className="flex justify-center my-4">
                 <ButtonColorful 
                     label={t('ad_requests.create_new', "Create New Ad Request")}
-                    onClick={() => createNewAdRequest(t)}
+                    onClick={() => {
+                        // Track event in PostHog before creating new ad request
+                        if (window.posthog) {
+                            window.posthog.capture('Create Ad Request Button Clicked', {
+                                $current_url: window.location.href,
+                                timestamp: new Date().toISOString()
+                            });
+                        }
+                        // Call the original function
+                        createNewAdRequest(t);
+                    }}
                 />
             </div>
             
