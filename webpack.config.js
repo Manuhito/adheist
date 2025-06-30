@@ -5,6 +5,7 @@ const webpack = require('webpack');
 
 // Load environment variables
 const APP_URL = process.env.APP_URL || 'http://localhost:8000';
+const isProd = process.env.NODE_ENV === 'production';
 
 module.exports = {
   entry: {
@@ -73,7 +74,8 @@ module.exports = {
   },
   plugins: [
     new webpack.DefinePlugin({
-      'APP_URL': JSON.stringify(APP_URL)
+      'APP_URL': JSON.stringify(APP_URL),
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
     }),
     new MiniCssExtractPlugin({
       filename: 'css/[name].css',
@@ -83,7 +85,34 @@ module.exports = {
   optimization: {
     minimizer: [new TerserPlugin({
       extractComments: false,  // disable generation of license.txt files
+      terserOptions: {
+        compress: {
+          drop_console: isProd,
+        },
+      },
     })],
+    // Split common dependencies into separate chunks
+    splitChunks: {
+      cacheGroups: {
+        commons: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors',
+          chunks: 'all',
+        },
+        // Extract React and ReactDOM into a separate chunk
+        react: {
+          test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
+          name: 'react',
+          chunks: 'all',
+          priority: 10, // higher priority
+        },
+      },
+    },
   },
-  devtool: "eval-cheap-source-map",
+  // Only use source maps in development
+  devtool: isProd ? false : "eval-cheap-source-map",
+  // Reduce memory usage in production
+  performance: {
+    hints: isProd ? 'warning' : false,
+  },
 };
