@@ -36,6 +36,27 @@ server {
         add_header X-Proxy-Response-Time $upstream_response_time;
     }
 
+    # Optimize the create adrequest page that's showing slowness
+    location ~ ^/ads/create/([0-9]+/)?$ {
+        proxy_pass http://127.0.0.1:8000;  
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # Strong performance optimizations
+        proxy_buffering off;
+        proxy_read_timeout 300s;
+        proxy_connect_timeout 75s;
+        proxy_send_timeout 300s;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        
+        # Add timing header
+        add_header X-Proxy-Response-Time $upstream_response_time;
+        add_header X-Adheist-Route "create-adrequest";
+    }
+    
     # Increase timeouts for specific endpoints known to be slow
     location ~ ^/ads/adrequest/[0-9]+/get/$ {
         proxy_pass http://127.0.0.1:8000;  
