@@ -1,16 +1,33 @@
-{% extends "account/base.html" %}
+{% extends "web/base.html" %}
 {% load i18n %}
 {% block content %}
-    <h1 class="pg-title">{% translate "Verify Your E-mail Address" %}</h1>
-    <p>
+<div class="relative w-full px-4 pt-12 sm:px-6 lg:px-8">
+  <div class="flex flex-col items-center max-w-2xl mx-auto w-full pt-8 md:pt-12">
+    <div class="flex w-auto items-center space-x-2 rounded-full bg-primary/20 px-2 py-1 ring-1 ring-accent whitespace-pre">
+      <p class="text-xs font-medium text-primary sm:text-sm">{% translate "Email Verification" %}</p>
+    </div>
+    
+    <h1 class="text-4xl font-bold tracking-tight sm:text-6xl text-neutral-700 dark:text-white max-w-4xl leading-relaxed lg:leading-snug text-center mx-auto mt-8">
+      <span class="text-black dark:text-white">{% translate "Verify Your E-mail Address" %}</span>
+    </h1>
+    
+    <div class="flex flex-col md:flex-row justify-center items-center gap-4 md:gap-8 mt-8 max-w-4xl w-full px-4">
+      <div class="flex items-center gap-2">
+        <span class="text-primary text-sm">✓</span>
+        <span class="text-sm text-muted-foreground whitespace-nowrap">
+          {% blocktranslate %}We have sent an e-mail to you for verification.{% endblocktranslate %}
+        </span>
+      </div>
+    </div>
+    
+    <div class="mt-6 text-center max-w-md">
+      <p class="text-sm text-muted-foreground">
         {% blocktranslate %}
-        We have sent an e-mail to you for verification.
         Follow the link provided to finalize the signup process.
-        {% endblocktranslate %}
-    </p>
-    <p>
-        {% blocktranslate %}
         Please contact us if you do not receive it within a few minutes.
         {% endblocktranslate %}
-    </p>
+      </p>
+    </div>
+  </div>
+</div>
 {% endblock %}
