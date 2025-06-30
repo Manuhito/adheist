@@ -550,6 +550,17 @@ def get_adlibrary_filters(request):
         }
         adlibrary_list.append(adlibrary_data)
     
+    # Track event in PostHog for filter query
+    posthog.capture(
+        request.user.id if request.user.is_authenticated else 'anonymous',  # Distinct ID (user ID or anonymous)
+        'Step 1 Filter query',
+        properties={
+            'company_name': company_name,
+            'industries': industries,
+            'tags': tags
+        }
+    )
+    
     return JsonResponse({'adlibraries': adlibrary_list}, safe=True)
 
 
