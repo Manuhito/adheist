@@ -29,13 +29,14 @@ class EmailAsUsernameAdapter(DefaultAccountAdapter):
                 
             # Track the signup event
             posthog.capture(
-                user.email,
+                user.id,
                 event='Signup Completed',
                 properties={ 
                     '$set': { 
                         'Signup Completed': True,
                         'Signup Method': signup_method,
                         'Date Joined': user.date_joined.isoformat(),
+                        'email': user.email,
                     },
                     'signup_method': signup_method,
                     '$current_url': request.build_absolute_uri(),
@@ -57,12 +58,13 @@ class EmailAsUsernameAdapter(DefaultAccountAdapter):
                 
             # Track the login event
             posthog.capture(
-                user.email,
+                user.id,  # Usar ID en lugar de email para consistencia con otros eventos
                 event='User Login',
                 properties={ 
                     '$set': { 
                         'Last Login': timezone.now().isoformat(),
                         'Login Count': user.last_login is not None,  # True if not first login
+                        'email': user.email,  # Añadir email como propiedad para mantener esta información
                     },
                     'login_method': login_method,
                     '$current_url': request.build_absolute_uri(),

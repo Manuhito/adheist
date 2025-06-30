@@ -13,9 +13,9 @@ def init_posthog():
     """
     if settings.POSTHOG_ENABLED:
         try:
-            posthog.api_key = settings.POSTHOG_API_KEY
+            posthog.api_key = settings.POSTHOG_KEY  # Corregido: POSTHOG_KEY en lugar de POSTHOG_API_KEY
             posthog.host = settings.POSTHOG_HOST
-            logger.info("PostHog client initialized successfully")
+            logger.info(f"PostHog client initialized successfully with host: {settings.POSTHOG_HOST}")
         except Exception as e:
             logger.error(f"Failed to initialize PostHog client: {e}")
     else:
