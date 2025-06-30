@@ -1,10 +1,15 @@
-from allauth.account.signals import email_confirmed, user_signed_up
+from allauth.account.signals import email_confirmed, user_signed_up, user_logged_out
 from django.conf import settings
 from django.core.files.storage import default_storage
 from django.core.mail import mail_admins
 from django.db.models.signals import post_delete, pre_save
 from django.dispatch import receiver
+from django.utils import timezone
 from apps.users.models import CustomUser
+import posthog
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @receiver(user_signed_up)
@@ -46,6 +51,30 @@ def remove_old_profile_picture_on_change(sender, instance, **kwargs):
     if old_file and old_file.name != instance.avatar.name:
         if default_storage.exists(old_file.name):
             default_storage.delete(old_file.name)
+
+
+@receiver(user_logged_out)
+def handle_user_logout(request, user, **kwargs):
+    """
+    Captura el evento de logout en PostHog cuando un usuario cierra sesión.
+    """
+    if user and user.is_authenticated:
+        try:
+            # Registrar evento de logout en PostHog
+            posthog.capture(
+                user.id,
+                'User Logout',
+                properties={
+                    '$set': {
+                        'Last Logout': timezone.now().isoformat(),
+                        'email': user.email,
+                    },
+                }
+            )
+            logger.info(f"Evento de logout registrado para el usuario {user.email}")
+        except Exception as e:
+            # Registrar error pero continuar con el logout
+            logger.error(f"Error al registrar evento de logout en PostHog: {e}")
 
 
 @receiver(post_delete, sender=CustomUser)
