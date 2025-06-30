@@ -927,6 +927,19 @@ def adrequest_version_create(request):
             status=AdRequestVersion.STATUS_UNASSIGNED
         )
         print("Version created: ", version)
+        
+        # Track event in PostHog when a new AdRequestVersion is created
+        posthog.capture(
+            request.user.id,
+            'Ad Version Created',
+            properties={
+                'version_type': 'initial',
+                'ad_request_id': ad_request.id,
+                'version_id': version.id,
+                'has_user_prompt': bool(user_prompt),
+                'timestamp': version.created_at.isoformat() if hasattr(version, 'created_at') else None
+            }
+        )
         # Generate image using OpenAI if user_prompt is provided
         image_generated = False
         task_id = None
@@ -1063,6 +1076,20 @@ def adrequest_revision_create(request):
             ad_request=ad_request,
             user_prompt=user_prompt,
             status=AdRequestVersion.STATUS_UNASSIGNED
+        )
+        print("Revision created: ", version)
+        
+        # Track event in PostHog when a new AdRequestVersion revision is created
+        posthog.capture(
+            request.user.id,
+            'Ad Version Created',
+            properties={
+                'version_type': 'revision',
+                'ad_request_id': ad_request.id,
+                'version_id': version.id,
+                'has_user_prompt': bool(user_prompt),
+                'timestamp': version.created_at.isoformat() if hasattr(version, 'created_at') else None
+            }
         )
         
         # Generate image using OpenAI if user_prompt is provided
