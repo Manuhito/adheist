@@ -467,6 +467,17 @@ if "test" in sys.argv:
     SILENCED_SYSTEM_CHECKS.append("djstripe.I002")
 
 
+# Logging configuration
+# Get environment (dev, stage, prod)
+APP_ENV = os.environ.get('APP_ENV', 'dev')
+
+# Base directory for log files in non-dev environments
+LOG_DIR = os.environ.get('DJANGO_LOG_DIR', '/var/log/django/')
+
+# Ensure log directory exists in stage/prod
+if APP_ENV in ['stage', 'prod']:
+    os.makedirs(LOG_DIR, exist_ok=True)
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -474,16 +485,48 @@ LOGGING = {
         "verbose": {
             "format": '[{asctime}] {levelname} "{name}" {message}',
             "style": "{",
-            "datefmt": "%d/%b/%Y %H:%M:%S",  # match Django server time format
+            "datefmt": "%d/%b/%Y %H:%M:%S",
+        },
+        "json": {
+            "format": '{"time": "%(asctime)s", "level": "%(levelname)s", "message": "%(message)s", "module": "%(module)s"}',
+            "class": "logging.Formatter",
+        },
+    },
+    "filters": {
+        "require_debug_true": {
+            "()": "django.utils.log.RequireDebugTrue",
+        },
+        "require_debug_false": {
+            "()": "django.utils.log.RequireDebugFalse",
         },
     },
     "handlers": {
-        "console": {"class": "logging.StreamHandler", "formatter": "verbose"},
+        "console": {
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+        },
     },
     "loggers": {
         "django": {
             "handlers": ["console"],
             "level": env("DJANGO_LOG_LEVEL", default="INFO"),
+            "propagate": True,
+        },
+        "django.request": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        "apps": {  # For your application code
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": True,
+        },
+        "apps.performance": {  # Special logger for performance metrics
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
         },
         "adheist": {
             "handlers": ["console"],
@@ -495,6 +538,46 @@ LOGGING = {
         },
     },
 }
+
+# Add file handlers in stage and production environments
+if APP_ENV in ['stage', 'prod']:
+    # Define file handlers
+    LOGGING["handlers"]["file_app"] = {
+        "level": "INFO",
+        "class": "logging.handlers.RotatingFileHandler",
+        "filename": os.path.join(LOG_DIR, "app.log"),
+        "maxBytes": 10 * 1024 * 1024,  # 10MB
+        "backupCount": 5,
+        "formatter": "verbose",
+    }
+    
+    LOGGING["handlers"]["file_performance"] = {
+        "level": "INFO",
+        "class": "logging.handlers.RotatingFileHandler",
+        "filename": os.path.join(LOG_DIR, "performance.log"),
+        "maxBytes": 10 * 1024 * 1024,  # 10MB
+        "backupCount": 5,
+        "formatter": "json",
+    }
+    
+    LOGGING["handlers"]["file_errors"] = {
+        "level": "ERROR",
+        "class": "logging.handlers.RotatingFileHandler",
+        "filename": os.path.join(LOG_DIR, "errors.log"),
+        "maxBytes": 10 * 1024 * 1024,  # 10MB
+        "backupCount": 5,
+        "formatter": "verbose",
+    }
+    
+    # Update loggers to use file handlers
+    LOGGING["loggers"]["django"]["handlers"].append("file_app")
+    LOGGING["loggers"]["django.request"]["handlers"].append("file_errors")
+    LOGGING["loggers"]["apps"]["handlers"].extend(["file_app", "file_errors"])
+    LOGGING["loggers"]["apps.performance"]["handlers"].append("file_performance")
+    
+    # Log the environment we're running in
+    import logging
+    logging.getLogger("adheist").info(f"Running in {APP_ENV} environment with DEBUG={DEBUG}")
 
 # OpenAI API configuration
 OPENAI_API_KEY = env("OPENAI_API_KEY", default="")

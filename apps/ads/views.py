@@ -661,9 +661,13 @@ def _get_user_adrequest(request, pk, select_related_fields=None):
 import time
 import logging
 import traceback
+import json
 from django.conf import settings
 
+# Regular logger for general messages
 logger = logging.getLogger(__name__)
+# Performance logger for timing data
+perf_logger = logging.getLogger('apps.performance')
 
 @login_required
 @require_http_methods(["GET"])
@@ -692,7 +696,9 @@ def adrequest_get(request, pk):
         
         if cached_data:
             timing_data['total'] = time.time() - start_time
-            logger.info(f"Cache hit for adrequest_get {pk}: {timing_data}")
+            timing_data['request_id'] = pk
+            timing_data['cache_hit'] = True
+            perf_logger.info(f"adrequest_get_timing: {json.dumps(timing_data)}")
             return JsonResponse(cached_data)
         
         # If not in cache, get the AdRequest with optimized query and check permissions
@@ -707,7 +713,9 @@ def adrequest_get(request, pk):
         # If result is a JsonResponse, it means there was an error
         if isinstance(result, JsonResponse):
             timing_data['total'] = time.time() - start_time
-            logger.info(f"Error in adrequest_get {pk}: {timing_data}")
+            timing_data['request_id'] = pk
+            timing_data['error'] = True
+            perf_logger.info(f"adrequest_get_timing: {json.dumps(timing_data)}")
             return result
         
         # Otherwise, result is the ad_request object
@@ -777,7 +785,9 @@ def adrequest_get(request, pk):
         timing_data['total'] = time.time() - start_time
         
         # Log timing information
-        logger.info(f"adrequest_get {pk} timing: {timing_data}")
+        timing_data['request_id'] = pk
+        timing_data['cache_hit'] = False
+        perf_logger.info(f"adrequest_get_timing: {json.dumps(timing_data)}")
         
         # Add timing info to response in development
         if settings.DEBUG:
@@ -788,7 +798,10 @@ def adrequest_get(request, pk):
     except Exception as e:
         # Log any exceptions with timing information
         timing_data['total'] = time.time() - start_time
-        logger.error(f"Exception in adrequest_get {pk}: {str(e)}\nTiming: {timing_data}\n{traceback.format_exc()}")
+        timing_data['request_id'] = pk
+        timing_data['exception'] = str(e)
+        perf_logger.error(f"adrequest_get_exception: {json.dumps(timing_data)}")
+        logger.error(f"Exception in adrequest_get {pk}: {str(e)}\n{traceback.format_exc()}")
         raise
 
 
