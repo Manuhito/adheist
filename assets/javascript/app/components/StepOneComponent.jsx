@@ -365,6 +365,13 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
   // Handle next step (create or update ad request)
   const handleNextStep = async () => {
+    // Track event in PostHog when Next button is pressed
+    if (window.posthog) {
+      window.posthog.capture('Next Button pressed', {
+        page: 'Step 1'
+      });
+    }
+    
     // Validate required fields
     if ((!selectedAdLibrary && !userUploadedImage) || !selectedCanvasSize) {
       setSubmitError(t('step_one.validation_error', 'Please select both an image source (gallery or upload) and canvas size'));

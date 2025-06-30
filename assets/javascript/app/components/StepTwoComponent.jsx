@@ -175,6 +175,13 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
   const handleNext = async () => {
     console.log('Next button clicked');
+    
+    // Track event in PostHog when Next button is pressed
+    if (window.posthog) {
+      window.posthog.capture('Next Button pressed', {
+        page: 'Step 2'
+      });
+    }
 
     // Ya no validamos que se haya seleccionado un tipo de producto, ya que no es obligatorio
 
