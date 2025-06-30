@@ -275,6 +275,18 @@ def payment_success(request):
                     }
                 )
                 print(f"Subscription created successfully with ID: {subscription.id}")
+                
+                # Track event in PostHog when a subscription is created
+                posthog.capture(
+                    request.user.id,
+                    'Sub Created',
+                    properties={
+                        'plan': product.name,  # Plan name from the product object
+                        'subscription_id': subscription.id,
+                        'price_id': price_id,
+                        'customer_id': customer_id
+                    }
+                )
             except Exception as e:
                 print(f"Error creating subscription with standard billing: {str(e)}")
                 print("Falling back to invoice collection method")
