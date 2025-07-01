@@ -3,7 +3,7 @@ server {
     server_name stage.adheist.ai www.stage.adheist.ai;
 
     location /static/ {
-        alias /code/static_root/;
+        alias /code/;
         access_log off;
         expires 30d;
     }
