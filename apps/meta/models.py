@@ -75,11 +75,28 @@ class Backload(BaseModel):
         (STATUS_FAILED, 'Failed'),
     ]
     
+    AD_ACTIVE = 'ACTIVE'
+    AD_INACTIVE = 'INACTIVE'
+    AD_ALL = 'ALL'
+    
+    AD_ACTIVE_STATUS_CHOICES = [
+        (AD_ACTIVE, 'Active'),
+        (AD_INACTIVE, 'Inactive'),
+        (AD_ALL, 'All'),
+    ]
+    
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
         default=STATUS_PENDING,
         help_text="Current status of the API execution"
+    )
+    
+    ad_active_status = models.CharField(
+        max_length=10,
+        choices=AD_ACTIVE_STATUS_CHOICES,
+        default=AD_ACTIVE,
+        help_text="Status of the ad (ACTIVE or INACTIVE)"
     )
     
     ad_delivery_date_min = models.CharField(

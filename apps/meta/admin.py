@@ -12,8 +12,8 @@ from .tasks import fetch_meta_ads
 
 @admin.register(Backload)
 class BackloadAdmin(admin.ModelAdmin):
-    list_display = ["get_page_names","ad_delivery_date_min", "content_languages", "media_types", "status", "last_run", "created_at"]
-    list_filter = ["status", "created_at", "last_run"]
+    list_display = ["get_page_names","ad_delivery_date_min", "content_languages", "media_types", "ad_active_status", "status", "last_run", "created_at"]
+    list_filter = ["status", "ad_active_status", "created_at", "last_run"]
     search_fields = []
     readonly_fields = ["created_at", "updated_at", "last_run", "output_file", "error_log", "run_query_button", "status"]
     filter_horizontal = ["pages"]
@@ -23,7 +23,7 @@ class BackloadAdmin(admin.ModelAdmin):
             "fields": ("pages",)
         }),
         ("API Parameters", {
-            "fields": ("ad_reached_countries", "content_languages", "media_types", "fields", "limit", "ad_delivery_date_min")
+            "fields": ("ad_reached_countries", "content_languages", "media_types", "fields", "limit", "ad_delivery_date_min", "ad_active_status")
         }),
         ("Execution Information", {
             "fields": ("status", "last_run", "output_file", "error_log", "run_query_button")
@@ -124,7 +124,8 @@ class BackloadAdmin(admin.ModelAdmin):
                 fields=obj.fields,
                 limit=obj.limit,
                 backload_id=obj.pk,
-                ad_delivery_date_min=obj.ad_delivery_date_min
+                ad_delivery_date_min=obj.ad_delivery_date_min,
+                ad_active_status=obj.ad_active_status
             )
             
             messages.success(request, f"La tarea de consulta a la API de Meta se ha iniciado en segundo plano. Los resultados se guardarán en {output_dir}. El estado se actualizará automáticamente cuando finalice.")

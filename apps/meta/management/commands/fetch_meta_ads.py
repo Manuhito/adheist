@@ -83,6 +83,10 @@ class Command(BaseCommand):
             "--ad-delivery-date-min",
             help="Minimum ad delivery date in YYYY-MM-DD format"
         )
+        parser.add_argument(
+            "--ad-active-status",
+            help="Status of the ad (ACTIVE or INACTIVE)"
+        )
 
     def handle(self, *args, **options):
         # Inicializar lista de mensajes de error para devolver al final
@@ -138,6 +142,7 @@ class Command(BaseCommand):
         fields = options.get("fields") or "page_name,ad_creative_bodies,ad_snapshot_url,impressions,spend"
         limit = options.get("limit") or 100
         ad_delivery_date_min = options.get("ad_delivery_date_min")
+        ad_active_status = options.get("ad_active_status")
         
         # Consultar la API y guardar los resultados
         try:
@@ -150,7 +155,8 @@ class Command(BaseCommand):
                 fields=fields,
                 limit=limit,
                 delay=options.get("delay", 2),
-                ad_delivery_date_min=ad_delivery_date_min
+                ad_delivery_date_min=ad_delivery_date_min,
+                ad_active_status=ad_active_status
             )
             
             # Añadir errores de la consulta a la lista principal de errores
@@ -212,7 +218,8 @@ class Command(BaseCommand):
         fields: str = None,
         limit: int = 100,
         delay: int = 2,
-        ad_delivery_date_min: str = None
+        ad_delivery_date_min: str = None,
+        ad_active_status: str = None
     ) -> tuple[List[Dict[str, Any]], List[str]]:
         """
         Query the Meta Ad Library API to get ads for the specified pages.
@@ -227,6 +234,7 @@ class Command(BaseCommand):
             limit: Maximum number of ads per page
             delay: Seconds to wait between batches
             ad_delivery_date_min: Minimum ad delivery date in YYYY-MM-DD format
+            ad_active_status: Status of the ad (ACTIVE or INACTIVE)
             
         Returns:
             Tuple containing (list of ads, list of error messages)
@@ -260,6 +268,11 @@ class Command(BaseCommand):
             if ad_delivery_date_min:
                 self.stdout.write(f"DEBUG - Adding ad_delivery_date_min: {ad_delivery_date_min}")
                 params["ad_delivery_date_min"] = ad_delivery_date_min
+                
+            # Add ad_active_status if provided
+            if ad_active_status:
+                self.stdout.write(f"DEBUG - Adding ad_active_status: {ad_active_status}")
+                params["ad_active_status"] = ad_active_status
             
             # Añadir parámetros en el mismo orden que Postman
             if ad_reached_countries:

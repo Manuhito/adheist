@@ -29,7 +29,8 @@ def fetch_meta_ads(
     fields: str = None,
     limit: int = None,
     backload_id: int = None,
-    ad_delivery_date_min: str = None
+    ad_delivery_date_min: str = None,
+    ad_active_status: str = None
 ) -> Dict[str, Any]:
     """
     Celery task to fetch ads from Meta Ad Library API.
@@ -49,6 +50,7 @@ def fetch_meta_ads(
         limit: Maximum number of ads per page in the response
         backload_id: ID of the Backload object to update with error logs
         ad_delivery_date_min: Minimum ad delivery date in YYYY-MM-DD format
+        ad_active_status: Status of the ad (ACTIVE or INACTIVE)
     
     Returns:
         Dictionary with task execution information
@@ -91,6 +93,8 @@ def fetch_meta_ads(
         command_kwargs['backload_id'] = backload_id
     if ad_delivery_date_min:
         command_kwargs['ad_delivery_date_min'] = ad_delivery_date_min
+    if ad_active_status:
+        command_kwargs['ad_active_status'] = ad_active_status
     
     try:
         # Execute the management command
