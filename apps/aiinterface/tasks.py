@@ -4,15 +4,99 @@ Celery tasks for AI interface operations.
 from typing import Dict, List, Optional, Union
 import logging
 from decimal import Decimal
+import json
+import os
+import requests
 
 from celery import shared_task
 from django.core.files.base import ContentFile
 import posthog
 
+from apps.ads.models import AdRequestVersion
+
 from .services import ImageGenerationService
 from .models import OpenAIConfiguration
 
 logger = logging.getLogger(__name__)
+
+
+def send_slack_notification(error_message: str, context: Optional[Dict] = None, title: str = "Image Generation Error") -> bool:
+    """
+    Sends a notification to Slack when an error occurs.
+    
+    Args:
+        error_message: The error message
+        context: Optional additional context
+        title: Notification title
+        
+    Returns:
+        bool: True if sent successfully, False otherwise
+    """
+    try:
+        # Get webhook URL from environment variable
+        webhook_url = os.environ.get('SLACK_WEBHOOK_URL')
+        if not webhook_url:
+            logger.warning("SLACK_WEBHOOK_URL not configured. Notification will not be sent.")
+            return False
+            
+        # Prepare the message
+        blocks = [
+            {
+                "type": "header",
+                "text": {
+                    "type": "plain_text",
+                    "text": title,
+                    "emoji": True
+                }
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": f"*Error:* ```{error_message[:1000]}```"
+                }
+            }
+        ]
+        
+        # Add context if provided
+        if context:
+            # Filter sensitive information
+            safe_context = {
+                k: v for k, v in context.items() 
+                if k not in ['api_key', 'password', 'secret', 'token', 'credentials']
+            }
+            
+            context_text = json.dumps(safe_context, indent=2)
+            if len(context_text) > 1000:
+                context_text = context_text[:997] + "..."
+            
+            blocks.append({
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": f"*Context:* ```{context_text}```"
+                }
+            })
+        
+        # Send the message
+        response = requests.post(
+            webhook_url,
+            json={"blocks": blocks},
+            timeout=5  # Reasonable timeout
+        )
+        
+        if response.status_code != 200:
+            logger.error(
+                f"Error sending Slack notification. Status: {response.status_code}, "
+                f"Response: {response.text[:200]}"
+            )
+            return False
+            
+        return True
+        
+    except Exception as e:
+        logger.error(f"Error sending Slack notification: {str(e)}")
+        return False
 
 @shared_task(bind=True, max_retries=3)
 def generate_image_task(
@@ -47,20 +131,73 @@ def generate_image_task(
                 image_urls=image_urls,
                 canvas_size=canvas_size
             )
-        except Exception as service_error:
-            # Capturar cualquier excepción no manejada del servicio
-            logger.exception(f"Unhandled exception in image generation service: {str(service_error)}")
             
-            # Si tenemos un version_id, actualizar su estado a fallido
+            # Check if the result contains an error
+            if "error" in result:
+                error_message = result.get("error", "Unknown error")
+                logger.error(f"Image generation failed: {error_message}")
+                
+                # Send Slack notification for functional errors
+                context = {
+                    "prompt": text_prompt[:100] + "..." if len(text_prompt) > 100 else text_prompt,
+                    "canvas_size": canvas_size,
+                    "version_id": version_id,
+                    "version_type": version_type,
+                    "has_images": bool(image_urls),
+                    "status_code": result.get("status_code"),
+                    "response_data": result.get("response_data", "")[:200] if result.get("response_data") else ""
+                }
+                send_slack_notification(
+                    error_message=error_message,
+                    context=context,
+                    title="Functional Error in Image Generation"
+                )
+                
+                # If we have a version_id, update its status to failed
+                if version_id:
+                    try:
+                        version = AdRequestVersion.objects.get(id=version_id)
+                        version.status = version.STATUS_FAILED
+                        version.error_logs = f"Error in image generation service: {error_message}"
+                        version.save(update_fields=['status', 'error_logs'])
+                    except Exception as e:
+                        logger.exception(f"Error updating AdRequestVersion with error: {str(e)}")
+                
+                # Devolver el error
+                return {
+                    "status": "error",
+                    "error": error_message,
+                    "details": result
+                }
+                
+        except Exception as service_error:
+            # Capture any unhandled exception from the service
+            error_msg = f"Unhandled exception in image generation service: {str(service_error)}"
+            logger.exception(error_msg)
+            
+            # Send Slack notification
+            context = {
+                "prompt": text_prompt[:100] + "..." if len(text_prompt) > 100 else text_prompt,
+                "canvas_size": canvas_size,
+                "version_id": version_id,
+                "version_type": version_type,
+                "has_images": bool(image_urls)
+            }
+            send_slack_notification(
+                error_message=str(service_error),
+                context=context,
+                title="Error in Image Generation Service"
+            )
+            
+            # If we have a version_id, update its status to failed
             if version_id:
                 try:
-                    from apps.ads.models import AdRequestVersion
                     version = AdRequestVersion.objects.get(id=version_id)
                     version.status = version.STATUS_FAILED
-                    version.error_logs = f"Error en el servicio de generación de imágenes: {str(service_error)}"
+                    version.error_logs = f"Error in image generation service: {str(service_error)}"
                     version.save(update_fields=['status', 'error_logs'])
                 except Exception as e:
-                    logger.exception(f"Error al actualizar AdRequestVersion con error: {str(e)}")
+                    logger.exception(f"Error updating AdRequestVersion with error: {str(e)}")
             
             # Reintentamos la tarea
             self.retry(exc=service_error, countdown=60)
@@ -250,7 +387,22 @@ def generate_image_task(
         }
         
     except Exception as e:
-        logger.exception(f"Error in generate_image_task: {str(e)}")
+        error_msg = f"Error in generate_image_task: {str(e)}"
+        logger.exception(error_msg)
+        
+        # Send Slack notification
+        context = {
+            "prompt": text_prompt[:100] + "..." if len(text_prompt) > 100 else text_prompt,
+            "canvas_size": canvas_size,
+            "version_id": version_id,
+            "version_type": version_type,
+            "has_images": bool(image_urls)
+        }
+        send_slack_notification(
+            error_message=str(e),
+            context=context,
+            title="General Error in Image Generation Task"
+        )
         
         # If we have a version ID, update its status to failed
         if version_id:
