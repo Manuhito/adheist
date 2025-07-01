@@ -624,24 +624,27 @@ def adrequest_create(request):
         # Get user assets if they exist
         user_assets = AdRequestAssets.objects.filter(user=request.user).first()
         
-        if user_assets:
-            # Set base_assets reference
-            create_params['base_assets'] = user_assets
+        # If user doesn't have assets, create a new AdRequestAssets instance
+        if not user_assets:
+            user_assets = AdRequestAssets.objects.create(user=request.user)
             
-            # Add text fields to asset_overrides
-            create_params['asset_overrides'] = user_assets.to_dict()
-            
-            # Add image fields to their respective override fields
-            image_fields = [
-                'logo', 'product_image_1', 'product_image_2', 
-                'app_image_1', 'app_image_2',
-                'marketing_image_1', 'marketing_image_2', 'marketing_image_3'
-            ]
-            
-            for field in image_fields:
-                base_image = getattr(user_assets, field)
-                if base_image:
-                    create_params[f"{field}_override"] = base_image
+        # Set base_assets reference
+        create_params['base_assets'] = user_assets
+        
+        # Add text fields to asset_overrides
+        create_params['asset_overrides'] = user_assets.to_dict()
+        
+        # Add image fields to their respective override fields
+        image_fields = [
+            'logo', 'product_image_1', 'product_image_2', 
+            'app_image_1', 'app_image_2',
+            'marketing_image_1', 'marketing_image_2', 'marketing_image_3'
+        ]
+        
+        for field in image_fields:
+            base_image = getattr(user_assets, field)
+            if base_image:
+                create_params[f"{field}_override"] = base_image
         
         # Create the AdRequest with all fields at once
         ad_request = AdRequest.objects.create(**create_params)
