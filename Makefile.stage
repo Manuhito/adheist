@@ -5,6 +5,11 @@ setup-compose:
 	@cp docker-compose.yml.stage docker-compose.yml
 	@echo "Copied docker-compose.yml.stage to docker-compose.yml"
 
+setup-nginx:
+	@rm -f nginx.conf
+	@cp nginx.conf.stage nginx.conf
+	@echo "Copied nginx.conf.stage to nginx.conf"
+
 setup-env: setup-compose
 	@[ ! -f ./.env ] && cp ./.env.stage ./.env || echo ".env file already exists."
 
