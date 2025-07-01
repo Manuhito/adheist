@@ -1,11 +1,9 @@
 include custom.mk
 
-setup-nginx:
+setup-compose:
 	@rm -f nginx.conf
 	@cp nginx.conf.stage nginx.conf
 	@echo "Copied nginx.conf.stage to nginx.conf"
-
-setup-compose:
 	@rm -f docker-compose.yml
 	@cp docker-compose.yml.stage docker-compose.yml
 	@echo "Copied docker-compose.yml.stage to docker-compose.yml"
