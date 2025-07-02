@@ -900,76 +900,81 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
           </aside>
           {/* Main column derecha: branding, details, product type */}
           <main className="lg:col-span-8 flex flex-col">
-            {/* Company Branding */}
-            <div className="bg-card rounded-xl flex items-start">
-                <CompanyLogoUpload
-                  onUpload={handleLogoUpload}
-                  initialImage={initialData.logo_override}
-                />
-              </div>
-            {/* Campaign Details */}
-            <div className="bg-card p-6 rounded-xl overflow-hidden h-full">
-              <h3 className="text-lg font-medium mb-4">{t('step_two.campaign_details', 'Campaign Details')}</h3>
-              <div className="mb-6">
-                <label
-                  htmlFor={websiteUrlId}
-                  className="block text-sm font-medium mb-2"
-                >
-                  {t('step_two.website_url', 'Website URL')}
-                </label>
-                <Input
-                  id={websiteUrlId}
-                  type="url"
-                  placeholder={t('step_two.enter_website_url', 'Enter your website URL')}
-                  value={websiteUrl}
-                  onChange={handleWebsiteUrlChange}
-                />
-              </div>
-              <div className="w-full mb-6">
-                <h3 className="text-sm font-medium mb-2">{t('step_two.brand_color', 'Brand Color')}</h3>
-                <p className="text-xs text-muted-foreground mb-3">{t('step_two.enter_hex_color', 'Enter a hex color that represents your brand identity')}</p>
-                <div>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                      <span className="text-gray-500">#</span>
-                    </div>
-                    <Input
-                      id={brandColorId}
-                      type="text"
-                      placeholder={t('step_two.enter_hex_color_example', 'Enter hex color (e.g. FF5500)')}
-                      value={selectedColor.replace('#', '')}
-                      onChange={handleColorChange}
-                      className={`pl-6 ${colorError ? 'border-red-500' : ''}`}
-                    />
-                  </div>
-                  {colorError && (
-                    <p className="text-xs text-red-500 mt-1">{t('step_two.enter_valid_hex_color', 'Please enter a valid hex color code (e.g. FF5500)')}</p>
-                  )}
-                  {selectedColor && !colorError && (
-                    <div className="mt-2 flex items-center gap-2">
-                      <div
-                        className="h-6 w-6 rounded-md border"
-                        style={{ backgroundColor: selectedColor }}
-                      />
-                      <span className="text-xs">{selectedColor}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="w-full">
-                <h3 className="text-sm font-medium mb-2">{t('step_two.key_benefits', 'Key Benefits')}</h3>
-                <p className="text-xs text-muted-foreground mb-3">{t('step_two.add_key_benefits', 'Add the key benefits of your product or service')}</p>
-                <div>
-                  <Input
-                    id={keyBenefitsId}
-                    type="text"
-                    placeholder={t('step_two.key_benefits_example', 'E.g. Fast delivery, 24/7 support...')}
-                    value={keyBenefits}
-                    onChange={handleKeyBenefitsChange}
-                  />
-                </div>
-              </div>
+  {/* Branding + Campaign Details en dos columnas */}
+  <div className="flex flex-row gap-x-6 w-full">
+    {/* Company Branding (izquierda) */}
+    <div className="bg-card rounded-xl flex items-start">
+      <CompanyLogoUpload
+        onUpload={handleLogoUpload}
+        initialImage={initialData.logo_override}
+      />
+    </div>
+    {/* Campaign Details (derecha) */}
+    <div className="bg-card p-6 rounded-xl overflow-hidden h-full flex-1">
+      <h3 className="text-lg font-medium mb-4">{t('step_two.campaign_details', 'Campaign Details')}</h3>
+      <div className="mb-6">
+        <label
+          htmlFor={websiteUrlId}
+          className="block text-sm font-medium mb-2"
+        >
+          {t('step_two.website_url', 'Website URL')}
+        </label>
+        <Input
+          id={websiteUrlId}
+          type="url"
+          placeholder={t('step_two.enter_website_url', 'Enter your website URL')}
+          value={websiteUrl}
+          onChange={handleWebsiteUrlChange}
+          className="w-full"
+        />
+      </div>
+      <div className="w-full mb-6">
+        <h3 className="text-sm font-medium mb-2">{t('step_two.brand_color', 'Brand Color')}</h3>
+        <p className="text-xs text-muted-foreground mb-3">{t('step_two.enter_hex_color', 'Enter a hex color that represents your brand identity')}</p>
+        <div>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+              <span className="text-gray-500">#</span>
             </div>
+            <Input
+              id={brandColorId}
+              type="text"
+              placeholder={t('step_two.enter_hex_color_example', 'Enter hex color (e.g. FF5500)')}
+              value={selectedColor.replace('#', '')}
+              onChange={handleColorChange}
+              className={`w-full ${colorError ? 'border-red-500' : ''}`}
+            />
+          </div>
+          {colorError && (
+            <p className="text-xs text-red-500 mt-1">{t('step_two.enter_valid_hex_color', 'Please enter a valid hex color code (e.g. FF5500)')}</p>
+          )}
+          {selectedColor && !colorError && (
+            <div className="mt-2 flex items-center gap-2">
+              <div
+                className="h-6 w-6 rounded-md border"
+                style={{ backgroundColor: selectedColor }}
+              />
+              <span className="text-xs">{selectedColor}</span>
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="w-full">
+        <h3 className="text-sm font-medium mb-2">{t('step_two.key_benefits', 'Key Benefits')}</h3>
+        <p className="text-xs text-muted-foreground mb-3">{t('step_two.add_key_benefits', 'Add the key benefits of your product or service')}</p>
+        <div>
+          <Input
+            id={keyBenefitsId}
+            type="text"
+            placeholder={t('step_two.key_benefits_example', 'E.g. Fast delivery, 24/7 support...')}
+            value={keyBenefits}
+            onChange={handleKeyBenefitsChange}
+            className="w-full"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
             {/* Product Type */}
             <div>
               <ProductTypeSelect
