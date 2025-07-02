@@ -801,14 +801,13 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   return (
     <div className="w-full min-h-screen flex flex-col">
       <div className="flex-1 w-full max-w-7xl mx-auto px-2 sm:px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
           {/* Summary section lateral izquierdo */}
-          <aside className="lg:col-span-4 mb-8 lg:mb-0">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 flex flex-col gap-y-4 items-start">
+          <aside className="lg:col-span-4 mb-8 lg:mb-0 h-full flex flex-col">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 flex flex-col gap-y-4 items-start h-full">
               <h2 className="text-xl font-semibold mb-4">{t('step_two.summary', 'Summary')}</h2>
-              <div className="w-full">
-                <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 rounded-md">
-                  <div className="flex flex-col gap-4">
+              <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 rounded-md h-full w-full flex flex-col flex-1">
+                  <div className="flex flex-col gap-y-8">
                     {/* Ad Style */}
                     <div className="flex flex-col items-center text-center">
                       <div className="group relative w-32 h-32 rounded-lg overflow-hidden shadow border bg-white dark:bg-gray-800">
@@ -852,6 +851,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
                         )}
                       </div>
                     </div>
+                    <hr className="my-6 opacity-0" />
                     {/* Canvas Size */}
                     <div className="flex flex-col items-center text-center">
                       <div className="mb-2">
@@ -895,7 +895,6 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
                     </div>
                   </div>
                 </div>
-              </div>
             </div>
           </aside>
           {/* Main column derecha: branding, details, product type */}
