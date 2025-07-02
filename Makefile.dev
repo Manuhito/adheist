@@ -81,6 +81,9 @@ build-api-client:  ## Update the JavaScript API client code.
 	-g typescript-fetch \
 	-o /local/
 
+bootstrap_blog:  ## Initializes your Wagtail content with some example pages and blog posts
+	@docker compose run --rm web python manage.py bootstrap_blog
+
 upgrade: requirements migrations migrate npm-install npm-dev  ## Run after a Pegasus upgrade to update requirements, migrate the database, and rebuild the front end
 
 .PHONY: help
