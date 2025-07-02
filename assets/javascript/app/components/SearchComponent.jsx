@@ -72,7 +72,7 @@ export const SearchComponent = ({ selectedCompany, onCompanyChange }) => {
             variant="outline"
             role="combobox"
             aria-expanded={isOpen}
-            className="w-full justify-between bg-background px-3 font-normal"
+            className="w-full justify-between bg-background px-3 font-normal min-h-[38px] h-[38px]"
           >
             <span className={!selectedCompany ? "text-muted-foreground" : ""}>
               {selectedCompany || t('search.select_company', 'Select Company')}

@@ -110,11 +110,11 @@ export const FilterFormComponent = ({
   };
 
   return (
-    <div className="w-full max-w-md space-y-6 mt-4">
+    <div className="flex-1 flex mt-4">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-wrap gap-4 w-full">
           {/* Campo de industrias */}
-          <div className="space-y-2">
+          <div className="flex-1 min-w-[180px]">
             <div className="flex items-center">
               <Factory className="h-4 w-4 mr-2" />
               <h3 className="text-base font-medium">{t('filter.industries', 'Industries')}</h3>
@@ -171,7 +171,7 @@ export const FilterFormComponent = ({
           </div>
 
           {/* Campo de etiquetas */}
-          <div className="space-y-2">
+          <div className="flex-1 min-w-[180px]">
             <div className="flex items-center">
               <Tag className="h-4 w-4 mr-2" />
               <h3 className="text-base font-medium">{t('filter.tags', 'Ad description Keywords')}</h3>

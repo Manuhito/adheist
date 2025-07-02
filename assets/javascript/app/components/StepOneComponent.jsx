@@ -14,7 +14,7 @@ const FilterCacheContext = createContext({
   industries: [],
   tags: [],
   isLoading: false,
-  loadFilterData: () => {}
+  loadFilterData: () => { }
 });
 
 /**
@@ -34,7 +34,7 @@ export const FilterCacheProvider = ({ children }) => {
       console.log(`[CACHE HIT] ✅ [${cacheId}] Usando datos en caché - industries: ${industries.length}, tags: ${tags.length}`);
       return Promise.resolve({ industries, tags });
     }
-    
+
     const startTime = performance.now();
     const cacheId = window._filterCacheId || 'unknown';
     console.log(`[CACHE MISS] ⏳ [${cacheId}] Cargando datos desde la API - timestamp: ${new Date().toISOString()}`);
@@ -86,7 +86,7 @@ export const FilterCacheProvider = ({ children }) => {
         }
         setIsLoading(false);
         setIsLoaded(true);
-        
+
         return { industries: industryOptions, tags: tagOptions };
       })
       .catch(error => {
@@ -285,14 +285,14 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
   // Handle image upload
   const handleImageUpload = async (imageUrl, imageFile) => {
     console.log('Image upload handler called with:', { imageUrl, imageFile });
-    
+
     // If we're removing the image
     if (!imageUrl) {
       setUserUploadedImage(null);
       setUserUploadedFile(null);
       return;
     }
-    
+
     // Process the image URL - similar to StepTwoComponent
     if (imageUrl.startsWith('blob:')) {
       try {
@@ -300,13 +300,13 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
         // Fetch the blob data
         const blobResponse = await fetch(imageUrl);
         const blob = await blobResponse.blob();
-        
+
         // Create a File object from the blob
         const filename = `user_uploaded_image_${Date.now()}.${blob.type.split('/')[1] || 'png'}`;
         const file = new File([blob], filename, { type: blob.type });
-        
+
         console.log('Created file:', file.name, 'type:', file.type, 'size:', file.size);
-        
+
         // Store both the URL and the File
         setUserUploadedImage(imageUrl);
         setUserUploadedFile(file);
@@ -325,7 +325,7 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
       setUserUploadedImage(imageUrl);
       setUserUploadedFile(imageFile);
     }
-    
+
     // Update UI state
     setImageSource('upload');
     setSelectedAdLibrary(null);
@@ -371,13 +371,13 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
         page: 'Step 1'
       });
     }
-    
+
     // Validate required fields
     if ((!selectedAdLibrary && !userUploadedImage) || !selectedCanvasSize) {
       setSubmitError(t('step_one.validation_error', 'Please select both an image source (gallery or upload) and canvas size'));
       return;
     }
-    
+
     // Additional validation for upload mode
     if (imageSource === 'upload' && !userUploadedFile) {
       setSubmitError(t('step_one.upload_error', 'There was a problem with your uploaded image. Please try again.'));
@@ -392,7 +392,7 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
       const formData = new FormData();
       formData.append('canvas_size', selectedCanvasSize);
       formData.append('status', 'DRAFT'); // Set status to DRAFT to advance to next step
-      
+
       // Add either ad_library or user_uploaded_image, but not both
       if (imageSource === 'library' && selectedAdLibrary) {
         formData.append('ad_library', selectedAdLibrary);
@@ -453,25 +453,25 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
           status: 'DRAFT', // Force status to DRAFT to ensure we move to step 2
           canvas_size: selectedCanvasSize
         };
-        
+
         // Add the appropriate image source data
         if (imageSource === 'library') {
           completeData.ad_library_id = selectedAdLibrary;
         } else if (imageSource === 'upload') {
           completeData.has_user_uploaded_image = true;
-          
+
           // Include the user_uploaded_image URL in the data passed to StepTwoComponent
           // If we have a response from the server with the URL, use that
           if (data.user_uploaded_image) {
             completeData.user_uploaded_image = data.user_uploaded_image;
-          } 
+          }
           // Otherwise, if we have a local blob URL, use that
           else if (userUploadedImage && userUploadedImage.startsWith('blob:')) {
             completeData.user_uploaded_image = userUploadedImage;
             console.log('Passing blob URL to StepTwoComponent:', userUploadedImage);
           }
         }
-        
+
         // Track event in PostHog when user advances to Step Two
         if (window.posthog) {
           window.posthog.capture('Ad Creation Step One Completed', {
@@ -482,7 +482,7 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
             user_uploaded_img: !!completeData.has_user_uploaded_image
           });
         }
-        
+
         onComplete(completeData);
       }
     } catch (error) {
@@ -520,12 +520,9 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
   // Render the component
   return (
     <div className="space-y-6 flex flex-col items-center w-full">
-      <div className="w-full max-w-md relative">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center">
-            <Building className="h-4 w-4 mr-2" />
-            <h3 className="text-base font-medium">{t('step_one.company', 'Company')}</h3>
-          </div>
+      <div className="w-full relative">
+        {/* Botón de limpiar filtros en la parte superior */}
+        <div className="flex justify-end mb-2">
           {hasActiveFilters && (
             <button
               onClick={handleClearFilters}
@@ -538,17 +535,34 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
             </button>
           )}
         </div>
-        <SearchComponent
-          selectedCompany={selectedCompany}
-          onCompanyChange={handleCompanyChange}
-        />
+
+        {/* Contenedor de filtros en línea horizontal */}
+        <div className="flex flex-nowrap gap-3 w-full overflow-visible pb-2">
+          {/* Filtro de compañía */}
+          <div className="flex-1 min-w-[180px] max-w-[30%] flex mt-4">
+            <div className="w-full">
+              <div className="flex items-center">
+                <Building className="h-4 w-4 mr-2" />
+                <h3 className="text-base font-medium">{t('step_one.company', 'Company')}</h3>
+              </div>
+              <div>
+                <SearchComponent
+                  selectedCompany={selectedCompany}
+                  onCompanyChange={handleCompanyChange}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Filtros de industrias y etiquetas */}
+          <FilterFormComponent
+            selectedIndustries={selectedIndustries}
+            selectedTags={selectedTags}
+            onIndustriesChange={handleIndustriesChange}
+            onTagsChange={handleTagsChange}
+          />
+        </div>
       </div>
-      <FilterFormComponent
-        selectedIndustries={selectedIndustries}
-        selectedTags={selectedTags}
-        onIndustriesChange={handleIndustriesChange}
-        onTagsChange={handleTagsChange}
-      />
       <div className="mt-8 w-full">
         <Tabs value={imageSource} onValueChange={handleImageSourceChange} className="w-full mb-6">
           <TabsList className="grid w-full grid-cols-2">
@@ -591,7 +605,7 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
           <TabsContent value="upload" className="mt-4">
             <div className="flex flex-col items-center justify-center p-8 border border-gray-200 rounded-lg shadow-sm">
-              <ImageUpload 
+              <ImageUpload
                 key={imageUploadKey}
                 onUpload={handleImageUpload}
                 customTitle={t('step_one.upload_title', 'Upload Your Image')}
