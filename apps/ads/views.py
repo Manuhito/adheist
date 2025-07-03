@@ -922,8 +922,8 @@ def adrequest_version_create(request):
             # Get the limit for this AdRequest
             limit = get_ad_request_version_limit(ad_request)
             return JsonResponse({
-                'error': f'This ad request has reached its limit of {limit} versions. Please upgrade your plan for more versions.'
-            }, status=400)
+                'error': f'This ad request has reached its limit of versions. Please upgrade your plan for more versions.'
+            }, status=403)
         
         # Check if user has available credits
         if not can_create_ad_request(request.user):
@@ -1083,8 +1083,8 @@ def adrequest_revision_create(request):
             # Get the limit for this AdRequest
             limit = get_ad_request_version_limit(ad_request)
             return JsonResponse({
-                'error': f'This ad request has reached its limit of {limit} versions. Please upgrade your plan for more versions.'
-            }, status=400)
+                'error': f'This ad request has reached its limit of versions. Please upgrade your plan for more versions.'
+            }, status=403)
         
         # Create a new AdRequestVersion instance
         version = AdRequestVersion.objects.create(
