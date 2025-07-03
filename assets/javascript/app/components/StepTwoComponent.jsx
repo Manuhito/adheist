@@ -941,7 +941,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
               placeholder={t('step_two.enter_hex_color_example', 'Enter hex color (e.g. FF5500)')}
               value={selectedColor.replace('#', '')}
               onChange={handleColorChange}
-              className={`w-full ${colorError ? 'border-red-500' : ''}`}
+              className={`w-full pl-6 ${colorError ? 'border-red-500' : ''}`}
             />
           </div>
           {colorError && (
