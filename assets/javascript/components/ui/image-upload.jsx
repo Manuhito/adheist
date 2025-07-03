@@ -12,6 +12,7 @@ export function ImageUpload({
   customTitle = "Image Upload",
   customDescription = "Supported formats: JPG, PNG, WebP",
   customPlaceholderText = "Click to select",
+  customDragDropText,
   initialImage = null,
   ...props 
 }) {
@@ -100,9 +101,11 @@ export function ImageUpload({
           </div>
           <div className="text-center">
             <p className="text-sm font-medium">{customPlaceholderText}</p>
-            <p className="text-xs text-muted-foreground">
-              {t('image_upload.drag_drop', 'or drag and drop file here')}
-            </p>
+            {typeof customDragDropText !== 'undefined' && customDragDropText.trim() === '' ? null : (
+              <p className="text-xs text-muted-foreground">
+                {typeof customDragDropText !== 'undefined' ? customDragDropText : t('image_upload.drag_drop', 'or drag and drop file here')}
+              </p>
+            )}
           </div>
         </div>
       ) : (

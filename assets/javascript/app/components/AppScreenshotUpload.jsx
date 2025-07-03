@@ -26,17 +26,14 @@ export function AppScreenshotUpload({ onUpload, className, initialData, ...props
   return (
     <div className={cn("w-full h-full flex flex-col p-6", className)}>
       <div className="w-full">
-        <h3 className="text-lg font-medium mb-2">{t('app_screenshot.title', 'App Screenshots')}</h3>
-        <p className="text-sm text-muted-foreground mb-4">
-          {t('app_screenshot.upload_description', 'Upload high-quality screenshots of your software to showcase its features')}
-        </p>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <ImageUpload 
             onUpload={handleFirstScreenshotUpload}
-            customTitle={t('app_screenshot.main_interface', 'Main Interface')}
-            customDescription={t('app_screenshot.main_screen', 'Main screen or dashboard view')}
-            customPlaceholderText={t('app_screenshot.add_main', 'Add main screenshot')}
+            customTitle={" "}
+            customDescription={" "}
+            customPlaceholderText={" "}
+            customDragDropText={" "}
             className="w-full border"
             initialImage={primaryImageUrl}
             {...props}
@@ -44,9 +41,10 @@ export function AppScreenshotUpload({ onUpload, className, initialData, ...props
           
           <ImageUpload 
             onUpload={handleSecondScreenshotUpload}
-            customTitle={t('app_screenshot.feature_highlight', 'Feature Highlight')}
-            customDescription={t('app_screenshot.key_feature', 'Key feature or functionality in action')}
-            customPlaceholderText={t('app_screenshot.add_feature', 'Add feature screenshot')}
+            customTitle={" "}
+            customDescription={" "}
+            customPlaceholderText={" "}
+            customDragDropText={" "}
             className="w-full border"
             initialImage={secondaryImageUrl}
             {...props}
