@@ -33,6 +33,7 @@ export function ProductImageUpload({ onUpload, className, initialData, ...props 
             customTitle={" "}
             customDescription={" "}
             customPlaceholderText={" "}
+            customDragDropText={" "}
             className="w-full border"
             initialImage={primaryImageUrl}
             {...props}
@@ -43,6 +44,7 @@ export function ProductImageUpload({ onUpload, className, initialData, ...props 
             customTitle={" "}
             customDescription={" "}
             customPlaceholderText={" "}
+            customDragDropText={" "}
             className="w-full border"
             initialImage={secondaryImageUrl}
             {...props}
