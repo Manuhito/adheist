@@ -239,7 +239,7 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="w-full min-h-screen flex flex-col">
       {/* No Credits Dialog */}
       {showNoCreditsDialog && (
         <div
@@ -277,14 +277,16 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
           </div>
         </div>
       )}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-semibold mb-4">{t('step_three.summary', 'Summary')}</h2>
-
-        {/* Summary of the ad request */}
-        <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 rounded-md mb-6">
-          <div className="flex flex-col md:flex-row gap-6 items-start">
-            {/* Column 1: Ad Style */}
-            <div className="flex flex-col md:w-1/3">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-2 sm:px-4 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+          {/* Summary section lateral izquierdo */}
+          <aside className="lg:col-span-4 mb-8 lg:mb-0 h-full flex flex-col">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 flex flex-col gap-y-4 items-start h-full">
+              <h2 className="text-xl font-semibold mb-4">{t('step_three.summary', 'Summary')}</h2>
+              <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 rounded-md h-full w-full flex flex-col flex-1">
+                <div className="flex flex-col gap-6">
+                  {/* Row 1: Ad Style */}
+                  <div className="flex flex-col">
 
               <div className="group relative w-32 h-32 rounded-lg overflow-hidden shadow border bg-white dark:bg-gray-800">
                 {isAdLibraryLoading ? (
@@ -326,10 +328,10 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
                   <div className="flex items-center justify-center w-full h-full text-gray-400">{t('step_three.no_image', 'No image')}</div>
                 )}
               </div>
-            </div>
+                  </div>
 
-            {/* Column 2: Brand Details */}
-            <div className="flex flex-col md:w-1/3">
+                  {/* Row 2: Brand Details */}
+                  <div className="flex flex-col">
 
 
               {/* Details Content */}
@@ -420,10 +422,10 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
                   })()}
                 </div>
               </div>
-            </div>
+                  </div>
 
-            {/* Column 3: Images */}
-            <div className="flex flex-col md:w-1/3">
+                  {/* Row 3: Images */}
+                  <div className="flex flex-col">
 
 
               {/* Images organized in 3 rows */}
@@ -510,11 +512,13 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
                 })()}
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* We've removed the separate images section since they're now in the right column */}
-      </div>
+                </div>
+              </div>
+            </div>
+          </aside>
+          
+          {/* Main content area */}
+          <main className="lg:col-span-8 flex flex-col">
 
       {/* Nueva sección: Prompt del usuario (solo visual) - outside the white background container */}
       <div className="flex flex-col items-center justify-center mb-8">
@@ -549,7 +553,10 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
         </div>
       </div>
 
-      <div className="flex justify-between items-center gap-4 pb-8">
+          </main>
+        </div>
+      </div>
+      <div className="w-full px-4 flex justify-between pb-8 max-w-7xl mx-auto">
         <BackButton onClick={handleBack} isLoading={isBackSubmitting} />
         <Button
           variant="outline"
