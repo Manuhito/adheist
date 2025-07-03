@@ -1290,9 +1290,40 @@ def adrequest_details_page(request, adrequest_id):
     
     print(f"{versions_data=}")
     
-    # Convert to JSON for the template
+    # Prepare complete adrequest data for frontend
     import json
-    versions_json = json.dumps(versions_data)
+    
+    # Prepare the complete data object
+    adrequest_data = {
+        'id': ad_request.id,
+        'status': ad_request.status,
+        'created_at': ad_request.created_at.isoformat() if ad_request.created_at else None,
+        'updated_at': ad_request.updated_at.isoformat() if ad_request.updated_at else None,
+        'versions': versions_data,
+        'available_version_credits': available_version_credits,
+        'canvas_size': ad_request.canvas_size or '1024x1024'
+    }
+    
+    # Add ad_library data if available
+    if ad_request.ad_library:
+        ad_library = ad_request.ad_library
+        adrequest_data.update({
+            'ad_library_id': ad_library.id,
+            'ad_library_name': ad_library.name,
+            'ad_image': ad_library.image.url if ad_library.image else None,
+            'industries': [industry.name for industry in ad_library.industries.all()] if ad_library.industries.exists() else []
+        })
+    
+    # Add user uploaded image if available
+    if ad_request.user_uploaded_image:
+        adrequest_data['user_uploaded_image'] = ad_request.user_uploaded_image.url
+    
+    # Add asset overrides if available
+    if ad_request.asset_overrides:
+        adrequest_data['asset_overrides'] = ad_request.asset_overrides
+    
+    # Convert to JSON for the template
+    adrequest_json = json.dumps(adrequest_data)
         
     # Render the adlibrary_detail.html template with the ad_request as the object
     template = "ads/adlibrary_detail.html"
@@ -1301,8 +1332,7 @@ def adrequest_details_page(request, adrequest_id):
         "object": ad_request.ad_library if ad_request.ad_library else None,
         "ad_request": ad_request,
         "versions": versions,
-        "versions_json": versions_json,
-        "available_version_credits": available_version_credits,
+        "adrequest_json": adrequest_json,  # Passing the complete JSON
         "current_versions_count": versions.count()
     }
         
