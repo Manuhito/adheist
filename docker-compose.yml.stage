@@ -36,6 +36,8 @@ services:
       - media_volume:/code/media
       # Mount SSL certificates from host
       - /etc/letsencrypt:/etc/letsencrypt:ro
+      - ./nginx.conf.stage:/etc/nginx/sites-available/default
+      - ./supervisord.conf.stage:/etc/supervisor/conf.d/supervisord.conf
     ports:
       - "80:80"
       - "443:443"
