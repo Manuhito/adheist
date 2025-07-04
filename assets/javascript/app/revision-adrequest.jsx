@@ -233,6 +233,9 @@ const RevisionAdRequest = () => {
                               />
                               <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center items-center text-white p-2">
                                 <h4 className="text-sm font-semibold mb-1">{adRequestData.ad_library_name || t("revision.no_name", "No name")}</h4>
+                                {adRequestData.industries && adRequestData.industries.length > 0 && (
+                                  <p className="text-xs text-center">{adRequestData.industries.join(", ")}</p>
+                                )}
                               </div>
                             </>
                           ) : (

@@ -1309,9 +1309,9 @@ def adrequest_details_page(request, adrequest_id):
         ad_library = ad_request.ad_library
         adrequest_data.update({
             'ad_library_id': ad_library.id,
-            'ad_library_name': ad_library.name,
-            'ad_image': ad_library.image.url if ad_library.image else None,
-            'industries': [industry.name for industry in ad_library.industries.all()] if ad_library.industries.exists() else []
+            'ad_library_name': str(ad_library.facebook_page.page_name),
+            'ad_image': ad_library.ad_image.url if ad_library.ad_image else None,
+            'industries': [industry.name for industry in ad_library.facebook_page.industries.all()] if hasattr(ad_library.facebook_page, 'industries') and ad_library.facebook_page.industries.exists() else []
         })
     
     # Add user uploaded image if available
