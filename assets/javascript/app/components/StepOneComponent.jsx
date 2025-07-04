@@ -609,12 +609,9 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
                 key={imageUploadKey}
                 onUpload={handleImageUpload}
                 customTitle={t('step_one.upload_title', 'Upload Your Image')}
-                customDescription={t('step_one.upload_description', 'Upload an image to use as inspiration for your ad')}
+                customDescription={" "}
                 initialImage={userUploadedImage}
               />
-              <p className="mt-4 text-sm text-muted-foreground text-center max-w-md">
-                {t('step_one.upload_help', 'Your uploaded image will be used as inspiration for generating your ad creative')}
-              </p>
             </div>
           </TabsContent>
         </Tabs>
