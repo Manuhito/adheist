@@ -234,7 +234,10 @@ const RevisionAdRequest = () => {
                               <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center items-center text-white p-2">
                                 <h4 className="text-sm font-semibold mb-1">{adRequestData.ad_library_name || t("revision.no_name", "No name")}</h4>
                                 {adRequestData.industries && adRequestData.industries.length > 0 && (
-                                  <p className="text-xs text-center">{adRequestData.industries.join(", ")}</p>
+                                  <p className="text-xs mb-1 text-center">{adRequestData.industries.join(", ")}</p>
+                                )}
+                                {adRequestData.tags && adRequestData.tags.length > 0 && (
+                                  <p className="text-xs text-blue-200">{adRequestData.tags.join(", ")}</p>
                                 )}
                               </div>
                             </>
@@ -244,7 +247,25 @@ const RevisionAdRequest = () => {
                         </div>
                       </div>
 
-                      {/* Row 2: Brand Details */}
+                      {/* Row 2: Brand Logo */}
+                      <div className="flex flex-col">
+                        <h3 className="text-sm font-medium mb-2">{t("revision.brand_logo", "Brand Logo")}</h3>
+                        <div className="group relative w-32 h-32 rounded-lg overflow-hidden shadow border bg-white dark:bg-gray-800 flex items-center justify-center p-2">
+                          {adRequestData?.asset_overrides?.logo_url ? (
+                            <>
+                              <img
+                                src={adRequestData.asset_overrides.logo_url}
+                                alt={t("revision.brand_logo", "Brand Logo")}
+                                className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105"
+                              />
+                            </>
+                          ) : (
+                            <div className="flex items-center justify-center w-full h-full text-gray-400">{t("revision.no_logo", "No logo")}</div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Row 3: Brand Details */}
                       <div className="flex flex-col">
                         <h3 className="text-sm font-medium mb-2">{t("revision.brand_details", "Brand Details")}</h3>
                         <div className="flex-1 w-full">
@@ -328,6 +349,37 @@ const RevisionAdRequest = () => {
                             })()}
                           </div>
                         </div>
+                        
+                        {/* Product and Service Images */}
+                        {(() => {
+                          const productServiceImages = [
+                            { key: 'product_image_1_url', label: t('revision.product_1', 'Product 1') },
+                            { key: 'product_image_2_url', label: t('revision.product_2', 'Product 2') },
+                            { key: 'app_image_1_url', label: t('revision.service_1', 'Service 1') },
+                            { key: 'app_image_2_url', label: t('revision.service_2', 'Service 2') },
+                          ].filter(img => adRequestData?.asset_overrides?.[img.key]);
+
+                          if (productServiceImages.length === 0) return null;
+
+                          return (
+                            <div className="flex flex-col mt-4">
+                              <h3 className="text-sm font-medium mb-2">{t("revision.product_service_images", "Product & Service Images")}</h3>
+                              <div className="flex flex-wrap gap-2">
+                                {productServiceImages.map(img => (
+                                  <div key={img.key} className="flex flex-col items-center">
+                                    <img
+                                      src={adRequestData.asset_overrides[img.key]}
+                                      alt={img.label}
+                                      className="w-16 h-16 object-cover rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm"
+                                      loading="lazy"
+                                    />
+                                    <span className="text-xs mt-1">{img.label}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
                   </div>

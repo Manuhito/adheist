@@ -1320,7 +1320,28 @@ def adrequest_details_page(request, adrequest_id):
     
     # Add asset overrides if available
     if ad_request.asset_overrides:
-        adrequest_data['asset_overrides'] = ad_request.asset_overrides
+        # Create a copy of asset_overrides to avoid modifying the original
+        asset_overrides = dict(ad_request.asset_overrides)
+        
+        # Add image URLs to asset_overrides
+        if ad_request.logo_override and hasattr(ad_request.logo_override, 'url'):
+            asset_overrides['logo_url'] = ad_request.logo_override.url
+            
+        # Add product images URLs
+        if ad_request.product_image_1_override and hasattr(ad_request.product_image_1_override, 'url'):
+            asset_overrides['product_image_1_url'] = ad_request.product_image_1_override.url
+            
+        if ad_request.product_image_2_override and hasattr(ad_request.product_image_2_override, 'url'):
+            asset_overrides['product_image_2_url'] = ad_request.product_image_2_override.url
+            
+        # Add app images URLs
+        if ad_request.app_image_1_override and hasattr(ad_request.app_image_1_override, 'url'):
+            asset_overrides['app_image_1_url'] = ad_request.app_image_1_override.url
+            
+        if ad_request.app_image_2_override and hasattr(ad_request.app_image_2_override, 'url'):
+            asset_overrides['app_image_2_url'] = ad_request.app_image_2_override.url
+        
+        adrequest_data['asset_overrides'] = asset_overrides
     
     # Convert to JSON for the template
     adrequest_json = json.dumps(adrequest_data)
