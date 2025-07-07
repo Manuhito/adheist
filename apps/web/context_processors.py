@@ -309,7 +309,7 @@ def translations(request):
             'filter.loading_industries': _('Loading industries...'),
             'filter.no_industries': _('No industries available'),
             'filter.tags': _('Ad description Keywords'),
-            'filter.select_tags': _('Select Ad description Keywords'),
+            'filter.select_tags': _('Search by Ad description Keywords'),
             'filter.loading_tags': _('Loading tags...'),
             'filter.no_tags': _('No tags available'),
             
