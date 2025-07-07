@@ -4,6 +4,8 @@ from django.shortcuts import redirect
 from django.views.decorators.csrf import ensure_csrf_cookie
 import json
 
+from apps.ads.models import FAQ
+
 
 def home(request):
     if request.user.is_authenticated:
@@ -154,4 +156,28 @@ def pricing_page(request):
         
     return render(request, 'web/pricing.html', {
         "pricing_data": pricing_json
+    })
+
+
+@ensure_csrf_cookie
+def faq_page(request):
+    """
+    Render the FAQ page with questions and answers from the FAQ model.
+    """
+    # Get all active FAQ items ordered by their order field
+    faq_items = FAQ.objects.filter(is_active=True).order_by('order', 'created_at')
+    
+    # Convert FAQ items to a list of dictionaries for JSON serialization
+    faq_data = [{
+        'id': item.id,
+        'question': item.question,
+        'answer': item.answer,
+        'order': item.order
+    } for item in faq_items]
+    
+    # Convert FAQ data to JSON for the React component
+    faq_json = json.dumps(faq_data)
+    
+    return render(request, 'web/faq.html', {
+        "faq_data": faq_json
     })

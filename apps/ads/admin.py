@@ -19,6 +19,7 @@ from .models import (
     AdRequestUsage,
     ExtraCredit,
     AppConfiguration,
+    FAQ,
 )
 
 
@@ -317,3 +318,18 @@ class AppConfigurationAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         # Do not allow deleting the configuration
         return False
+
+
+@admin.register(FAQ)
+class FAQAdmin(admin.ModelAdmin):
+    list_display = ["question", "order", "is_active", "created_at", "updated_at"]
+    list_filter = ["is_active"]
+    search_fields = ["question", "answer"]
+    ordering = ["order", "created_at"]
+    list_editable = ["order", "is_active"]
+    
+    fieldsets = [
+        (None, {
+            "fields": ["question", "answer", "order", "is_active"]
+        })
+    ]

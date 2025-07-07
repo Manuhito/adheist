@@ -763,3 +763,21 @@ class ExtraCredit(BaseModel):
     def use_credit(cls, user):
         """Use one extra credit if available (uses general_credits for backward compatibility)"""
         return cls.use_general_credit(user)
+
+
+class FAQ(BaseModel):
+    """
+    Model to store Frequently Asked Questions and their answers for a FAQ page.
+    """
+    question = models.CharField(max_length=255, help_text="The question text")
+    answer = models.TextField(help_text="The answer to the question")
+    order = models.PositiveIntegerField(default=0, help_text="Order in which the question appears on the FAQ page")
+    is_active = models.BooleanField(default=True, help_text="Whether this FAQ is currently displayed on the site")
+    
+    class Meta:
+        verbose_name = "FAQ"
+        verbose_name_plural = "FAQs"
+        ordering = ['order', 'created_at']
+    
+    def __str__(self):
+        return self.question
