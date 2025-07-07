@@ -134,7 +134,7 @@ const data = [
   },
 ];
 
-export default function Stats09() {
+export default function ProgressBarUsage() {
   return (
     <div className="w-full">
       <Card className="w-full py-4">

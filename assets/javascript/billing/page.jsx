@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { PricingSection } from '../components/blocks/pricing-section';
 import { InvoiceSection } from '../components/sections/invoice-section';
 import { PaymentMethodSection } from '../components/sections/payment-method-section';
-import Stats09 from '../components/ui/stats-3';
+import ProgressBarUsage from '../components/ui/progress-bar-usage';
 import { SubscriptionCancelSection } from '../components/sections/subscription-cancel-section';
 import { useTranslation } from '../lib/useTranslation';
 import { SubscriptionUpdateConfirmation } from './subscription-update-confirmation';
@@ -125,7 +125,7 @@ export function BillingPage({ pricingData, onSubscribe }) {
       {hasActiveSubscription && (
         <>
           {/* Sección de método de pago */}
-          <Stats09 />
+          <ProgressBarUsage />
           <PaymentMethodSection paymentMethodData={paymentMethodData} />
           
           {/* Sección de facturas */}
