@@ -1375,11 +1375,13 @@ def get_user_credits(user):
             plan_type = getattr(usage, 'plan_type', None)
     except Exception:
         pass
+    extra_general_credits = 0
+    extra_version_credits = 0
     try:
         extra = ExtraCredit.objects.filter(user=user).first()
         if extra:
-            general_credits += getattr(extra, 'general_credits', 0)
-            version_credits += getattr(extra, 'version_credits', 0)
+            extra_general_credits = getattr(extra, 'general_credits', 0)
+            extra_version_credits = getattr(extra, 'version_credits', 0)
     except Exception:
         pass
     # Obtener los límites del plan
@@ -1391,7 +1393,9 @@ def get_user_credits(user):
         'general_credits': general_credits,
         'version_credits': version_credits,
         'max_general_credits': plan_limits['general_credits'],
-        'max_version_credits': plan_limits['version_credits']
+        'max_version_credits': plan_limits['version_credits'],
+        'extra_general_credits': extra_general_credits,
+        'extra_version_credits': extra_version_credits
     }
 
 

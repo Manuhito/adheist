@@ -23,6 +23,7 @@ function Card({ className, ...props }: CardProps) {
   );
 }
 Card.displayName = "Card";
+export { Card };
 
 interface CardContentProps extends React.ComponentProps<"div"> {}
 function CardContent({ className, ...props }: CardContentProps) {
@@ -31,6 +32,7 @@ function CardContent({ className, ...props }: CardContentProps) {
   );
 }
 CardContent.displayName = "CardContent";
+export { CardContent };
 
 interface ProgressProps extends React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root> {}
 const Progress = React.forwardRef<

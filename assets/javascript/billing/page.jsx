@@ -3,6 +3,7 @@ import { PricingSection } from '../components/blocks/pricing-section';
 import { InvoiceSection } from '../components/sections/invoice-section';
 import { PaymentMethodSection } from '../components/sections/payment-method-section';
 import ProgressBarUsage from '../components/ui/progress-bar-usage';
+import { ExtraCreditCard } from '../components/ui/extra-credit-card';
 import { SubscriptionCancelSection } from '../components/sections/subscription-cancel-section';
 import { useTranslation } from '../lib/useTranslation';
 import { SubscriptionUpdateConfirmation } from './subscription-update-confirmation';
@@ -125,7 +126,7 @@ export function BillingPage({ pricingData, onSubscribe }) {
       {hasActiveSubscription && (
         <>
           {/* Sección de créditos */}
-          <div className="flex flex-col gap-4 mb-6">
+          <div className="flex flex-col gap-4 mb-4">
             <ProgressBarUsage
               label={t('billing.general_credits', 'General credits')}
               credits={window.__USAGE_DATA__?.general_credits || 0}
@@ -136,6 +137,23 @@ export function BillingPage({ pricingData, onSubscribe }) {
               credits={window.__USAGE_DATA__?.version_credits || 0}
               maxCredits={window.__USAGE_DATA__?.max_version_credits || 1}
             />
+            {/* Extra Credits Cards */}
+            {(window.__USAGE_DATA__?.extra_general_credits > 0 || window.__USAGE_DATA__?.extra_version_credits > 0) && (
+              <div className="flex flex-row gap-4 mt-2">
+                {window.__USAGE_DATA__?.extra_general_credits > 0 && (
+                  <ExtraCreditCard
+                    label={t('billing.extra_general_credits', 'General extra credits')}
+                    credits={window.__USAGE_DATA__?.extra_general_credits}
+                  />
+                )}
+                {window.__USAGE_DATA__?.extra_version_credits > 0 && (
+                  <ExtraCreditCard
+                    label={t('billing.extra_version_credits', 'Version extra credits')}
+                    credits={window.__USAGE_DATA__?.extra_version_credits}
+                  />
+                )}
+              </div>
+            )}
           </div>
           {/* Sección de método de pago */}
           <PaymentMethodSection paymentMethodData={paymentMethodData} />
