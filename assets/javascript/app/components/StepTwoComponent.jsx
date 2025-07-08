@@ -806,11 +806,11 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
           <aside className="lg:col-span-4 mb-8 lg:mb-0 h-full flex flex-col">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 flex flex-col gap-y-4 items-start h-full">
               <h2 className="text-xl font-semibold mb-4">{t('step_two.summary', 'Summary')}</h2>
-              <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 rounded-md h-full w-full flex flex-col flex-1">
+              <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-8 rounded-md h-full w-full flex flex-col flex-1">
                   <div className="flex flex-col gap-y-8">
                     {/* Ad Style */}
                     <div className="flex flex-col items-center text-center">
-                      <div className="group relative w-32 h-32 rounded-lg overflow-hidden shadow border bg-white dark:bg-gray-800">
+                      <div className="group relative w-full max-w-[600px] aspect-square rounded-lg overflow-hidden shadow border bg-white dark:bg-gray-800 mx-auto">
                         {isAdLibraryLoading ? (
                           <div className="flex items-center justify-center w-full h-full text-gray-400 animate-pulse">{t('step_two.loading', 'Loading...')}</div>
                         ) : adLibraryData ? (
@@ -819,6 +819,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
                               src={adLibraryData.ad_image || 'https://images.unsplash.com/photo-1557804506-669a67965ba0'}
                               alt={adLibraryData.company_name || 'Ad Preview'}
                               className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
+                              style={{maxWidth:'600px',width:'100%',maxHeight:'100%'}}
                             />
                             <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center items-center text-white p-2">
                               <h4 className="text-sm font-semibold mb-1">{adLibraryData.company_name || 'Ad Library'}</h4>
@@ -840,6 +841,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
                               src={initialData.user_uploaded_image}
                               alt={t('step_two.user_uploaded_image', 'User Uploaded Image')}
                               className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
+                              style={{maxWidth:'600px',width:'100%',maxHeight:'100%'}}
                             />
                             <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center items-center text-white p-2">
                               <h4 className="text-sm font-semibold mb-1">{t('step_two.custom_image', 'Custom Image')}</h4>
@@ -867,29 +869,30 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
                             return (
                               <div className="flex flex-col items-center">
                                 {item.id === "1024x1024" && (
-                                  <div className="w-8 h-8 border-2 border-gray-300 rounded-sm mb-2" />
+                                  <div className="w-full max-w-[600px] aspect-square border-2 border-gray-300 rounded-sm mb-2 mx-auto" />
                                 )}
                                 {item.id === "1536x1024" && (
-                                  <div className="w-12 h-8 border-2 border-gray-300 rounded-sm mb-2" />
+                                  <div className="w-full max-w-[600px] aspect-[3/2] border-2 border-gray-300 rounded-sm mb-2 mx-auto" />
                                 )}
                                 {item.id === "1024x1536" && (
-                                  <div className="w-8 h-12 border-2 border-gray-300 rounded-sm mb-2" />
+                                  <div className="w-full max-w-[600px] aspect-[2/3] border-2 border-gray-300 rounded-sm mb-2 mx-auto" />
                                 )}
                                 {item.id === "auto" && (
-                                  <div className="w-8 h-8 border-2 border-dashed border-gray-300 rounded-full flex items-center justify-center mb-2 text-xs text-gray-400">{t('step_one.auto', 'Auto')}</div>
+                                  <div className="w-full max-w-[600px] aspect-square border-2 border-dashed border-gray-300 rounded-full flex items-center justify-center mb-2 text-xs text-gray-400 mx-auto">{t('step_one.auto', 'Auto')}</div>
                                 )}
                                 <span className="font-semibold text-xs">{item.label}</span>
                                 <span className="text-xs text-gray-500">{item.size}</span>
                               </div>
                             );
+                          } else {
+                            return (
+                              <div className="flex flex-col items-center w-full max-w-[600px] mx-auto">
+                                <div className="w-full max-w-[600px] aspect-square border-2 border-dashed border-gray-200 rounded-sm mb-2 flex items-center justify-center text-xs text-gray-400">?</div>
+                                <span className="font-semibold text-xs text-gray-400">{t('step_two.unknown', 'Unknown')}</span>
+                                <span className="text-xs text-gray-400">{initialData.canvas_size || t('step_two.not_specified', 'Not specified')}</span>
+                              </div>
+                            );
                           }
-                          return (
-                            <div className="flex flex-col items-center">
-                              <div className="w-8 h-8 border-2 border-dashed border-gray-200 rounded-sm mb-2 flex items-center justify-center text-xs text-gray-400">?</div>
-                              <span className="font-semibold text-xs text-gray-400">{t('step_two.unknown', 'Unknown')}</span>
-                              <span className="text-xs text-gray-400">{initialData.canvas_size || t('step_two.not_specified', 'Not specified')}</span>
-                            </div>
-                          );
                         })()}
                       </div>
                     </div>
