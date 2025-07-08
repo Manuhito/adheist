@@ -7,6 +7,7 @@
   // Pass data to the React components
   window.__PRICING_DATA__ = {{ pricing_data|safe }};
   window.__PAYMENT_METHOD_DATA__ = {{ payment_method_data|safe }};
+  window.__USAGE_DATA__ = {{ usage_data|safe }};
 </script>
 <script src="{% static 'js/billing-bundle.js' %}" defer></script>
 {% endblock %}
