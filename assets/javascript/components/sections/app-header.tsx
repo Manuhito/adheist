@@ -62,16 +62,6 @@ export default function AppHeader() {
           <div className="flex items-center">
             <div className="flex items-center gap-4">
               <a
-                href="/blog"
-                target="_arya"
-                className={cn(
-                  buttonVariants({ variant: "ghost", size: "sm" }),
-                  "font-medium"
-                )}
-              >
-                {t('app_header.blog', 'Blog')}
-              </a>
-              <a
                 href="/pricing"
                 className={cn(
                   buttonVariants({ variant: "outline", size: "sm" }),
