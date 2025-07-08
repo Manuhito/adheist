@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-07-07 14:45+0000\n"
+"POT-Creation-Date: 2025-07-08 21:34+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -839,6 +839,7 @@ msgid "Review & Submit"
 msgstr ""
 
 #: apps/web/context_processors.py:268 apps/web/context_processors.py:419
+#: apps/web/context_processors.py:433
 msgid "No ad request ID available"
 msgstr ""
 
@@ -883,25 +884,25 @@ msgid "Select a canvas size to proceed"
 msgstr ""
 
 #: apps/web/context_processors.py:281 apps/web/context_processors.py:320
-#: apps/web/context_processors.py:401
+#: apps/web/context_processors.py:401 apps/web/context_processors.py:451
 msgid "Square"
 msgstr ""
 
 #: apps/web/context_processors.py:282 apps/web/context_processors.py:322
-#: apps/web/context_processors.py:403
+#: apps/web/context_processors.py:403 apps/web/context_processors.py:453
 msgid "Portrait"
 msgstr ""
 
 #: apps/web/context_processors.py:283 apps/web/context_processors.py:323
-#: apps/web/context_processors.py:404
+#: apps/web/context_processors.py:404 apps/web/context_processors.py:452
 msgid "Landscape"
 msgstr ""
 
-#: apps/web/context_processors.py:284
+#: apps/web/context_processors.py:284 apps/web/context_processors.py:455
 msgid "Auto"
 msgstr "Auto"
 
-#: apps/web/context_processors.py:285
+#: apps/web/context_processors.py:285 apps/web/context_processors.py:454
 msgid "Automatic"
 msgstr "Automatic"
 
@@ -987,6 +988,7 @@ msgid "No tags available"
 msgstr ""
 
 #: apps/web/context_processors.py:317 apps/web/context_processors.py:393
+#: apps/web/context_processors.py:437
 msgid "Summary"
 msgstr ""
 
@@ -995,6 +997,7 @@ msgid "Loading..."
 msgstr ""
 
 #: apps/web/context_processors.py:319 apps/web/context_processors.py:395
+#: apps/web/context_processors.py:444
 msgid "No image"
 msgstr ""
 
@@ -1003,10 +1006,12 @@ msgid "Portrait Tall"
 msgstr ""
 
 #: apps/web/context_processors.py:324 apps/web/context_processors.py:405
+#: apps/web/context_processors.py:456
 msgid "Unknown"
 msgstr ""
 
 #: apps/web/context_processors.py:325 apps/web/context_processors.py:406
+#: apps/web/context_processors.py:457
 msgid "Not specified"
 msgstr ""
 
@@ -1216,39 +1221,39 @@ msgstr ""
 msgid "Unsupported format. Please upload a JPG, PNG, or WebP image."
 msgstr ""
 
-#: apps/web/context_processors.py:396
+#: apps/web/context_processors.py:396 apps/web/context_processors.py:442
 msgid "Ad Preview"
 msgstr ""
 
-#: apps/web/context_processors.py:397
+#: apps/web/context_processors.py:397 apps/web/context_processors.py:443
 msgid "No name"
 msgstr ""
 
-#: apps/web/context_processors.py:398
+#: apps/web/context_processors.py:398 apps/web/context_processors.py:448
 msgid "No brand color"
 msgstr ""
 
-#: apps/web/context_processors.py:399
+#: apps/web/context_processors.py:399 apps/web/context_processors.py:449
 msgid "No company website"
 msgstr ""
 
-#: apps/web/context_processors.py:400
+#: apps/web/context_processors.py:400 apps/web/context_processors.py:450
 msgid "No key benefits"
 msgstr ""
 
-#: apps/web/context_processors.py:407
+#: apps/web/context_processors.py:407 apps/web/context_processors.py:458
 msgid "Product 1"
 msgstr ""
 
-#: apps/web/context_processors.py:408
+#: apps/web/context_processors.py:408 apps/web/context_processors.py:459
 msgid "Product 2"
 msgstr ""
 
-#: apps/web/context_processors.py:409
+#: apps/web/context_processors.py:409 apps/web/context_processors.py:460
 msgid "Service 1"
 msgstr ""
 
-#: apps/web/context_processors.py:410
+#: apps/web/context_processors.py:410 apps/web/context_processors.py:461
 msgid "Service 2"
 msgstr ""
 
@@ -1268,21 +1273,21 @@ msgstr ""
 msgid "Additional instructions? (optional)"
 msgstr ""
 
-#: apps/web/context_processors.py:415
+#: apps/web/context_processors.py:415 apps/web/context_processors.py:428
 msgid "Write your prompt..."
 msgstr ""
 
-#: apps/web/context_processors.py:416
+#: apps/web/context_processors.py:416 apps/web/context_processors.py:467
 msgid ""
 "Once submitted, your ad request will be processed. This may take a few "
 "minutes."
 msgstr ""
 
-#: apps/web/context_processors.py:417
+#: apps/web/context_processors.py:417 apps/web/context_processors.py:468
 msgid "Generating..."
 msgstr ""
 
-#: apps/web/context_processors.py:418
+#: apps/web/context_processors.py:418 apps/web/context_processors.py:469
 msgid "Generate"
 msgstr ""
 
@@ -1298,7 +1303,7 @@ msgstr ""
 msgid "Error updating status to SUBMITED:"
 msgstr ""
 
-#: apps/web/context_processors.py:423
+#: apps/web/context_processors.py:423 apps/web/context_processors.py:436
 msgid "Error generating version"
 msgstr ""
 
@@ -1308,6 +1313,88 @@ msgstr ""
 
 #: apps/web/context_processors.py:425
 msgid "Failed to update status to DRAFT"
+msgstr ""
+
+#: apps/web/context_processors.py:427
+msgid "Additional instructions?"
+msgstr ""
+
+#: apps/web/context_processors.py:429
+msgid "Version limit reached. No more versions can be generated."
+msgstr ""
+
+#: apps/web/context_processors.py:432
+msgid "Please enter a prompt before generating"
+msgstr ""
+
+#: apps/web/context_processors.py:434
+msgid "No image available for revision"
+msgstr ""
+
+#: apps/web/context_processors.py:435
+msgid "Failed to update status to SUBMITTED"
+msgstr ""
+
+#: apps/web/context_processors.py:438
+msgid "Ad Style"
+msgstr ""
+
+#: apps/web/context_processors.py:439
+msgid "User Uploaded Image"
+msgstr ""
+
+#: apps/web/context_processors.py:440
+msgid "Custom Image"
+msgstr ""
+
+#: apps/web/context_processors.py:441
+msgid "User uploaded"
+msgstr ""
+
+#: apps/web/context_processors.py:445
+msgid "Brand Logo"
+msgstr ""
+
+#: apps/web/context_processors.py:446
+msgid "No logo"
+msgstr ""
+
+#: apps/web/context_processors.py:447
+#, fuzzy
+#| msgid "Error Details"
+msgid "Brand Details"
+msgstr "Error Details"
+
+#: apps/web/context_processors.py:462
+msgid "Product & Service Images"
+msgstr ""
+
+#: apps/web/context_processors.py:463
+msgid "Previous Version"
+msgstr ""
+
+#: apps/web/context_processors.py:464
+msgid "Next Version"
+msgstr ""
+
+#: apps/web/context_processors.py:465
+msgid "Revision"
+msgstr ""
+
+#: apps/web/context_processors.py:466
+msgid "credits available"
+msgstr ""
+
+#: apps/web/context_processors.py:472
+msgid "Back to Ad Requests"
+msgstr ""
+
+#: apps/web/context_processors.py:473
+msgid "Generated Ad Image"
+msgstr ""
+
+#: apps/web/context_processors.py:474
+msgid "No version with generated image found for this ad request."
 msgstr ""
 
 #: templates/400.html:4
