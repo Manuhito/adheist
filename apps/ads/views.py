@@ -20,7 +20,7 @@ import os
 from django.conf import settings
 import posthog
 
-from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion
+from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion, AdRequestUsage, ExtraCredit
 from .forms import AdLibraryForm
 from .services import can_create_ad_request, use_credit, can_create_ad_request_version, get_ad_request_version_limit, use_general_credit, use_version_credit, can_create_ad_version
 import boto3
@@ -1359,8 +1359,32 @@ def adrequest_details_page(request, adrequest_id):
         
     return TemplateResponse(request, template, context)
 
-@ensure_csrf_cookie
-@login_required
+def get_user_credits(user):
+    """
+    Suma los créditos generales y de versión de AdRequestUsage y ExtraCredit para el usuario.
+    Devuelve: dict con general_credits y version_credits
+    """
+    general_credits = 0
+    version_credits = 0
+    try:
+        usage = AdRequestUsage.objects.filter(user=user).order_by('-billing_period_start').first()
+        if usage:
+            general_credits += getattr(usage, 'general_credits', 0)
+            version_credits += getattr(usage, 'version_credits', 0)
+    except Exception:
+        pass
+    try:
+        extra = ExtraCredit.objects.filter(user=user).first()
+        if extra:
+            general_credits += getattr(extra, 'general_credits', 0)
+            version_credits += getattr(extra, 'version_credits', 0)
+    except Exception:
+        pass
+    return {
+        'general_credits': general_credits,
+        'version_credits': version_credits
+    }
+
 def billing_page(request):
     """
     Render the billing page with pricing information.
@@ -1612,13 +1636,20 @@ def billing_page(request):
     # Convert pricing data to JSON for the React component
     pricing_json = json.dumps(pricing_data)
     payment_method_json = json.dumps(payment_method_data)
+
+    # Recuperar usage combinando créditos de AdRequestUsage y ExtraCredit
+    usage = get_user_credits(request.user) if request.user.is_authenticated else {"general_credits": 0, "version_credits": 0}
+    usage_json = json.dumps(usage)
+
     print(f"Pricing data: {pricing_json}")
     print(f"Payment method data: {payment_method_json}")
-        
+    print(f"Usage: {usage_json}")
+
     return render(request, 'ads/billing.html', {
         "active_tab": "billing",
         "pricing_data": pricing_json,
-        "payment_method_data": payment_method_json
+        "payment_method_data": payment_method_json,
+        "usage_data": usage_json
     })
 
 
