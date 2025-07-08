@@ -1362,15 +1362,17 @@ def adrequest_details_page(request, adrequest_id):
 def get_user_credits(user):
     """
     Suma los créditos generales y de versión de AdRequestUsage y ExtraCredit para el usuario.
-    Devuelve: dict con general_credits y version_credits
+    Devuelve: dict con general_credits, version_credits, max_general_credits, max_version_credits
     """
     general_credits = 0
     version_credits = 0
+    plan_type = None
     try:
         usage = AdRequestUsage.objects.filter(user=user).order_by('-billing_period_start').first()
         if usage:
             general_credits += getattr(usage, 'general_credits', 0)
             version_credits += getattr(usage, 'version_credits', 0)
+            plan_type = getattr(usage, 'plan_type', None)
     except Exception:
         pass
     try:
@@ -1380,10 +1382,18 @@ def get_user_credits(user):
             version_credits += getattr(extra, 'version_credits', 0)
     except Exception:
         pass
+    # Obtener los límites del plan
+    from apps.ads.models import AppConfiguration
+    limits = AppConfiguration.get_limits()
+    limits_key = str(plan_type).lower() if plan_type and str(plan_type).lower() in limits else 'default'
+    plan_limits = limits.get(limits_key, limits['default'])
     return {
         'general_credits': general_credits,
-        'version_credits': version_credits
+        'version_credits': version_credits,
+        'max_general_credits': plan_limits['general_credits'],
+        'max_version_credits': plan_limits['version_credits']
     }
+
 
 def billing_page(request):
     """

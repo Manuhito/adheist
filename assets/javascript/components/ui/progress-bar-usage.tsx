@@ -55,17 +55,24 @@ const Progress = React.forwardRef<
 ));
 Progress.displayName = ProgressPrimitive.Root.displayName;
 
-export default function ProgressBarUsage() {
+interface ProgressBarUsageProps {
+  label: string;
+  credits: number;
+  maxCredits: number;
+}
+
+export default function ProgressBarUsage({ label, credits, maxCredits }: ProgressBarUsageProps) {
+  const percentage = maxCredits > 0 ? (credits / maxCredits) * 100 : 0;
   return (
     <div className="w-full">
       <Card className="w-full py-4">
         <CardContent>
-          <dt className="text-sm text-muted-foreground">Credits</dt>
-          <dd className="text-2xl font-semibold text-foreground">$672</dd>
-          <Progress value={67.2} className="mt-6 h-2" />
+          <dt className="text-sm text-muted-foreground">{label}</dt>
+          <dd className="text-2xl font-semibold text-foreground">{credits}</dd>
+          <Progress value={percentage} className="mt-6 h-2" />
           <dd className="mt-2 flex items-center justify-between text-sm">
-            <span className="text-primary">67.2%</span>
-            <span className="text-muted-foreground">$672 of $1,000</span>
+            <span className="text-primary">{percentage.toFixed(1)}%</span>
+            <span className="text-muted-foreground">{credits} of {maxCredits} credits</span>
           </dd>
         </CardContent>
       </Card>

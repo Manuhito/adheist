@@ -124,8 +124,20 @@ export function BillingPage({ pricingData, onSubscribe }) {
       {/* Solo mostrar las secciones adicionales si el usuario tiene una suscripción activa */}
       {hasActiveSubscription && (
         <>
+          {/* Sección de créditos */}
+          <div className="flex flex-col gap-4 mb-6">
+            <ProgressBarUsage
+              label={t('billing.general_credits', 'General credits')}
+              credits={window.__USAGE_DATA__?.general_credits || 0}
+              maxCredits={window.__USAGE_DATA__?.max_general_credits || 1}
+            />
+            <ProgressBarUsage
+              label={t('billing.version_credits', 'Version credits')}
+              credits={window.__USAGE_DATA__?.version_credits || 0}
+              maxCredits={window.__USAGE_DATA__?.max_version_credits || 1}
+            />
+          </div>
           {/* Sección de método de pago */}
-          <ProgressBarUsage />
           <PaymentMethodSection paymentMethodData={paymentMethodData} />
           
           {/* Sección de facturas */}
