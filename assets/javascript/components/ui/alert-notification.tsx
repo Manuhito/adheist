@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Alert } from "./alert";
 import { AlertCircle, X } from "lucide-react";
 
@@ -16,14 +16,39 @@ export const AlertNotification: React.FC<AlertNotificationProps> = ({
   onClose,
 }) => {
   const [visible, setVisible] = useState(true);
+  const [progress, setProgress] = useState(100);
+  const progressIntervalRef = useRef<number | null>(null);
 
   useEffect(() => {
+    // Set up the timer for closing the notification
     const timer = setTimeout(() => {
       setVisible(false);
       if (onClose) onClose();
     }, duration);
 
-    return () => clearTimeout(timer);
+    // Set up progress bar animation
+    const startTime = Date.now();
+    const updateProgress = () => {
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(0, 100 - (elapsed / duration) * 100);
+      setProgress(remaining);
+
+      if (remaining <= 0) {
+        if (progressIntervalRef.current) {
+          window.clearInterval(progressIntervalRef.current);
+        }
+      }
+    };
+
+    // Update progress every 16ms (roughly 60fps)
+    progressIntervalRef.current = window.setInterval(updateProgress, 16);
+
+    return () => {
+      clearTimeout(timer);
+      if (progressIntervalRef.current) {
+        window.clearInterval(progressIntervalRef.current);
+      }
+    };
   }, [duration, onClose]);
 
   if (!visible) return null;
@@ -34,6 +59,21 @@ export const AlertNotification: React.FC<AlertNotificationProps> = ({
     error: "text-red-500",
     success: "text-emerald-500",
     info: "text-blue-500",
+  };
+  
+  // Get progress bar color based on variant
+  const getProgressBarColor = (variant: string) => {
+    switch (variant) {
+      case "warning":
+        return "bg-amber-500";
+      case "error":
+        return "bg-red-500";
+      case "success":
+        return "bg-emerald-500";
+      case "info":
+      default:
+        return "bg-blue-500";
+    }
   };
 
   return (
@@ -66,7 +106,15 @@ export const AlertNotification: React.FC<AlertNotificationProps> = ({
           </button>
         }
       >
-        <p className="text-sm">{message}</p>
+        <div className="flex flex-col w-full relative">
+          <p className="text-sm mb-1">{message}</p>
+          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-200 dark:bg-gray-700 overflow-hidden">
+            <div 
+              className={`h-full ${getProgressBarColor(variant)} transition-all ease-linear`}
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
       </Alert>
     </div>
   );
