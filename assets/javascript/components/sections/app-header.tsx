@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Drawer from "@/components/drawer";
+import UserDrawer from "@/components/user-drawer";
 import { Icons } from "@/components/icons";
 import { ThemeSwitch } from "@/components/theme-switch";
 import { buttonVariants, Button } from "@/components/ui/button";
@@ -60,16 +61,6 @@ export default function AppHeader() {
         <div className="hidden lg:block">
           <div className="flex items-center">
             <div className="flex items-center gap-4">
-              <a
-                href="/blog"
-                target="_arya"
-                className={cn(
-                  buttonVariants({ variant: "ghost", size: "sm" }),
-                  "font-medium"
-                )}
-              >
-                {t('app_header.blog', 'Blog')}
-              </a>
               <a
                 href="/pricing"
                 className={cn(
@@ -170,8 +161,8 @@ export default function AppHeader() {
           </div>
         </div>
 
-        <div className="lg:hidden">
-          <Drawer />
+        <div className="lg:hidden flex items-center gap-4">
+          <UserDrawer />
         </div>
       </div>
       <div

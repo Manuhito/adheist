@@ -196,7 +196,7 @@ export const FilterFormComponent = ({
                           field.value.includes(tag.value)
                         )}
                         options={availableTags}
-                        placeholder={t('filter.select_tags', 'Select Ad description Keywords')}
+                        placeholder={t('filter.select_tags', 'Search by Ad description Keywords')}
                         emptyIndicator={
                           isLoading ? (
                             <p className="text-center text-sm">{t('filter.loading_tags', 'Loading tags...')}</p>

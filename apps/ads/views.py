@@ -20,7 +20,7 @@ import os
 from django.conf import settings
 import posthog
 
-from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion
+from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion, AdRequestUsage, ExtraCredit
 from .forms import AdLibraryForm
 from .services import can_create_ad_request, use_credit, can_create_ad_request_version, get_ad_request_version_limit, use_general_credit, use_version_credit, can_create_ad_version
 import boto3
@@ -1320,7 +1320,28 @@ def adrequest_details_page(request, adrequest_id):
     
     # Add asset overrides if available
     if ad_request.asset_overrides:
-        adrequest_data['asset_overrides'] = ad_request.asset_overrides
+        # Create a copy of asset_overrides to avoid modifying the original
+        asset_overrides = dict(ad_request.asset_overrides)
+        
+        # Add image URLs to asset_overrides
+        if ad_request.logo_override and hasattr(ad_request.logo_override, 'url'):
+            asset_overrides['logo_url'] = ad_request.logo_override.url
+            
+        # Add product images URLs
+        if ad_request.product_image_1_override and hasattr(ad_request.product_image_1_override, 'url'):
+            asset_overrides['product_image_1_url'] = ad_request.product_image_1_override.url
+            
+        if ad_request.product_image_2_override and hasattr(ad_request.product_image_2_override, 'url'):
+            asset_overrides['product_image_2_url'] = ad_request.product_image_2_override.url
+            
+        # Add app images URLs
+        if ad_request.app_image_1_override and hasattr(ad_request.app_image_1_override, 'url'):
+            asset_overrides['app_image_1_url'] = ad_request.app_image_1_override.url
+            
+        if ad_request.app_image_2_override and hasattr(ad_request.app_image_2_override, 'url'):
+            asset_overrides['app_image_2_url'] = ad_request.app_image_2_override.url
+        
+        adrequest_data['asset_overrides'] = asset_overrides
     
     # Convert to JSON for the template
     adrequest_json = json.dumps(adrequest_data)
@@ -1338,8 +1359,46 @@ def adrequest_details_page(request, adrequest_id):
         
     return TemplateResponse(request, template, context)
 
-@ensure_csrf_cookie
-@login_required
+def get_user_credits(user):
+    """
+    Suma los créditos generales y de versión de AdRequestUsage y ExtraCredit para el usuario.
+    Devuelve: dict con general_credits, version_credits, max_general_credits, max_version_credits
+    """
+    general_credits = 0
+    version_credits = 0
+    plan_type = None
+    try:
+        usage = AdRequestUsage.objects.filter(user=user).order_by('-billing_period_start').first()
+        if usage:
+            general_credits += getattr(usage, 'general_credits', 0)
+            version_credits += getattr(usage, 'version_credits', 0)
+            plan_type = getattr(usage, 'plan_type', None)
+    except Exception:
+        pass
+    extra_general_credits = 0
+    extra_version_credits = 0
+    try:
+        extra = ExtraCredit.objects.filter(user=user).first()
+        if extra:
+            extra_general_credits = getattr(extra, 'general_credits', 0)
+            extra_version_credits = getattr(extra, 'version_credits', 0)
+    except Exception:
+        pass
+    # Obtener los límites del plan
+    from apps.ads.models import AppConfiguration
+    limits = AppConfiguration.get_limits()
+    limits_key = str(plan_type).lower() if plan_type and str(plan_type).lower() in limits else 'default'
+    plan_limits = limits.get(limits_key, limits['default'])
+    return {
+        'general_credits': general_credits,
+        'version_credits': version_credits,
+        'max_general_credits': plan_limits['general_credits'],
+        'max_version_credits': plan_limits['version_credits'],
+        'extra_general_credits': extra_general_credits,
+        'extra_version_credits': extra_version_credits
+    }
+
+
 def billing_page(request):
     """
     Render the billing page with pricing information.
@@ -1591,13 +1650,20 @@ def billing_page(request):
     # Convert pricing data to JSON for the React component
     pricing_json = json.dumps(pricing_data)
     payment_method_json = json.dumps(payment_method_data)
+
+    # Recuperar usage combinando créditos de AdRequestUsage y ExtraCredit
+    usage = get_user_credits(request.user) if request.user.is_authenticated else {"general_credits": 0, "version_credits": 0}
+    usage_json = json.dumps(usage)
+
     print(f"Pricing data: {pricing_json}")
     print(f"Payment method data: {payment_method_json}")
-        
+    print(f"Usage: {usage_json}")
+
     return render(request, 'ads/billing.html', {
         "active_tab": "billing",
         "pricing_data": pricing_json,
-        "payment_method_data": payment_method_json
+        "payment_method_data": payment_method_json,
+        "usage_data": usage_json
     })
 
 

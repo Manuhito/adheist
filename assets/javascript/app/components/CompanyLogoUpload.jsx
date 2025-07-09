@@ -22,6 +22,7 @@ export function CompanyLogoUpload({ onUpload, className, initialImage, ...props 
           className="border"
           initialImage={initialImage}
           style={{ maxWidth: "250px", margin: 0 }}
+          showFileInfo={false}
           {...props}
         />
       </div>

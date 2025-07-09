@@ -23,4 +23,5 @@ urlpatterns = [
         name="shadcn",
     ),
     path("pricing/", views.pricing_page, name="pricing_page"),
+    path("faq/", views.faq_page, name="faq_page"),
 ]
