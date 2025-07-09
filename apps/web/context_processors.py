@@ -218,7 +218,7 @@ def translations(request):
             'ad_requests.industries': _('Industries'),
             'ad_requests.no_industries': _('No associated industries'),
             'ad_requests.view_details': _('View details'),
-            'ad_requests.wait_processing': _('This image is currently generating. Please wait for it to be processed.'),
+            'ad_requests.wait_processing': _('Your image is being generated and may take a few minutes to be available.'),
             'ad_requests.error_creating': _('Error creating ad request. Please try again.'),
             'ad_requests.success_message': _('Your ad request has been processed successfully! Your ad is being generated and may take a few minutes to be available.'),
             'ad_requests.create_new': _('Create New Ad Request'),

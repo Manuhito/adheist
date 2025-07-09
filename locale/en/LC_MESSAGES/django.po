@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-07-08 21:34+0000\n"
+"POT-Creation-Date: 2025-07-09 15:26+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -679,7 +679,8 @@ msgid "View details"
 msgstr ""
 
 #: apps/web/context_processors.py:221
-msgid "This image is currently generating. Please wait for it to be processed."
+msgid ""
+"Your image is being generated and may take a few minutes to be available."
 msgstr ""
 
 #: apps/web/context_processors.py:222

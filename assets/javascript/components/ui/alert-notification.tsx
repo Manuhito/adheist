@@ -37,7 +37,7 @@ export const AlertNotification: React.FC<AlertNotificationProps> = ({
   };
 
   return (
-    <div className="fixed top-4 right-4 z-50 animate-in fade-in slide-in-from-top-5">
+    <div className="fixed bottom-6 right-6 z-50 animate-in fade-in slide-in-from-bottom-5">
       <Alert
         layout="row"
         isNotification

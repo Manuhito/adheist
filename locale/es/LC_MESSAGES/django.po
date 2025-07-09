@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-07-08 21:34+0000\n"
+"POT-Creation-Date: 2025-07-09 15:26+0000\n"
 "PO-Revision-Date: 2025-04-30 00:00+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Spanish <LL@li.org>\n"
@@ -708,10 +708,8 @@ msgid "View details"
 msgstr "Ver detalles"
 
 #: apps/web/context_processors.py:221
-msgid "This image is currently generating. Please wait for it to be processed."
-msgstr ""
-"Esta imagen está actualmente generando. Por favor, espera a que sea "
-"procesada."
+msgid "Your image is being generated and may take a few minutes to be available."
+msgstr "Tu imagen está siendo generada y puede tardar unos minutos en estar disponible."
 
 #: apps/web/context_processors.py:222
 msgid "Error creating ad request. Please try again."
@@ -1452,7 +1450,9 @@ msgstr "Imagen del anuncio generada"
 
 #: apps/web/context_processors.py:474
 msgid "No version with generated image found for this ad request."
-msgstr "No se encontró ninguna versión con la imagen generada para esta solicitud de anuncio."
+msgstr ""
+"No se encontró ninguna versión con la imagen generada para esta solicitud de "
+"anuncio."
 
 #: templates/400.html:4
 msgid "Shucks. That was a bad request."
@@ -2318,6 +2318,12 @@ msgstr ""
 "class=\"font-medium\">%(end)s</span> de <span class=\"font-"
 "medium\">%(total)s</span> resultados\n"
 "        "
+
+#~ msgid ""
+#~ "This image is currently generating. Please wait for it to be processed."
+#~ msgstr ""
+#~ "Esta imagen está actualmente generando. Por favor, espera a que sea "
+#~ "procesada."
 
 #~ msgid ""
 #~ "\n"
