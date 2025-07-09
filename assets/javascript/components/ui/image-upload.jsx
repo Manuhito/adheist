@@ -14,6 +14,7 @@ export function ImageUpload({
   customPlaceholderText = "Click to select",
   customDragDropText,
   initialImage = null,
+  showFileInfo = true,
   ...props 
 }) {
   const { t } = useTranslation();
@@ -136,7 +137,7 @@ export function ImageUpload({
               </Button>
             </div>
           </div>
-          {fileName && (
+          {fileName && showFileInfo && (
             <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
               <span className="truncate">{fileName}</span>
               <button
