@@ -1,5 +1,6 @@
 from django import template
 from django.template.defaultfilters import date as date_filter
+import json
 
 register = template.Library()
 
@@ -26,7 +27,7 @@ def serialize_blog_posts(posts):
             'slug': post.slug,
             'image': image_url
         })
-    return serialized_posts
+    return json.dumps(serialized_posts)
 
 @register.filter
 def serialize_blog_post(post):
@@ -37,7 +38,7 @@ def serialize_blog_post(post):
         if gallery.exists():
             image_url = gallery.first().image.get_rendition('original').url
 
-    return {
+    return json.dumps({
         'metadata': {
             'title': post.title,
             'publishedAt': date_filter(post.first_published_at, 'Y-m-d'),
@@ -47,4 +48,4 @@ def serialize_blog_post(post):
         },
         'slug': post.slug,
         'source': str(post.body)
-    }
+    })
