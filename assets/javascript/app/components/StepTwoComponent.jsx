@@ -855,7 +855,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
                     </div>
                     <hr className="my-6 opacity-0" />
                     {/* Canvas Size */}
-                    <div className="flex flex-col items-center text-center">
+                    <div className="flex-col items-center text-center">
                       <div className="mb-2">
                         {(() => {
                           const canvasSizes = [
@@ -869,16 +869,16 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
                             return (
                               <div className="flex flex-col items-center">
                                 {item.id === "1024x1024" && (
-                                  <div className="w-full max-w-[600px] aspect-square border-2 border-gray-300 rounded-sm mb-2 mx-auto" />
+                                  <div className="w-full max-w-[100px] aspect-square border-2 border-gray-300 rounded-sm mb-2 mx-auto" />
                                 )}
                                 {item.id === "1536x1024" && (
-                                  <div className="w-full max-w-[600px] aspect-[3/2] border-2 border-gray-300 rounded-sm mb-2 mx-auto" />
+                                  <div className="w-full max-w-[100px] aspect-[3/2] border-2 border-gray-300 rounded-sm mb-2 mx-auto" />
                                 )}
                                 {item.id === "1024x1536" && (
-                                  <div className="w-full max-w-[600px] aspect-[2/3] border-2 border-gray-300 rounded-sm mb-2 mx-auto" />
+                                  <div className="w-full max-w-[100px] aspect-[2/3] border-2 border-gray-300 rounded-sm mb-2 mx-auto" />
                                 )}
                                 {item.id === "auto" && (
-                                  <div className="w-full max-w-[600px] aspect-square border-2 border-dashed border-gray-300 rounded-full flex items-center justify-center mb-2 text-xs text-gray-400 mx-auto">{t('step_one.auto', 'Auto')}</div>
+                                  <div className="w-full max-w-[100px] aspect-square border-2 border-dashed border-gray-300 rounded-full flex items-center justify-center mb-2 text-xs text-gray-400 mx-auto">{t('step_one.auto', 'Auto')}</div>
                                 )}
                                 <span className="font-semibold text-xs">{item.label}</span>
                                 <span className="text-xs text-gray-500">{item.size}</span>
@@ -886,8 +886,8 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
                             );
                           } else {
                             return (
-                              <div className="flex flex-col items-center w-full max-w-[600px] mx-auto">
-                                <div className="w-full max-w-[600px] aspect-square border-2 border-dashed border-gray-200 rounded-sm mb-2 flex items-center justify-center text-xs text-gray-400">?</div>
+                              <div className="flex flex-col items-center">
+                                <div className="w-full max-w-[100px] aspect-square border-2 border-dashed border-gray-200 rounded-sm mb-2 flex items-center justify-center text-xs text-gray-400">?</div>
                                 <span className="font-semibold text-xs text-gray-400">{t('step_two.unknown', 'Unknown')}</span>
                                 <span className="text-xs text-gray-400">{initialData.canvas_size || t('step_two.not_specified', 'Not specified')}</span>
                               </div>
