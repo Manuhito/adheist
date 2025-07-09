@@ -5,6 +5,10 @@ Usage:
     python manage.py shell
     >>> from apps.blog.examples import create_example_blog_post
     >>> create_example_blog_post()
+    
+    # To test API integration:
+    >>> from apps.blog.examples import test_api_integration
+    >>> test_api_integration(max_posts=2)  # Limit to 2 posts for testing
 """
 from datetime import date
 
@@ -12,7 +16,7 @@ from django.core.files.base import ContentFile
 from django.core.files.images import ImageFile
 from wagtail.images.models import Image
 
-from apps.blog.api_utils import create_blog_post, upload_image_for_blog
+from apps.blog.api_utils import create_blog_post, upload_image_for_blog, import_posts_from_api, fetch_posts_from_api
 
 
 def create_example_blog_post():
@@ -101,3 +105,41 @@ def create_blog_post_with_image():
     print(f"Created blog post with image: {post.title}")
     print(f"URL: /blog/{post.slug}/")
     return post
+
+
+def test_api_integration(max_posts: int = None):
+    """Test fetching and importing blog posts from the external CMS API.
+    
+    Args:
+        max_posts: Maximum number of posts to import (None for all)
+    
+    Returns:
+        List of created blog posts
+    """
+    print("Testing API integration...")
+    
+    try:
+        # First, just try to fetch the data to verify API connectivity
+        print("Fetching posts from API...")
+        posts_data = fetch_posts_from_api()
+        print(f"Successfully fetched {len(posts_data)} posts from API")
+        
+        # Print the first post's title for verification
+        if posts_data:
+            first_post = posts_data[0]
+            print(f"First post title: {first_post.get('title')}")
+            print(f"First post excerpt: {first_post.get('excerpt', '')[:100]}...")
+        
+        # Now import the posts
+        print("\nImporting posts to the blog...")
+        created_posts = import_posts_from_api(max_posts=max_posts)
+        
+        print(f"\nSuccessfully imported {len(created_posts)} posts")
+        for post in created_posts:
+            print(f"- {post.title} (URL: /blog/{post.slug}/)")
+        
+        return created_posts
+        
+    except Exception as e:
+        print(f"Error during API integration test: {str(e)}")
+        return []

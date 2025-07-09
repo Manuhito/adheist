@@ -1,8 +1,11 @@
 """
 Utility functions for programmatically creating and managing blog posts via the Wagtail API.
 """
+import json
+import os
+import requests
 from datetime import date
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, Any
 
 from django.conf import settings
 from django.core.files.images import ImageFile
@@ -265,3 +268,229 @@ def update_blog_post(
         revision.publish()
     
     return blog_post
+
+
+def fetch_posts_from_api() -> List[Dict[str, Any]]:
+    """
+    Fetch blog posts from the external CMS API.
+    
+    Returns:
+        List of blog post data dictionaries from the API
+    
+    Raises:
+        Exception: If API request fails or response is invalid
+    """
+    endpoint = os.environ.get('CMS_BLOG_ENDPOINT')
+    api_key = os.environ.get('CMS_BLOG_KEY')
+    
+    if not endpoint or not api_key:
+        raise ValueError("CMS_BLOG_ENDPOINT and CMS_BLOG_KEY environment variables must be set")
+    
+    headers = {
+        'x-api-key': api_key
+    }
+    
+    try:
+        response = requests.get(endpoint, headers=headers)
+        response.raise_for_status()  # Raise exception for 4XX/5XX responses
+        
+        # Parse JSON response
+        posts_data = response.json()
+        
+        # Validate response is a list
+        if not isinstance(posts_data, list):
+            raise ValueError(f"Expected a list of posts, got {type(posts_data)}")
+            
+        return posts_data
+    
+    except requests.RequestException as e:
+        raise Exception(f"API request failed: {str(e)}")
+    except json.JSONDecodeError:
+        raise Exception("Invalid JSON response from API")
+
+
+def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
+    """
+    Import blog posts from the external CMS API and create them in the system.
+    
+    Args:
+        max_posts: Maximum number of posts to import (None for all)
+        
+    Returns:
+        List of created BlogPage instances
+    """
+    # Fetch posts from API
+    posts_data = fetch_posts_from_api()
+    
+    # Limit number of posts if specified
+    if max_posts is not None:
+        posts_data = posts_data[:max_posts]
+    
+    created_posts = []
+    
+    # Find the blog index page to add posts to
+    blog_index = None
+    try:
+        from apps.blog.models import BlogIndexPage
+        blog_index = BlogIndexPage.objects.live().first()
+        if not blog_index:
+            print("No blog index page found. Cannot import posts.")
+            return []
+    except Exception as e:
+        print(f"Error finding blog index page: {e}")
+        return []
+    
+    # Process each post
+    for post_data in posts_data:
+        try:
+            # Extract required fields from the API response
+            title = post_data.get('title')
+            if not title:
+                print("Skipping post: missing title")
+                continue
+                
+            # Get intro/excerpt (limited to 250 chars)
+            intro = post_data.get('excerpt', '')[:250]
+            
+            # Get content
+            content = post_data.get('content', '')
+            if not content:
+                print(f"Skipping post '{title}': missing content")
+                continue
+            
+            # Create a simple slug if not provided
+            slug = post_data.get('slug')
+            if not slug:
+                slug = title.lower().replace(' ', '-')[:30]
+            
+            # Parse publication date if available
+            publication_date = None
+            date_str = post_data.get('date')
+            if date_str:
+                try:
+                    from datetime import datetime
+                    # Try common date formats
+                    for fmt in ['%Y-%m-%d', '%Y-%m-%dT%H:%M:%S', '%Y-%m-%d %H:%M:%S']:
+                        try:
+                            dt = datetime.strptime(date_str, fmt)
+                            publication_date = dt.date()
+                            break
+                        except ValueError:
+                            continue
+                except Exception as e:
+                    print(f"Error parsing date '{date_str}': {e}")
+            
+            # Create body content with intro and content
+            body_content = [
+                {
+                    "type": "paragraph",
+                    "value": f"<p>{intro}</p>"
+                },
+                {
+                    "type": "paragraph",
+                    "value": f"<p>{content}</p>"
+                },
+            ]
+            
+            # Check if the post has a cover image in the API response
+            post_image = None
+            cover_image_url = post_data.get('coverImage')
+            
+            if cover_image_url:
+                # If we have a cover image URL, try to download it
+                try:
+                    print(f"Downloading cover image from {cover_image_url}")
+                    response = requests.get(cover_image_url, stream=True)
+                    if response.status_code == 200:
+                        # Create a unique name based on the post title
+                        image_name = f"{slug}.jpg"
+                        image_title = f"Cover for {title[:30]}"
+                        
+                        # Create and save the image
+                        from django.core.files.base import ContentFile
+                        image_content = ContentFile(response.content, name=image_name)
+                        post_image = upload_image_for_blog(image_content, image_title)
+                        print(f"Successfully downloaded cover image for '{title}'")
+                except Exception as e:
+                    print(f"Failed to download cover image: {e}")
+                    post_image = None
+            
+            # If no cover image or download failed, use the app logo
+            if not post_image:
+                try:
+                    print(f"Using app logo for post '{title}'")
+                    logo_path = "static/images/web/logo-adheist.png"
+                    
+                    # Create a unique title for this instance of the logo
+                    image_title = f"Logo for {title[:30]}"
+                    
+                    # Open and upload the logo file
+                    from django.core.files.images import ImageFile
+                    with open(logo_path, "rb") as f:
+                        post_image = upload_image_for_blog(ImageFile(f), image_title)
+                    print(f"Successfully used app logo for '{title}'")
+                except Exception as e:
+                    print(f"Error using app logo: {e}")
+                    # If we can't use the app logo, we can't create the post
+                    raise e
+            
+            # Debug the image object
+            print(f"Image object type: {type(post_image)}")
+            print(f"Image object ID: {post_image.id if post_image else 'None'}")
+            
+            # Add image to body content directly
+            if post_image:
+                print("Adding image to body content")
+                body_content.append({
+                    "type": "image",
+                    "value": post_image  # Pass the image object directly, not in a dict
+                })
+            
+            # Create the blog post WITHOUT gallery images first
+            try:
+                # First create the post without gallery images
+                post = create_blog_post(
+                    title=title,
+                    intro=intro,
+                    body_content=body_content,
+                    publication_date=publication_date,
+                    parent_page=blog_index,
+                    auto_publish=True,
+                    # No gallery_images parameter
+                )
+                
+                # Then add the gallery image separately
+                from apps.blog.models import BlogPageGalleryImage
+                BlogPageGalleryImage.objects.create(
+                    page=post,
+                    image=post_image,
+                    caption=f"Featured image for {title}"
+                )
+                
+                print(f"Created blog post and added image separately: {title}")
+            except Exception as e:
+                print(f"Error creating blog post: {e}")
+                # Try alternative approach
+                print("Trying alternative approach...")
+                
+                # Create the blog post with gallery images parameter
+                post = create_blog_post(
+                    title=title,
+                    intro=intro,
+                    body_content=body_content,
+                    publication_date=publication_date,
+                    parent_page=blog_index,
+                    auto_publish=True,
+                    gallery_images=[{
+                        "image": post_image,
+                        "caption": f"Featured image for {title}"
+                    }]
+                )
+            
+            created_posts.append(post)
+            print(f"Created blog post: {post.title} (ID: {post.id})")
+            
+        except Exception as e:
+            print(f"Error processing post: {e}")
+    
+    return created_posts
