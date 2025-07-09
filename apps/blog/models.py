@@ -92,35 +92,35 @@ class BlogPageGalleryImage(Orderable):
 
 class BlogApiConfig(models.Model):
     """
-    Configuración para la API externa de blog
+    Configuration for the external blog API
     """
     api_endpoint = models.URLField(
-        verbose_name=_("URL del endpoint de la API"),
-        help_text=_("URL completa del endpoint de la API externa")
+        verbose_name=_("API endpoint URL"),
+        help_text=_("Complete URL of the external API endpoint")
     )
     api_key = models.CharField(
         max_length=255, 
-        verbose_name=_("Clave de API"),
-        help_text=_("Clave de autenticación para la API externa")
+        verbose_name=_("API Key"),
+        help_text=_("Authentication key for the external API")
     )
     last_import = models.DateTimeField(
         null=True, 
         blank=True,
-        verbose_name=_("Última importación"),
-        help_text=_("Fecha y hora de la última importación exitosa")
+        verbose_name=_("Last import"),
+        help_text=_("Date and time of the last successful import")
     )
     
     class Meta:
-        verbose_name = _("Configuración de API de Blog")
-        verbose_name_plural = _("Configuración de API de Blog")
+        verbose_name = _("Blog API Configuration")
+        verbose_name_plural = _("Blog API Configuration")
     
     def __str__(self):
-        return "Configuración de API de Blog"
+        return "Blog API Configuration"
     
     def save(self, *args, **kwargs):
-        # Asegurar que solo exista una instancia
+        # Ensure only one instance exists
         if not self.pk and BlogApiConfig.objects.exists():
-            raise ValidationError(_("Ya existe una configuración. Solo puede haber una configuración a la vez."))
+            raise ValidationError(_("A configuration already exists. Only one configuration can exist at a time."))
         super().save(*args, **kwargs)
         
     @classmethod

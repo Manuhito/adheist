@@ -17,24 +17,24 @@ class BlogApiConfigAdmin(admin.ModelAdmin):
         (None, {
             'fields': ('api_endpoint', 'api_key')
         }),
-        ('Información', {
+        ('Information', {
             'fields': ('last_import', 'import_button')
         }),
     )
     
     def has_add_permission(self, request):
-        # Solo permitir crear una instancia si no existe ninguna
+        # Only allow creating an instance if none exists
         return not BlogApiConfig.objects.exists()
     
     def has_delete_permission(self, request, obj=None):
-        # No permitir eliminar la configuración
+        # Do not allow deleting the configuration
         return False
     
     def import_button(self, obj):
         if obj and obj.pk:
             url = reverse('admin:import_blog_posts', args=[obj.pk])
             return format_html(
-                '<a class="button" href="{}">Importar Posts</a>',
+                '<a class="button" href="{}">Import Posts</a>',
                 url
             )
         return ""
@@ -52,7 +52,7 @@ class BlogApiConfigAdmin(admin.ModelAdmin):
         return custom_urls + urls
     
     def import_posts_view(self, request, config_id):
-        """Vista para importar posts desde la API externa"""
+        """View to import posts from the external API"""
         config = BlogApiConfig.objects.get(pk=config_id)
         
         try:
@@ -63,19 +63,19 @@ class BlogApiConfigAdmin(admin.ModelAdmin):
             config.last_import = timezone.now()
             config.save(update_fields=['last_import'])
             
-            # Mensaje de éxito
+            # Success message
             messages.success(
                 request, 
-                f'Se importaron {len(created_posts)} posts correctamente.'
+                f'Successfully imported {len(created_posts)} posts.'
             )
         except Exception as e:
-            # Mensaje de error
+            # Error message
             messages.error(
                 request, 
-                f'Error al importar posts: {str(e)}'
+                f'Error importing posts: {str(e)}'
             )
         
-        # Redireccionar de vuelta a la vista de detalle
+        # Redirect back to the detail view
         return HttpResponseRedirect(
             reverse('admin:blog_blogapiconfig_change', args=[config_id])
         )

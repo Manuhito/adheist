@@ -332,23 +332,23 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
             # Get intro/excerpt (limited to 250 chars)
             intro = post_data.get('excerpt', '')
             
-            # Si el excerpt está vacío, generar uno a partir del contenido
+            # If excerpt is empty, generate one from the content
             if not intro:
                 content_text = post_data.get('content', '')
                 if content_text:
-                    # Eliminar etiquetas HTML básicas para obtener texto plano
+                    # Remove basic HTML tags to get plain text
                     import re
                     clean_content = re.sub(r'<[^>]+>', '', content_text)
-                    # Usar las primeras 250 caracteres como intro
+                    # Use the first 250 characters as intro
                     intro = clean_content[:250].strip()
-                    print(f"Generando intro a partir del contenido para '{title}': {intro[:50]}...")
+                    print(f"Generating intro from content for '{title}': {intro[:50]}...")
                 
-            # Si aún no tenemos intro, usar el título como fallback
+            # If we still don't have an intro, use the title as fallback
             if not intro:
-                intro = f"Artículo sobre {title}"
-                print(f"Usando título como intro para '{title}'")
+                intro = f"Article about {title}"
+                print(f"Using title as intro for '{title}'")
             
-            # Limitar a 250 caracteres
+            # Limit to 250 characters
             intro = intro[:250]
             
             # Get content
