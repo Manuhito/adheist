@@ -15,41 +15,8 @@ from wagtail.rich_text import RichText
 from apps.blog.models import BlogIndexPage, BlogPage, BlogPageGalleryImage
 
 
-def get_default_image() -> Image:
-    """
-    Returns the default image to use for blog posts when no image is provided.
-    By default, uses the site's favicon or a placeholder image.
-    
-    Returns:
-        Wagtail Image instance
-    """
-    # Try to get the site favicon as default image
-    try:
-        # Look for an existing default image first
-        default_image = Image.objects.filter(title="Default Blog Image").first()
-        if default_image:
-            return default_image
-            
-        # If no default image exists, try to use the favicon
-        favicon_path = getattr(settings, 'FAVICON_PATH', None)
-        if favicon_path:
-            with open(favicon_path, 'rb') as f:
-                image_file = ImageFile(f)
-                default_image = Image(
-                    title="Default Blog Image",
-                    file=image_file,
-                )
-                default_image.save()
-                return default_image
-    except Exception as e:
-        # If any error occurs, we'll fall back to a placeholder
-        pass
-        
-    # If we can't find or create a default image, raise an error
-    raise ValueError(
-        "No default image available. Please provide at least one image for the blog post "
-        "or configure a default image in settings."
-    )
+# Función get_default_image eliminada - Ya no se utiliza
+# La UI ahora muestra una imagen por defecto para posts sin imágenes
 
 
 def create_blog_post(
@@ -149,18 +116,19 @@ def create_blog_post(
                     image=image,
                     caption=caption
                 )
-    else:
-        # If no gallery images were provided, add a default image
-        try:
-            default_image = get_default_image()
-            BlogPageGalleryImage.objects.create(
-                page=blog_post,
-                image=default_image,
-                caption="Default Image"
-            )
-        except ValueError as e:
-            # If we can't get a default image and none was provided, raise an error
-            raise ValueError(f"Image is mandatory for blog posts: {str(e)}")
+    # No añadir imagen por defecto, la UI se encargará de mostrar una imagen por defecto cuando sea necesario
+    # else:
+    #     # If no gallery images were provided, add a default image
+    #     try:
+    #         default_image = get_default_image()
+    #         BlogPageGalleryImage.objects.create(
+    #             page=blog_post,
+    #             image=default_image,
+    #             caption="Default Image"
+    #         )
+    #     except ValueError as e:
+    #         # If we can't get a default image and none was provided, raise an error
+    #         raise ValueError(f"Image is mandatory for blog posts: {str(e)}")
     
     # Create a revision
     revision = blog_post.save_revision()
@@ -280,11 +248,23 @@ def fetch_posts_from_api() -> List[Dict[str, Any]]:
     Raises:
         Exception: If API request fails or response is invalid
     """
-    endpoint = os.environ.get('CMS_BLOG_ENDPOINT')
-    api_key = os.environ.get('CMS_BLOG_KEY')
+    # Importamos aquí para evitar importaciones circulares
+    from apps.blog.models import BlogApiConfig
     
-    if not endpoint or not api_key:
-        raise ValueError("CMS_BLOG_ENDPOINT and CMS_BLOG_KEY environment variables must be set")
+    # Intentar obtener la configuración
+    config = BlogApiConfig.get_solo()
+    
+    # Si hay configuración, usar esos valores
+    if config:
+        endpoint = config.api_endpoint
+        api_key = config.api_key
+    else:
+        # Como fallback, intentar usar variables de entorno
+        endpoint = os.environ.get('CMS_BLOG_ENDPOINT')
+        api_key = os.environ.get('CMS_BLOG_KEY')
+        
+        if not endpoint or not api_key:
+            raise ValueError("No hay configuración de API y las variables de entorno CMS_BLOG_ENDPOINT y CMS_BLOG_KEY no están configuradas")
     
     headers = {
         'x-api-key': api_key
@@ -350,7 +330,26 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
                 continue
                 
             # Get intro/excerpt (limited to 250 chars)
-            intro = post_data.get('excerpt', '')[:250]
+            intro = post_data.get('excerpt', '')
+            
+            # Si el excerpt está vacío, generar uno a partir del contenido
+            if not intro:
+                content_text = post_data.get('content', '')
+                if content_text:
+                    # Eliminar etiquetas HTML básicas para obtener texto plano
+                    import re
+                    clean_content = re.sub(r'<[^>]+>', '', content_text)
+                    # Usar las primeras 250 caracteres como intro
+                    intro = clean_content[:250].strip()
+                    print(f"Generando intro a partir del contenido para '{title}': {intro[:50]}...")
+                
+            # Si aún no tenemos intro, usar el título como fallback
+            if not intro:
+                intro = f"Artículo sobre {title}"
+                print(f"Usando título como intro para '{title}'")
+            
+            # Limitar a 250 caracteres
+            intro = intro[:250]
             
             # Get content
             content = post_data.get('content', '')
