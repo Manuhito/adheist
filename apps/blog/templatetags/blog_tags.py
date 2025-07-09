@@ -37,7 +37,7 @@ def serialize_blog_posts(posts):
 def serialize_blog_post(post):
     """Serializes a single blog post for React component consumption"""
     # Imagen por defecto para posts sin imagen
-    default_image = static('images/blog/default-blog-image.jpg')
+    default_image = static('images/blog/default-blog-image.png')
     
     image_url = default_image
     if hasattr(post, 'gallery_images'):
