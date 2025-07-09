@@ -1,5 +1,6 @@
 from django import template
 from django.template.defaultfilters import date as date_filter
+from django.templatetags.static import static
 import json
 
 register = template.Library()
@@ -8,10 +9,13 @@ register = template.Library()
 def serialize_blog_posts(posts):
     """Serializes blog posts for React component consumption"""
     serialized_posts = []
+    # Imagen por defecto para posts sin imagen
+    default_image = static('images/blog/default-blog-image.png')
+    
     for post in posts:
         # Get the specific blog page instance
         post = post.specific
-        image_url = None
+        image_url = default_image
 
         # Safely try to get gallery images
         if hasattr(post, 'gallery_images'):
@@ -32,7 +36,10 @@ def serialize_blog_posts(posts):
 @register.filter
 def serialize_blog_post(post):
     """Serializes a single blog post for React component consumption"""
-    image_url = None
+    # Imagen por defecto para posts sin imagen
+    default_image = static('images/blog/default-blog-image.jpg')
+    
+    image_url = default_image
     if hasattr(post, 'gallery_images'):
         gallery = post.gallery_images.all()
         if gallery.exists():
