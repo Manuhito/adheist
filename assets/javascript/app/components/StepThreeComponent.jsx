@@ -338,46 +338,50 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
               {/* Details Content */}
               <div className="flex-1 w-full">
-                {/* Brand Color Display */}
-                <div className="mb-3">
-
-                  {initialData.asset_overrides?.main_hex_color ? (
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="h-6 w-6 rounded-md border"
-                        style={{ backgroundColor: initialData.asset_overrides.main_hex_color }}
-                      />
+                {/* Brand Details - Horizontal Layout with Wrapping */}
+                <div className="flex flex-wrap gap-4 mb-3">
+                  {/* Brand Color Display */}
+                  <div className="flex-shrink-0">
+                    {initialData.asset_overrides?.main_hex_color ? (
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="h-6 w-6 rounded-md border"
+                          style={{ backgroundColor: initialData.asset_overrides.main_hex_color }}
+                        />
+                        <span className="text-xs">
+                          {initialData.asset_overrides.main_hex_color}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-gray-400">{t('step_three.no_brand_color', 'No brand color')}</span>
+                    )}
+                  </div>
+                  
+                  {/* Company Website Display */}
+                  <div className="flex-shrink-0">
+                    {initialData.asset_overrides?.company_website ? (
+                      <a
+                        href={initialData.asset_overrides.company_website}
+                        className="text-xs text-blue-600 underline break-all"
+                        target="_blank" rel="noopener noreferrer"
+                      >
+                        {initialData.asset_overrides.company_website}
+                      </a>
+                    ) : (
+                      <span className="text-xs text-gray-400">{t('step_three.no_company_website', 'No company website')}</span>
+                    )}
+                  </div>
+                  
+                  {/* Key Benefits Display */}
+                  {initialData.asset_overrides?.key_benefits && (
+                    <div className="flex-shrink-0">
                       <span className="text-xs">
-                        {initialData.asset_overrides.main_hex_color}
+                        {initialData.asset_overrides.key_benefits}
                       </span>
                     </div>
-                  ) : (
-                    <span className="text-xs text-gray-400">{t('step_three.no_brand_color', 'No brand color')}</span>
                   )}
                 </div>
-                {/* Company Website Display */}
-                <div className="mb-3">
-
-                  {initialData.asset_overrides?.company_website ? (
-                    <a
-                      href={initialData.asset_overrides.company_website}
-                      className="text-xs text-blue-600 underline break-all"
-                      target="_blank" rel="noopener noreferrer"
-                    >
-                      {initialData.asset_overrides.company_website}
-                    </a>
-                  ) : (
-                    <span className="text-xs text-gray-400">{t('step_three.no_company_website', 'No company website')}</span>
-                  )}
-                </div>
-                {/* Key Benefits Display */}
-                {initialData.asset_overrides?.key_benefits && (
-  <div className="mb-3">
-    <span className="text-xs">
-      {initialData.asset_overrides.key_benefits}
-    </span>
-  </div>
-) }
+                
                 {/* Canvas Size Display (vertical) */}
                 <div className="mb-2">
 
