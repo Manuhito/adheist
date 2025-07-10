@@ -58,6 +58,7 @@ class BlogPage(Page):
     date = models.DateField("Post date")
     intro = models.CharField(max_length=250)
     body = StreamField(_get_default_block_types())
+    post_id = models.CharField(max_length=100, blank=True, null=True, help_text="ID del post en la API externa")
 
     search_fields = Page.search_fields + [
         index.SearchField("intro"),

@@ -27,6 +27,7 @@ def create_blog_post(
     parent_page=None,
     auto_publish: bool = True,
     gallery_images: Optional[List[Dict]] = None,
+    post_id: Optional[str] = None,
 ) -> BlogPage:
     """
     Create a new blog post programmatically.
@@ -39,6 +40,7 @@ def create_blog_post(
         parent_page: Parent page to add the blog post to (defaults to first BlogIndexPage)
         auto_publish: Whether to automatically publish the page
         gallery_images: List of dicts with 'image' and 'caption' keys
+        post_id: Optional ID from the external API to store for reference
         
     Returns:
         The created BlogPage instance
@@ -99,6 +101,7 @@ def create_blog_post(
         intro=intro,
         date=publication_date,
         body=processed_body,
+        post_id=post_id,
     )
     
     # Add it as a child of the parent page
@@ -248,23 +251,35 @@ def fetch_posts_from_api() -> List[Dict[str, Any]]:
     Raises:
         Exception: If API request fails or response is invalid
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    
     # Importamos aquí para evitar importaciones circulares
-    from apps.blog.models import BlogApiConfig
-    
-    # Intentar obtener la configuración
-    config = BlogApiConfig.get_solo()
-    
-    # Si hay configuración, usar esos valores
-    if config:
-        endpoint = config.api_endpoint
-        api_key = config.api_key
-    else:
-        # Como fallback, intentar usar variables de entorno
-        endpoint = os.environ.get('CMS_BLOG_ENDPOINT')
-        api_key = os.environ.get('CMS_BLOG_KEY')
+    try:
+        from apps.blog.models import BlogApiConfig
         
-        if not endpoint or not api_key:
-            raise ValueError("No hay configuración de API y las variables de entorno CMS_BLOG_ENDPOINT y CMS_BLOG_KEY no están configuradas")
+        # Intentar obtener la configuración
+        config = BlogApiConfig.get_solo()
+        logger.info(f"Found BlogApiConfig: {config is not None}")
+        
+        # Si hay configuración, usar esos valores
+        if config:
+            endpoint = config.api_endpoint
+            api_key = config.api_key
+            logger.info(f"Using API endpoint from config: {endpoint}")
+        else:
+            # Como fallback, intentar usar variables de entorno
+            endpoint = os.environ.get('CMS_BLOG_ENDPOINT')
+            api_key = os.environ.get('CMS_BLOG_KEY')
+            logger.info(f"Using API endpoint from environment: {endpoint}")
+            
+            if not endpoint or not api_key:
+                error_msg = "No hay configuración de API y las variables de entorno CMS_BLOG_ENDPOINT y CMS_BLOG_KEY no están configuradas"
+                logger.error(error_msg)
+                raise ValueError(error_msg)
+    except Exception as e:
+        logger.error(f"Error al obtener la configuración de la API: {str(e)}")
+        raise
     
     headers = {
         'x-api-key': api_key
@@ -329,6 +344,13 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
                 print("Skipping post: missing title")
                 continue
                 
+            # Extract post_id from API
+            post_id = post_data.get('id')
+            if post_id:
+                print(f"Processing post with ID: {post_id}")
+            else:
+                print(f"Warning: Post '{title}' has no ID in API response")
+                
             # Get intro/excerpt (limited to 250 chars)
             intro = post_data.get('excerpt', '')
             
@@ -379,15 +401,15 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
                 except Exception as e:
                     print(f"Error parsing date '{date_str}': {e}")
             
-            # Create body content with intro and content
+            # Create body content with intro as paragraph and content as raw HTML
             body_content = [
                 {
                     "type": "paragraph",
                     "value": f"<p>{intro}</p>"
                 },
                 {
-                    "type": "paragraph",
-                    "value": f"<p>{content}</p>"
+                    "type": "html",
+                    "value": content  # Usar el HTML tal cual, sin envolverlo en <p>
                 },
             ]
             
@@ -445,28 +467,65 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
                     "value": post_image  # Pass the image object directly, not in a dict
                 })
             
-            # Create the blog post WITHOUT gallery images first
+            # Verificar si ya existe un post con este post_id
+            existing_post = None
+            if post_id:
+                from apps.blog.models import BlogPage
+                try:
+                    existing_post = BlogPage.objects.filter(post_id=post_id).first()
+                    if existing_post:
+                        print(f"Post con ID {post_id} ya existe. Actualizando en lugar de crear nuevo.")
+                except Exception as e:
+                    print(f"Error buscando post existente: {e}")
+            
+            # Actualizar o crear el post
             try:
-                # First create the post without gallery images
-                post = create_blog_post(
-                    title=title,
-                    intro=intro,
-                    body_content=body_content,
-                    publication_date=publication_date,
-                    parent_page=blog_index,
-                    auto_publish=True,
-                    # No gallery_images parameter
-                )
+                if existing_post:
+                    # Actualizar post existente
+                    post = update_blog_post(
+                        blog_post=existing_post,
+                        title=title,
+                        intro=intro,
+                        body_content=body_content,
+                        publication_date=publication_date,
+                        auto_publish=True
+                    )
+                    
+                    # Actualizar la imagen de galería si existe
+                    from apps.blog.models import BlogPageGalleryImage
+                    # Eliminar imágenes existentes
+                    BlogPageGalleryImage.objects.filter(page=post).delete()
+                    # Añadir nueva imagen
+                    if post_image:
+                        BlogPageGalleryImage.objects.create(
+                            page=post,
+                            image=post_image,
+                            caption=f"Featured image for {title}"
+                        )
+                else:
+                    # Crear nuevo post
+                    post = create_blog_post(
+                        title=title,
+                        intro=intro,
+                        body_content=body_content,
+                        publication_date=publication_date,
+                        parent_page=blog_index,
+                        auto_publish=True,
+                        post_id=post_id,
+                        # No gallery_images parameter
+                    )
+                    
+                    # Añadir imagen de galería
+                    from apps.blog.models import BlogPageGalleryImage
+                    if post_image:
+                        BlogPageGalleryImage.objects.create(
+                            page=post,
+                            image=post_image,
+                            caption=f"Featured image for {title}"
+                        )
                 
-                # Then add the gallery image separately
-                from apps.blog.models import BlogPageGalleryImage
-                BlogPageGalleryImage.objects.create(
-                    page=post,
-                    image=post_image,
-                    caption=f"Featured image for {title}"
-                )
-                
-                print(f"Created blog post and added image separately: {title}")
+                action = "Updated" if existing_post else "Created"
+                print(f"{action} blog post '{title}' with ID {post_id}")
             except Exception as e:
                 print(f"Error creating blog post: {e}")
                 # Try alternative approach
@@ -480,6 +539,7 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
                     publication_date=publication_date,
                     parent_page=blog_index,
                     auto_publish=True,
+                    post_id=post_id,
                     gallery_images=[{
                         "image": post_image,
                         "caption": f"Featured image for {title}"
