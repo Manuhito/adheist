@@ -459,29 +459,23 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
             print(f"Image object type: {type(post_image)}")
             print(f"Image object ID: {post_image.id if post_image else 'None'}")
             
-            # Add image to body content directly
-            if post_image:
-                print("Adding image to body content")
-                body_content.append({
-                    "type": "image",
-                    "value": post_image  # Pass the image object directly, not in a dict
-                })
+            # We do not add the image to the body content directly, as it will be included in the gallery images.
             
-            # Verificar si ya existe un post con este post_id
+            # Check if a post with this post_id already exists
             existing_post = None
             if post_id:
                 from apps.blog.models import BlogPage
                 try:
                     existing_post = BlogPage.objects.filter(post_id=post_id).first()
                     if existing_post:
-                        print(f"Post con ID {post_id} ya existe. Actualizando en lugar de crear nuevo.")
+                        print(f"Post with ID {post_id} already exists. Updating instead of creating new.")
                 except Exception as e:
-                    print(f"Error buscando post existente: {e}")
+                    print(f"Error searching for existing post: {e}")
             
-            # Actualizar o crear el post
+            # Update or create the post
             try:
                 if existing_post:
-                    # Actualizar post existente
+                    # Update existing post
                     post = update_blog_post(
                         blog_post=existing_post,
                         title=title,
@@ -491,11 +485,11 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
                         auto_publish=True
                     )
                     
-                    # Actualizar la imagen de galería si existe
+                    # Update gallery image if it exists
                     from apps.blog.models import BlogPageGalleryImage
-                    # Eliminar imágenes existentes
+                    # Delete existing images
                     BlogPageGalleryImage.objects.filter(page=post).delete()
-                    # Añadir nueva imagen
+                    # Add new image
                     if post_image:
                         BlogPageGalleryImage.objects.create(
                             page=post,
@@ -503,7 +497,7 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
                             caption=f"Featured image for {title}"
                         )
                 else:
-                    # Crear nuevo post
+                    # Create new post
                     post = create_blog_post(
                         title=title,
                         intro=intro,
@@ -515,7 +509,7 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
                         # No gallery_images parameter
                     )
                     
-                    # Añadir imagen de galería
+                    # Add gallery image
                     from apps.blog.models import BlogPageGalleryImage
                     if post_image:
                         BlogPageGalleryImage.objects.create(
