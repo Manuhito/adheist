@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.utils.html import format_html
 
 from .models import BlogApiConfig
-from .api_utils import import_posts_from_api
+from .tasks import import_blog_posts_task
 
 
 @admin.register(BlogApiConfig)
@@ -52,27 +52,21 @@ class BlogApiConfigAdmin(admin.ModelAdmin):
         return custom_urls + urls
     
     def import_posts_view(self, request, config_id):
-        """View to import posts from the external API"""
-        config = BlogApiConfig.objects.get(pk=config_id)
-        
+        """View to import posts from the external API using a Celery task"""
         try:
-            # Importar posts
-            created_posts = import_posts_from_api()
-            
-            # Actualizar fecha de última importación
-            config.last_import = timezone.now()
-            config.save(update_fields=['last_import'])
+            # Launch the Celery task
+            import_blog_posts_task.delay(config_id=config_id)
             
             # Success message
             messages.success(
                 request, 
-                f'Successfully imported {len(created_posts)} posts.'
+                'Blog post import task has been scheduled. The posts will be imported in the background.'
             )
         except Exception as e:
             # Error message
             messages.error(
                 request, 
-                f'Error importing posts: {str(e)}'
+                f'Error scheduling import task: {str(e)}'
             )
         
         # Redirect back to the detail view
