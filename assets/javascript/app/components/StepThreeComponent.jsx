@@ -277,7 +277,7 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
           </div>
         </div>
       )}
-      <div className="flex-1 w-full max-w-7xl mx-auto px-2 sm:px-4 py-8">
+      <div className="flex-1 w-full max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
           {/* Summary section lateral izquierdo */}
           <aside className="lg:col-span-4 mb-8 lg:mb-0 h-full flex flex-col">
@@ -524,7 +524,7 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
           </aside>
           
           {/* Main content area */}
-          <main className="lg:col-span-8 flex flex-col">
+          <main className="lg:col-span-8 flex flex-col justify-center">
 
       {/* Nueva sección: Prompt del usuario (solo visual) - outside the white background container */}
       <div className="flex flex-col items-center justify-center mb-8">
@@ -562,7 +562,7 @@ const StepThreeComponent = ({ onComplete, initialData = {}, refreshData }) => {
           </main>
         </div>
       </div>
-      <div className="w-full px-4 flex justify-between pb-8 max-w-7xl mx-auto">
+      <div className="w-full flex justify-between max-w-7xl mx-auto">
         <BackButton onClick={handleBack} isLoading={isBackSubmitting} />
         <Button
           variant="outline"
