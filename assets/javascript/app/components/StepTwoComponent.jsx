@@ -800,11 +800,11 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
   return (
     <div className="w-full min-h-screen flex flex-col">
-      <div className="flex-1 w-full max-w-7xl mx-auto px-2 sm:px-4 py-8">
+      <div className="flex-1 w-full max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
           {/* Summary section lateral izquierdo */}
           <aside className="lg:col-span-4 mb-8 lg:mb-0 h-full flex flex-col">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 flex flex-col gap-y-4 items-start h-full">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col gap-y-4 items-start h-full">
               <h2 className="text-xl font-semibold mb-4">{t('step_two.summary', 'Summary')}</h2>
               <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-8 rounded-md h-full w-full flex flex-col flex-1">
                   <div className="flex flex-col gap-y-8">
@@ -912,7 +912,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       />
     </div>
     {/* Campaign Details (derecha) */}
-    <div className="bg-card p-6 rounded-xl overflow-hidden h-full flex-1">
+    <div className="bg-card p-4 rounded-xl overflow-hidden h-full flex-1">
       <h3 className="text-lg font-medium mb-4">{t('step_two.campaign_details', 'Campaign Details')}</h3>
       <div className="mb-6">
         <label

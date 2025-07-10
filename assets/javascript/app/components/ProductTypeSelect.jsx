@@ -27,7 +27,7 @@ export function ProductTypeSelect({ className, onProductImageUpload, onAppScreen
   ];
 
   return (
-    <div className={cn("w-full bg-card p-6 rounded-xl", className)}>
+    <div className={cn("w-full bg-card p-4 rounded-xl", className)}>
       <h3 className="text-lg font-medium mb-4">{t('product_type.title', 'Product Type')}</h3>
       <p className="text-sm text-muted-foreground mb-4">
         {t('product_type.upload_images', 'Upload images for your product or service')}
