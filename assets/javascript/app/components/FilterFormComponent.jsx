@@ -110,7 +110,7 @@ export const FilterFormComponent = ({
   };
 
   return (
-    <div className="flex-1 flex mt-4">
+    <div className="flex-1 flex">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-wrap gap-4 w-full">
           {/* Campo de industrias */}

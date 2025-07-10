@@ -519,7 +519,7 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
   // Render the component
   return (
-    <div className="space-y-6 flex flex-col items-center w-full">
+    <div className="space-y-3 flex flex-col items-center w-full">
       <div className="w-full relative">
         {/* Botón de limpiar filtros en la parte superior */}
         <div className="flex justify-end mb-2">
@@ -539,7 +539,7 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
         {/* Contenedor de filtros en línea horizontal */}
         <div className="flex flex-nowrap gap-3 w-full overflow-visible pb-2">
           {/* Filtro de compañía */}
-          <div className="flex-1 min-w-[180px] max-w-[30%] flex mt-4">
+          <div className="flex-1 min-w-[180px] max-w-[30%] flex">
             <div className="w-full">
               <div className="flex items-center">
                 <Building className="h-4 w-4 mr-2" />

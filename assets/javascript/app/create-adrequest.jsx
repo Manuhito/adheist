@@ -260,9 +260,9 @@ const CreateAdRequestApp = () => {
         </div>
       )}
 
-      <div className="space-y-8">
+      <div className="space-y-4">
         {/* Header row with title, progress indicator, and delete button */}
-        <div className="flex items-center mb-4">
+        <div className="flex items-center">
           <h1 className="text-2xl font-bold mr-4">{t('create_adrequest.title', 'Create Ad Request')}</h1>
           
           {/* Compact Progress indicator */}
