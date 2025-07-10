@@ -261,60 +261,54 @@ const CreateAdRequestApp = () => {
       )}
 
       <div className="space-y-8">
-        {/* Header row with title and delete button */}
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold">{t('create_adrequest.title', 'Create Ad Request')}</h1>
+        {/* Header row with title, progress indicator, and delete button */}
+        <div className="flex items-center mb-4">
+          <h1 className="text-2xl font-bold mr-4">{t('create_adrequest.title', 'Create Ad Request')}</h1>
+          
+          {/* Compact Progress indicator */}
+          <div className="flex-1 flex items-center justify-between mx-4">
+            <div className="flex items-center">
+              <div className={`rounded-full h-6 w-6 flex items-center justify-center text-xs ${adRequestData.status === 'NEW' ? 'bg-primary text-white' : 'bg-green-500 text-white'}`}>
+                1
+              </div>
+              <div className="ml-1 text-xs font-medium hidden sm:inline">
+                {t('create_adrequest.step1', 'Select Ad Style')}
+              </div>
+            </div>
+            <div className="flex-1 mx-2 h-1 bg-gray-200">
+              <div className={`h-full ${adRequestData.status !== 'NEW' ? 'bg-green-500' : 'bg-gray-200'}`} style={{ width: adRequestData.status === 'NEW' ? '0%' : '100%' }}></div>
+            </div>
+
+            <div className="flex items-center">
+              <div className={`rounded-full h-6 w-6 flex items-center justify-center text-xs ${adRequestData.status === 'DRAFT' ? 'bg-primary text-white' : (adRequestData.status === 'NEW' ? 'bg-gray-300 text-gray-600' : 'bg-green-500 text-white')}`}>
+                2
+              </div>
+              <div className="ml-1 text-xs font-medium hidden sm:inline">
+                {t('create_adrequest.step2', 'Configure Ad')}
+              </div>
+            </div>
+            <div className="flex-1 mx-2 h-1 bg-gray-200">
+              <div className={`h-full ${adRequestData.status === 'FILLED' ? 'bg-green-500' : 'bg-gray-200'}`} style={{ width: adRequestData.status === 'FILLED' ? '100%' : '0%' }}></div>
+            </div>
+
+            <div className="flex items-center">
+              <div className={`rounded-full h-6 w-6 flex items-center justify-center text-xs ${adRequestData.status === 'FILLED' ? 'bg-primary text-white' : 'bg-gray-300 text-gray-600'}`}>
+                3
+              </div>
+              <div className="ml-1 text-xs font-medium hidden sm:inline">
+                {t('create_adrequest.step3', 'Review & Submit')}
+              </div>
+            </div>
+          </div>
+          
           <button
             type="button"
-            className="p-2 text-gray-500 hover:text-red-500 transition-colors duration-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="p-2 text-gray-500 hover:text-red-500 transition-colors duration-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 ml-2"
             aria-label="Delete ad request"
             onClick={() => setShowDeleteConfirmation(true)}
           >
             <Trash2 className="w-5 h-5" />
           </button>
-        </div>
-
-
-
-        {/* Progress indicator */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            {/* Step 1: Select Ad Style */}
-            <div className="flex items-center">
-              <div className={`rounded-full h-8 w-8 flex items-center justify-center ${adRequestData.status === 'NEW' ? 'bg-primary text-white' : 'bg-green-500 text-white'}`}>
-                1
-              </div>
-              <div className="ml-2 text-sm font-medium">
-                {t('create_adrequest.step1', 'Select Ad Style')}
-              </div>
-            </div>
-            <div className="flex-1 mx-4 h-1 bg-gray-200">
-              <div className={`h-full ${adRequestData.status !== 'NEW' ? 'bg-green-500' : 'bg-gray-200'}`} style={{ width: adRequestData.status === 'NEW' ? '0%' : '100%' }}></div>
-            </div>
-
-            {/* Step 2: Configure Ad */}
-            <div className="flex items-center">
-              <div className={`rounded-full h-8 w-8 flex items-center justify-center ${adRequestData.status === 'DRAFT' ? 'bg-primary text-white' : (adRequestData.status === 'NEW' ? 'bg-gray-300 text-gray-600' : 'bg-green-500 text-white')}`}>
-                2
-              </div>
-              <div className="ml-2 text-sm font-medium">
-                {t('create_adrequest.step2', 'Configure Ad')}
-              </div>
-            </div>
-            <div className="flex-1 mx-4 h-1 bg-gray-200">
-              <div className={`h-full ${adRequestData.status === 'FILLED' ? 'bg-green-500' : 'bg-gray-200'}`} style={{ width: adRequestData.status === 'FILLED' ? '100%' : '0%' }}></div>
-            </div>
-
-            {/* Step 3: Review & Submit */}
-            <div className="flex items-center">
-              <div className={`rounded-full h-8 w-8 flex items-center justify-center ${adRequestData.status === 'FILLED' ? 'bg-primary text-white' : 'bg-gray-300 text-gray-600'}`}>
-                3
-              </div>
-              <div className="ml-2 text-sm font-medium">
-                {t('create_adrequest.step3', 'Review & Submit')}
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Current step component */}
