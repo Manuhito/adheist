@@ -329,6 +329,14 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
     // Update UI state
     setImageSource('upload');
     setSelectedAdLibrary(null);
+    
+    // Auto-scroll to the bottom of the page
+    setTimeout(() => {
+      window.scrollTo({
+        top: document.documentElement.scrollHeight,
+        behavior: 'smooth'
+      });
+    }, 100);
   };
 
   // Handle image source change
@@ -515,6 +523,14 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
     setSelectedAdLibrary(item.id);
     setImageSource('library');
     setUserUploadedImage(null);
+    
+    // Auto-scroll to the bottom of the page
+    setTimeout(() => {
+      window.scrollTo({
+        top: document.documentElement.scrollHeight,
+        behavior: 'smooth'
+      });
+    }, 100);
   };
 
   // Render the component
