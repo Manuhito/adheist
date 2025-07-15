@@ -25,6 +25,8 @@ beautifulsoup4==4.12.3
     # via wagtail
 billiard==4.2.1
     # via celery
+brotli==1.1.0
+    # via -r requirements/requirements.in
 boto3==1.36.2
     # via -r requirements/requirements.in
 botocore==1.36.2

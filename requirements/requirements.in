@@ -19,3 +19,12 @@ redis
 stripe
 wagtail
 playwright  # Para scraping de imágenes de Meta Ads
+
+# Scrapy dependencies
+scrapy==2.11.0
+scrapy-djangoitem==1.1.1
+billiard==4.1.0
+twisted==22.10.0
+
+# Para descomprimir respuestas HTTP
+brotli
