@@ -5,6 +5,7 @@ import logging
 import time
 import random
 import os
+import re
 import asyncio
 from django.utils import timezone
 from celery import shared_task
@@ -320,25 +321,14 @@ async def scrape_facebook_ads_with_playwright(scraper):
                                     ad_info = {"ad_id": ad_id}
                                     
                                     try:
+                                        # Extraer detalles adicionales del modal usando la nueva función
+                                        ad_info.update(await extract_ad_modal_details(page, ad_id))
+                                        
                                         # Intentar extraer texto del anuncio
                                         ad_text_element = await page.query_selector('div[role="dialog"] div[data-ad-preview="message"], div[role="dialog"] div[class*="text"]')
                                         if ad_text_element:
                                             ad_info["ad_text"] = await ad_text_element.evaluate('(element) => element.textContent')
                                             # Texto extraído correctamente
-                                        
-                                        # Intentar extraer fecha de inicio
-                                        start_date_element = await page.query_selector('div[role="dialog"] span:has-text("Started running on"), div[role="dialog"] span:has-text("Comenzó a publicarse el")')
-                                        if start_date_element:
-                                            start_date_text = await start_date_element.evaluate('(element) => element.textContent')
-                                            ad_info["start_date"] = start_date_text
-                                            # Fecha extraída correctamente
-                                        
-                                        # Intentar extraer plataformas donde se muestra
-                                        platforms_element = await page.query_selector('div[role="dialog"] div:has-text("Platforms"), div[role="dialog"] div:has-text("Plataformas")')
-                                        if platforms_element:
-                                            platforms_text = await platforms_element.evaluate('(element) => element.textContent')
-                                            ad_info["platforms"] = platforms_text
-                                            # Plataformas extraídas correctamente
                                         
                                         # Intentar extraer URLs de imágenes
                                         image_elements = await page.query_selector_all('div[role="dialog"] img')
@@ -450,6 +440,292 @@ async def scrape_facebook_ads_with_playwright(scraper):
         await browser.close()
     
     return results
+
+
+async def extract_ad_modal_details(page, ad_id):
+    """
+    Extracts detailed information from the ad modal.
+    
+    Args:
+        page: Playwright page object
+        ad_id: ID of the ad being processed
+        
+    Returns:
+        dict: Extracted information from the modal
+    """
+    ad_info = {"ad_id": ad_id}
+    
+    try:
+        # Extraer el ID directamente del parámetro ad_id (limpiando el texto si es necesario)
+        if isinstance(ad_id, str) and ":" in ad_id:
+            clean_id = ad_id.split(":", 1)[1].strip()
+            ad_info["library_id"] = clean_id
+        
+        # Intentar múltiples selectores para encontrar el contenedor del modal
+        # Las clases de Facebook cambian frecuentemente, así que probamos varios patrones
+        selectors = [
+            'div[class*="x78zum5"]',  # Clase original parcial
+            'div[aria-label*="anuncio"]',  # Etiqueta aria en español
+            'div[aria-label*="ad details"]',  # Etiqueta aria en inglés
+            'div[role="dialog"]',  # Cualquier diálogo modal
+            'div.xeuugli',  # Otra clase posible
+            'div[class*="modal"]'  # Clase genérica de modal
+        ]
+        
+        target_component = None
+        for selector in selectors:
+            try:
+                found = await page.query_selector(selector)
+                if found:
+                    target_component = found
+                    logger.info(f"Componente de detalles encontrado con selector: {selector}")
+                    break
+            except Exception:
+                continue
+        
+        # Si no encontramos el componente con los selectores específicos, usar el body como fallback
+        if not target_component:
+            target_component = await page.query_selector('body')
+            logger.warning(f"Usando body como fallback para extraer información del anuncio ID: {ad_id}")
+        
+        # Buscar todos los elementos de texto para analizar su contenido
+        text_elements = await target_component.query_selector_all('div, span, p')
+        
+        # Variables para almacenar información encontrada
+        found_date = False
+        found_platforms = False
+        found_versions = False
+        
+        # Patrones para fechas en español e inglés
+        date_patterns = [
+            "Comenzó a publicarse", "Started running", "Fecha de inicio", "Start date",
+            "Comenzó el", "Started on", "Desde el", "From", "En circulación desde"
+        ]
+        
+        # Analizar cada elemento de texto
+        all_texts = []
+        for element in text_elements:
+            try:
+                text = await element.evaluate('(element) => element.textContent')
+                if not text or len(text.strip()) < 3:  # Ignorar textos muy cortos
+                    continue
+                    
+                all_texts.append(text.strip())
+                
+                # Buscar fecha de inicio con patrones más flexibles
+                if not found_date:
+                    for pattern in date_patterns:
+                        if pattern.lower() in text.lower():
+                            found_date = True
+                            # Extraer la fecha después del patrón
+                            parts = re.split(pattern, text, flags=re.IGNORECASE)
+                            if len(parts) > 1:
+                                # Obtener solo la parte de la fecha (primeras palabras después del patrón)
+                                date_text = parts[1].strip()
+                                # Limpiar posibles caracteres iniciales como ':', 'el', etc.
+                                date_text = re.sub(r'^[:\s,el]+', '', date_text).strip()
+                                
+                                # Limitar la extracción hasta el cierre de la etiqueta </span> si existe
+                                span_end = date_text.find('</span>')
+                                if span_end > 0:
+                                    date_text = date_text[:span_end].strip()
+                                
+                                # Limitar la extracción a solo la fecha (máximo 30 caracteres)
+                                # y detener en el primer carácter no válido para una fecha
+                                clean_date = ""
+                                valid_chars = set("0123456789./- abcdefghijklmnopqrstuvwxyzáéíóúñ")
+                                for i, char in enumerate(date_text.lower()):
+                                    if i >= 30 or char not in valid_chars:
+                                        break
+                                    clean_date += date_text[i]
+                                
+                                ad_info["start_date"] = clean_date.strip()
+                                logger.info(f"Fecha de inicio encontrada: {clean_date.strip()}")
+                                break
+            except Exception as e:
+                logger.warning(f"Error al procesar elemento de texto: {e}")
+                continue
+                
+            # Buscar plataformas (Facebook, Instagram) - evitar confusión con versiones
+            if not found_platforms and ("Facebook" in text or "Instagram" in text) and not any(v in text.lower() for v in ["versiones", "versions", "version"]):
+                # Extraer solo los nombres de las plataformas, no todo el texto
+                platforms = []
+                if "Facebook" in text:
+                    platforms.append("Facebook")
+                if "Instagram" in text:
+                    platforms.append("Instagram")
+                
+                # Solo marcar como encontrado si realmente identificamos plataformas
+                if platforms:
+                    found_platforms = True
+                    platform_text = ", ".join(platforms)
+                    ad_info["platforms"] = platform_text
+                    logger.info(f"Plataformas: {platform_text}")
+                        
+        # Si no se encontraron plataformas por texto, intentar detectarlas por atributos de imagen
+        if not found_platforms:
+            try:
+                # Buscar elementos de imagen que puedan contener iconos de plataformas
+                image_elements = await target_component.query_selector_all('img')
+                platforms = []
+                
+                for img in image_elements:
+                    try:
+                        alt_text = await img.get_attribute('alt') or ''
+                        aria_label = await img.get_attribute('aria-label') or ''
+                        img_class = await img.get_attribute('class') or ''
+                        
+                        # Verificar si las propiedades de la imagen sugieren que es un icono de plataforma
+                        if 'Facebook' in alt_text or 'Facebook' in aria_label:
+                            platforms.append('Facebook')
+                        if 'Instagram' in alt_text or 'Instagram' in aria_label:
+                            platforms.append('Instagram')
+                            
+                    except Exception as e:
+                        logger.warning(f"Error al procesar imagen para detectar plataformas: {e}")
+                
+                # Eliminar duplicados y actualizar información
+                if platforms:
+                    platforms = list(set(platforms))
+                    found_platforms = True
+                    platform_text = ", ".join(platforms)
+                    ad_info["platforms"] = platform_text
+                    logger.info(f"Plataformas detectadas por iconos: {platform_text}")
+            except Exception as e:
+                logger.warning(f"Error al intentar detectar plataformas por iconos: {e}")
+                
+                
+                # Buscar información sobre versiones
+                if not found_versions and any(v in text.lower() for v in ["versiones", "versions", "version"]):
+                    found_versions = True
+                    # Determinar si tiene múltiples versiones basado en el texto
+                    has_multiple = any(num in text for num in ["2", "3", "4", "5", "6", "7", "8", "9"])
+                    has_multiple = has_multiple or ("multiple" in text.lower() or "varias" in text.lower())
+                    ad_info["has_versions"] = has_multiple
+                    logger.info(f"Tiene múltiples versiones: {has_multiple}")
+            except Exception as elem_error:
+                logger.debug(f"Error al procesar elemento de texto: {str(elem_error)}")
+        
+        # Segundo intento para plataformas si no se encontraron
+        if not found_platforms:
+            # Buscar secciones específicas que puedan contener información de plataformas
+            platform_keywords = ["Plataformas", "Platforms", "Platform", "Plataforma"]
+            
+            # Primero buscar textos que contengan palabras clave de plataformas
+            platform_section_index = -1
+            for i, text in enumerate(all_texts):
+                if any(keyword.lower() in text.lower() for keyword in platform_keywords):
+                    platform_section_index = i
+                    break
+            
+            # Si encontramos una sección de plataformas, buscar en ese texto y en los siguientes
+            if platform_section_index >= 0:
+                # Buscar en el texto actual y en los 3 siguientes (si existen)
+                for i in range(platform_section_index, min(platform_section_index + 4, len(all_texts))):
+                    text = all_texts[i]
+                    platforms = []
+                    if "Facebook" in text:
+                        platforms.append("Facebook")
+                    if "Instagram" in text:
+                        platforms.append("Instagram")
+                    
+                    if platforms:
+                        found_platforms = True
+                        platform_text = ", ".join(platforms)
+                        ad_info["platforms"] = platform_text
+                        logger.info(f"Plataformas (segundo intento): {platform_text}")
+                        break
+        
+        # Tercer intento para plataformas - buscar cualquier mención de Facebook o Instagram
+        if not found_platforms:
+            platforms = []
+            # Buscar primero en textos cortos que probablemente sean etiquetas o títulos
+            for text in all_texts:
+                if len(text) < 30 and ("Facebook" in text or "Instagram" in text):
+                    if "Facebook" in text and "Facebook" not in platforms:
+                        platforms.append("Facebook")
+                    if "Instagram" in text and "Instagram" not in platforms:
+                        platforms.append("Instagram")
+            
+            # Si no encontramos en textos cortos, buscar en cualquier texto
+            if not platforms:
+                for text in all_texts:
+                    if "Facebook" in text and "Facebook" not in platforms:
+                        platforms.append("Facebook")
+                    if "Instagram" in text and "Instagram" not in platforms:
+                        platforms.append("Instagram")
+            
+            if platforms:
+                platform_text = ", ".join(platforms)
+                ad_info["platforms"] = platform_text
+                logger.info(f"Plataformas (tercer intento): {platform_text}")
+                found_platforms = True
+        
+        # Segundo intento para fecha de inicio
+        if not found_date:
+            # Buscar patrones de fecha (dd/mm/yyyy, mm/dd/yyyy, etc.)
+            date_regex_patterns = [
+                r'\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}',  # dd/mm/yyyy o mm/dd/yyyy
+                r'\d{1,2}\s+de\s+[a-zA-Z]+\s+de\s+\d{4}',  # dd de mes de yyyy (español)
+                r'[a-zA-Z]+\s+\d{1,2},\s+\d{4}',  # mes dd, yyyy (inglés)
+                r'\d{1,2}\s+[a-zA-Z]{3,10}\.?\s+\d{4}'  # dd mes. yyyy (formato abreviado)
+            ]
+            
+            # Buscar primero en textos cortos que probablemente sean fechas
+            for text in all_texts:
+                if len(text) < 30:  # Probablemente una fecha o etiqueta
+                    for regex in date_regex_patterns:
+                        match = re.search(regex, text)
+                        if match:
+                            ad_info["start_date"] = match.group(0)
+                            logger.info(f"Fecha de inicio (segundo intento): {match.group(0)}")
+                            found_date = True
+                            break
+                if found_date:
+                    break
+            
+            # Si no encontramos en textos cortos, buscar en cualquier texto
+            if not found_date:
+                for text in all_texts:
+                    for regex in date_regex_patterns:
+                        match = re.search(regex, text)
+                        if match:
+                            ad_info["start_date"] = match.group(0)
+                            logger.info(f"Fecha de inicio (segundo intento): {match.group(0)}")
+                            found_date = True
+                            break
+                    if found_date:
+                        break
+        
+        # Verificar si los datos extraídos son válidos
+        if 'start_date' in ad_info and len(ad_info['start_date']) > 50:
+            # La fecha parece contener demasiado texto, probablemente es incorrecta
+            logger.warning(f"Fecha de inicio demasiado larga, posible error: {ad_info['start_date'][:30]}...")
+            ad_info['start_date'] = 'Error: fecha no válida'
+        
+        if 'platforms' in ad_info and len(ad_info['platforms']) > 30:
+            # Las plataformas parecen contener demasiado texto
+            logger.warning(f"Texto de plataformas demasiado largo, posible error: {ad_info['platforms'][:30]}...")
+            # Intentar extraer solo los nombres de plataformas conocidas
+            platforms = []
+            if "Facebook" in ad_info['platforms']:
+                platforms.append("Facebook")
+            if "Instagram" in ad_info['platforms']:
+                platforms.append("Instagram")
+            ad_info['platforms'] = ", ".join(platforms) if platforms else 'Error: plataformas no válidas'
+        
+        # Imprimir la información extraída en la consola
+        print(f"\n--- DETALLES DEL ANUNCIO {ad_id} ---")
+        print(f"Identificador de biblioteca: {ad_info.get('library_id', 'No encontrado')}")
+        print(f"Fecha de inicio: {ad_info.get('start_date', 'No encontrado')}")
+        print(f"Plataformas: {ad_info.get('platforms', 'No encontrado')}")
+        print(f"Tiene versiones: {ad_info.get('has_versions', 'No detectado')}")
+        print("-----------------------------------\n")
+        
+        return ad_info
+    except Exception as e:
+        logger.error(f"Error al extraer detalles del modal para anuncio ID: {ad_id}: {str(e)}")
+        return ad_info
 
 
 @shared_task
