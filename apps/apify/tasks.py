@@ -57,11 +57,25 @@ def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int
     skipped_count = 0
     errors = []
     
+    from apps.ads.models import AdLibrary
+    
     for item in items:
         try:
+            # Skip if this ad has already been processed
+            meta_ad_id = item.get('ad_archive_id')
+            if not meta_ad_id:
+                logger.warning(f"Item without ad_archive_id, skipping: {item}")
+                skipped_count += 1
+                continue
+                
+            if AdLibrary.objects.filter(meta_ad_id=meta_ad_id).exists():
+                logger.info(f"Ad with ID {meta_ad_id} already exists, skipping creation")
+                skipped_count += 1
+                continue
+            
             # Check if this is an item with cards (multiple ads)
             if item.get('snapshot') and item['snapshot'].get('cards'):
-                logger.info(f"Processing item with cards: {item.get('ad_archive_id', 'unknown')}")
+                logger.info(f"Processing item with cards: {meta_ad_id}")
                 result = create_adlibrary_from_cards(item, media_type, content_languages)
                 processed_count += result['processed_count']
                 failed_count += result['failed_count']
@@ -70,8 +84,11 @@ def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int
             
             # Process as a regular single ad item
             else:
-                logger.info(f"Processing item: {item.get('ad_archive_id', 'unknown')}")
-                continue
+                logger.info(f"Processing item: {meta_ad_id}")
+                result = create_adlibrary_from_single_ad(item, media_type, content_languages)
+                processed_count += result['processed_count']
+                failed_count += result['failed_count']
+                errors.extend(result['errors'])
             
             # Note: Since create_ad_library_entry is a Celery task,
             # we're not waiting for the result here. Each task will run
@@ -89,6 +106,174 @@ def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int
         'processed_count': processed_count,
         'failed_count': failed_count,
         'skipped_count': skipped_count,
+        'errors': errors
+    }
+
+
+def create_adlibrary_from_single_ad(item: dict, media_type: str, content_languages: list) -> Dict[str, Any]:
+    """
+    Create an AdLibrary entry from a single ad item without cards.
+    
+    Args:
+        item: Diccionario con datos del anuncio de Apify sin cards
+        media_type: Tipo de medio del anuncio
+        content_languages: Lista de idiomas del contenido
+        
+    Returns:
+        Diccionario con estadísticas de procesamiento
+    """
+    from datetime import datetime
+    from apps.ads.models import AdLibrary
+    from apps.apify.models import FacebookPage
+    from django.core.files import File
+    import os
+    import tempfile
+    import requests
+    
+    processed_count = 0
+    failed_count = 0
+    errors = []
+    
+    # Extract data from the item
+    meta_ad_id = item.get('ad_archive_id')
+    page_id = item.get('page_id')
+    start_date = item.get('start_date')
+    end_date = item.get('end_date')
+    currency = item.get('currency', '')
+    publisher_platform = item.get('publisher_platform', [])
+    is_active = item.get('is_active')
+    
+    # Convert Unix timestamps to datetime objects if present
+    ad_creation_time = None
+    ad_delivery_start_time = None
+    ad_delivery_stop_time = None
+    
+    if start_date:
+        try:
+            ad_creation_time = datetime.fromtimestamp(start_date).date()
+            ad_delivery_start_time = ad_creation_time
+        except (ValueError, TypeError):
+            logger.warning(f"Invalid start_date format: {start_date}")
+    
+    if end_date:
+        try:
+            ad_delivery_stop_time = datetime.fromtimestamp(end_date).date()
+        except (ValueError, TypeError):
+            logger.warning(f"Invalid end_date format: {end_date}")
+    
+    # Find the related FacebookPage
+    try:
+        facebook_page = FacebookPage.objects.get(page_id=page_id)
+    except FacebookPage.DoesNotExist:
+        error_msg = f"FacebookPage with ID {page_id} not found, skipping ad creation"
+        logger.error(error_msg)
+        return {
+            'processed_count': 0,
+            'failed_count': 1,
+            'errors': [error_msg]
+        }
+    
+    # Determine meta_status based on is_active
+    meta_status = AdLibrary.STATUS_ACTIVE if is_active else AdLibrary.STATUS_INACTIVE
+    
+    try:
+        # Get the snapshot data
+        snapshot = item.get('snapshot', {})
+        
+        # Get image URL from the first image in the snapshot
+        image_url = None
+        images = snapshot.get('images', [])
+        if images and len(images) > 0:
+            image_url = images[0].get('original_image_url')
+        
+        image_temp_file = None
+        
+        if image_url:
+            try:
+                # Create a temporary file to store the image
+                image_temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.jpg')
+                
+                # Download the image
+                response = requests.get(image_url, stream=True, timeout=30)
+                response.raise_for_status()
+                
+                # Write the image to the temporary file
+                for chunk in response.iter_content(chunk_size=8192):
+                    image_temp_file.write(chunk)
+                
+                image_temp_file.flush()
+                image_temp_file.close()
+                
+                # Reopen the file in read mode
+                image_temp_file = open(image_temp_file.name, 'rb')
+            except Exception as e:
+                logger.error(f"Error downloading image from {image_url}: {str(e)}")
+                if image_temp_file and hasattr(image_temp_file, 'name'):
+                    try:
+                        os.unlink(image_temp_file.name)
+                    except:
+                        pass
+                image_temp_file = None
+        
+        # Extract text content from snapshot
+        body_text = ''
+        if snapshot.get('body') and isinstance(snapshot.get('body'), dict):
+            body_text = snapshot.get('body', {}).get('text', '')
+        
+        # Create the AdLibrary entry
+        ad_library = AdLibrary(
+            facebook_page=facebook_page,
+            ad_creative_link_titles=snapshot.get('title', ''),
+            is_fav=False,
+            is_active=True,
+            language=content_languages,
+            media_type=media_type,
+            publisher_platform=publisher_platform,
+            meta_ad_id=meta_ad_id,
+            ad_creation_time=ad_creation_time,
+            ad_delivery_start_time=ad_delivery_start_time,
+            ad_delivery_stop_time=ad_delivery_stop_time,
+            meta_status=meta_status,
+            ad_creative_bodies=body_text,
+            ad_creative_link_captions=snapshot.get('caption', ''),
+            ad_creative_link_descriptions=snapshot.get('link_description', ''),
+            age_country_gender_reach_breakdown={},
+            beneficiary_payers={},
+            br_total_reach='',
+            bylines='',
+            currency=currency
+        )
+        
+        # Save the image if available
+        if image_temp_file:
+            # Generate a filename for the image
+            filename = f"ad_{meta_ad_id}_{datetime.now().strftime('%Y%m%d%H%M%S')}.jpg"
+            
+            # Save the image to the ad_image field
+            ad_library.ad_image.save(filename, File(image_temp_file))
+            
+            # Close and delete the temporary file
+            image_temp_file.close()
+            try:
+                os.unlink(image_temp_file.name)
+            except:
+                pass
+        
+        # Save the object
+        ad_library.save()
+        
+        processed_count += 1
+        logger.info(f"Successfully created AdLibrary entry for ad ID {meta_ad_id}")
+        
+    except Exception as e:
+        error_msg = f"Error processing ad ID {meta_ad_id}: {str(e)}"
+        logger.error(error_msg)
+        errors.append(error_msg)
+        failed_count += 1
+    
+    return {
+        'processed_count': processed_count,
+        'failed_count': failed_count,
         'errors': errors
     }
 
@@ -163,11 +348,6 @@ def create_adlibrary_from_cards(item: dict, media_type: str, content_languages: 
     cards = item['snapshot'].get('cards', [])
     for index, card in enumerate(cards):
         try:
-            # Skip if this card has already been processed
-            card_meta_ad_id = f"{meta_ad_id}_{index}"
-            if AdLibrary.objects.filter(meta_ad_id=card_meta_ad_id).exists():
-                logger.info(f"Card with ID {card_meta_ad_id} already exists, skipping creation")
-                continue
             
             # Download the image from the card
             image_url = card.get('original_image_url')
@@ -215,7 +395,7 @@ def create_adlibrary_from_cards(item: dict, media_type: str, content_languages: 
                 language=content_languages,
                 media_type=media_type,
                 publisher_platform=publisher_platform,
-                meta_ad_id=card_meta_ad_id,
+                meta_ad_id=meta_ad_id,
                 ad_creation_time=ad_creation_time,
                 ad_delivery_start_time=ad_delivery_start_time,
                 ad_delivery_stop_time=ad_delivery_stop_time,
@@ -231,7 +411,7 @@ def create_adlibrary_from_cards(item: dict, media_type: str, content_languages: 
             )
             
             # Generate a filename for the image
-            filename = f"ad_{card_meta_ad_id}_{datetime.now().strftime('%Y%m%d%H%M%S')}.jpg"
+            filename = f"ad_{meta_ad_id}_{datetime.now().strftime('%Y%m%d%H%M%S')}.jpg"
             
             # Save the image to the ad_image field
             ad_library.ad_image.save(filename, File(image_temp_file))
