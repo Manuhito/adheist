@@ -103,6 +103,7 @@ PROJECT_APPS = [
     "apps.ads",
     "apps.aiinterface",
     "apps.meta",
+    "apps.apify.apps.ApifyConfig",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + PROJECT_APPS + WAGTAIL_APPS
