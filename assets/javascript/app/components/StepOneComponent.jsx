@@ -244,7 +244,8 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
         title: title,
         desc: desc,
         url: imageUrl,
-        industry: industry
+        industry: industry,
+        is_fav: item.is_fav || false // Incluir la propiedad is_fav para que funcione el icono de estrella
       };
     });
   };
