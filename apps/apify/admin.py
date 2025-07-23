@@ -77,10 +77,10 @@ class BackloadAdmin(admin.ModelAdmin):
             return HttpResponseRedirect(reverse(f'admin:{self.model._meta.app_label}_{self.model._meta.model_name}_changelist'))
         
         try:
-            # Obtener IDs de página
-            page_ids = list(obj.pages.filter(is_active=True).values_list('page_id', flat=True))
+            # Obtener páginas activas
+            active_pages = obj.pages.filter(is_active=True)
             
-            if not page_ids:
+            if not active_pages.exists():
                 messages.error(request, "No active pages selected for query.")
                 return HttpResponseRedirect(reverse(
                     f'admin:{self.model._meta.app_label}_{self.model._meta.model_name}_change', 
@@ -105,19 +105,25 @@ class BackloadAdmin(admin.ModelAdmin):
             obj.output_file = output_dir
             obj.save(update_fields=['output_file'])
             
-            # Construir URLs usando el método del modelo
-            urls = obj.get_facebook_ads_urls()
+            # Lanzar una tarea de Celery por cada página
+            tasks_launched = 0
+            for page in active_pages:
+                # Construir la URL para esta página específica
+                url = obj.get_facebook_ads_url_for_page(page.page_id)
+                
+                # Ejecutar la tarea de Celery en segundo plano para esta página
+                fetch_apify_ads.delay(
+                    output_dir=f"{output_dir}_{page.page_id}",
+                    urls=[{'url': url}],
+                    page_id=page.page_id,
+                    backload_id=obj.pk
+                )
+                tasks_launched += 1
             
-            # Ejecutar la tarea de Celery en segundo plano
-            fetch_apify_ads.delay(
-                output_dir=output_dir,
-                urls=urls,
-                backload_id=obj.pk
-            )
-            
-            messages.success(request, f"La tarea de consulta a la API de Apify se ha iniciado en segundo plano. Los resultados se guardarán en {output_dir}. El estado se actualizará automáticamente cuando finalice.")
+            messages.success(request, f"Se han iniciado {tasks_launched} tareas de consulta a la API de Apify en segundo plano, una por cada página. Los resultados se guardarán en {output_dir}_[page_id]. El estado se actualizará automáticamente cuando finalicen.")
         except Exception as e:
             messages.error(request, f"Error executing command: {str(e)}")
+
         
         return HttpResponseRedirect(reverse(
             f'admin:{self.model._meta.app_label}_{self.model._meta.model_name}_change', 

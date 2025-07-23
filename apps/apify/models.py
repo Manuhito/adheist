@@ -117,7 +117,7 @@ class Backload(BaseModel):
     
     ad_delivery_date_min = models.CharField(
         max_length=10,
-        default="2024-01-01",
+        default="",
         blank=True,
         help_text="Minimum ad delivery date in YYYY-MM-DD format. If empty, no date filter will be applied."
     )
@@ -136,7 +136,7 @@ class Backload(BaseModel):
     media_types = models.CharField(
         max_length=20,
         choices=MEDIA_TYPE_CHOICES,
-        default=MEDIA_TYPE_ALL,
+        default=MEDIA_TYPE_IMAGE_AND_MEME,
         help_text="Type of media to filter ads by"
     )
     error_log = models.TextField(
@@ -170,6 +170,39 @@ class Backload(BaseModel):
     def get_admin_url(self):
         return reverse('admin:apify_backload_change', args=[self.pk])
         
+    def get_facebook_ads_url_for_page(self, page_id):
+        """
+        Construye la URL para la API de Facebook Ads Library para una página específica.
+        
+        Formato de URL:
+        https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=ALL&view_all_page_id=PAGE_ID
+        
+        Parámetros opcionales:
+        - content_languages[0]=en (si está definido)
+        - media_type=image_and_meme (según el valor seleccionado)
+        - start_date[min]=2020-08-20 (si hay fecha mínima)
+        
+        Args:
+            page_id: ID de la página de Facebook
+            
+        Returns:
+            str: URL para la API de Facebook Ads Library
+        """
+        # Construir la URL base
+        url = f"https://www.facebook.com/ads/library/?active_status={self.ad_active_status}&ad_type=all&country={self.ad_reached_countries}&view_all_page_id={page_id}"
+        
+        # Añadir parámetros opcionales
+        if self.content_languages:
+            url += f"&content_languages[0]={self.content_languages}"
+            
+        if self.media_types != self.MEDIA_TYPE_ALL:
+            url += f"&media_type={self.media_types}"
+            
+        if self.ad_delivery_date_min:
+            url += f"&start_date[min]={self.ad_delivery_date_min}"
+            
+        return url
+    
     def get_facebook_ads_urls(self):
         """
         Construye las URLs para la API de Facebook Ads Library según los parámetros del Backload.
@@ -189,19 +222,7 @@ class Backload(BaseModel):
         page_ids = list(self.pages.filter(is_active=True).values_list('page_id', flat=True))
         
         for page_id in page_ids:
-            # Construir la URL base
-            url = f"https://www.facebook.com/ads/library/?active_status={self.ad_active_status}&ad_type=all&country={self.ad_reached_countries}&view_all_page_id={page_id}"
-            
-            # Añadir parámetros opcionales
-            if self.content_languages:
-                url += f"&content_languages[0]={self.content_languages}"
-                
-            if self.media_types != self.MEDIA_TYPE_ALL:
-                url += f"&media_type={self.media_types}"
-                
-            if self.ad_delivery_date_min:
-                url += f"&start_date[min]={self.ad_delivery_date_min}"
-                
+            url = self.get_facebook_ads_url_for_page(page_id)
             urls.append({'url': url})
             
         return urls

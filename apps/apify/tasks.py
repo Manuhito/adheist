@@ -58,6 +58,8 @@ def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int
     errors = []
     
     from apps.ads.models import AdLibrary
+
+    # incluir aqui el codigo para recuperear la lista de IDs (meta_ad_id) unicos de AdLibrary por facebook_page_id correspondiente a los items recuperados
     
     for item in items:
         try:
@@ -448,6 +450,7 @@ def fetch_apify_ads(
     urls: List[Dict[str, str]] = None,
     period: str = "",
     actor_id: str = "XtaWFhbtfxyzqrFmd",
+    page_id: str = None,
     backload_id: int = None
 ) -> Dict[str, Any]:
     """
@@ -458,9 +461,9 @@ def fetch_apify_ads(
     Args:
         output_dir: Directory to save the JSON result files
         urls: List of dictionaries with URLs to scrape (e.g. [{'url': 'https://www.facebook.com/ads/library/...'}])
-        active_status: Status of ads to fetch ('all', 'active', 'inactive')
         period: Time period for ads (empty string for all time)
         actor_id: ID of the Apify actor to run
+        page_id: ID de la página de Facebook asociada a esta tarea
         backload_id: ID of the Backload object to update with error logs
     
     Returns:
