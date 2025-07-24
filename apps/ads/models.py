@@ -38,7 +38,7 @@ class AdLibrary(BaseModel):
         (STATUS_INACTIVE, 'Inactive'),
     ]
     
-    facebook_page = models.ForeignKey('meta.FacebookPage', on_delete=models.CASCADE, related_name="adlibraries")
+    facebook_page = models.ForeignKey('apify.FacebookPage', on_delete=models.CASCADE, related_name="adlibraries")
     tags = models.ManyToManyField(TagList, related_name="adlibraries", blank=True)
     ad_creative_link_titles = models.TextField(blank=True, help_text="Ad creative link titles from Meta API")
     ad_image = models.ImageField(upload_to="adlibrary/", null=True, blank=True)
@@ -57,7 +57,7 @@ class AdLibrary(BaseModel):
         null=True,
         help_text="Lista de plataformas donde se publicó el anuncio"
     )
-    meta_ad_id = models.CharField(max_length=20, blank=True, unique=True, help_text="Identificador único del anuncio en Meta")
+    meta_ad_id = models.CharField(max_length=20, null=True, blank=True, help_text="Identificador único del anuncio en Meta")
     ad_creation_time = models.DateField(null=True, blank=True, help_text="Fecha de creación del anuncio en formato YYYY-MM-DD")
     ad_delivery_start_time = models.DateField(null=True, blank=True, help_text="Fecha de inicio de entrega del anuncio en formato YYYY-MM-DD")
     ad_delivery_stop_time = models.DateField(null=True, blank=True, help_text="Fecha de finalización de entrega del anuncio en formato YYYY-MM-DD")
@@ -68,24 +68,9 @@ class AdLibrary(BaseModel):
         help_text="Status of the ad in Meta's system"
     )
     # New fields based on Meta API data
-    ad_creative_bodies = ArrayField(
-        models.TextField(),
-        blank=True,
-        null=True,
-        help_text="List of ad creative body texts"
-    )
-    ad_creative_link_captions = ArrayField(
-        models.TextField(),
-        blank=True,
-        null=True,
-        help_text="List of ad creative link captions"
-    )
-    ad_creative_link_descriptions = ArrayField(
-        models.TextField(),
-        blank=True,
-        null=True,
-        help_text="List of ad creative link descriptions"
-    )
+    ad_creative_bodies = models.TextField(null=True, blank=True, help_text="Ad creative body texts")
+    ad_creative_link_captions = models.TextField(null=True, blank=True, help_text="Ad creative link captions")
+    ad_creative_link_descriptions = models.TextField(null=True, blank=True, help_text="Ad creative link descriptions")
     age_country_gender_reach_breakdown = JSONField(
         blank=True,
         null=True,
