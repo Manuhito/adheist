@@ -31,4 +31,5 @@ urlpatterns = [
     path("proxy-image/", views.proxy_image_download, name="proxy_image_download"),
     path("api/toggle-favorite/", views.toggle_favorite, name="toggle_favorite"),
     path("api/deactivate-image/", views.deactivate_image, name="deactivate_image"),
+    path("api/request-brand/", views.request_brand, name="request_brand"),
 ]

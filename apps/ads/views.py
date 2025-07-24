@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.contrib import messages
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http.response import HttpResponseRedirect, JsonResponse, HttpResponse
@@ -19,6 +19,8 @@ import urllib.parse
 import os
 from django.conf import settings
 import posthog
+from django.utils import timezone
+from apps.aiinterface.tasks import send_slack_notification
 
 from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion, AdRequestUsage, ExtraCredit
 from .forms import AdLibraryForm
@@ -1161,7 +1163,7 @@ def adrequest_revision_create(request):
         print(f"Error in adrequest_revision_create: {str(e)}")
         return JsonResponse({'error': str(e)}, status=500)
 
-
+@ensure_csrf_cookie
 @login_required
 def create_adrequest_page(request, adrequest_id=None):
     """
@@ -1861,6 +1863,46 @@ def toggle_favorite(request):
         })
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+@csrf_exempt
+@require_POST
+@login_required
+def request_brand(request):
+    """
+    Handle brand request and send Slack notification.
+    
+    POST Parameters:
+    - brand_url: URL of the brand to request
+    
+    Returns: JSON with success status
+    """
+    try:
+        data = json.loads(request.body)
+        brand_url = data.get('brand_url')
+        
+        if not brand_url:
+            return JsonResponse({'success': False, 'error': 'Brand URL is required'}, status=400)
+        
+        # Send Slack notification
+        user_email = request.user.email
+        title = "New Brand Request"
+        message = f"A user has requested a new brand to be added to the library"
+        
+        context = {
+            'user_email': user_email,
+            'brand_url': brand_url,
+            'timestamp': str(timezone.now())
+        }
+        
+        # Send notification using the existing function
+        send_slack_notification(message, context, title)
+        
+        return JsonResponse({'success': True})
+        
+    except Exception as e:
+        logging.error(f"Error processing brand request: {str(e)}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
 @require_POST

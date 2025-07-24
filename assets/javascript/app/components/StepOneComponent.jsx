@@ -145,6 +145,60 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const [submitError, setSubmitError] = useState(null);
   // State for the request brand modal
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+  const [brandUrl, setBrandUrl] = useState('');
+  const [requestStatus, setRequestStatus] = useState({ loading: false, success: false, error: null });
+  
+  // Function to get CSRF token from cookie
+  const getCsrfToken = () => {
+    const name = 'csrftoken';
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  };
+
+  // Function to handle brand request submission
+  const handleBrandRequest = async () => {
+    if (!brandUrl.trim()) return;
+    
+    setRequestStatus({ loading: true, success: false, error: null });
+    
+    try {
+      const csrfToken = getCsrfToken();
+      console.log('CSRF Token:', csrfToken); // For debugging
+      
+      const response = await fetch('/ads/api/request-brand/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({ brand_url: brandUrl.trim() })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to submit brand request');
+      }
+      
+      setRequestStatus({ loading: false, success: true, error: null });
+      
+      // Close modal after success (optional - can keep open to show success message)
+      // setTimeout(() => setIsRequestModalOpen(false), 2000);
+    } catch (error) {
+      console.error('Error submitting brand request:', error);
+      setRequestStatus({ loading: false, success: false, error: error.message });
+    }
+  };
 
   // Function to call the API with all filters
   const fetchFilteredResults = () => {
@@ -505,22 +559,6 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
     }
   };
 
-  // Function to get CSRF token from cookies
-  const getCsrfToken = () => {
-    const name = 'csrftoken';
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-      const cookies = document.cookie.split(';');
-      for (let i = 0; i < cookies.length; i++) {
-        const cookie = cookies[i].trim();
-        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-          break;
-        }
-      }
-    }
-    return cookieValue;
-  };
 
   // Handle gallery item selection
   const handleGalleryItemSelect = (item) => {
@@ -710,7 +748,14 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
       </div>
 
       {/* Modal para solicitar una nueva marca */}
-      <Dialog open={isRequestModalOpen} onOpenChange={setIsRequestModalOpen}>
+      <Dialog open={isRequestModalOpen} onOpenChange={(open) => {
+        if (!open) {
+          // Reset form state when closing
+          setBrandUrl('');
+          setRequestStatus({ loading: false, success: false, error: null });
+        }
+        setIsRequestModalOpen(open);
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t('request_brand.title', 'Add a new brand to our library')}</DialogTitle>
@@ -728,10 +773,26 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
               <input
                 id="brand-url"
                 type="text"
+                value={brandUrl}
+                onChange={(e) => setBrandUrl(e.target.value)}
                 className="w-full px-3 py-2 border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="https://www.facebook.com/ads/library/..."
+                disabled={requestStatus.loading || requestStatus.success}
               />
             </div>
+            
+            {/* Status messages */}
+            {requestStatus.error && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm">
+                {requestStatus.error}
+              </div>
+            )}
+            
+            {requestStatus.success && (
+              <div className="p-3 bg-green-50 border border-green-200 rounded-md text-green-600 text-sm">
+                {t('request_brand.success', 'Your request has been submitted successfully. We will add this brand to our library soon.')}
+              </div>
+            )}
             
             {/* Tarjeta de ayuda */}
             <div className="mt-4 p-4 bg-primary/5 dark:bg-primary/10 border border-primary/10 dark:border-primary/20 rounded-lg">
@@ -746,10 +807,18 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
           </div>
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsRequestModalOpen(false)}>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsRequestModalOpen(false)}
+              disabled={requestStatus.loading}
+            >
               {t('common.cancel', 'Cancel')}
             </Button>
-            <Button onClick={() => setIsRequestModalOpen(false)}>
+            <Button 
+              onClick={handleBrandRequest}
+              disabled={!brandUrl.trim() || requestStatus.loading || requestStatus.success}
+              loading={requestStatus.loading}
+            >
               {t('request_brand.submit', 'Submit request')}
             </Button>
           </DialogFooter>
