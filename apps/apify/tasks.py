@@ -17,7 +17,7 @@ from apps.apify.models import Backload
 logger = logging.getLogger(__name__)
 
 
-def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int = None) -> dict:
+def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int = None, page_id: str = None) -> dict:
     """
     Procesa los items de un dataset de Apify y crea entradas en AdLibrary para cada anuncio.
     
@@ -25,6 +25,7 @@ def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int
         dataset_id: ID del dataset de Apify a procesar
         client: Cliente de Apify inicializado
         backload_id: ID del Backload asociado a esta ejecución
+        page_id: ID de la página de Facebook asociada a esta tarea
         
     Returns:
         Diccionario con estadísticas de procesamiento
@@ -59,7 +60,18 @@ def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int
     
     from apps.ads.models import AdLibrary
 
-    # incluir aqui el codigo para recuperear la lista de IDs (meta_ad_id) unicos de AdLibrary por facebook_page_id correspondiente a los items recuperados
+    # Obtener la lista de meta_ad_id únicos de AdLibrary asociados al FacebookPage
+    existing_ad_ids = []
+    if page_id:
+        # Consultar los meta_ad_id únicos para la página de Facebook específica
+        existing_ad_ids = list(AdLibrary.objects.filter(
+            facebook_page__page_id=page_id,
+            meta_ad_id__isnull=False
+        ).values_list('meta_ad_id', flat=True).distinct())
+        
+        logger.info(f"Found {len(existing_ad_ids)} existing ads for FacebookPage ID {page_id}")
+    else:
+        logger.warning("No page_id provided, skipping existing ads lookup")
     
     for item in items:
         try:
@@ -553,7 +565,7 @@ def fetch_apify_ads(
             }
         
         # Fetch and process items from the dataset
-        processing_result = process_apify_dataset(dataset_id, client, backload_id)
+        processing_result = process_apify_dataset(dataset_id, client, backload_id, page_id)
         
         # Update Backload status to SUCCESS
         if backload_id:
