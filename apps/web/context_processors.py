@@ -276,7 +276,18 @@ def translations(request):
             'step_one.company': _('Company'),
             'step_one.clear_filters': _('Clear filters'),
             'step_one.gallery_title': _('Select Your Ideal Ad Style'),
-            'step_one.gallery_description': _('Browse and choose the ad style that best matches your desired outcome'),
+            'step_one.gallery_description_part1': _("Didn't find your favourite company?"),
+            'step_one.gallery_description_part2': _("Request a new brand"),
+            
+            # Request brand modal translations
+            'request_brand.title': _('Add a new brand to our library'),
+            'request_brand.description': _('We will put this new brand on our library'),
+            'request_brand.url_label': _('Brand URL'),
+            'request_brand.help_title': _('How to get the URL?'),
+            'request_brand.help_step1': _('Go to Meta ad library and search for the brand / advertiser.'),
+            'request_brand.help_step2': _('Click on the brand in the search dropdown and copy the URL and paste it above.'),
+            'request_brand.submit': _('Submit request'),
+            
             'step_one.select_canvas': _('Select a canvas size to proceed'),
             'step_one.square': _('Square'),
             'step_one.portrait': _('Portrait'),
@@ -285,6 +296,7 @@ def translations(request):
             'step_one.auto_desc': _('Automatic'),
             'step_one.tooltip_validation': _('Please select an image and canvas size'),
             'step_one.no_results': _('No ad examples found. Try adjusting your filters.'),
+            
             
             # NextButton translations
             'next_button.next': _('Next'),

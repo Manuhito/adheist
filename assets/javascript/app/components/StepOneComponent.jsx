@@ -2,12 +2,14 @@ import React, { useState, useEffect, createContext, useContext } from 'react';
 import { SearchComponent } from './SearchComponent';
 import { FilterFormComponent } from './FilterFormComponent';
 import InteractiveBentoGallery from '../../components/ui/interactive-bento-gallery.jsx';
-import { Building, X, Upload, ImageIcon } from 'lucide-react';
+import { Building, X, Upload, ImageIcon, Plus } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../shadcn/components/ui/tooltip';
 import { NextButton } from '../../components/ui/next-button.jsx';
 import { useTranslation } from '../../lib/useTranslation';
 import { ImageUpload } from '../../components/ui/image-upload';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shadcn/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../../shadcn/components/ui/dialog';
+import { Button } from '../../shadcn/components/ui/button';
 
 // Contexto para almacenar en caché las industrias y etiquetas
 const FilterCacheContext = createContext({
@@ -141,6 +143,8 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const [imageUploadKey, setImageUploadKey] = useState(Date.now());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
+  // State for the request brand modal
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
 
   // Function to call the API with all filters
   const fetchFilteredResults = () => {
@@ -607,7 +611,17 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
                   <InteractiveBentoGallery
                     mediaItems={galleryItems}
                     title={t('step_one.gallery_title', 'Select Your Ideal Ad Style')}
-                    description={t('step_one.gallery_description', 'Browse and choose the ad style that best matches your desired outcome')}
+                    description={
+                      <>
+                        {t('step_one.gallery_description_part1', "Didn't find your favourite company? ")}
+                        <span 
+                          className="text-primary underline cursor-pointer hover:text-primary/80 transition-colors"
+                          onClick={() => setIsRequestModalOpen(true)}
+                        >
+                          {t('step_one.gallery_description_part2', "Request a new brand")}
+                        </span>
+                      </>
+                    }
                     onItemSelect={handleGalleryItemSelect}
                     selectedItemId={selectedAdLibrary}
                   />
@@ -694,6 +708,53 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
           </div>
         )}
       </div>
+
+      {/* Modal para solicitar una nueva marca */}
+      <Dialog open={isRequestModalOpen} onOpenChange={setIsRequestModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('request_brand.title', 'Add a new brand to our library')}</DialogTitle>
+            <DialogDescription>
+              {t('request_brand.description', 'We will put this new brand on our library')}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4 space-y-4">
+            {/* Input para la URL */}
+            <div className="space-y-2">
+              <label htmlFor="brand-url" className="text-sm font-medium text-foreground">
+                {t('request_brand.url_label', 'Brand URL')}
+              </label>
+              <input
+                id="brand-url"
+                type="text"
+                className="w-full px-3 py-2 border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                placeholder="https://www.facebook.com/ads/library/..."
+              />
+            </div>
+            
+            {/* Tarjeta de ayuda */}
+            <div className="mt-4 p-4 bg-primary/5 dark:bg-primary/10 border border-primary/10 dark:border-primary/20 rounded-lg">
+              <h4 className="text-sm font-semibold text-primary dark:text-primary mb-2">
+                {t('request_brand.help_title', 'How to get the URL?')}
+              </h4>
+              <ol className="text-sm text-muted-foreground space-y-2 pl-5 list-decimal">
+                <li>{t('request_brand.help_step1', 'Go to Meta ad library and search for the brand / advertiser.')}</li>
+                <li>{t('request_brand.help_step2', 'Click on the brand in the search dropdown and copy the URL and paste it above.')}</li>
+              </ol>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsRequestModalOpen(false)}>
+              {t('common.cancel', 'Cancel')}
+            </Button>
+            <Button onClick={() => setIsRequestModalOpen(false)}>
+              {t('request_brand.submit', 'Submit request')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
