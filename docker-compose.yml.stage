@@ -30,12 +30,15 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.stage
+    command: /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
     volumes:
       - .:/code
       - ./static:/code/static
       - media_volume:/code/media
       # Mount SSL certificates from host
       - /etc/letsencrypt:/etc/letsencrypt:ro
+      - ./nginx.conf.stage:/etc/nginx/sites-available/default
+      - ./supervisord.conf:/etc/supervisor/conf.d/supervisord.conf
     ports:
       - "80:80"
       - "443:443"
@@ -78,4 +81,4 @@ volumes:
   postgres_data:
   redis_data:
   media_volume:
-  
+
