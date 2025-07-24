@@ -967,3 +967,42 @@ def download_image(image_url: str, logger) -> Optional[str]:
     except Exception as e:
         logger.error(f"Error downloading image from {image_url}: {e}")
         return None
+
+
+@shared_task
+def run_backload_queries(backload_ids):
+    """
+    Celery task to run queries on one or more Backload objects.
+    
+    This task executes the run_backload_queries management command for the given Backload IDs.
+    It can be scheduled through Django Celery Beat admin interface.
+    
+    Args:
+        backload_ids: List of Backload IDs to run queries on
+        
+    Returns:
+        Dictionary with task execution information
+    """
+    from django.core.management import call_command
+    
+    logger.info(f"Running backload queries for IDs: {backload_ids}")
+    
+    try:
+        # Convert to list if it's a single ID
+        if not isinstance(backload_ids, list):
+            backload_ids = [backload_ids]
+            
+        # Execute the management command
+        call_command('run_backload_queries', *[str(id) for id in backload_ids])
+        
+        return {
+            'status': 'success',
+            'message': f"Successfully ran queries for Backload IDs: {backload_ids}"
+        }
+    except Exception as e:
+        error_msg = f"Error running backload queries: {str(e)}"
+        logger.error(error_msg)
+        return {
+            'status': 'error',
+            'message': error_msg
+        }
