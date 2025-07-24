@@ -12,8 +12,6 @@ services:
       test: pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}
       interval: 2s
       retries: 10
-    restart: unless-stopped
-  
   redis:
     image: redis
     # persistent storage
@@ -24,45 +22,36 @@ services:
       test: bash -c 'exec 6<>/dev/tcp/redis/6379'
       interval: 2s
       retries: 10
-    restart: unless-stopped
-  
   web:
     build:
       context: .
-      dockerfile: Dockerfile.local
-    command: /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
+      dockerfile: Dockerfile.dev
+    command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/code
-      - ./static:/code/static
-      - media_volume:/code/media
-      - ./nginx.conf.local:/etc/nginx/sites-available/default
-      - ./supervisord.conf.local:/etc/supervisor/conf.d/supervisord.conf
     ports:
-      - "80:80"
+      - "8000:8000"
     environment:
-      - PYTHONUNBUFFERED=1
-      - PYTHONDONTWRITEBYTECODE=1
-      - DJANGO_SETTINGS_MODULE=adheist.settings
+      PYTHONUNBUFFERED: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
     env_file:
       - ./.env
+    restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
-    restart: unless-stopped
-  
   celery:
     build:
       context: .
-      dockerfile: Dockerfile.local
+      dockerfile: Dockerfile.dev
     command: celery -A adheist worker -l INFO --beat --pool=solo
     volumes:
       - .:/code
     environment:
-      - PYTHONUNBUFFERED=1
-      - PYTHONDONTWRITEBYTECODE=1
-      - DJANGO_SETTINGS_MODULE=adheist.settings
+      PYTHONUNBUFFERED: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
     env_file:
       - ./.env
     depends_on:
@@ -70,9 +59,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    restart: unless-stopped
 
 volumes:
   postgres_data:
   redis_data:
-  media_volume:
