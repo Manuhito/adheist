@@ -70,6 +70,26 @@ def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int
         ).values_list('meta_ad_id', flat=True).distinct())
         
         logger.info(f"Found {len(existing_ad_ids)} existing ads for FacebookPage ID {page_id}")
+        
+        # Extraer los meta_ad_id de los items actuales
+        current_ad_ids = []
+        for item in items:
+            meta_ad_id = item.get('ad_archive_id')
+            if meta_ad_id:
+                current_ad_ids.append(meta_ad_id)
+        
+        # Identificar anuncios que ya no están activos (existentes pero no en la lista actual)
+        inactive_ad_ids = [ad_id for ad_id in existing_ad_ids if ad_id not in current_ad_ids]
+        
+        # Marcar como inactivos los anuncios que ya no aparecen en el dataset
+        if inactive_ad_ids:
+            inactive_count = AdLibrary.objects.filter(
+                facebook_page__page_id=page_id,
+                meta_ad_id__in=inactive_ad_ids,
+                meta_status=AdLibrary.STATUS_ACTIVE
+            ).update(meta_status=AdLibrary.STATUS_INACTIVE)
+            
+            logger.info(f"Marked {inactive_count} ads as inactive for FacebookPage ID {page_id}")
     else:
         logger.warning("No page_id provided, skipping existing ads lookup")
     
