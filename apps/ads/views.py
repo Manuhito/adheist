@@ -1884,6 +1884,18 @@ def request_brand(request):
         if not brand_url:
             return JsonResponse({'success': False, 'error': 'Brand URL is required'}, status=400)
         
+        # Extract Facebook Page ID from URL if present
+        facebook_page_id = None
+        if 'view_all_page_id=' in brand_url:
+            try:
+                # Extract the ID using regex to find the pattern view_all_page_id=NUMBER
+                import re
+                match = re.search(r'view_all_page_id=([0-9]+)', brand_url)
+                if match:
+                    facebook_page_id = match.group(1)
+            except Exception as e:
+                logging.warning(f"Failed to extract Facebook Page ID: {str(e)}")
+        
         # Send Slack notification
         user_email = request.user.email
         title = "New Brand Request"
@@ -1894,6 +1906,10 @@ def request_brand(request):
             'brand_url': brand_url,
             'timestamp': str(timezone.now())
         }
+        
+        # Add Facebook Page ID to context if found
+        if facebook_page_id:
+            context['facebook_page_id'] = facebook_page_id
         
         # Send notification using the existing function
         send_slack_notification(message, context, title)
