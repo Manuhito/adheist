@@ -651,7 +651,7 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
                     title={t('step_one.gallery_title', 'Select Your Ideal Ad Style')}
                     description={
                       <>
-                        {t('step_one.gallery_description_part1', "Didn't find your favourite company? ")}
+                        {t('step_one.gallery_description_part1', "Didn't find your favourite company?")}{' '}
                         <span 
                           className="text-primary underline cursor-pointer hover:text-primary/80 transition-colors"
                           onClick={() => setIsRequestModalOpen(true)}
@@ -800,7 +800,35 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
                 {t('request_brand.help_title', 'How to get the URL?')}
               </h4>
               <ol className="text-sm text-muted-foreground space-y-2 pl-5 list-decimal">
-                <li>{t('request_brand.help_step1', 'Go to Meta ad library and search for the brand / advertiser.')}</li>
+                <li className="flex items-start flex-wrap">
+                  <span className="inline whitespace-normal">
+                    {t('request_brand.help_step1', 'Go to Meta ad library and search for the brand / advertiser.')}
+                    <a 
+                      href="https://www.facebook.com/ads/library" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center ml-0.5 text-primary hover:text-primary/80"
+                      title="Open Facebook Ad Library"
+                      style={{ whiteSpace: 'nowrap' }}
+                    >
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      width="14" 
+                      height="14" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      className="lucide lucide-external-link"
+                    >
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                      <polyline points="15 3 21 3 21 9"></polyline>
+                      <line x1="10" y1="14" x2="21" y2="3"></line>
+                    </svg>
+                    </a></span>
+                </li>
                 <li>{t('request_brand.help_step2', 'Click on the brand in the search dropdown and copy the URL and paste it above.')}</li>
               </ol>
             </div>
