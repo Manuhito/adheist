@@ -68,7 +68,6 @@ export default function NavigationMenuDemo() {
               <NavigationMenuLink asChild>
                 <a 
                   href={item.href || ""} 
-                  target="_arya"
                   className={navigationMenuTriggerStyle()}
                 >
                   {t(`menu.${item.label.toLowerCase().replace(/ /g, '_')}`, item.label)}
