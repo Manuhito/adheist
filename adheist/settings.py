@@ -272,9 +272,13 @@ SOCIALACCOUNT_PROVIDERS = {
 SERVER_EMAIL = env("SERVER_EMAIL", default="noreply@localhost:8000")
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="hey@adheist.ai")
 
-# The default value will print emails to the console, but you can change that here
-# and in your environment.
-EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
+# Email backend configuration based on environment
+# In development environment, use dummy backend that doesn't send emails
+# In other environments, use the configured backend or console backend as default
+if APP_ENV == 'dev':
+    EMAIL_BACKEND = "django.core.mail.backends.dummy.EmailBackend"  # No emails sent in dev
+else:
+    EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
 ANYMAIL = {
     "RESEND_API_KEY": env("RESEND_API_KEY", default=None),
     "RESEND_API_URL": env("RESEND_API_URL", default="https://api.resend.com"),
