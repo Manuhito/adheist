@@ -162,6 +162,8 @@ def generate_image_task(
                 # If we have a version_id, update its status to failed
                 if version_id:
                     try:
+                        # Use the AdRequestVersion that was imported at the top of the file
+                        from apps.ads.models import AdRequestVersion
                         version = AdRequestVersion.objects.get(id=version_id)
                         version.status = version.STATUS_FAILED
                         version.error_logs = f"Error in image generation service: {error_message}"
@@ -372,25 +374,15 @@ def generate_image_task(
                     error_message = f"No binary image content found in result for AdRequestVersion {version_id}"
                     logger.error(error_message)
                     version.status = version.STATUS_FAILED
-                    version.error_logs = error_message
-                    version.save(update_fields=['status', 'error_logs'])
             except Exception as e:
-                logger.exception(f"Error updating AdRequestVersion {version_id}: {str(e)}")
-                # If we have a version ID, update its status to failed
-                try:
-                    from apps.ads.models import AdRequestVersion
-                    version = AdRequestVersion.objects.get(id=version_id)
-                    version.status = version.STATUS_FAILED
-                    version.error_logs = f"Error updating AdRequestVersion: {str(e)}"
-                    version.save(update_fields=['status', 'error_logs'])
-                except Exception:
-                    pass
-        
-        # Return the result
-        return {
-            "status": "success",
-            "result": result
-        }
+                logger.exception(f"Error tracking PostHog event for AdRequestVersion {version_id}: {str(e)}")
+            
+        else:
+            error_message = f"No binary image content found in result for AdRequestVersion {version_id}"
+            logger.error(error_message)
+            version.status = version.STATUS_FAILED
+            version.error_logs = error_message
+            version.save(update_fields=['status', 'error_logs'])
         
     except Exception as e:
         error_msg = f"Error in generate_image_task: {str(e)}"
