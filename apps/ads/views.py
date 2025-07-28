@@ -7,6 +7,8 @@ import logging
 
 # Importar el servicio de generación de imágenes
 from apps.aiinterface.services import ImageGenerationService
+from django.db.models import Q, Count, Sum, F, Exists, OuterRef, Subquery
+from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404, render, redirect
 from django.template.response import TemplateResponse
 from django.views.decorators.http import require_POST
@@ -490,6 +492,7 @@ def get_adlibrary_filters(request):
         company_name: Filter by company name (case-insensitive contains)
         industries: Filter by industry names (comma-separated list)
         tags: Filter by tag names (comma-separated list)
+        is_active: Filter by active status (true/false)
     
     Returns: JSON with list of AdLibrary objects including company_name, industries, tags, and ad_image
     """
@@ -499,6 +502,10 @@ def get_adlibrary_filters(request):
     company_name = request.GET.get('company_name', '')
     industries = request.GET.getlist('industries', [])
     tags = request.GET.getlist('tags', [])
+    
+    # Get is_active filter parameter (default to True if not provided)
+    is_active_param = request.GET.get('is_active', 'true').lower()
+    is_active = is_active_param in ['true', '1', 'yes']
     
     # If single values are provided instead of lists, convert them
     if not industries and request.GET.get('industry'):
@@ -510,41 +517,50 @@ def get_adlibrary_filters(request):
     # Check if any filter parameters are provided
     has_filters = company_name or industries or tags
     
-    # Start with all active AdLibrary objects or just favorites if no filters
     if has_filters:
+        # Comenzar con una consulta base sin filtros
         adlibraries = AdLibrary.objects.filter(is_active=True)
+        
+        # Aplicar filtros específicos primero
+        # Apply company name filter if provided (AND logic)
+        if company_name:
+            adlibraries = adlibraries.filter(facebook_page__page_name__icontains=company_name)
+        
+        # Create combined query for industries and tags (OR logic between them)
+        combined_query = Q()
+        
+        # Add industry conditions to combined query
+        if industries:
+            # Filter by industries using a more efficient in-query
+            valid_industries = [industry for industry in industries if industry]
+            if valid_industries:
+                combined_query |= Q(facebook_page__industries__name__in=valid_industries)
+        
+        # Add tag conditions to combined query - search in ad_creative_bodies
+        if tags:
+            valid_tags = [tag for tag in tags if tag]
+            if valid_tags:
+                for tag in valid_tags:
+                    # Buscar en ad_creative_bodies usando la función de PostgreSQL para buscar en arrays
+                    # Esta es la forma más eficiente y directa para buscar en ArrayField
+                    combined_query |= Q(pk__in=AdLibrary.objects.extra(
+                        where=["EXISTS (SELECT 1 FROM unnest(ad_creative_bodies) AS body WHERE body ILIKE %s)"],
+                        params=['%' + tag + '%']
+                    ).values('pk'))
+        
+        # Apply the combined filter if any conditions exist
+        if combined_query:
+            adlibraries = adlibraries.filter(combined_query).distinct()
+        
+        # Aplicar el filtro is_active al final
+        if is_active:
+            adlibraries = adlibraries.filter(meta_status=AdLibrary.STATUS_ACTIVE)
     else:
-        adlibraries = AdLibrary.objects.filter(is_fav=True, is_active=True)
-    
-    # Apply company name filter if provided (AND logic)
-    if company_name:
-        adlibraries = adlibraries.filter(facebook_page__page_name__icontains=company_name)
-    
-    # Create combined query for industries and tags (OR logic between them)
-    combined_query = Q()
-    
-    # Add industry conditions to combined query
-    if industries:
-        # Filter by industries using a more efficient in-query
-        valid_industries = [industry for industry in industries if industry]
-        if valid_industries:
-            combined_query |= Q(facebook_page__industries__name__in=valid_industries)
-    
-    # Add tag conditions to combined query - search in ad_creative_bodies
-    if tags:
-        valid_tags = [tag for tag in tags if tag]
-        if valid_tags:
-            for tag in valid_tags:
-                # Buscar en ad_creative_bodies usando la función de PostgreSQL para buscar en arrays
-                # Esta es la forma más eficiente y directa para buscar en ArrayField
-                combined_query |= Q(pk__in=AdLibrary.objects.extra(
-                    where=["EXISTS (SELECT 1 FROM unnest(ad_creative_bodies) AS body WHERE body ILIKE %s)"],
-                    params=['%' + tag + '%']
-                ).values('pk'))
-    
-    # Apply the combined filter if any conditions exist
-    if combined_query:
-        adlibraries = adlibraries.filter(combined_query).distinct()
+        # Si no hay filtros específicos, mostrar solo favoritos
+        if is_active:
+            adlibraries = AdLibrary.objects.filter(is_fav=True, meta_status=AdLibrary.STATUS_ACTIVE, is_active=True)
+        else:
+            adlibraries = AdLibrary.objects.filter(is_fav=True, is_active=True)
     
     # Convert to list of dictionaries with all required fields
     adlibrary_list = []

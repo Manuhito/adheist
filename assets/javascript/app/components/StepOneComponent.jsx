@@ -127,9 +127,10 @@ export const useFilterCache = () => useContext(FilterCacheContext);
 const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const { t } = useTranslation();
   // Centralized state for all filters
-  const [selectedCompany, setSelectedCompany] = useState(null);
+  const [selectedCompany, setSelectedCompany] = useState('');
   const [selectedIndustries, setSelectedIndustries] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
+  const [showOnlyActive, setShowOnlyActive] = useState(true);
   const [filteredResults, setFilteredResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   // Initialize selected canvas size directly with the size value from initialData
@@ -220,6 +221,9 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
     if (selectedTags && selectedTags.length > 0) {
       selectedTags.forEach(tag => params.append('tags', tag));
     }
+    
+    // Add active filter
+    params.append('is_active', showOnlyActive);
 
     // Always call the API, even when no filters are selected
     fetch(`/ads/adlibraries/?${params.toString()}`)
@@ -311,7 +315,7 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
   // Call the API when any filter changes
   useEffect(() => {
     fetchFilteredResults();
-  }, [selectedCompany, selectedIndustries, selectedTags]);
+  }, [selectedCompany, selectedIndustries, selectedTags, showOnlyActive]);
 
   // Fetch fresh data when component mounts
   useEffect(() => {
@@ -331,6 +335,11 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
   const handleTagsChange = (tags) => {
     setSelectedTags(tags);
+  };
+
+  // Handle active filter change
+  const handleActiveFilterChange = (isActive) => {
+    setShowOnlyActive(isActive);
   };
 
   // Prepare media items for the gallery
@@ -660,6 +669,8 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
                         </span>
                       </>
                     }
+                    onActiveFilterChange={handleActiveFilterChange}
+                    initialActiveFilter={showOnlyActive}
                     onItemSelect={handleGalleryItemSelect}
                     selectedItemId={selectedAdLibrary}
                   />
