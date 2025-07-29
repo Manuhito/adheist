@@ -20,6 +20,7 @@ export const MultipleSelector = React.forwardRef(
       disabled,
       className,
       badgeClassName,
+      icon,
       ...props
     },
     ref
@@ -193,6 +194,11 @@ export const MultipleSelector = React.forwardRef(
                 </div>
               );
             })}
+            {icon && value.length === 0 && !inputValue && (
+              <div className="flex items-center mr-2 text-muted-foreground">
+                {icon}
+              </div>
+            )}
             <CommandPrimitive.Input
               ref={inputRef}
               value={inputValue}
