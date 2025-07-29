@@ -49,19 +49,19 @@ export const FilterFormComponent = ({
       tags: selectedTags,
     },
   });
-  
+
   // Asegurar que los datos estén cargados
   useEffect(() => {
     const componentMountTime = performance.now();
     const cacheId = window._filterCacheId || 'unknown';
-    
+
     console.log(`[FILTER FORM] 📊 [${cacheId}] Componente montado - timestamp: ${new Date().toISOString()}`);
-    
+
     // Cargar datos si aún no están disponibles
     if (industriesList.length === 0 || tagsList.length === 0) {
       console.log(`[FILTER FORM] 🔄 [${cacheId}] Solicitando datos de filtros - caché vacía`);
       const startTime = performance.now();
-      
+
       loadFilterData().then((data) => {
         const endTime = performance.now();
         console.log(`[FILTER FORM] ⏱️ [${cacheId}] Datos recibidos en ${(endTime - startTime).toFixed(2)}ms`);
@@ -70,14 +70,14 @@ export const FilterFormComponent = ({
     } else {
       console.log(`[FILTER FORM] ✅ [${cacheId}] Usando datos en caché - industries: ${industriesList.length}, tags: ${tagsList.length}`);
       console.log(`[FILTER FORM] 💾 [${cacheId}] Tiempo de montaje con caché: ${(performance.now() - componentMountTime).toFixed(2)}ms`);
-      
+
       // Medir el tiempo de renderizado inicial de los componentes MultipleSelector
       setTimeout(() => {
         const renderTime = performance.now() - componentMountTime;
         console.log(`[PERF] ⚡️ [${cacheId}] Tiempo total de renderizado con virtualización: ${renderTime.toFixed(2)}ms`);
       }, 0);
     }
-    
+
     // Registrar el rendimiento en localStorage para diagnóstico
     try {
       const formPerfData = JSON.parse(localStorage.getItem('filterFormPerfData') || '[]');
@@ -115,10 +115,6 @@ export const FilterFormComponent = ({
         <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-wrap gap-4 w-full">
           {/* Campo de industrias */}
           <div className="flex-1 min-w-[180px]">
-            <div className="flex items-center">
-              <Factory className="h-4 w-4 mr-2" />
-              <h3 className="text-base font-medium">{t('filter.industries', 'Industries')}</h3>
-            </div>
 
             <FormField
               control={form.control}
@@ -139,7 +135,8 @@ export const FilterFormComponent = ({
                           field.value.includes(industry.value)
                         )}
                         options={availableIndustries}
-                        placeholder={t('filter.select_industries', 'Select industries')}
+                        icon={<Factory className="h-4 w-4" />}
+                        placeholder={t('filter.industries', 'Industries')}
                         emptyIndicator={
                           isLoading ? (
                             <p className="text-center text-sm">{t('filter.loading_industries', 'Loading industries...')}</p>
@@ -172,11 +169,6 @@ export const FilterFormComponent = ({
 
           {/* Campo de etiquetas */}
           <div className="flex-1 min-w-[180px]">
-            <div className="flex items-center">
-              <Tag className="h-4 w-4 mr-2" />
-              <h3 className="text-base font-medium">{t('filter.tags', 'Ad description Keywords')}</h3>
-            </div>
-
             <FormField
               control={form.control}
               name="tags"
@@ -196,7 +188,8 @@ export const FilterFormComponent = ({
                           field.value.includes(tag.value)
                         )}
                         options={availableTags}
-                        placeholder={t('filter.select_tags', 'Search by Ad description Keywords')}
+                        icon={<Tag className="h-4 w-4" />}
+                        placeholder={t('filter.tags', 'Ad description Keywords')}
                         emptyIndicator={
                           isLoading ? (
                             <p className="text-center text-sm">{t('filter.loading_tags', 'Loading tags...')}</p>

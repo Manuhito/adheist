@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
-import { Search, Check, ChevronDown } from 'lucide-react';
+import { Search, Check, ChevronDown, Building, Factory } from 'lucide-react';
 import { useTranslation } from '../../lib/useTranslation';
 
 /**
@@ -74,8 +74,13 @@ export const SearchComponent = ({ selectedCompany, onCompanyChange }) => {
             aria-expanded={isOpen}
             className="w-full justify-between bg-background px-3 font-normal min-h-[38px] h-[38px]"
           >
-            <span className={!selectedCompany ? "text-muted-foreground" : ""}>
-              {selectedCompany || t('search.select_company', 'Select Company')}
+            <span className={!selectedCompany ? "text-muted-foreground flex items-center" : ""}>
+              {selectedCompany || (
+                <>
+                  <Building className="h-4 w-4 mr-2" />
+                  {t('search.company', 'Company')}
+                </>
+              )}
             </span>
             <ChevronDown
               size={16}

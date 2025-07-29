@@ -314,6 +314,7 @@ def translations(request):
             'search.search_company': _('Search company...'),
             'search.loading_companies': _('Loading companies...'),
             'search.no_companies': _('No companies found.'),
+            'search.company': _('Company'),
             
             # FilterFormComponent translations
             'filter.industries': _('Industries'),
@@ -321,7 +322,6 @@ def translations(request):
             'filter.loading_industries': _('Loading industries...'),
             'filter.no_industries': _('No industries available'),
             'filter.tags': _('Ad description Keywords'),
-            'filter.select_tags': _('Search by Ad description Keywords'),
             'filter.loading_tags': _('Loading tags...'),
             'filter.no_tags': _('No tags available'),
             

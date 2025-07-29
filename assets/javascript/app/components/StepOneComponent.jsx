@@ -3,6 +3,7 @@ import { SearchComponent } from './SearchComponent';
 import { FilterFormComponent } from './FilterFormComponent';
 import InteractiveBentoGallery from '../../components/ui/interactive-bento-gallery.jsx';
 import { Building, X, Upload, ImageIcon, Plus } from 'lucide-react';
+import { Switch } from '../../components/ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../shadcn/components/ui/tooltip';
 import { NextButton } from '../../components/ui/next-button.jsx';
 import { useTranslation } from '../../lib/useTranslation';
@@ -589,30 +590,27 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
   return (
     <div className="space-y-3 flex flex-col items-center w-full">
       <div className="w-full relative">
-        {/* Botón de limpiar filtros en la parte superior */}
-        <div className="flex justify-end mb-2">
-          {hasActiveFilters && (
-            <button
-              onClick={handleClearFilters}
-              className="group flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-500 hover:text-primary transition-all duration-200 ease-in-out hover:scale-105 active:scale-95 relative overflow-hidden rounded-full"
-              aria-label="Clear all filters"
-            >
-              <span className="relative z-10">{t('step_one.clear_filters', 'Clear filters')}</span>
-              <X className="h-3.5 w-3.5 relative z-10 group-hover:rotate-90 transition-transform duration-300" />
-              <span className="absolute inset-0 bg-gray-100 opacity-0 group-hover:opacity-100 group-active:opacity-80 rounded-full scale-0 group-hover:scale-100 transition-all duration-300 ease-out" />
-            </button>
-          )}
-        </div>
-
         {/* Contenedor de filtros en línea horizontal */}
-        <div className="flex flex-nowrap gap-3 w-full overflow-visible pb-2">
+        <div className="flex flex-nowrap gap-3 w-full overflow-visible pb-2 items-center">
+          {/* Toggle de 'only active ads' */}
+          <div className="flex items-center space-x-2 pr-2 border-r border-gray-200">
+            <Switch
+              id="only-active-ads"
+              checked={showOnlyActive}
+              onCheckedChange={(checked) => {
+                setShowOnlyActive(checked);
+                handleActiveFilterChange(checked);
+              }}
+              className="data-[state=checked]:bg-primary"
+            />
+            <label htmlFor="only-active-ads" className="text-sm font-medium cursor-pointer whitespace-nowrap">
+              {t('bento_gallery.only_active_ads', 'Only active Ads')}
+            </label>
+          </div>
+          
           {/* Filtro de compañía */}
           <div className="flex-1 min-w-[180px] max-w-[30%] flex">
             <div className="w-full">
-              <div className="flex items-center">
-                <Building className="h-4 w-4 mr-2" />
-                <h3 className="text-base font-medium">{t('step_one.company', 'Company')}</h3>
-              </div>
               <div>
                 <SearchComponent
                   selectedCompany={selectedCompany}
@@ -629,6 +627,21 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
             onIndustriesChange={handleIndustriesChange}
             onTagsChange={handleTagsChange}
           />
+          
+          {/* Botón de limpiar filtros en la misma fila que los filtros */}
+          {hasActiveFilters && (
+            <div className="ml-auto">
+              <button
+                onClick={handleClearFilters}
+                className="group flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-500 hover:text-primary transition-all duration-200 ease-in-out hover:scale-105 active:scale-95 relative overflow-hidden rounded-full"
+                aria-label="Clear all filters"
+              >
+                <span className="relative z-10">{t('step_one.clear_filters', 'Clear filters')}</span>
+                <X className="h-3.5 w-3.5 relative z-10 group-hover:rotate-90 transition-transform duration-300" />
+                <span className="absolute inset-0 bg-gray-100 opacity-0 group-hover:opacity-100 group-active:opacity-80 rounded-full scale-0 group-hover:scale-100 transition-all duration-300 ease-out" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
       <div className="mt-8 w-full">

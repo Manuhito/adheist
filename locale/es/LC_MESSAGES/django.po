@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-07-24 20:53+0000\n"
+"POT-Creation-Date: 2025-07-29 20:21+0000\n"
 "PO-Revision-Date: 2025-04-30 00:00+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Spanish <LL@li.org>\n"
@@ -19,23 +19,23 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? "
 "1 : 2;\n"
 
-#: adheist/settings.py:300 apps/web/context_processors.py:73
+#: adheist/settings.py:307 apps/web/context_processors.py:73
 msgid "English"
 msgstr "Inglés"
 
-#: adheist/settings.py:301 apps/web/context_processors.py:74
+#: adheist/settings.py:308 apps/web/context_processors.py:74
 msgid "French"
 msgstr "Francés"
 
-#: adheist/settings.py:302 apps/web/context_processors.py:75
+#: adheist/settings.py:309 apps/web/context_processors.py:75
 msgid "Spanish"
 msgstr "Español"
 
-#: adheist/settings.py:429
+#: adheist/settings.py:436
 msgid "AdHeist"
 msgstr "AdHeist"
 
-#: adheist/settings.py:431
+#: adheist/settings.py:438
 msgid "AdHeist description"
 msgstr "Descripción de AdHeist"
 
@@ -729,7 +729,7 @@ msgstr "Borrador"
 msgid "No library"
 msgstr "Sin biblioteca"
 
-#: apps/web/context_processors.py:218 apps/web/context_processors.py:319
+#: apps/web/context_processors.py:218 apps/web/context_processors.py:320
 #: templates/ads/adlibrary_form.html:42
 msgid "Industries"
 msgstr "Industrias"
@@ -939,8 +939,9 @@ msgid "An unexpected error occurred"
 msgstr "Error inesperado"
 
 #: apps/web/context_processors.py:276 apps/web/context_processors.py:306
+#: apps/web/context_processors.py:317
 msgid "Company"
-msgstr "Compañía"
+msgstr "Empresa"
 
 #: apps/web/context_processors.py:277
 msgid "Clear filters"
@@ -979,8 +980,12 @@ msgid "Go to Meta ad library and search for the brand / advertiser."
 msgstr "Ve a la biblioteca de anuncios de Meta y busca la marca / anunciante."
 
 #: apps/web/context_processors.py:288
-msgid "Click on the brand in the search dropdown and copy the URL and paste it above."
-msgstr "Haz clic en la marca en el menú desplegable de búsqueda y copia la URL y pégala arriba."
+msgid ""
+"Click on the brand in the search dropdown and copy the URL and paste it "
+"above."
+msgstr ""
+"Haz clic en la marca en el menú desplegable de búsqueda y copia la URL y "
+"pégala arriba."
 
 #: apps/web/context_processors.py:289
 msgid "Submit request"
@@ -1068,31 +1073,25 @@ msgstr "Cargando compañías..."
 msgid "No companies found."
 msgstr "No se encontraron compañías."
 
-#: apps/web/context_processors.py:320
+#: apps/web/context_processors.py:321
 msgid "Select industries"
 msgstr "Seleccionar industrias"
 
-#: apps/web/context_processors.py:321
+#: apps/web/context_processors.py:322
 #, fuzzy
 #| msgid "No associated industries"
 msgid "Loading industries..."
 msgstr "No hay industrias asociadas"
 
-#: apps/web/context_processors.py:322
+#: apps/web/context_processors.py:323
 #, fuzzy
 #| msgid "No ad request ID available"
 msgid "No industries available"
 msgstr "No hay industrias disponibles"
 
-#: apps/web/context_processors.py:323
+#: apps/web/context_processors.py:324
 msgid "Ad description Keywords"
 msgstr "Palabras clave de la descripción del anuncio"
-
-#: apps/web/context_processors.py:324
-#, fuzzy
-#| msgid "Select Ad description Keywords"
-msgid "Search by Ad description Keywords"
-msgstr "Buscar por palabras clave de la descripción del anuncio"
 
 #: apps/web/context_processors.py:325
 msgid "Loading tags..."
@@ -2386,6 +2385,11 @@ msgstr ""
 "class=\"font-medium\">%(end)s</span> de <span class=\"font-"
 "medium\">%(total)s</span> resultados\n"
 "        "
+
+#, fuzzy
+#~| msgid "Select Ad description Keywords"
+#~ msgid "Search by Ad description Keywords"
+#~ msgstr "Buscar por palabras clave de la descripción del anuncio"
 
 #~ msgid ""
 #~ "Browse and choose the ad style that best matches your desired outcome"
