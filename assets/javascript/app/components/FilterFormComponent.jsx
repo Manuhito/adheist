@@ -169,11 +169,6 @@ export const FilterFormComponent = ({
 
           {/* Campo de etiquetas */}
           <div className="flex-1 min-w-[180px]">
-            <div className="flex items-center">
-              <Tag className="h-4 w-4 mr-2" />
-              <h3 className="text-base font-medium">{t('filter.tags', 'Ad description Keywords')}</h3>
-            </div>
-
             <FormField
               control={form.control}
               name="tags"
@@ -193,7 +188,8 @@ export const FilterFormComponent = ({
                           field.value.includes(tag.value)
                         )}
                         options={availableTags}
-                        placeholder={t('filter.select_tags', 'Search by Ad description Keywords')}
+                        icon={<Tag className="h-4 w-4" />}
+                        placeholder={t('filter.tags', 'Ad description Keywords')}
                         emptyIndicator={
                           isLoading ? (
                             <p className="text-center text-sm">{t('filter.loading_tags', 'Loading tags...')}</p>
