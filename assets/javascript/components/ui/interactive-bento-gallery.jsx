@@ -466,22 +466,6 @@ const InteractiveBentoGallery = ({
     return (
         <div className="container mx-auto px-4 py-6 max-w-5xl">
             <div className="mb-6 relative">
-                <div className="absolute left-0 top-1 flex items-center space-x-2">
-                    <Switch
-                        id="only-active-ads"
-                        checked={showOnlyActive}
-                        onCheckedChange={(checked) => {
-                            setShowOnlyActive(checked);
-                            if (onActiveFilterChange && typeof onActiveFilterChange === 'function') {
-                                onActiveFilterChange(checked);
-                            }
-                        }}
-                        className="data-[state=checked]:bg-primary"
-                    />
-                    <label htmlFor="only-active-ads" className="text-sm font-medium cursor-pointer">
-                        {t('bento_gallery.only_active_ads', 'Only active Ads')}
-                    </label>
-                </div>
                 <div className="text-center">
                     <motion.h2
                         className="text-2xl sm:text-3xl font-bold text-foreground"

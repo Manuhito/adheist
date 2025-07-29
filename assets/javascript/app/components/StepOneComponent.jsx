@@ -3,6 +3,7 @@ import { SearchComponent } from './SearchComponent';
 import { FilterFormComponent } from './FilterFormComponent';
 import InteractiveBentoGallery from '../../components/ui/interactive-bento-gallery.jsx';
 import { Building, X, Upload, ImageIcon, Plus } from 'lucide-react';
+import { Switch } from '../../components/ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../shadcn/components/ui/tooltip';
 import { NextButton } from '../../components/ui/next-button.jsx';
 import { useTranslation } from '../../lib/useTranslation';
@@ -606,6 +607,22 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
         {/* Contenedor de filtros en línea horizontal */}
         <div className="flex flex-nowrap gap-3 w-full overflow-visible pb-2">
+          {/* Toggle de 'only active ads' */}
+          <div className="flex items-center space-x-2 pr-2 border-r border-gray-200">
+            <Switch
+              id="only-active-ads"
+              checked={showOnlyActive}
+              onCheckedChange={(checked) => {
+                setShowOnlyActive(checked);
+                handleActiveFilterChange(checked);
+              }}
+              className="data-[state=checked]:bg-primary"
+            />
+            <label htmlFor="only-active-ads" className="text-sm font-medium cursor-pointer whitespace-nowrap">
+              {t('bento_gallery.only_active_ads', 'Only active Ads')}
+            </label>
+          </div>
+          
           {/* Filtro de compañía */}
           <div className="flex-1 min-w-[180px] max-w-[30%] flex">
             <div className="w-full">
