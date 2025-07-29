@@ -272,6 +272,9 @@ SOCIALACCOUNT_PROVIDERS = {
 SERVER_EMAIL = env("SERVER_EMAIL", default="noreply@localhost:8000")
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="hey@adheist.ai")
 
+# Get environment (dev, stage, prod)
+APP_ENV = os.environ.get('APP_ENV', 'dev')
+
 # Email backend configuration based on environment
 # In development environment, use dummy backend that doesn't send emails
 # In other environments, use the configured backend or console backend as default
@@ -477,10 +480,6 @@ SILENCED_SYSTEM_CHECKS = [
 if "test" in sys.argv:
     # Silence unnecessary warnings in tests
     SILENCED_SYSTEM_CHECKS.append("djstripe.I002")
-
-
-# Get environment (dev, stage, prod)
-APP_ENV = os.environ.get('APP_ENV', 'dev')
 
 # Base directory for log files in non-dev environments
 LOG_DIR = os.environ.get('DJANGO_LOG_DIR', '/var/log/django/')
