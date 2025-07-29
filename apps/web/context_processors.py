@@ -314,6 +314,7 @@ def translations(request):
             'search.search_company': _('Search company...'),
             'search.loading_companies': _('Loading companies...'),
             'search.no_companies': _('No companies found.'),
+            'search.company': _('Company'),
             
             # FilterFormComponent translations
             'filter.industries': _('Industries'),

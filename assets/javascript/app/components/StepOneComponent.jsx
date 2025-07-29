@@ -609,10 +609,6 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
           {/* Filtro de compañía */}
           <div className="flex-1 min-w-[180px] max-w-[30%] flex">
             <div className="w-full">
-              <div className="flex items-center">
-                <Building className="h-4 w-4 mr-2" />
-                <h3 className="text-base font-medium">{t('step_one.company', 'Company')}</h3>
-              </div>
               <div>
                 <SearchComponent
                   selectedCompany={selectedCompany}
