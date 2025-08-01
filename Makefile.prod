@@ -9,9 +9,7 @@ setup-compose:
 	@echo "Copied docker-compose.yml.prod to docker-compose.yml"
 
 setup-env: setup-compose
-	@rm -f .env
-	@cp .env.prod .env
-	@echo "Copied .env.prod to .env"
+	@[ ! -f ./.env ] && cp ./.env.prod ./.env || echo ".env file already exists."
 
 start: ## Start the docker containers with production configuration
 	@echo "Starting the docker containers for production"
