@@ -1,0 +1,51 @@
+# syntax = docker/dockerfile:1.5
+FROM python:3.12-bookworm
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Install node/npm + nginx + supervisor
+RUN --mount=target=/var/lib/apt/lists,type=cache,sharing=locked \
+    --mount=target=/var/cache/apt,type=cache,sharing=locked \
+    apt-get update && \
+    apt-get install -yqq \
+    curl \
+    gnupg \
+    supervisor \
+    nginx \
+    gettext \
+    libpq-dev && \
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get update && \
+    apt-get install -yqq nodejs
+
+# Create directories and prepare environment
+WORKDIR /code
+
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:0.5.2 /uv /uvx /bin/
+
+# Install Python requirements
+COPY requirements.txt requirements.txt
+COPY prod-requirements.txt prod-requirements.txt
+COPY requirements requirements/
+RUN --mount=type=cache,target=/root/.cache \
+    uv pip install --system -r prod-requirements.txt \
+    gunicorn gevent
+
+# Create necessary directories
+RUN mkdir -p /var/log/nginx /var/log/supervisor /var/log/gunicorn /run/nginx /code/static /code/media
+RUN mkdir -p /etc/letsencrypt/live/adheist.ai
+RUN touch /var/log/supervisor/supervisord.log /var/log/nginx/access.log /var/log/nginx/error.log \
+    /var/log/gunicorn/access.log /var/log/gunicorn/error.log \
+    /var/log/collectstatic.log /var/log/migrate.log
+RUN chown -R www-data:www-data /var/log/nginx /run/nginx
+
+# Copy configuration files
+COPY nginx.conf /etc/nginx/sites-available/default
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Expose ports for both HTTP and HTTPS
+EXPOSE 80 443
+
+# Start supervisor
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
