@@ -540,13 +540,14 @@ def get_adlibrary_filters(request):
         if tags:
             valid_tags = [tag for tag in tags if tag]
             if valid_tags:
+                # Crear una condición OR para buscar cualquiera de los tags en ad_creative_bodies
+                tag_query = Q()
                 for tag in valid_tags:
-                    # Buscar en ad_creative_bodies usando la función de PostgreSQL para buscar en arrays
-                    # Esta es la forma más eficiente y directa para buscar en ArrayField
-                    combined_query |= Q(pk__in=AdLibrary.objects.extra(
-                        where=["EXISTS (SELECT 1 FROM unnest(ad_creative_bodies) AS body WHERE body ILIKE %s)"],
-                        params=['%' + tag + '%']
-                    ).values('pk'))
+                    # Usar icontains para búsqueda insensible a mayúsculas/minúsculas
+                    tag_query |= Q(ad_creative_bodies__icontains=tag)
+                
+                # Añadir la condición OR a la consulta combinada
+                combined_query |= tag_query
         
         # Apply the combined filter if any conditions exist
         if combined_query:
