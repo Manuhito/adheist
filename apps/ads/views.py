@@ -1447,41 +1447,55 @@ def billing_page(request):
         # Enterprise plan will be added manually
     }
     
+    # Separar los productos en planes y paquetes
+    subscription_products = []
+    package_products = []
+    
+    for product in products_with_metadata:
+        # Identificar si es un paquete por el slug
+        if product.metadata.slug.startswith('package-'):
+            package_products.append(product)
+        else:
+            subscription_products.append(product)
+    
     # Initialize pricing data without Free plan
     pricing_data = {
         "title": "Pricing Plans",
         "subtitle": "Choose the perfect plan for your needs",
         "frequencies": ["monthly", "usage"],
         "tiers": [],
-        "usagePackages": [
-            {
-                "name": "Package 1",
-                "description": "Basic usage package",
-                "price": 100,
-                "priceId": "price_package_1",
-                "features": [
-                    "100 images",
-                    "200 revisions"
-                ],
-                "cta": "Buy Package",
-                "highlighted": True,
-                "popular": False
-            },
-            {
-                "name": "Package 2",
-                "description": "Advanced usage package",
-                "price": 200,
-                "priceId": "price_package_2",
-                "features": [
-                    "200 images",
-                    "500 revisions"
-                ],
-                "cta": "Buy Package",
-                "highlighted": False,
-                "popular": True
-            }
-        ]
+        "usagePackages": []
     }
+    
+    # Construir usagePackages con los package_products
+    for product in package_products:
+        # Obtener el precio para el paquete
+        # Intentamos obtener un precio activo para el producto
+        try:
+            # Primero intentamos obtener el precio usando el método _get_price
+            price = product._get_price(None, fail_hard=False)
+            
+            if not price:
+                # Si no hay precio con _get_price, intentamos obtener cualquier precio activo
+                from djstripe.models import Price
+                prices = Price.objects.filter(product=product.product.id, active=True)
+                if prices.exists():
+                    price = prices.first()
+            
+            if price:
+                package = {
+                    "name": product.metadata.name,
+                    "description": product.metadata.description,
+                    "price": int(price.unit_amount / 100),
+                    "priceId": price.id,  # ID dinámico desde Stripe
+                    "features": product.metadata.features,
+                    "cta": "Buy Package",
+                    "highlighted": product.metadata.slug == "package-1",
+                    "popular": product.metadata.slug == "package-2"
+                }
+                pricing_data["usagePackages"].append(package)
+        except Exception as e:
+            logger.error(f"Error obteniendo precio para paquete {product.metadata.slug}: {str(e)}")
     # Get current user's subscription plan ID if available
     current_plan_id = None
     current_plan_name = None
@@ -1528,7 +1542,7 @@ def billing_page(request):
                 current_plan_id = highest_tier_sub.plan.product.id
                 print(f"Highest tier subscription: {current_plan_name}")
     # Add tiers from metadata
-    for product in products_with_metadata:
+    for product in subscription_products:
         slug = product.metadata.slug
         if slug in product_mapping:
             # Get prices

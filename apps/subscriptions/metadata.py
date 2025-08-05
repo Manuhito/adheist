@@ -193,6 +193,26 @@ ACTIVE_PLAN_INTERVALS = [
 # apps/subscriptions/metadata.py
 ACTIVE_PRODUCTS = [
     ProductMetadata(
+        stripe_id='prod_SNtXmUxTHcTfoe', 
+        slug='package-1', 
+        name='package 1', 
+        features=['package 1 Feature 1', 'package 1 Feature 2', 'package 1 Feature 3'], 
+        price_displays={}, 
+        description='The package 1 plan', 
+        is_default=True, 
+        limits={}
+    ),
+    ProductMetadata(
+        stripe_id='prod_SoSw2e3riRHPI2', 
+        slug='package-2', 
+        name='package 2', 
+        features=['package 2 Feature 1', 'package 2 Feature 2', 'package 2 Feature 3'], 
+        price_displays={}, 
+        description='The package 2 plan', 
+        is_default=False, 
+        limits={}
+    ),
+    ProductMetadata(
         stripe_id='prod_S6Cf3s6eD62XZQ', 
         slug='pro', 
         name='Pro', 
