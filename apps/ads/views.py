@@ -23,6 +23,7 @@ from django.conf import settings
 import posthog
 from django.utils import timezone
 from apps.aiinterface.tasks import send_slack_notification
+from django.contrib.auth import get_user_model
 
 from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion, AdRequestUsage, ExtraCredit
 from .forms import AdLibraryForm
@@ -113,6 +114,89 @@ def payment_page(request):
     return render(request, 'ads/payment.html')
 
 @login_required
+def provision_credit_package(request, user_id, product):
+    """
+    Asigna créditos al usuario basado en el paquete comprado.
+    
+    Args:
+        user: El usuario que compró el paquete
+        product: El objeto Product de Stripe
+        
+    Returns:
+        dict: Información sobre los créditos asignados
+    """
+    print(f'user_id in provision_credit_package: {user_id}')
+    User = get_user_model()
+    user = User.objects.get(id=user_id)
+    print(f"Provisioning credit package: {product.name} for user: {user.id}")
+    
+    # Obtener el slug del producto de los productos activos
+    slug = None
+    stripe_product_id = product.id
+    print(f"Looking for product with Stripe ID: {stripe_product_id}")
+    
+    from apps.subscriptions.metadata import get_active_products_with_metadata
+    # Buscar el producto en los productos activos
+    active_products = list(get_active_products_with_metadata())
+    for active_product in active_products:
+        if active_product.stripe_id == stripe_product_id:
+            slug = active_product.metadata.slug
+            print(f"Found matching product: {active_product.metadata.name} with slug: {slug}")
+            break
+
+    from apps.ads.models import AppConfiguration
+    # Obtener la configuración de créditos desde AppConfiguration
+    config = AppConfiguration.get_limits()
+    
+    # Inicializar valores por defecto
+    general_credits = 0
+    version_credits = 0
+    package_name = "Unknown Package"
+    
+    # Asignar créditos según el paquete
+    if slug == 'package-1' or (slug and slug.startswith('package-1-')):
+        general_credits = config.get('package1', {}).get('general_credits', 15)
+        version_credits = config.get('package1', {}).get('version_credits', 3)
+        package_name = "Package 1"
+    elif slug == 'package-2' or (slug and slug.startswith('package-2-')):
+        general_credits = config.get('package2', {}).get('general_credits', 30)
+        version_credits = config.get('package2', {}).get('version_credits', 7)
+        package_name = "Package 2"
+    else:
+        # Si no coincide con ningún paquete conocido, usar el nombre del producto
+        package_name = product.name
+        print(f"Unknown package type, using default values for {package_name}")
+        # Usar valores predeterminados conservadores
+        general_credits = 5
+        version_credits = 1
+    
+    from .models import ExtraCredit
+    # Asignar créditos al usuario usando los métodos de ExtraCredit
+    ExtraCredit.add_general_credits(user, general_credits)
+    ExtraCredit.add_version_credits(user, version_credits)
+    
+    print(f"Credits assigned to user {user.id}: {general_credits} general, {version_credits} version")
+    
+    import posthog
+    # Registrar la transacción en PostHog
+    posthog.capture(
+        user.id,
+        'Credits Purchased',
+        properties={
+            'package': package_name,
+            'general_credits': general_credits,
+            'version_credits': version_credits,
+            'slug': slug
+        }
+    )
+    
+    return {
+        'package_name': package_name,
+        'general_credits': general_credits,
+        'version_credits': version_credits
+    }
+
+
 def payment_success(request):
     """
     Handle successful payment and create subscription.
@@ -261,74 +345,127 @@ def payment_success(request):
                 print(f"Error attaching payment method: {str(e)}")
                 # Continue anyway, we'll try to create the subscription
             
-            # Now create a subscription with the attached payment method
-            print(f"Creating subscription with price: {price_id} for customer: {customer_id}")
+            # Verificar si es un paquete de créditos o una suscripción por el tipo de precio
+            is_credit_package = False
             
             try:
-                # Create subscription with standard billing
-                subscription = stripe.Subscription.create(
-                    customer=customer_id,
-                    items=[
-                        {
-                            'price': price_id,
-                        },
-                    ],
-                    metadata={
-                        'user_id': request.user.id,
-                        'payment_intent_id': payment_intent_id,
-                    }
-                )
-                print(f"Subscription created successfully with ID: {subscription.id}")
+                # Verificar el tipo de precio (one_time para paquetes, recurring para suscripciones)
+                price_obj = stripe.Price.retrieve(price_id)
+                print(f"Price type: {price_obj.type}, Price ID: {price_id}")
                 
-                # Track event in PostHog when a subscription is created
-                posthog.capture(
-                    request.user.id,
-                    'Sub Created',
-                    properties={
-                        'plan': product.name,  # Plan name from the product object
-                        'subscription_id': subscription.id,
-                        'price_id': price_id,
-                        'customer_id': customer_id
-                    }
-                )
+                if price_obj.type == 'one_time':
+                    is_credit_package = True
+                    print(f"Detected credit package by price type: {product.name}")
             except Exception as e:
-                print(f"Error creating subscription with standard billing: {str(e)}")
-                print("Falling back to invoice collection method")
+                print(f"Error checking price type: {str(e)}")
                 
-                # Fallback to invoice collection method if standard billing fails
-                subscription = stripe.Subscription.create(
-                    customer=customer_id,
-                    items=[
-                        {
-                            'price': price_id,
-                        },
-                    ],
-                    collection_method='send_invoice',  # Fallback to invoice
-                    days_until_due=30,
-                    metadata={
-                        'user_id': request.user.id,
-                        'payment_intent_id': payment_intent_id,
-                    }
+            print(f"Final detection - Product: {product.name}, is_credit_package: {is_credit_package}")
+            
+            # aqui incluir print del request.user completo para ver su estructura
+            user_id = request.user.id
+            print(f"User ID: {user_id}")
+            if is_credit_package:
+                # Procesar como paquete de créditos
+                try:
+                    # Asignar créditos al usuario
+                    credits_info = provision_credit_package(
+                        request,
+                        user_id, 
+                        product
+                    )
+                    
+                    # Mensaje de éxito
+                    messages.success(
+                        request,
+                        f"You've successfully purchased {credits_info['package_name']} and received {credits_info['general_credits']} general credits and {credits_info['version_credits']} version credits!"
+                    )
+                    
+                    return render(request, 'ads/payment_success.html', {
+                        'success': True,
+                        'is_credit_package': True,
+                        'credits_info': credits_info,
+                        'product_name': product.name
+                    })
+                    
+                except Exception as e:
+                    print(f"Error provisioning credit package: {str(e)}")
+                    messages.error(
+                        request,
+                        f"Error processing credit package: {str(e)}. Please contact support."
+                    )
+                    return render(request, 'ads/payment_success.html', {
+                        'success': False,
+                        'debug_info': f"Credit package error: {str(e)}"
+                    })
+            else:
+                # Procesar como suscripción (flujo original)
+                print(f"Creating subscription with price: {price_id} for customer: {customer_id}")
+                
+                try:
+                    # Create subscription with standard billing
+                    subscription = stripe.Subscription.create(
+                        customer=customer_id,
+                        items=[
+                            {
+                                'price': price_id,
+                            },
+                        ],
+                        metadata={
+                            'user_id': request.user.id,
+                            'payment_intent_id': payment_intent_id,
+                        }
+                    )
+                    print(f"Subscription created successfully with ID: {subscription.id}")
+                    
+                    # Track event in PostHog when a subscription is created
+                    posthog.capture(
+                        request.user.id,
+                        'Sub Created',
+                        properties={
+                            'plan': product.name,  # Plan name from the product object
+                            'subscription_id': subscription.id,
+                            'price_id': price_id,
+                            'customer_id': customer_id
+                        }
+                    )
+                except Exception as e:
+                    print(f"Error creating subscription with standard billing: {str(e)}")
+                    print("Falling back to invoice collection method")
+                    
+                    # Fallback to invoice collection method if standard billing fails
+                    subscription = stripe.Subscription.create(
+                        customer=customer_id,
+                        items=[
+                            {
+                                'price': price_id,
+                            },
+                        ],
+                        collection_method='send_invoice',  # Fallback to invoice
+                        days_until_due=30,
+                        metadata={
+                            'user_id': request.user.id,
+                            'payment_intent_id': payment_intent_id,
+                        }
+                    )
+                    print(f"Subscription created with invoice collection method: {subscription.id}")
+                print(f"Subscription created: {subscription.id}, status: {subscription.status}")
+                
+                # Provision the subscription in your system
+                print(f"Provisioning subscription: {subscription.id} for user: {request.user.id}")
+                djstripe_subscription = provision_subscription(request.user, subscription.id)
+                print(f"Subscription provisioned: {djstripe_subscription.id}")
+                
+                # Success message
+                messages.success(
+                    request,
+                    f"You've successfully subscribed to {product.name}. Thank you for your support!"
                 )
-                print(f"Subscription created with invoice collection method: {subscription.id}")
-            print(f"Subscription created: {subscription.id}, status: {subscription.status}")
-            
-            # Provision the subscription in your system
-            print(f"Provisioning subscription: {subscription.id} for user: {request.user.id}")
-            djstripe_subscription = provision_subscription(request.user, subscription.id)
-            print(f"Subscription provisioned: {djstripe_subscription.id}")
-            
-            # Success message
-            messages.success(
-                request,
-                f"You've successfully subscribed to {product.name}. Thank you for your support!"
-            )
-            
-            return render(request, 'ads/payment_success.html', {
-                'success': True,
-                'subscription': djstripe_subscription,
-                'product_name': product.name
-            })
+                
+                return render(request, 'ads/payment_success.html', {
+                    'success': True,
+                    'subscription': djstripe_subscription,
+                    'product_name': product.name
+                })
             
         except Exception as e:
             print(f"Error creating subscription: {str(e)}")
