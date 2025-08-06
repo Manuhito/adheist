@@ -8,10 +8,10 @@ interface ExtraCreditCardProps {
 
 export function ExtraCreditCard({ label, credits }: ExtraCreditCardProps) {
   return (
-    <Card className="w-full max-w-[180px] flex-1 px-2 py-3 text-center border border">
-      <CardContent className="px-0">
-        <div className="text-xs text-muted-foreground mb-1">{label}</div>
-        <div className="text-xl font-bold">{credits}</div>
+    <Card className="w-full flex-1 px-2 py-4 text-center border border-muted bg-background shadow-sm hover:border-primary/20 transition-colors">
+      <CardContent className="px-2">
+        <div className="text-sm text-muted-foreground mb-2">{label}</div>
+        <div className="text-2xl font-semibold text-primary">{credits}</div>
       </CardContent>
     </Card>
   );
