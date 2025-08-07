@@ -18,7 +18,7 @@ export default function AppHeader() {
     const userData = (window as any).__USER_DATA__;
     if (userData) {
       const initials = userData.name
-        ? userData.name.split(' ').map((n) => n[0]).join('').toUpperCase()
+        ? userData.name.split(' ').map((n: string) => n[0]).join('').toUpperCase()
         : userData.email[0].toUpperCase();
       
       setUser({

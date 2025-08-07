@@ -1,8 +1,9 @@
 import React from 'react';
 type IconProps = React.HTMLAttributes<SVGElement>;
+type ImgIconProps = React.ImgHTMLAttributes<HTMLImageElement>;
 
 export const Icons = {
-  logo: (props: IconProps) => (
+  logo: (props: ImgIconProps) => (
     <img
       src="/static/images/web/logo-adheist.png"
       alt="Adheist Logo"

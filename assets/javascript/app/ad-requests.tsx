@@ -1,11 +1,21 @@
 import React, { useState, useEffect, useRef } from "react";
 import ReactDOM from "react-dom/client";
-import { BentoGrid, BentoItem } from "../components/ui/bento-grid";
-import { ButtonColorful } from "../components/ui/button-colorful";
-import { AlertNotification } from "../components/ui/alert-notification";
-
-import { cn } from "../lib/utils";
-import { useTranslation } from "../lib/useTranslation";
+import { BentoGrid, BentoItem } from "@/components/ui/bento-grid";
+import { ButtonColorful } from "@/components/ui/button-colorful";
+import { AlertNotification } from "@/components/ui/alert-notification";
+import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/useTranslation";
+import {
+    CheckCircle,
+    AlertCircle,
+    Clock,
+    PenTool,
+    ThumbsUp,
+    Undo,
+    PencilRuler,
+    CircleCheckBig,
+    ArrowUpRight,
+} from "lucide-react";
 
 // Declare PostHog types for TypeScript
 declare global {
@@ -21,17 +31,6 @@ declare global {
 }
 
 // Componente para mostrar solicitudes de anuncios
-import {
-    CheckCircle,
-    AlertCircle,
-    Clock,
-    PenTool,
-    ThumbsUp,
-    Undo,
-    PencilRuler,
-    CircleCheckBig,
-    ArrowUpRight,
-} from "lucide-react";
 
 // Mapping of statuses to icons and colors
 const statusIconMap: Record<string, React.ReactElement> = {
@@ -126,17 +125,17 @@ function adRequestToBentoItem(adRequest: AdRequest, t: (key: string, fallback?: 
                     const message = t('ad_requests.wait_processing', 'Your image is being generated and may take a few minutes to be available.');
                     
                     notificationRoot.render(
-                        React.createElement(AlertNotification, {
-                            message: message,
-                            variant: "info" as "info" | "warning" | "error" | "success",
-                            duration: 5000,
-                            onClose: () => {
+                        <AlertNotification
+                            message={message}
+                            variant="info"
+                            duration={5000}
+                            onClose={() => {
                                 // Remove the notification container when closed
                                 if (notificationContainer.parentNode) {
                                     notificationContainer.parentNode.removeChild(notificationContainer);
                                 }
-                            }
-                        })
+                            }}
+                        />
                     );
                     return; // Don't redirect
                 }
@@ -334,11 +333,11 @@ function AdRequestsGrid() {
         <div className="ad-requests-container">
             {/* Notification */}
             {notification && (
-                React.createElement(AlertNotification, {
-                    message: notification.message,
-                    variant: notification.variant,
-                    onClose: () => setNotification(null)
-                })
+                <AlertNotification
+                    message={notification.message}
+                    variant={notification.variant}
+                    onClose={() => setNotification(null)}
+                />
             )}
             
             {/* Create new ad request button */}
@@ -374,10 +373,10 @@ function initAdRequestsGrid() {
             root.render(<AdRequestsGrid />);
 
         } catch (error) {
-
+            console.error('Error initializing AdRequestsGrid:', error);
         }
     } else {
-
+        console.warn('Container #ad-requests-grid not found');
     }
 }
 

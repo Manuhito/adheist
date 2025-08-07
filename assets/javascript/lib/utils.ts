@@ -20,7 +20,7 @@ export function constructMetadata({
   title?: string;
   description?: string;
   image?: string;
-  [key: string]: Metadata[keyof Metadata];
+  [key: string]: any;
 }): Metadata {
   return {
     title: {
