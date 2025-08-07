@@ -35,8 +35,13 @@ def send_slack_notification(error_message: str, context: Optional[Dict] = None, 
     try:
         # Check if we're in development environment
         app_env = os.environ.get('APP_ENV', 'dev')
+        
+        # Add environment prefix to title
+        env_prefix = f"[{app_env.upper()}]" if app_env else "[UNKNOWN]"
+        prefixed_title = f"{env_prefix} {title}"
+        
         if app_env == 'dev':
-            logger.info(f"Slack notification skipped in development environment: {title}")
+            logger.info(f"Slack notification skipped in development environment: {prefixed_title}")
             return False
             
         # Get webhook URL from environment variable
@@ -51,7 +56,7 @@ def send_slack_notification(error_message: str, context: Optional[Dict] = None, 
                 "type": "header",
                 "text": {
                     "type": "plain_text",
-                    "text": title,
+                    "text": prefixed_title,
                     "emoji": True
                 }
             },
