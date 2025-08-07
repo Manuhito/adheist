@@ -6,6 +6,10 @@ import { RiInstagramFill } from "react-icons/ri";
 
 export const BLUR_FADE_DELAY = 0.15;
 
+// Definir APP_URL para evitar errores de TypeScript
+declare const APP_URL: string | undefined;
+const DEFAULT_URL = "http://localhost:8000";
+
 export const siteConfig = {
   name: "AdHeist",
   description: "Automate your workflow with AI",

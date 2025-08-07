@@ -5,7 +5,8 @@ import Section from "@/components/section";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Star } from "lucide-react";
-import { Image } from "@/components/common";
+// Usar un componente de imagen estándar
+import React from "react";
 
 export const Highlight = ({
   children,
@@ -66,9 +67,9 @@ export const TestimonialCard = ({
     </div>
 
     <div className="flex w-full select-none items-center justify-start gap-5">
-      <Image
-        width={40}
-        height={40}
+      <img
+        width="40"
+        height="40"
         src={img || ""}
         alt={name}
         className="h-10 w-10 rounded-full ring-1 ring-border ring-offset-4"

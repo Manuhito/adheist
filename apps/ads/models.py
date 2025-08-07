@@ -185,6 +185,26 @@ class AppConfiguration(BaseModel):
     pro_version_credits = models.PositiveIntegerField(
         default=10,
         help_text="Version credits for users with Pro subscription"
+    )
+    
+    # Package 1 credits
+    package1_general_credits = models.PositiveIntegerField(
+        default=15,
+        help_text="General credits for Package 1"
+    )
+    package1_version_credits = models.PositiveIntegerField(
+        default=3,
+        help_text="Version credits for Package 1"
+    )
+    
+    # Package 2 credits
+    package2_general_credits = models.PositiveIntegerField(
+        default=30,
+        help_text="General credits for Package 2"
+    )
+    package2_version_credits = models.PositiveIntegerField(
+        default=7,
+        help_text="Version credits for Package 2"
     )    
     class Meta:
         verbose_name = "Application Configuration"
@@ -226,6 +246,14 @@ class AppConfiguration(BaseModel):
             'pro': {
                 'general_credits': config.pro_general_credits,
                 'version_credits': config.pro_version_credits
+            },
+            'package1': {
+                'general_credits': config.package1_general_credits,
+                'version_credits': config.package1_version_credits
+            },
+            'package2': {
+                'general_credits': config.package2_general_credits,
+                'version_credits': config.package2_version_credits
             }
         }
     

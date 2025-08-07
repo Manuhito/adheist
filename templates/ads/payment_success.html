@@ -18,7 +18,12 @@
   <div class="bg-card dark:bg-card/90 rounded-lg shadow-md p-6 mb-8">
     <h2 class="text-xl font-semibold mb-4">{% trans "Subscription Details" %}</h2>
     <div id="subscription-details" class="space-y-4">
-      {% if product_name %}
+      {% if is_credit_package %}
+      <div class="flex justify-between border-b pb-2">
+        <span class="text-muted-foreground dark:text-muted-foreground/90">{% trans "Credit Package:" %}</span>
+        <span class="font-medium text-foreground dark:text-foreground/90">{{ product_name }}</span>
+      </div>
+      {% elif product_name %}
       <div class="flex justify-between border-b pb-2">
         <span class="text-muted-foreground dark:text-muted-foreground/90">{% trans "Plan:" %}</span>
         <span class="font-medium text-foreground dark:text-foreground/90">{{ product_name }}</span>

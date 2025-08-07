@@ -291,6 +291,8 @@ class AppConfigurationAdmin(admin.ModelAdmin):
         "default_general_credits", "default_version_credits", 
         "starter_general_credits", "starter_version_credits",
         "pro_general_credits", "pro_version_credits", 
+        "package1_general_credits", "package1_version_credits",
+        "package2_general_credits", "package2_version_credits",
         "updated_at"
     ]
     fieldsets = [
@@ -307,6 +309,16 @@ class AppConfigurationAdmin(admin.ModelAdmin):
         ("Pro Plan Credits", {
             "fields": ["pro_general_credits", "pro_version_credits"],
             "description": "Credits for users with Pro subscription",
+            "classes": ["wide"]
+        }),
+        ("Package 1 Credits", {
+            "fields": ["package1_general_credits", "package1_version_credits"],
+            "description": "Credits for Package 1 purchase",
+            "classes": ["wide"]
+        }),
+        ("Package 2 Credits", {
+            "fields": ["package2_general_credits", "package2_version_credits"],
+            "description": "Credits for Package 2 purchase",
             "classes": ["wide"]
         })
     ]

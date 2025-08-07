@@ -7,7 +7,8 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import Image from "@/components/common";
+// Reemplazar con un componente de imagen adecuado
+import React from "react";
 import { MdOutlineFormatQuote } from "react-icons/md";
 
 const companies = [
@@ -47,9 +48,9 @@ export default function Component() {
                     </BlurFade>
                     <BlurFade delay={0.25 * 2} inView>
                       <div className="mt-8">
-                        <Image
-                          width={0}
-                          height={40}
+                        <img
+                          width="auto"
+                          height="40"
                           key={index}
                           src={`https://cdn.magicui.design/companies/${
                             companies[index % companies.length]

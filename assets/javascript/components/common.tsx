@@ -6,7 +6,7 @@ interface LinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
 }
 
 export type Metadata = {
-  title?: string;
+  title?: string | { template: string; default: string };
   description?: string;
   image?: string;
   [key: string]: any;
