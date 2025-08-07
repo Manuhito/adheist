@@ -38,13 +38,15 @@ export function BillingPage({ pricingData, onSubscribe }) {
 
   // Función para manejar la selección de un nuevo plan
   const handlePlanSelect = (priceId, frequency, tier) => {
-    if (hasActiveSubscription) {
-      // Si ya tiene una suscripción, mostrar la página de confirmación
+    if (hasActiveSubscription && frequency !== 'usage') {
+      // Si ya tiene una suscripción y está seleccionando un plan (no un paquete de uso),
+      // mostrar la página de confirmación
       setSelectedPlan(tier);
       setSelectedFrequency(frequency);
       setShowConfirmation(true);
     } else {
-      // Si no tiene suscripción, proceder con la suscripción normal
+      // Si no tiene suscripción o está comprando un paquete de uso,
+      // proceder con la suscripción normal sin confirmación
       onSubscribe && onSubscribe(priceId);
     }
   };
