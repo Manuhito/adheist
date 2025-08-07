@@ -417,6 +417,11 @@ def payment_success(request):
                     )
                     print(f"Subscription created successfully with ID: {subscription.id}")
                     
+                    # Create or update AdRequestUsage record for the user
+                    from apps.ads.models import AdRequestUsage
+                    AdRequestUsage.get_current_usage(request.user)
+                    print(f"AdRequestUsage record created/updated for user: {request.user.id}")
+                    
                     # Track event in PostHog when a subscription is created
                     posthog.capture(
                         request.user.id,
@@ -448,6 +453,12 @@ def payment_success(request):
                         }
                     )
                     print(f"Subscription created with invoice collection method: {subscription.id}")
+                    
+                    # Create or update AdRequestUsage record for the user
+                    from apps.ads.models import AdRequestUsage
+                    AdRequestUsage.get_current_usage(request.user)
+                    print(f"AdRequestUsage record created/updated for user: {request.user.id}")
+                    
                 print(f"Subscription created: {subscription.id}, status: {subscription.status}")
                 
                 # Provision the subscription in your system

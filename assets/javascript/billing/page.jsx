@@ -122,19 +122,26 @@ export function BillingPage({ pricingData, onSubscribe }) {
         t={t}
       />
 
-      {/* Sección de créditos adicionales - siempre visible */}
-      <div className="mt-8 mb-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
-          <ExtraCreditCard
-            label={t('billing.ad_request_generations', 'Ad request generations')}
-            credits={window.__USAGE_DATA__?.extra_general_credits || 0}
-          />
-          <ExtraCreditCard
-            label={t('billing.ads_revisions', 'Ads Revisions')}
-            credits={window.__USAGE_DATA__?.extra_version_credits || 0}
-          />
+      {/* Sección de créditos adicionales - solo visible si hay créditos extra */}
+      {(window.__USAGE_DATA__?.extra_general_credits > 0 || window.__USAGE_DATA__?.extra_version_credits > 0) && (
+        <div className="mt-8 mb-4">
+          <h3 className="text-lg font-medium mb-3">{t('billing.additional_credits', 'Créditos adicionales')}</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
+            {window.__USAGE_DATA__?.extra_general_credits > 0 && (
+              <ExtraCreditCard
+                label={t('billing.ad_request_generations', 'Ad request generations')}
+                credits={window.__USAGE_DATA__?.extra_general_credits || 0}
+              />
+            )}
+            {window.__USAGE_DATA__?.extra_version_credits > 0 && (
+              <ExtraCreditCard
+                label={t('billing.ads_revisions', 'Ads Revisions')}
+                credits={window.__USAGE_DATA__?.extra_version_credits || 0}
+              />
+            )}
+          </div>
         </div>
-      </div>
+      )}
       
       {/* Solo mostrar las secciones adicionales si el usuario tiene una suscripción activa */}
       {hasActiveSubscription && (
