@@ -168,6 +168,30 @@ def translations(request):
             'billing.unknown_error': _('Unknown error'),
             'billing.network_error': _('Network error'),
             'billing.has_active_subscription': _('Has active subscription:'),
+            'billing.additional_credits': _('Additional Credits'),
+            'billing.ad_request_generations': _('Ad request generations'),
+            'billing.ads_revisions': _('Ads Revisions'),
+            'billing.general_credits': _('General credits'),
+            'billing.version_credits': _('Version credits'),
+
+            # Subscription update confirmation translations
+            'subscription.update_confirmation_title': _('Confirm Subscription Update'),
+            'subscription.current_plan': _('Current Plan'),
+            'subscription.new_plan': _('New Plan'),
+            'subscription.confirm_update': _('Confirm Update'),
+            'subscription.cancel': _('Cancel'),
+            'subscription.new_billing_period': _('Your subscription will be updated immediately and a new billing period will begin today.'),
+            'subscription.credit_transfer': _('Any remaining credits from your current plan will be transferred to your new subscription.'),
+            'subscription.immediate_change': _('This change will take effect immediately upon confirmation.'),
+
+            # Subscription cancel section translations
+            'subscription.cancel_title': _('Cancel Subscription'),
+            'subscription.cancel_description': _('Your subscription will remain active until'),
+            'subscription.manage_subscription': _('Manage Subscription'),
+
+            # Usage based packages translations
+            'pricing.usage_packages': _('Usage Based Packages'),
+            'pricing.starter_description': _('Essential features for small businesses'),
 
             # Payment page translations (from payment.js/payment-page)
             'payment.no_data': _('No payment data found. Redirecting to billing page...'),
