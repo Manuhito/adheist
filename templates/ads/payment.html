@@ -1,13 +1,17 @@
 {% extends "web/app/app_base.html" %}
 {% load static %}
 
-{% block body %}
-<!-- React will render the payment page in this container -->
-<div id="payment-page-container"></div>
-
+{% block extra_js %}
+{{ block.super }}
 <!-- Load Stripe.js -->
 <script src="https://js.stripe.com/v3/"></script>
-
 <!-- Load the payment bundle -->
 <script src="{% static 'js/payment-bundle.js' %}" defer></script>
+{% endblock %}
+
+{% block app %}
+<!-- React will render the payment page in this container -->
+<div class="container mx-auto">
+  <div id="payment-page-container"></div>
+</div>
 {% endblock %}

@@ -1,7 +1,9 @@
 import * as React from "react";
 import { useState, useEffect } from "react";
+import { ArrowLeft } from "lucide-react";
 import { useTranslation } from "../../lib/useTranslation";
 import { PaymentForm } from "@/shadcn/components/ui/payment-form";
+import { Button } from "@/shadcn/components/ui/button";
 
 interface PaymentData {
   clientSecret: string;
@@ -61,8 +63,24 @@ export function PaymentPage() {
     );
   }
   
+  const handleGoBack = () => {
+    window.location.href = '/ads/billing/';
+  };
+
   return (
     <div className="max-w-4xl mx-auto py-12 px-4">
+      <div className="flex items-center mb-6">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="flex items-center text-muted-foreground hover:text-foreground"
+          onClick={handleGoBack}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          {t('payment.back_to_plans', 'Back to plans')}
+        </Button>
+      </div>
+      
       <h1 className="text-3xl font-bold mb-8">{t('payment.complete_your_payment', 'Complete Your Payment')}</h1>
       
       <PaymentForm
