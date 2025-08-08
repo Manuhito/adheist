@@ -9,6 +9,30 @@ import { Button } from "@/shadcn/components/ui/button";
 import { Card } from "@/shadcn/components/ui/card";
 import { useTranslation } from '../../../lib/useTranslation';
 
+// Función para obtener el valor de una cookie por su nombre
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
+}
+
+// Función para convertir el código de idioma a formato compatible con Stripe
+function getStripeLocale(languageCode) {
+  // Mapeo de códigos de idioma a locales de Stripe
+  const localeMap = {
+    'es': 'es',
+    'en': 'en',
+    'fr': 'fr',
+    'de': 'de',
+    'it': 'it',
+    'pt': 'pt',
+    // Añadir más idiomas según sea necesario
+  };
+  
+  return localeMap[languageCode] || 'auto'; // 'auto' deja que Stripe detecte automáticamente
+}
+
 export function PaymentForm({
   clientSecret,
   publishableKey,
@@ -39,12 +63,40 @@ export function PaymentForm({
         if (stripeInstance) {
           setStripe(stripeInstance);
           
+          // Obtener el idioma del usuario desde la cookie
+          const userLanguage = getCookie('adheist_language') || 'en';
+          console.log('User language from cookie:', userLanguage);
+          
+          // Convertir el código de idioma a formato compatible con Stripe
+          const stripeLocale = getStripeLocale(userLanguage);
+          console.log('Using Stripe locale:', stripeLocale);
+          
           const elementsOptions = {
             clientSecret,
+            locale: stripeLocale, // Configurar el idioma para Stripe Elements
             appearance: {
               theme: "stripe",
               variables: {
                 colorPrimary: "--primary",
+                colorText: document.documentElement.classList.contains('dark') ? '#ffffff' : '#1a1a1a',
+                colorTextSecondary: document.documentElement.classList.contains('dark') ? '#e0e0e0' : '#424770',
+                colorTextPlaceholder: document.documentElement.classList.contains('dark') ? '#a0a0a0' : '#aab7c4',
+                colorBackground: document.documentElement.classList.contains('dark') ? '#1a1a1a' : '#ffffff',
+                colorDanger: '#df1b41',
+                fontFamily: '"Inter", system-ui, sans-serif',
+                borderRadius: '0.5rem',
+                spacingUnit: '4px',
+              },
+              rules: {
+                '.Label': {
+                  color: document.documentElement.classList.contains('dark') ? '#ffffff' : '#1a1a1a',
+                  fontWeight: '500',
+                },
+                '.Input': {
+                  color: document.documentElement.classList.contains('dark') ? '#ffffff' : '#1a1a1a',
+                  backgroundColor: document.documentElement.classList.contains('dark') ? '#2a2a2a' : '#ffffff',
+                  borderColor: document.documentElement.classList.contains('dark') ? '#4a4a4a' : '#e0e0e0',
+                },
               },
             },
           };
