@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-07 08:28+0000\n"
+"POT-Creation-Date: 2025-08-09 08:38+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1575,6 +1575,69 @@ msgstr ""
 #: apps/web/context_processors.py:510
 msgid "No version with generated image found for this ad request."
 msgstr ""
+
+#: apps/web/context_processors.py:513
+msgid "Confirm Credit Package Purchase"
+msgstr ""
+
+#: apps/web/context_processors.py:514
+msgid "Credit Package"
+msgstr ""
+
+#: apps/web/context_processors.py:515
+msgid "One-time purchase"
+msgstr ""
+
+#: apps/web/context_processors.py:516
+msgid "Package Includes"
+msgstr ""
+
+#: apps/web/context_processors.py:517
+#, fuzzy
+#| msgid "Debug Information"
+msgid "Payment Information"
+msgstr "Informations de débogage"
+
+#: apps/web/context_processors.py:518
+msgid ""
+"Your default payment method will be charged immediately for this purchase."
+msgstr ""
+
+#: apps/web/context_processors.py:519
+msgid "Credits will be available in your account immediately after purchase."
+msgstr ""
+
+#: apps/web/context_processors.py:520
+msgid "To change your payment method, please go back to the billing page."
+msgstr ""
+
+#: apps/web/context_processors.py:521
+msgid "Confirm Purchase"
+msgstr ""
+
+#: apps/web/context_processors.py:522
+#, fuzzy
+#| msgid "Return to Billing"
+msgid "Back to Billing"
+msgstr "Retour au paiement"
+
+#: apps/web/context_processors.py:523
+msgid "No price ID available for the selected package."
+msgstr ""
+
+#: apps/web/context_processors.py:524
+msgid "Failed to purchase credit package."
+msgstr ""
+
+#: apps/web/context_processors.py:525
+msgid "Received an unexpected response from the server."
+msgstr ""
+
+#: apps/web/context_processors.py:526
+#, fuzzy
+#| msgid "An unexpected error occurred. Please try again."
+msgid "A network error occurred. Please try again."
+msgstr "Une erreur inattendue est survenue. Veuillez réessayer."
 
 #: templates/400.html:4
 msgid "Shucks. That was a bad request."

@@ -1,7 +1,7 @@
 from django.urls import path
 
 from . import views
-from .views import payment_method_views, api_views
+from .views import payment_method_views, api_views, credit_package_views
 
 app_name = "subscriptions"
 
@@ -31,6 +31,7 @@ urlpatterns = [
     # subscription update api views
     path("api/update-subscription/", views.update_subscription_api, name="api_update_subscription"),
     path("api/cancel-subscription/", api_views.CancelSubscription.as_view(), name="api_cancel_subscription"),
+    path("api/purchase-credit-package/", credit_package_views.purchase_credit_package_api, name="api_purchase_credit_package"),
     
     # payment method update views
     path("update-payment-method/", payment_method_views.update_payment_method_page, name="update_payment_method"),
