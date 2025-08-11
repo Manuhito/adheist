@@ -7,6 +7,7 @@ import { ExtraCreditCard } from '../components/ui/extra-credit-card';
 import { SubscriptionCancelSection } from '../components/sections/subscription-cancel-section';
 import { useTranslation } from '../lib/useTranslation';
 import { SubscriptionUpdateConfirmation } from './subscription-update-confirmation';
+import { CreditPackageConfirmation } from './credit-package-confirmation';
 
 /**
  * Componente principal que contiene toda la página de facturación
@@ -20,10 +21,14 @@ export function BillingPage({ pricingData, onSubscribe }) {
   };
   const { t } = useTranslation();
 
-  // Estado para manejar la página de confirmación
+  // Estado para manejar la página de confirmación de suscripción
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [selectedFrequency, setSelectedFrequency] = useState('monthly');
+  
+  // Estado para manejar la página de confirmación de paquete de créditos
+  const [showCreditPackageConfirmation, setShowCreditPackageConfirmation] = useState(false);
+  const [selectedCreditPackage, setSelectedCreditPackage] = useState(null);
 
   // Verificar si el usuario tiene una suscripción activa
   const hasActiveSubscription = pricingData.tiers.some(tier => tier.is_current_plan);
@@ -36,17 +41,29 @@ export function BillingPage({ pricingData, onSubscribe }) {
     console.log('Current Period End:', currentPlan.current_period_end);
   }
 
-  // Función para manejar la selección de un nuevo plan
+  // Función para manejar la selección de un nuevo plan o paquete
   const handlePlanSelect = (priceId, frequency, tier) => {
-    if (hasActiveSubscription && frequency !== 'usage') {
+    // Si es un paquete de uso (frequency === 'usage')
+    if (frequency === 'usage') {
+      // Si el usuario tiene un método de pago configurado, mostrar la página de confirmación
+      if (paymentMethodData.has_payment_method) {
+        setSelectedCreditPackage({
+          ...tier,
+          priceId: priceId
+        });
+        setShowCreditPackageConfirmation(true);
+      } else {
+        // Si no tiene método de pago, proceder con el flujo normal
+        onSubscribe && onSubscribe(priceId);
+      }
+    } else if (hasActiveSubscription) {
       // Si ya tiene una suscripción y está seleccionando un plan (no un paquete de uso),
-      // mostrar la página de confirmación
+      // mostrar la página de confirmación de actualización
       setSelectedPlan(tier);
       setSelectedFrequency(frequency);
       setShowConfirmation(true);
     } else {
-      // Si no tiene suscripción o está comprando un paquete de uso,
-      // proceder con la suscripción normal sin confirmación
+      // Si no tiene suscripción, proceder con la suscripción normal sin confirmación
       onSubscribe && onSubscribe(priceId);
     }
   };
@@ -66,6 +83,20 @@ export function BillingPage({ pricingData, onSubscribe }) {
   const handleUpdateCancel = () => {
     setShowConfirmation(false);
     setSelectedPlan(null);
+  };
+  
+  // Función para manejar la confirmación de compra de paquete de créditos
+  const handleCreditPackageConfirm = (priceId) => {
+    // La compra ya se realizó mediante la solicitud a /subscriptions/api/purchase-credit-package/
+    // Solo cerrar el diálogo de confirmación
+    setShowCreditPackageConfirmation(false);
+    // La redirección ya está manejada en credit-package-confirmation.jsx
+  };
+  
+  // Función para cancelar la compra de paquete de créditos
+  const handleCreditPackageCancel = () => {
+    setShowCreditPackageConfirmation(false);
+    setSelectedCreditPackage(null);
   };
 
   // Traducir los datos de precios
@@ -98,7 +129,7 @@ export function BillingPage({ pricingData, onSubscribe }) {
     }))
   };
 
-  // Si estamos mostrando la página de confirmación
+  // Si estamos mostrando la página de confirmación de actualización de suscripción
   if (showConfirmation && currentPlan && selectedPlan) {
     return (
       <SubscriptionUpdateConfirmation
@@ -107,6 +138,17 @@ export function BillingPage({ pricingData, onSubscribe }) {
         frequency={selectedFrequency}
         onConfirm={handleUpdateConfirm}
         onCancel={handleUpdateCancel}
+      />
+    );
+  }
+  
+  // Si estamos mostrando la página de confirmación de compra de paquete de créditos
+  if (showCreditPackageConfirmation && selectedCreditPackage) {
+    return (
+      <CreditPackageConfirmation
+        packageData={selectedCreditPackage}
+        onConfirm={handleCreditPackageConfirm}
+        onCancel={handleCreditPackageCancel}
       />
     );
   }

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-07 08:29+0000\n"
+"POT-Creation-Date: 2025-08-09 08:38+0000\n"
 "PO-Revision-Date: 2025-04-30 00:00+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Spanish <LL@li.org>\n"
@@ -562,10 +562,6 @@ msgstr "Actualizar a Equipo"
 msgid "Contact Sales"
 msgstr "Contactar con ventas"
 
-#: apps/web/context_processors.py:158 apps/web/context_processors.py:179
-msgid "Current Plan"
-msgstr "Plan actual"
-
 #: apps/web/context_processors.py:159
 msgid "🔥 Most Popular"
 msgstr "🔥 Más popular"
@@ -646,13 +642,17 @@ msgstr "Cancelar"
 msgid ""
 "Your subscription will be updated immediately and a new billing period will "
 "begin today."
-msgstr "Su suscripción se actualizará inmediatamente y un nuevo período de facturación comenzará hoy."
+msgstr ""
+"Su suscripción se actualizará inmediatamente y un nuevo período de "
+"facturación comenzará hoy."
 
 #: apps/web/context_processors.py:184
 msgid ""
 "Any remaining credits from your current plan will be transferred to your new "
 "subscription."
-msgstr "Cualquier crédito restante de su plan actual se transferirá a su nueva suscripción."
+msgstr ""
+"Cualquier crédito restante de su plan actual se transferirá a su nueva "
+"suscripción."
 
 #: apps/web/context_processors.py:185
 msgid "This change will take effect immediately upon confirmation."
@@ -1593,6 +1593,63 @@ msgstr ""
 "No se encontró ninguna versión con la imagen generada para esta solicitud de "
 "anuncio."
 
+#: apps/web/context_processors.py:513
+msgid "Current Plan"
+msgstr "Plan actual"
+
+#: apps/web/context_processors.py:514
+msgid "Credit Package"
+msgstr "Paquete de créditos"
+
+#: apps/web/context_processors.py:515
+msgid "One-time purchase"
+msgstr "Pago único"
+
+#: apps/web/context_processors.py:516
+msgid "Package Includes"
+msgstr "Incluye"
+
+#: apps/web/context_processors.py:517
+msgid "Payment Information"
+msgstr "Información de pago"
+
+#: apps/web/context_processors.py:518
+msgid "Your default payment method will be charged immediately for this purchase."
+msgstr "Tu método de pago predeterminado se cargará inmediatamente para esta compra."
+
+#: apps/web/context_processors.py:519
+msgid "Credits will be available in your account immediately after purchase."
+msgstr "Los créditos estarán disponibles en tu cuenta inmediatamente después de la compra."
+
+#: apps/web/context_processors.py:520
+msgid "To change your payment method, please go back to the billing page."
+msgstr "Para cambiar tu método de pago, por favor vuelve a la página de facturación."
+
+#: apps/web/context_processors.py:521
+msgid "Confirm Purchase"
+msgstr "Confirmar compra"
+
+#: apps/web/context_processors.py:522
+#| msgid "Return to Billing"
+msgid "Back to Billing"
+msgstr "Volver a página de facturación"
+
+#: apps/web/context_processors.py:523
+msgid "No price ID available for the selected package."
+msgstr "No se encontró ningún ID de precio disponible para el paquete seleccionado."
+
+#: apps/web/context_processors.py:524
+msgid "Failed to purchase credit package."
+msgstr "Error al comprar el paquete de créditos."
+
+#: apps/web/context_processors.py:525
+msgid "Received an unexpected response from the server."
+msgstr "Se recibió una respuesta inesperada del servidor."
+
+#: apps/web/context_processors.py:526
+msgid "A network error occurred. Please try again."
+msgstr "Se produjo un error de red. Por favor, inténtalo de nuevo."
+
 #: templates/400.html:4
 msgid "Shucks. That was a bad request."
 msgstr "¡Vaya! Eso fue una solicitud incorrecta."
@@ -2089,12 +2146,6 @@ msgstr "Sin biblioteca"
 msgid "Ad Image"
 msgstr "Añadir imagen"
 
-#: templates/ads/adlibrary_form.html:71
-#, fuzzy
-#| msgid "Current Plan"
-msgid "Current image:"
-msgstr "Plan actual"
-
 #: templates/ads/adlibrary_list.html:10 templates/ads/adlibrary_list.html:14
 msgid "All AdLibraries"
 msgstr ""
@@ -2122,10 +2173,8 @@ msgid "Subscription Details"
 msgstr "Detalles de suscripción"
 
 #: templates/ads/payment_success.html:23
-#, fuzzy
-#| msgid "Current Plan"
 msgid "Credit Package:"
-msgstr "Plan actual"
+msgstr "Paquete de créditos:"
 
 #: templates/ads/payment_success.html:28
 msgid "Plan:"
@@ -2138,10 +2187,8 @@ msgid "Status:"
 msgstr "Estado"
 
 #: templates/ads/payment_success.html:41
-#, fuzzy
-#| msgid "Current Plan"
 msgid "Current Period Ends:"
-msgstr "Plan actual"
+msgstr "Fin del periodo actual:"
 
 #: templates/ads/payment_success.html:46
 msgid ""

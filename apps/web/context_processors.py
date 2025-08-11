@@ -509,6 +509,22 @@ def translations(request):
             'ad_requests.generated_image': _('Generated Ad Image'),
             'ad_requests.no_version_found': _('No version with generated image found for this ad request.'),
             
+            # Credit package confirmation translations
+            'billing.confirm_credit_purchase': _('Confirm Credit Package Purchase'),
+            'billing.credit_package': _('Credit Package'),
+            'billing.one_time_purchase': _('One-time purchase'),
+            'billing.package_includes': _('Package Includes'),
+            'billing.payment_information': _('Payment Information'),
+            'billing.default_payment_method': _('Your default payment method will be charged immediately for this purchase.'),
+            'billing.credits_available': _('Credits will be available in your account immediately after purchase.'),
+            'billing.change_payment_method': _('To change your payment method, please go back to the billing page.'),
+            'billing.confirm_purchase': _('Confirm Purchase'),
+            'billing.back_to_billing': _('Back to Billing'),
+            'billing.no_price_id': _('No price ID available for the selected package.'),
+            'billing.purchase_failed': _('Failed to purchase credit package.'),
+            'billing.unexpected_response': _('Received an unexpected response from the server.'),
+            'billing.network_error': _('A network error occurred. Please try again.'),
+            
             # Add more translations as needed
         }
     }
