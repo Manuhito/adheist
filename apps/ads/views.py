@@ -641,10 +641,12 @@ def get_adlibrary_filters(request):
         industries: Filter by industry names (comma-separated list)
         tags: Filter by tag names (comma-separated list)
         is_active: Filter by active status (true/false)
+        page: Page number for pagination (default: 1)
+        page_size: Number of items per page (default: 20)
     
-    Returns: JSON with list of AdLibrary objects including company_name, industries, tags, and ad_image
+    Returns: JSON with list of AdLibrary objects including company_name, industries, tags, and ad_image,
+    plus pagination metadata
     """
-    from django.db.models import Q
     
     # Get filter parameters from request
     company_name = request.GET.get('company_name', '')
@@ -654,6 +656,19 @@ def get_adlibrary_filters(request):
     # Get is_active filter parameter (default to True if not provided)
     is_active_param = request.GET.get('is_active', 'true').lower()
     is_active = is_active_param in ['true', '1', 'yes']
+    
+    # Get pagination parameters
+    page = request.GET.get('page', '1')
+    page_size = request.GET.get('page_size', '20')
+    
+    try:
+        page = int(page)
+        page_size = int(page_size)
+        # Limitar el tamaño máximo de página para evitar consultas muy grandes
+        page_size = min(page_size, 100)
+    except (ValueError, TypeError):
+        page = 1
+        page_size = 20
     
     # If single values are provided instead of lists, convert them
     if not industries and request.GET.get('industry'):
@@ -711,9 +726,21 @@ def get_adlibrary_filters(request):
         else:
             adlibraries = AdLibrary.objects.filter(is_fav=True, is_active=True)
     
+    # Aplicar paginación a los resultados
+    paginator = Paginator(adlibraries, page_size)
+    
+    try:
+        paginated_adlibraries = paginator.page(page)
+    except PageNotAnInteger:
+        # Si la página no es un entero, mostrar la primera página
+        paginated_adlibraries = paginator.page(1)
+    except EmptyPage:
+        # Si la página está fuera de rango, mostrar la última página
+        paginated_adlibraries = paginator.page(paginator.num_pages)
+    
     # Convert to list of dictionaries with all required fields
     adlibrary_list = []
-    for adlibrary in adlibraries:
+    for adlibrary in paginated_adlibraries:
         # Get industries and tags as lists of names
         industry_names = [industry.name for industry in adlibrary.facebook_page.industries.all()]
         tag_names = [tag.name for tag in adlibrary.tags.all()]
@@ -736,11 +763,24 @@ def get_adlibrary_filters(request):
         properties={
             'company_name': company_name,
             'industries': industries,
-            'tags': tags
+            'tags': tags,
+            'page': page,
+            'page_size': page_size
         }
     )
     
-    return JsonResponse({'adlibraries': adlibrary_list}, safe=True)
+    # Incluir información de paginación en la respuesta
+    return JsonResponse({
+        'adlibraries': adlibrary_list,
+        'pagination': {
+            'total_items': paginator.count,
+            'total_pages': paginator.num_pages,
+            'current_page': paginated_adlibraries.number,
+            'has_next': paginated_adlibraries.has_next(),
+            'has_previous': paginated_adlibraries.has_previous(),
+            'page_size': page_size
+        }
+    }, safe=True)
 
 
 
