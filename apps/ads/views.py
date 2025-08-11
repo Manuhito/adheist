@@ -747,12 +747,13 @@ def get_adlibrary_filters(request):
 
 def get_adlibrary_company_list(request):
     """
-    Get a simple list of all unique company names from AdLibrary.
+    Get a simple list of all unique company names from FacebookPage in Apify app.
     Uses Redis caching for improved performance.
     
     Returns: JSON with list of unique company names
     """
     from django.core.cache import cache
+    from apps.apify.models import FacebookPage
     
     # Try to get from cache first
     cache_key = 'adlibrary_company_names'
@@ -760,11 +761,17 @@ def get_adlibrary_company_list(request):
     
     # If not in cache, get from database and cache it
     if company_names is None:
-        adlibraries = AdLibrary.objects.all()
-        # Use a set to eliminate duplicates, then convert back to list
-        company_names = list(set([adlibrary.facebook_page.page_name for adlibrary in adlibraries]))
-        # Cache for 1 hour (3600 seconds) - I will set to none for now
-        cache.set(cache_key, company_names, None)
+        # Consultar directamente las páginas de Facebook activas
+        # Esto es mucho más eficiente que consultar todos los AdLibrary
+        company_names = list(FacebookPage.objects.filter(
+            is_active=True,
+            page_name__isnull=False
+        ).exclude(
+            page_name=''
+        ).values_list('page_name', flat=True).distinct().order_by('page_name'))
+        
+        # Cache for 1 hour (3600 seconds)
+        cache.set(cache_key, company_names, 3600)
     
     return JsonResponse({'companies': company_names}, safe=True)
 
