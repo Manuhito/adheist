@@ -178,6 +178,13 @@ def provision_credit_package(request, user_id, product):
     print(f"Credits assigned to user {user.id}: {general_credits} general, {version_credits} version")
     
     import posthog
+    # Obtener el plan de suscripción actual del usuario
+    current_plan = "No Plan"
+    if hasattr(user, 'subscription') and user.subscription:
+        if user.has_active_subscription():
+            if user.subscription.plan and user.subscription.plan.product:
+                current_plan = user.subscription.plan.product.name
+    
     # Registrar la transacción en PostHog
     posthog.capture(
         user.id,
@@ -186,7 +193,8 @@ def provision_credit_package(request, user_id, product):
             'package': package_name,
             'general_credits': general_credits,
             'version_credits': version_credits,
-            'slug': slug
+            'slug': slug,
+            'current_subscription_plan': current_plan
         }
     )
     
