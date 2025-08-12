@@ -169,10 +169,12 @@ def translations(request):
             'billing.network_error': _('Network error'),
             'billing.has_active_subscription': _('Has active subscription:'),
             'billing.additional_credits': _('Additional Credits'),
-            'billing.ad_request_generations': _('Ad request generations'),
-            'billing.ads_revisions': _('Ads Revisions'),
+            'billing.ads_generation': _('Ads Generation'),
+            'billing.revisions': _('Revisions'),
             'billing.general_credits': _('General credits'),
             'billing.version_credits': _('Version credits'),
+            'billing.packages_and_additional_usage': _('Packages and Additional usage'),
+            
 
             # Subscription update confirmation translations
             'subscription.update_confirmation_title': _('Confirm Subscription Update'),
