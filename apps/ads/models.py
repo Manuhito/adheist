@@ -778,6 +778,28 @@ class ExtraCredit(BaseModel):
         return cls.use_general_credit(user)
 
 
+class UserBrand(BaseModel):
+    """
+    Model to store user brands information.
+    """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="brands")
+    brand_name = models.CharField(max_length=255, help_text="Name of the brand")
+    
+    class Meta:
+        verbose_name = "User Brand"
+        verbose_name_plural = "User Brands"
+        ordering = ['created_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'brand_name'],
+                name='unique_user_brand'
+            )
+        ]
+    
+    def __str__(self):
+        return f"{self.user.email} - {self.brand_name}"
+
+
 class FAQ(BaseModel):
     """
     Model to store Frequently Asked Questions and their answers for a FAQ page.
