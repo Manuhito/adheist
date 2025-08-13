@@ -1,0 +1,43 @@
+{% extends "web/base.html" %}
+{% block page_title %}Sign In with Code - AdHeist{% endblock %}
+{% load i18n %}
+{% load static %}
+{% load form_tags %}
+{% block content %}
+<div class="flex flex-col items-center justify-center py-16 mt-8 text-center px-4">
+  <h1 class="pg-title text-2xl font-bold mb-4 text-primary">{% translate "Mail me a sign-in code" %}</h1>
+  
+  <div class="w-full max-w-md">
+    <div class="bg-white dark:bg-gray-800 shadow-md rounded-lg px-8 py-6">
+      <p class="text-lg text-muted-foreground mb-6">
+        {% blocktranslate %}
+        You will receive an email containing a special code for a password-free sign-in.
+        {% endblocktranslate %}
+      </p>
+
+      <form class="space-y-6" method="post" action="{% url 'account_request_login_code' %}">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div class="space-y-4">
+          {% render_field form.email %}
+          {{ redirect_field }}
+        </div>
+
+        <div>
+          <button type="submit"
+            class="group relative flex w-full justify-center rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-focus focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+            {% translate "Request Code" %}
+          </button>
+        </div>
+      </form>
+
+      <div class="mt-6 text-center">
+        <a href="{% url 'account_login' %}" class="text-sm text-primary hover:text-primary-focus">
+          {% translate "Other sign-in options" %}
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
