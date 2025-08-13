@@ -282,6 +282,7 @@ class AppConfiguration(BaseModel):
 
 class AdRequestAssets(BaseModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="asset_collections", null=True, blank=True)
+    brand = models.ForeignKey('UserBrand', on_delete=models.CASCADE, related_name="assets", null=True, blank=True, help_text="Brand associated with these assets")
     company_website = models.URLField(null=True, blank=True)
     logo = models.ImageField(upload_to="adrequest_assets/", null=True, blank=True)
     main_hex_color = models.CharField(max_length=7, null=True, blank=True)
@@ -300,6 +301,7 @@ class AdRequestAssets(BaseModel):
     def to_dict(self):
         """Convert asset fields to dictionary for easier override handling"""
         return {
+            'brand': self.brand.id if self.brand else None,
             'company_website': self.company_website,
             'main_hex_color': self.main_hex_color,
             'key_benefits': self.key_benefits,
