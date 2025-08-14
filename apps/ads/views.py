@@ -25,7 +25,7 @@ from django.utils import timezone
 from apps.aiinterface.tasks import send_slack_notification
 from django.contrib.auth import get_user_model
 
-from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion, AdRequestUsage, ExtraCredit
+from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion, AdRequestUsage, ExtraCredit, UserBrand
 from .forms import AdLibraryForm
 from .services import can_create_ad_request, use_credit, can_create_ad_request_version, get_ad_request_version_limit, use_general_credit, use_version_credit, can_create_ad_version
 import boto3
@@ -921,6 +921,15 @@ def adrequest_get(request, pk):
 
     ad_library = safe_get(ad_request, 'ad_library')
     user = safe_get(ad_request, 'user')
+    base_assets = safe_get(ad_request, 'base_assets')
+    
+    # Get brand information if available
+    brand = None
+    if base_assets and hasattr(base_assets, 'brand') and base_assets.brand:
+        brand = {
+            'id': base_assets.brand.id,
+            'name': base_assets.brand.brand_name
+        }
 
     created_at = safe_get(ad_request, 'created_at')
     updated_at = safe_get(ad_request, 'updated_at')
@@ -944,6 +953,7 @@ def adrequest_get(request, pk):
         'marketing_image_1_override': safe_image_url(safe_get(ad_request, 'marketing_image_1_override')),
         'marketing_image_2_override': safe_image_url(safe_get(ad_request, 'marketing_image_2_override')),
         'marketing_image_3_override': safe_image_url(safe_get(ad_request, 'marketing_image_3_override')),
+        'brand': brand,
     })
 
 
@@ -1010,6 +1020,28 @@ def adrequest_update(request, pk):
         
         # Save the updated overrides
         ad_request.asset_overrides = current_overrides
+        
+        # Handle brand_id if provided
+        if 'brand_id' in request.POST:
+            brand_id = request.POST.get('brand_id')
+            
+            # Create base_assets if it doesn't exist
+            if not ad_request.base_assets:
+                ad_request.base_assets = AdRequestAssets.objects.create(user=request.user)
+                
+            # If brand_id is empty or None, set brand to None
+            if not brand_id:
+                ad_request.base_assets.brand = None
+            else:
+                try:
+                    # Get the UserBrand instance
+                    brand = get_object_or_404(UserBrand, id=brand_id, user=request.user)
+                    ad_request.base_assets.brand = brand
+                except Exception as e:
+                    return JsonResponse({'error': f'Invalid brand ID: {str(e)}'}, status=400)
+                
+            # Save the updated base_assets
+            ad_request.base_assets.save()
         
         # Update image override fields
         image_fields = [
@@ -2130,6 +2162,36 @@ def request_brand(request):
     except Exception as e:
         logging.error(f"Error processing brand request: {str(e)}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["GET"])
+def get_user_brands(request):
+    """
+    Get all brands associated with the current user.
+    
+    Returns: JSON with list of user brands
+    """
+    try:
+        # Get all brands for the current user
+        brands = UserBrand.objects.filter(user=request.user).order_by('brand_name')
+        
+        # Format the brands as a list of dictionaries
+        brands_data = [{
+            'id': brand.id,
+            'name': brand.brand_name
+        } for brand in brands]
+        
+        return JsonResponse({
+            'success': True,
+            'brands': brands_data
+        })
+    except Exception as e:
+        logging.error(f"Error retrieving user brands: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
 
 
 @require_POST
