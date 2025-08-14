@@ -1022,64 +1022,50 @@ def adrequest_update(request, pk):
         if 'brand_id' in request.POST:
             brand_id = request.POST.get('brand_id')
             
-            # Create base_assets if it doesn't exist
-            if not ad_request.base_assets:
-                ad_request.base_assets = AdRequestAssets.objects.create(user=request.user)
+            try:
+                # Ensure brand_id is an integer
+                brand_id = int(brand_id)
                 
-            # If brand_id is empty or None, set brand to None
-            if not brand_id or brand_id == 'null' or brand_id == 'undefined':
-                ad_request.base_assets.brand = None
-            else:
-                try:
-                    # Ensure brand_id is an integer
-                    try:
-                        brand_id = int(brand_id)
-                    except (ValueError, TypeError):
-                        # If conversion fails, set brand to None
-                        ad_request.base_assets.brand = None
-                        # Skip the rest of the brand processing
-                        raise ValueError(f"Invalid brand_id format: {brand_id}")
-                        
-                    print(f"Brand ID: {brand_id}")
-                    # Get the UserBrand instance
-                    brand = get_object_or_404(UserBrand, id=brand_id, user=request.user)
-                    ad_request.base_assets.brand = brand
-                    print(f"Brand: {brand}")
-                    # Get the brand's assets
-                    brand_assets = AdRequestAssets.objects.filter(brand=brand).first()
-                    print(f"Brand assets: {brand_assets}")
+                # Get the UserBrand instance
+                brand = get_object_or_404(UserBrand, id=brand_id, user=request.user)
+                print(f"Brand ID: {brand_id}, Brand: {brand}")
+                
+                # Check if assets already exist for this brand
+                brand_assets = AdRequestAssets.objects.filter(brand=brand).first()
+                print(f"Brand assets: {brand_assets}")
 
-                    if brand_assets:
-                        # Associate the existing brand assets with the AdRequest
-                        ad_request.base_assets = brand_assets
-                        
-                        # Overwrite asset_overrides with brand assets data
-                        ad_request.asset_overrides = brand_assets.to_dict()
-                        
-                        # Overwrite image override fields with images from brand assets
-                        image_fields = [
-                            'logo', 'product_image_1', 'product_image_2', 
-                            'app_image_1', 'app_image_2',
-                            'marketing_image_1', 'marketing_image_2', 'marketing_image_3'
-                        ]
-                        
-                        for field in image_fields:
-                            base_image = getattr(brand_assets, field)
-                            if base_image:
-                                setattr(ad_request, f"{field}_override", base_image)
-                    else:
-                        # If no brand assets exist for this brand, create a new one
-                        print(f"Creating new AdRequestAssets for brand: {brand}")
-                        new_assets = AdRequestAssets.objects.create(
-                            user=request.user,
-                            brand=brand
-                        )
-                        # Associate the new assets with the AdRequest
-                        ad_request.base_assets = new_assets
+                if brand_assets:
+                    # Associate the existing brand assets with the AdRequest
+                    ad_request.base_assets = brand_assets
                     
-                except Exception as e:
-                    return JsonResponse({'error': f'Invalid brand ID: {str(e)}'}, status=400)
-                
+                    # Overwrite asset_overrides with brand assets data
+                    ad_request.asset_overrides = brand_assets.to_dict()
+                    
+                    # Overwrite image override fields with images from brand assets
+                    image_fields = [
+                        'logo', 'product_image_1', 'product_image_2', 
+                        'app_image_1', 'app_image_2',
+                        'marketing_image_1', 'marketing_image_2', 'marketing_image_3'
+                    ]
+                    
+                    for field in image_fields:
+                        base_image = getattr(brand_assets, field)
+                        if base_image:
+                            setattr(ad_request, f"{field}_override", base_image)
+                else:
+                    # If no brand assets exist for this brand, create a new one
+                    print(f"Creating new AdRequestAssets for brand: {brand}")
+                    new_assets = AdRequestAssets.objects.create(
+                        user=request.user,
+                        brand=brand
+                    )
+                    # Associate the new assets with the AdRequest
+                    ad_request.base_assets = new_assets
+            except (ValueError, TypeError) as e:
+                return JsonResponse({'error': f'Invalid brand ID format: {str(e)}'}, status=400)
+            except Exception as e:
+                return JsonResponse({'error': f'Error processing brand: {str(e)}'}, status=400)
+                    
             # Save the updated base_assets
             ad_request.base_assets.save()
         
