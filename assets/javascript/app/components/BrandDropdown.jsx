@@ -87,7 +87,7 @@ const BrandDropdown = ({ initialBrandId, onBrandChange }) => {
   }
 
   return (
-    <div className="w-full mb-6">
+    <div className="w-full">
       <Select 
         selectedKey={selectedBrand} 
         onSelectionChange={handleBrandChange}

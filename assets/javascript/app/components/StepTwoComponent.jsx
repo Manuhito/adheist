@@ -70,6 +70,11 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     if (refreshData && initialData?.id && isDirectNavigation) {
       refreshData();
     }
+    
+    // Ensure selectedBrand is set from initialData if available
+    if (initialData.brand) {
+      setSelectedBrand(initialData.brand);
+    }
   }, []);
 
   // Asegurar que el scroll esté al inicio de la página cuando el componente se monte
@@ -995,6 +1000,9 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
                 initialBrandId={initialData.brand?.id}
                 onBrandChange={handleBrandChange}
               />
+              {!initialData.brand && (
+                <p className="text-xs text-amber-500 mt-1">{t('step_two.select_brand_first', 'Please select a brand to add assets')}</p>
+              )}
             </div>
             {/* Branding + Campaign Details en dos columnas */}
             <div className="flex flex-row gap-x-6 w-full">
@@ -1022,6 +1030,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
                     value={websiteUrl}
                     onChange={handleWebsiteUrlChange}
                     className="w-full"
+                    disabled={!selectedBrand}
                   />
                 </div>
                 <div className="w-full mb-6">
@@ -1039,6 +1048,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
                         value={selectedColor.replace('#', '')}
                         onChange={handleColorChange}
                         className={`w-full pl-6 ${colorError ? 'border-red-500' : ''}`}
+                        disabled={!selectedBrand}
                       />
                     </div>
                     {colorError && (
@@ -1066,6 +1076,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
                       value={keyBenefits}
                       onChange={handleKeyBenefitsChange}
                       className="w-full"
+                      disabled={!selectedBrand}
                     />
                   </div>
                 </div>
