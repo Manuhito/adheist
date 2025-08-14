@@ -301,7 +301,7 @@ class AdRequestAssets(BaseModel):
     def to_dict(self):
         """Convert asset fields to dictionary for easier override handling"""
         return {
-            'brand': self.brand.id if self.brand else None,
+            # Removed 'brand' field to prevent assignment issues
             'company_website': self.company_website,
             'main_hex_color': self.main_hex_color,
             'key_benefits': self.key_benefits,
@@ -390,6 +390,10 @@ class AdRequest(BaseModel):
         if self.base_assets:
             # Update JSON fields from asset_overrides
             for field_name, value in self.asset_overrides.items():
+                # Skip the 'brand' field as it requires special handling
+                if field_name == 'brand':
+                    continue
+                    
                 if hasattr(self.base_assets, field_name):
                     setattr(self.base_assets, field_name, value)
             
