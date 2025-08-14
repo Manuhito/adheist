@@ -967,6 +967,13 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
           </aside>
           {/* Main column derecha: branding, details, product type */}
           <main className="lg:col-span-8 flex flex-col">
+            {/* Brand Dropdown - Global selection */}
+            <div className="w-full">
+              <BrandDropdown 
+                initialBrandId={initialData.brand?.id}
+                onBrandChange={handleBrandChange}
+              />
+            </div>
             {/* Branding + Campaign Details en dos columnas */}
             <div className="flex flex-row gap-x-6 w-full">
               {/* Company Branding (izquierda) */}
@@ -979,11 +986,6 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
               {/* Campaign Details (derecha) */}
               <div className="bg-card p-6 rounded-xl overflow-hidden h-full flex-1">
                 <h3 className="text-lg font-medium mb-4">{t('step_two.campaign_details', 'Campaign Details')}</h3>
-                {/* Brand Dropdown */}
-                <BrandDropdown 
-                  initialBrandId={initialData.brand?.id}
-                  onBrandChange={handleBrandChange}
-                />
                 <div className="mb-6">
                   <label
                     htmlFor={websiteUrlId}
