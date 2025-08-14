@@ -856,7 +856,29 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       
       // If we have a refreshData function, call it to update the UI
       if (refreshData) {
-        refreshData();
+        console.log('Refreshing data after brand update...');
+        // Fetch fresh data and update the component state with the new assets
+        const freshData = await refreshData();
+        
+        if (freshData) {
+          // Update local state with the new asset_overrides
+          if (freshData.asset_overrides) {
+            // Update website URL
+            if (freshData.asset_overrides.company_website !== undefined) {
+              setWebsiteUrl(freshData.asset_overrides.company_website || '');
+            }
+            
+            // Update key benefits
+            if (freshData.asset_overrides.key_benefits !== undefined) {
+              setKeyBenefits(freshData.asset_overrides.key_benefits || '');
+            }
+            
+            // Update brand color
+            if (freshData.asset_overrides.main_hex_color !== undefined) {
+              setSelectedColor(freshData.asset_overrides.main_hex_color || '');
+            }
+          }
+        }
       }
     } catch (error) {
       console.error('Error saving brand:', error);
