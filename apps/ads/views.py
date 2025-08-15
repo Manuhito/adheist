@@ -2217,6 +2217,56 @@ def get_user_brands(request):
         return JsonResponse({
             'success': False,
             'error': str(e)
+        })
+
+
+@login_required
+@require_http_methods(["POST"])
+def create_user_brand(request):
+    """
+    Create a new brand for the current user.
+    
+    Expected POST data:
+    - brand_name: Name of the brand to create
+    
+    Returns: JSON with the created brand data
+    """
+    try:
+        # Get the brand name from the request
+        data = json.loads(request.body)
+        brand_name = data.get('brand_name')
+        
+        if not brand_name:
+            return JsonResponse({
+                'success': False,
+                'error': 'Brand name is required'
+            }, status=400)
+        
+        # Check if brand with this name already exists for this user
+        if UserBrand.objects.filter(user=request.user, brand_name=brand_name).exists():
+            return JsonResponse({
+                'success': False,
+                'error': 'A brand with this name already exists'
+            }, status=400)
+        
+        # Create the new brand
+        brand = UserBrand.objects.create(
+            user=request.user,
+            brand_name=brand_name
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'brand': {
+                'id': brand.id,
+                'name': brand.brand_name
+            }
+        })
+    except Exception as e:
+        logging.error(f"Error creating user brand: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
         }, status=500)
 
 
