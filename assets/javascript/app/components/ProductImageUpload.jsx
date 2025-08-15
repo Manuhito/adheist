@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { ImageUpload } from "../../components/ui/image-upload";
 import { cn } from "../../lib/utils";
 import { useTranslation } from "../../lib/useTranslation";
@@ -10,6 +10,18 @@ import { useTranslation } from "../../lib/useTranslation";
  */
 export function ProductImageUpload({ onUpload, className, initialData, ...props }) {
   const { t } = useTranslation();
+  
+  // State for image URLs to enable updates when initialData changes
+  const [primaryImageUrl, setPrimaryImageUrl] = useState(initialData?.product_image_1_override || null);
+  const [secondaryImageUrl, setSecondaryImageUrl] = useState(initialData?.product_image_2_override || null);
+  
+  // Update state when initialData changes (e.g., after brand change)
+  useEffect(() => {
+    console.log('ProductImageUpload: initialData changed', initialData);
+    setPrimaryImageUrl(initialData?.product_image_1_override || null);
+    setSecondaryImageUrl(initialData?.product_image_2_override || null);
+  }, [initialData]);
+  
   // Handle uploads for each image separately
   const handleFirstImageUpload = (url) => {
     onUpload?.({ type: 'primary', url });
@@ -18,10 +30,6 @@ export function ProductImageUpload({ onUpload, className, initialData, ...props 
   const handleSecondImageUpload = (url) => {
     onUpload?.({ type: 'secondary', url });
   };
-  
-  // Extract initial image URLs from initialData if available
-  const primaryImageUrl = initialData?.product_image_1_override || null;
-  const secondaryImageUrl = initialData?.product_image_2_override || null;
 
   return (
     <div className={cn("w-full h-full flex flex-col p-6", className)}>

@@ -20,6 +20,7 @@ from .models import (
     ExtraCredit,
     AppConfiguration,
     FAQ,
+    UserBrand,
 )
 
 
@@ -96,8 +97,9 @@ class AdRequestAdmin(admin.ModelAdmin):
 
 @admin.register(AdRequestAssets)
 class AdRequestAssetsAdmin(admin.ModelAdmin):
-    list_display = ["user", "created_at", "updated_at"]
-    search_fields = ["user__email"]
+    list_display = ["user", "brand", "created_at", "updated_at"]
+    search_fields = ["user__email", "brand__brand_name"]
+    list_filter = ["brand"]
 
 
 @admin.register(AdRequestVersion)
@@ -330,6 +332,19 @@ class AppConfigurationAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         # Do not allow deleting the configuration
         return False
+
+
+@admin.register(UserBrand)
+class UserBrandAdmin(admin.ModelAdmin):
+    list_display = ["brand_name", "user", "created_at", "updated_at"]
+    search_fields = ["brand_name", "user__email"]
+    list_filter = ["user"]
+    
+    fieldsets = [
+        (None, {
+            "fields": ["user", "brand_name"]
+        })
+    ]
 
 
 @admin.register(FAQ)

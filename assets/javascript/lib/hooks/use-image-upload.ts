@@ -97,14 +97,26 @@ export function useImageUpload({ onUpload, initialImage }: UseImageUploadProps =
     onUpload?.(null, null);
   }, [previewUrl, onUpload]);
 
-  // Initialize with initialImage if provided
+  // Update when initialImage changes
   useEffect(() => {
-    if (initialImage && !previewUrl) {
-      setPreviewUrl(initialImage);
-      setFileName('Preloaded image');
+    // Check if initialImage has changed and is different from current previewUrl
+    // This ensures we update the preview when brand changes
+    if (initialImage !== previewUrl) {
+      console.log('useImageUpload: initialImage changed', { initialImage, previewUrl });
+      
+      // If we have a new initialImage, update the preview
+      if (initialImage) {
+        setPreviewUrl(initialImage);
+        setFileName('Preloaded image');
+      } else if (previewUrl && previewUrl.startsWith('http')) {
+        // If initialImage is null/undefined but we have a previewUrl that's a URL (not a blob)
+        // clear the preview to show empty state
+        setPreviewUrl(null);
+        setFileName(null);
+      }
       // Don't call onUpload here as this is just initializing with existing data
     }
-  }, [initialImage]);
+  }, [initialImage, previewUrl]);
 
   useEffect(() => {
     return () => {

@@ -7,6 +7,7 @@ import { AppScreenshotUpload } from './AppScreenshotUpload.jsx';
 import { ProductTypeSelect } from './ProductTypeSelect.jsx';
 import { Input } from '../../components/ui/input.jsx';
 import { useTranslation } from '../../lib/useTranslation';
+import BrandDropdown from './BrandDropdown.jsx';
 
 /**
  * Step Two Component for the Create Ad Request flow
@@ -49,12 +50,16 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     ''
   );
 
+  const [colorError, setColorError] = useState(false);
+  const [selectedBrand, setSelectedBrand] = useState(initialData.brand || null);
+
   // We no longer need to track product type selection as both containers are always visible
 
   // Debounce timers
   const websiteUrlUpdateTimer = useRef(null);
   const keyBenefitsUpdateTimer = useRef(null);
   const colorUpdateTimer = useRef(null);
+  const brandUpdateTimer = useRef(null);
 
   // Solo refrescar datos si es necesario (por ejemplo, al recargar la página directamente)
   // No hacemos la llamada automáticamente para evitar duplicación con handleStepComplete
@@ -64,6 +69,11 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
     if (refreshData && initialData?.id && isDirectNavigation) {
       refreshData();
+    }
+    
+    // Ensure selectedBrand is set from initialData if available
+    if (initialData.brand) {
+      setSelectedBrand(initialData.brand);
     }
   }, []);
 
@@ -715,9 +725,6 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     return brightness > 0.5;
   };
 
-  // State for color validation
-  const [colorError, setColorError] = useState(false);
-
   // Handle color change with debouncing
   const handleColorChange = (e) => {
     let newValue = e.target.value;
@@ -795,6 +802,85 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
     } catch (error) {
       console.error('Error saving brand color:', error);
+    }
+  };
+
+  // Function to handle brand selection change
+  const handleBrandChange = (brand) => {
+    setSelectedBrand(brand);
+    
+    // Only proceed if we have an ID and a brand
+    if (!initialData.id || !brand) return;
+    
+    // Clear any existing timer
+    if (brandUpdateTimer.current) {
+      clearTimeout(brandUpdateTimer.current);
+    }
+    
+    // Set a new timer to update the database after a short delay
+    brandUpdateTimer.current = setTimeout(() => {
+      updateBrand(brand);
+    }, 500);
+    
+    console.log('Brand updated locally:', brand);
+  };
+  
+  // Function to update brand in the database
+  const updateBrand = async (brand) => {
+    // Only proceed if we have an ID and a brand
+    if (!initialData.id || !brand) return;
+    
+    try {
+      const csrfToken = getCsrfToken();
+      if (!csrfToken) {
+        console.error('CSRF token not found');
+        return;
+      }
+      
+      // Create a FormData object for the request
+      const formData = new FormData();
+      
+      // Add the brand_id field
+      formData.append('brand_id', brand.id);
+      
+      // Make the API call to update the brand
+      const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrfToken
+        },
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error updating brand: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log('Brand updated in database:', data);
+      
+      // If we have a refreshData function, call it to update the UI
+      if (refreshData) {
+        console.log('Refreshing data after brand update...');
+        // Fetch fresh data and update the component state with the new assets
+        const freshData = await refreshData();
+        
+        if (freshData) {
+          // Update local state with the new asset_overrides
+          if (freshData.asset_overrides !== undefined) {
+            // Update website URL (force update even if empty)
+            setWebsiteUrl(freshData.asset_overrides.company_website || '');
+            
+            // Update key benefits (force update even if empty)
+            setKeyBenefits(freshData.asset_overrides.key_benefits || '');
+            
+            // Update brand color (force update even if empty)
+            setSelectedColor(freshData.asset_overrides.main_hex_color || '');
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error saving brand:', error);
     }
   };
 
@@ -902,6 +988,16 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
           </aside>
           {/* Main column derecha: branding, details, product type */}
           <main className="lg:col-span-8 flex flex-col">
+            {/* Brand Dropdown - Global selection */}
+            <div className="w-full">
+              <BrandDropdown 
+                initialBrandId={initialData.brand?.id}
+                onBrandChange={handleBrandChange}
+              />
+              {!initialData.brand && (
+                <p className="text-xs text-amber-500 mt-1">{t('step_two.select_brand_first', 'Please select a brand to add assets')}</p>
+              )}
+            </div>
             {/* Branding + Campaign Details en dos columnas */}
             <div className="flex flex-row gap-x-6 w-full">
               {/* Company Branding (izquierda) */}
@@ -928,6 +1024,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
                     value={websiteUrl}
                     onChange={handleWebsiteUrlChange}
                     className="w-full"
+                    disabled={!selectedBrand}
                   />
                 </div>
                 <div className="w-full mb-6">
@@ -945,6 +1042,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
                         value={selectedColor.replace('#', '')}
                         onChange={handleColorChange}
                         className={`w-full pl-6 ${colorError ? 'border-red-500' : ''}`}
+                        disabled={!selectedBrand}
                       />
                     </div>
                     {colorError && (
@@ -972,6 +1070,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
                       value={keyBenefits}
                       onChange={handleKeyBenefitsChange}
                       className="w-full"
+                      disabled={!selectedBrand}
                     />
                   </div>
                 </div>

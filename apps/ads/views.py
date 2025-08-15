@@ -25,7 +25,7 @@ from django.utils import timezone
 from apps.aiinterface.tasks import send_slack_notification
 from django.contrib.auth import get_user_model
 
-from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion, AdRequestUsage, ExtraCredit
+from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion, AdRequestUsage, ExtraCredit, UserBrand
 from .forms import AdLibraryForm
 from .services import can_create_ad_request, use_credit, can_create_ad_request_version, get_ad_request_version_limit, use_general_credit, use_version_credit, can_create_ad_version
 import boto3
@@ -837,36 +837,13 @@ def adrequest_create(request):
     
     try:
         
-        # Initialize create parameters
+        # Initialize create parameters with empty assets and overrides
         create_params = {
             'user': request.user,
-            'status': AdRequest.STATUS_NEW
+            'status': AdRequest.STATUS_NEW,
+            'base_assets': None,
+            'asset_overrides': {}
         }
-        
-        # Get user assets if they exist
-        user_assets = AdRequestAssets.objects.filter(user=request.user).first()
-        
-        # If user doesn't have assets, create a new AdRequestAssets instance
-        if not user_assets:
-            user_assets = AdRequestAssets.objects.create(user=request.user)
-            
-        # Set base_assets reference
-        create_params['base_assets'] = user_assets
-        
-        # Add text fields to asset_overrides
-        create_params['asset_overrides'] = user_assets.to_dict()
-        
-        # Add image fields to their respective override fields
-        image_fields = [
-            'logo', 'product_image_1', 'product_image_2', 
-            'app_image_1', 'app_image_2',
-            'marketing_image_1', 'marketing_image_2', 'marketing_image_3'
-        ]
-        
-        for field in image_fields:
-            base_image = getattr(user_assets, field)
-            if base_image:
-                create_params[f"{field}_override"] = base_image
         
         # Create the AdRequest with all fields at once
         ad_request = AdRequest.objects.create(**create_params)
@@ -944,6 +921,15 @@ def adrequest_get(request, pk):
 
     ad_library = safe_get(ad_request, 'ad_library')
     user = safe_get(ad_request, 'user')
+    base_assets = safe_get(ad_request, 'base_assets')
+    
+    # Get brand information if available
+    brand = None
+    if base_assets and hasattr(base_assets, 'brand') and base_assets.brand:
+        brand = {
+            'id': base_assets.brand.id,
+            'name': base_assets.brand.brand_name
+        }
 
     created_at = safe_get(ad_request, 'created_at')
     updated_at = safe_get(ad_request, 'updated_at')
@@ -967,6 +953,7 @@ def adrequest_get(request, pk):
         'marketing_image_1_override': safe_image_url(safe_get(ad_request, 'marketing_image_1_override')),
         'marketing_image_2_override': safe_image_url(safe_get(ad_request, 'marketing_image_2_override')),
         'marketing_image_3_override': safe_image_url(safe_get(ad_request, 'marketing_image_3_override')),
+        'brand': brand,
     })
 
 
@@ -1030,9 +1017,72 @@ def adrequest_update(request, pk):
                 # If the field is explicitly empty, set it to empty
                 # Otherwise, update with the new value
                 current_overrides[field] = request.POST.get(field)
-        
-        # Save the updated overrides
-        ad_request.asset_overrides = current_overrides
+                
+        # Handle brand_id if provided
+        if 'brand_id' in request.POST:
+            brand_id = request.POST.get('brand_id')
+            
+            try:
+                # Ensure brand_id is an integer
+                brand_id = int(brand_id)
+                
+                # Get the UserBrand instance
+                brand = get_object_or_404(UserBrand, id=brand_id, user=request.user)
+                print(f"Brand ID: {brand_id}, Brand: {brand}")
+                
+                # Check if assets already exist for this brand
+                brand_assets = AdRequestAssets.objects.filter(brand=brand).first()
+                print(f"Brand assets: {brand_assets}")
+
+                if brand_assets:
+                    # Associate the existing brand assets with the AdRequest
+                    ad_request.base_assets = brand_assets
+                    
+                    # Overwrite asset_overrides with brand assets data
+                    ad_request.asset_overrides = brand_assets.to_dict()
+                    
+                    # Overwrite image override fields with images from brand assets
+                    image_fields = [
+                        'logo', 'product_image_1', 'product_image_2', 
+                        'app_image_1', 'app_image_2',
+                        'marketing_image_1', 'marketing_image_2', 'marketing_image_3'
+                    ]
+                    
+                    for field in image_fields:
+                        base_image = getattr(brand_assets, field)
+                        if base_image:
+                            setattr(ad_request, f"{field}_override", base_image)
+                else:
+                    # If no brand assets exist for this brand, create a new one
+                    print(f"Creating new AdRequestAssets for brand: {brand}")
+                    new_assets = AdRequestAssets.objects.create(
+                        user=request.user,
+                        brand=brand
+                    )
+                    # Associate the new assets with the AdRequest
+                    ad_request.base_assets = new_assets
+                    
+                    # Clear asset_overrides to prevent copying old data to new brand
+                    ad_request.asset_overrides = {}
+                    
+                    # Clear all image override fields to prevent copying old images
+                    image_fields = [
+                        'logo', 'product_image_1', 'product_image_2', 
+                        'app_image_1', 'app_image_2',
+                        'marketing_image_1', 'marketing_image_2', 'marketing_image_3'
+                    ]
+                    
+                    for field in image_fields:
+                        override_field = f"{field}_override"
+                        if hasattr(ad_request, override_field):
+                            setattr(ad_request, override_field, None)
+            except (ValueError, TypeError) as e:
+                return JsonResponse({'error': f'Invalid brand ID format: {str(e)}'}, status=400)
+            except Exception as e:
+                return JsonResponse({'error': f'Error processing brand: {str(e)}'}, status=400)
+                    
+            # Save the updated base_assets
+            ad_request.base_assets.save()
         
         # Update image override fields
         image_fields = [
@@ -2153,6 +2203,86 @@ def request_brand(request):
     except Exception as e:
         logging.error(f"Error processing brand request: {str(e)}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["GET"])
+def get_user_brands(request):
+    """
+    Get all brands associated with the current user.
+    
+    Returns: JSON with list of user brands
+    """
+    try:
+        # Get all brands for the current user
+        brands = UserBrand.objects.filter(user=request.user).order_by('brand_name')
+        
+        # Format the brands as a list of dictionaries
+        brands_data = [{
+            'id': brand.id,
+            'name': brand.brand_name
+        } for brand in brands]
+        
+        return JsonResponse({
+            'success': True,
+            'brands': brands_data
+        })
+    except Exception as e:
+        logging.error(f"Error retrieving user brands: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
+
+
+@login_required
+@require_http_methods(["POST"])
+def create_user_brand(request):
+    """
+    Create a new brand for the current user.
+    
+    Expected POST data:
+    - brand_name: Name of the brand to create
+    
+    Returns: JSON with the created brand data
+    """
+    try:
+        # Get the brand name from the request
+        data = json.loads(request.body)
+        brand_name = data.get('brand_name')
+        
+        if not brand_name:
+            return JsonResponse({
+                'success': False,
+                'error': 'Brand name is required'
+            }, status=400)
+        
+        # Check if brand with this name already exists for this user
+        if UserBrand.objects.filter(user=request.user, brand_name=brand_name).exists():
+            return JsonResponse({
+                'success': False,
+                'error': 'A brand with this name already exists'
+            }, status=400)
+        
+        # Create the new brand
+        brand = UserBrand.objects.create(
+            user=request.user,
+            brand_name=brand_name
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'brand': {
+                'id': brand.id,
+                'name': brand.brand_name
+            }
+        })
+    except Exception as e:
+        logging.error(f"Error creating user brand: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
 
 
 @require_POST
