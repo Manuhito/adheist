@@ -94,8 +94,14 @@ const BrandDropdown = ({ initialBrandId, onBrandChange }) => {
     // Add the new brand to the list
     setBrands([...brands, newBrand]);
     
-    // Select the newly created brand
-    handleBrandChange(newBrand.id.toString());
+    // Select the newly created brand and trigger the same update process
+    // as when a user selects a brand from the dropdown
+    setSelectedBrand(newBrand.id.toString());
+    
+    if (onBrandChange) {
+      // Call onBrandChange with the new brand object to trigger the update process
+      onBrandChange(newBrand);
+    }
   };
 
   return (
@@ -108,14 +114,19 @@ const BrandDropdown = ({ initialBrandId, onBrandChange }) => {
             placeholder={t('step_two.select_brand', 'Select a brand')}
           >
             <Label>{t('step_two.brand', 'Brand')}</Label>
-            <SelectTrigger>
+            <SelectTrigger 
+              onClick={brands.length === 0 ? () => setIsModalOpen(true) : undefined}
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectPopover>
               <SelectListBox>
                 {brands.length === 0 ? (
-                  <div className="p-2 text-sm text-gray-500">
-                    {t('step_two.no_brands', 'No brands available')}
+                  <div 
+                    className="p-2 text-sm text-gray-500 cursor-pointer hover:bg-gray-100"
+                    onClick={() => setIsModalOpen(true)}
+                  >
+                    {t('step_two.no_brands_click_to_create', 'No brands available - Click to create one')}
                   </div>
                 ) : (
                   brands.map(brand => (

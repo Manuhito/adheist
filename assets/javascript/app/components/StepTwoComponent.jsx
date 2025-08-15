@@ -867,21 +867,15 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
         
         if (freshData) {
           // Update local state with the new asset_overrides
-          if (freshData.asset_overrides) {
-            // Update website URL
-            if (freshData.asset_overrides.company_website !== undefined) {
-              setWebsiteUrl(freshData.asset_overrides.company_website || '');
-            }
+          if (freshData.asset_overrides !== undefined) {
+            // Update website URL (force update even if empty)
+            setWebsiteUrl(freshData.asset_overrides.company_website || '');
             
-            // Update key benefits
-            if (freshData.asset_overrides.key_benefits !== undefined) {
-              setKeyBenefits(freshData.asset_overrides.key_benefits || '');
-            }
+            // Update key benefits (force update even if empty)
+            setKeyBenefits(freshData.asset_overrides.key_benefits || '');
             
-            // Update brand color
-            if (freshData.asset_overrides.main_hex_color !== undefined) {
-              setSelectedColor(freshData.asset_overrides.main_hex_color || '');
-            }
+            // Update brand color (force update even if empty)
+            setSelectedColor(freshData.asset_overrides.main_hex_color || '');
           }
         }
       }

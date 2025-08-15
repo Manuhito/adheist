@@ -1061,6 +1061,21 @@ def adrequest_update(request, pk):
                     )
                     # Associate the new assets with the AdRequest
                     ad_request.base_assets = new_assets
+                    
+                    # Clear asset_overrides to prevent copying old data to new brand
+                    ad_request.asset_overrides = {}
+                    
+                    # Clear all image override fields to prevent copying old images
+                    image_fields = [
+                        'logo', 'product_image_1', 'product_image_2', 
+                        'app_image_1', 'app_image_2',
+                        'marketing_image_1', 'marketing_image_2', 'marketing_image_3'
+                    ]
+                    
+                    for field in image_fields:
+                        override_field = f"{field}_override"
+                        if hasattr(ad_request, override_field):
+                            setattr(ad_request, override_field, None)
             except (ValueError, TypeError) as e:
                 return JsonResponse({'error': f'Invalid brand ID format: {str(e)}'}, status=400)
             except Exception as e:
