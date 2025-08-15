@@ -25,9 +25,9 @@ const features = [
     ),
   },
 {
-  title: "Ad Library",
+  title: "Works Everywhere",
     description:
-  "Browse 100's of winning templates - pick any and make it your own.",
+  "Export to Facebook Ads, Instagram or Social Media.",
     className:
   "order-3 xl:order-none hover:bg-blue-500/10 transition-all duration-500 ease-out",
     content: (
@@ -40,9 +40,9 @@ className = "-mb-32 mt-4 max-h-64 w-full px-4 select-none drop-shadow-[0_0_28px_
     ),
   },
 {
-  title: "Create Ads Automatically",
+  title: "No Design Skills Needed",
     description:
-  "Every format you need, made for you with instant editing tools to quickly polish any ad.",
+  "AI handles the creative process. You handle the strategy.",
     className:
   "md:row-span-2 hover:bg-orange-500/10 transition-all duration-500 ease-out",
     content: (
@@ -66,9 +66,9 @@ className = "-mb-32 mt-4 max-h-64 w-full px-4 select-none drop-shadow-[0_0_28px_
     ),
 },
 {
-  title: "Safe, Simple Licensing",
+  title: "Scale A/B Testing Faster",
     description:
-  "Every ad you make is yours to use, forever, with no messy rights issues to worry about.",
+  "Create variants faster than ever.",
     className:
   "flex-row order-4 md:col-span-2 md:flex-row xl:order-none hover:bg-green-500/10 transition-all duration-500 ease-out",
     content: (
@@ -94,7 +94,7 @@ export default function Component() {
     < span className = "text-primary" > Successful Ad Creation </span>
       </>
 }
-className = "bg-neutral-100 dark:bg-neutral-900"
+className = "bg-neutral-100 dark:bg-neutral-900 -mt-8"
   >
   <div className="mx-auto mt-16 grid max-w-sm grid-cols-1 gap-6 text-gray-500 md:max-w-3xl md:grid-cols-2 xl:grid-rows-2 md:grid-rows-3 xl:max-w-6xl xl:auto-rows-fr xl:grid-cols-3" >
   {

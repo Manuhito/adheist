@@ -29,7 +29,7 @@ const problems = [
 
 export default function Component() {
   return (
-    <Section title="" subtitle="The Ad Creation Challenges">
+    <Section title="" subtitle="The Ad Creation Challenges" className="-mb-12">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
         {problems.map((problem, index) => (
           <BlurFade key={index} delay={0.2 + index * 0.2} inView>
