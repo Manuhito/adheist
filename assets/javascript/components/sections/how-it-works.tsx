@@ -16,7 +16,7 @@ const data = [
   {
     id: 2,
     title: "Create Ads Automatically",
-    content: "Turn winning ideas into your own ads with just a few clicks - 95% done for you.",
+    content: "Turn winning ideas into your own ads with just a few clicks - 100% Money Back Guarantee.",
     image: "/static/images/landing/dashboard.png",
     icon: <Zap className="w-6 h-6 text-primary" />,
   },

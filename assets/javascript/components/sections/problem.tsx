@@ -10,7 +10,7 @@ import { DollarSign, Shield, Zap } from "lucide-react";
 const problems = [
   {
     title: "Agencies Are Expensive",
-    description: "Hiring agencies or freelancers costs $2K-$30K per month for ad creation.",
+    description: "Hiring agencies or freelancers costs $2K-$10K per month for ad creation.",
     icon: DollarSign,
   },
   {
@@ -29,7 +29,7 @@ const problems = [
 
 export default function Component() {
   return (
-    <Section title="Problem" subtitle="Building Good Links is Hard">
+    <Section title="" subtitle="The Ad Creation Challenges">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
         {problems.map((problem, index) => (
           <BlurFade key={index} delay={0.2 + index * 0.2} inView>

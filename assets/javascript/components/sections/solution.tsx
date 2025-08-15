@@ -9,9 +9,9 @@ import { motion } from "framer-motion";
 
 const features = [
   {
-    title: "Find Winning Ad Ideas",
+    title: "Generate Unlimited Ad Variations",
     description:
-      "Adheist scans the ads with the highest adspend to spot what ads are working right now.",
+      "Create 100+ versions from a single product URL. Test what works.",
     className: "hover:bg-red-500/10 transition-all duration-500 ease-out",
     content: (
       <>
@@ -94,7 +94,6 @@ export default function Component() {
     < span className = "text-primary" > Successful Ad Creation </span>
       </>
 }
-description = "Ads that actually sell. Adheist makes ads based on real data — competitor ads, industry leaders, and trends. 95% done for you with one clean app for everything."
 className = "bg-neutral-100 dark:bg-neutral-900"
   >
   <div className="mx-auto mt-16 grid max-w-sm grid-cols-1 gap-6 text-gray-500 md:max-w-3xl md:grid-cols-2 xl:grid-rows-2 md:grid-rows-3 xl:max-w-6xl xl:auto-rows-fr xl:grid-cols-3" >
