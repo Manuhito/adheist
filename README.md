@@ -109,6 +109,22 @@ make npm-watch
 npm run dev-watch
 ```
 
+## Frontend UI Rules (Radix/ShadCN)
+
+- **Stack único:** Usar exclusivamente Radix UI + componentes ShadCN. No introducir otras librerías UI.
+- **Prohibido react-aria:** No añadir ni importar `react-aria-components` ni wrappers basados en aria. Si se detecta, migrar al patrón Radix/ ShadCN.
+- **Reutilizar componentes existentes:** Preferir los de `assets/javascript/components/ui/` y `assets/javascript/shadcn/components/ui/`. Si requieren cambios, mantener compatibilidad hacia atrás y no romper estilos/props actuales.
+- **Imports explícitos .tsx:** Importar siempre la versión `.tsx` de los componentes UI (evitar `.jsx` legacy). Webpack está configurado para priorizar `.ts/.tsx`.
+- **Patrones recomendados:**
+  - Dropdowns/combobox: `Popover` + `PopoverTrigger` + `PopoverContent` (Radix/ ShadCN).
+  - Modales: `Dialog` (Radix).
+  - Select: `@radix-ui/react-select` (no react-aria).
+- **Ejemplo de import correcto:**
+  ```js
+  import { Button } from '../../components/ui/button.tsx'
+  import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover.tsx'
+  ```
+
 ## Running Celery
 
 Celery can be used to run background tasks.

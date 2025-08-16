@@ -7,7 +7,7 @@ import {
   DialogFooter 
 } from '../../components/ui/dialog.tsx';
 import { Button } from '../../components/ui/button.tsx';
-import { Input } from '../../components/ui/input.jsx';
+import { Input } from '../../components/ui/input.tsx';
 import { useTranslation } from '../../lib/useTranslation';
 
 /**
