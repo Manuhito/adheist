@@ -2,8 +2,13 @@
 {% load static %}
 
 {% block content %}
+<div id="page-content-mount"></div>
 {% endblock %}
 
 {% block extra_js %}
+<script>
+  // Pass FAQ data to the React component
+  window.__FAQ_DATA__ = {{ faq_data|safe }};
+</script>
 <script src="{% static 'js/landing-bundle.js' %}"></script>
 {% endblock %}

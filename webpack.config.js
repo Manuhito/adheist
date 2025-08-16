@@ -15,7 +15,6 @@ module.exports = {
     base: './assets/javascript/base/index.jsx',  // layout base con header y footer
     landing: './assets/javascript/landing/index.jsx',  // nuevo entry para los componentes de landing
     pricing: './assets/javascript/pricing/index.jsx',  // entry point para la página de pricing
-    faq: './assets/javascript/faq/index.jsx',  // entry point para la página de FAQ
     blog: './assets/javascript/blog/index.jsx',  // entry point para el blog
     'blog-post': './assets/javascript/blog/post/index.jsx',  // entry point para el post individual
     'app-header': './assets/javascript/app-header.js',

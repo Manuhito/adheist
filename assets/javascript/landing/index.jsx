@@ -8,6 +8,8 @@ import Problem from "@/components/sections/problem";
 import HowItWorks from "@/components/sections/how-it-works";
 import Solution from "@/components/sections/solution";
 import CTA from "@/components/sections/cta";
+// Import the FAQ component that matches the dedicated FAQ page styling
+import FAQ from "./faq";
 
 const LandingPage = () => {
   return (
@@ -18,6 +20,7 @@ const LandingPage = () => {
       <HowItWorks />
       <Solution />
       <CTA />
+      <FAQ />
     </div>
   );
 };

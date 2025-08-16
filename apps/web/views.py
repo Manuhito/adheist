@@ -11,7 +11,23 @@ def home(request):
     if request.user.is_authenticated:
         return redirect("ads:ads_home")
     else:
-        return render(request, "web/landing_page.html")
+        # Get all active FAQ items for the landing page
+        faq_items = FAQ.objects.filter(is_active=True).order_by('order', 'created_at')
+        
+        # Convert FAQ items to a list of dictionaries for JSON serialization
+        faq_data = [{
+            'id': item.id,
+            'question': item.question,
+            'answer': item.answer,
+            'order': item.order
+        } for item in faq_items]
+        
+        # Convert FAQ data to JSON for the React component
+        faq_json = json.dumps(faq_data)
+        
+        return render(request, "web/landing_page.html", {
+            "faq_data": faq_json
+        })
 
 
 def simulate_error(request):
@@ -158,26 +174,3 @@ def pricing_page(request):
         "pricing_data": pricing_json
     })
 
-
-@ensure_csrf_cookie
-def faq_page(request):
-    """
-    Render the FAQ page with questions and answers from the FAQ model.
-    """
-    # Get all active FAQ items ordered by their order field
-    faq_items = FAQ.objects.filter(is_active=True).order_by('order', 'created_at')
-    
-    # Convert FAQ items to a list of dictionaries for JSON serialization
-    faq_data = [{
-        'id': item.id,
-        'question': item.question,
-        'answer': item.answer,
-        'order': item.order
-    } for item in faq_items]
-    
-    # Convert FAQ data to JSON for the React component
-    faq_json = json.dumps(faq_data)
-    
-    return render(request, 'web/faq.html', {
-        "faq_data": faq_json
-    })
