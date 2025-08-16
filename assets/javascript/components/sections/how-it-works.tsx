@@ -31,7 +31,7 @@ const data = [
 
 export default function Component() {
   return (
-    <Section>
+    <Section className="-mt-12 -mb-8">
     <div className= "text-center space-y-4 pb-6 mx-auto" >
     <h2 className="mx-auto mt-4 max-w-xs text-3xl font-semibold sm:max-w-none sm:text-4xl md:text-5xl" >
       Creating Ads with <span className= "text-primary" > AdHeist </span> is

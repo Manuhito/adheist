@@ -4,7 +4,6 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { HeroHighlight, Highlight } from "@/components/ui/hero-highlight";
 import { Icons } from "@/components/icons";
-import HeroVideoDialog from "@/components/magicui/hero-video";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Link } from "@/components/common"; // Changed from default to named import
@@ -71,9 +70,10 @@ export function HeroHighlightDemo() {
             className="text-4xl font-bold tracking-tight sm:text-6xl text-neutral-700 dark:text-white max-w-4xl leading-relaxed lg:leading-snug text-center mx-auto mt-16"
           >
             <Highlight className="text-black dark:text-white">
-              Steal the Highest ROI Ads
+            #1 Ai Ad Generator 
             </Highlight>{" "}
-            and Make Them Your Own
+            <br />
+            that Converts
           </motion.h1>
 
           <motion.div
@@ -85,7 +85,7 @@ export function HeroHighlightDemo() {
             <div className="flex items-center gap-2">
               <span className="text-primary text-sm">✓</span>
               <span className="text-sm text-muted-foreground whitespace-nowrap">
-                Save <span className="font-medium">$2K-$30K</span>/month
+                Save <span className="font-medium">$2K-$10K</span>/month
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -97,7 +97,7 @@ export function HeroHighlightDemo() {
             <div className="flex items-center gap-2">
               <span className="text-primary text-sm">✓</span>
               <span className="text-sm text-muted-foreground whitespace-nowrap">
-                <span className="font-medium">95%</span> Done For You
+                <span className="font-medium">100%</span> Money Back Guarantee
               </span>
             </div>
           </motion.div>
@@ -133,7 +133,7 @@ className = {
   "w-full sm:w-auto text-background flex gap-2 bg-primary hover:bg-primary/90 px-8 py-6 text-lg"
           )}
         >
-  Start with 5 Free Links
+  Start Free Beta
     </Link>
     < form method = "post" action = "/accounts/google/login/" >
       <input type="hidden" name = "csrfmiddlewaretoken" value = { getCookie('csrftoken') } />
@@ -156,28 +156,9 @@ initial = {{ opacity: 0 }}
 animate = {{ opacity: 1 }}
 transition = {{ delay: 1.0, duration: 0.8 }}
       >
-  5 Free Links - No Credit Card Required
+  No Credit Card Required
     </motion.p>
     </>
-  );
-}
-
-function HeroImage() {
-  return (
-    <motion.div
-      className="relative mx-auto flex w-full items-center justify-center"
-      initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 1.2, duration: 1, ease }}
-    >
-      <HeroVideoDialog
-        animationStyle="from-center"
-        videoSrc="https://www.youtube.com/embed/C5ddo63kHHI"
-        thumbnailSrc="/static/images/landing/dashboard.png"
-        thumbnailAlt="Hero Video"
-        className="border rounded-lg shadow-lg max-w-screen-lg mt-24"
-      />
-    </motion.div>
   );
 }
 
@@ -186,7 +167,6 @@ export default function Hero2() {
     <section id="hero">
       <div className="relative flex w-full flex-col items-center justify-start px-4 pt-4 sm:px-6 sm:pt-6 md:pt-6 lg:px-8">
         <HeroTitles />
-        <HeroImage />
         <div className="pointer-events-none absolute inset-x-0 -bottom-12 h-1/3 bg-gradient-to-t from-background via-background to-transparent lg:h-1/4"></div>
       </div>
     </section>

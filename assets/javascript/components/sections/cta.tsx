@@ -30,7 +30,7 @@ export default function CtaSection() {
             "w-full sm:w-auto text-background flex gap-2 bg-primary hover:bg-primary/90"
           )}
         >
-          Start Creating Winning Ads
+          Start Free Beta
         </a>
   < form method = "post" action = "/accounts/google/login/" >
     <input type="hidden" name = "csrfmiddlewaretoken" value = { getCookie('csrftoken') } />
