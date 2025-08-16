@@ -3,7 +3,7 @@ import { SearchComponent } from './SearchComponent';
 import { FilterFormComponent } from './FilterFormComponent';
 import InteractiveBentoGallery from '../../components/ui/interactive-bento-gallery.jsx';
 import { Building, X, Upload, ImageIcon, Plus } from 'lucide-react';
-import { Switch } from '../../components/ui/switch';
+import { Switch } from '../../components/ui/switch.tsx';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../shadcn/components/ui/tooltip';
 import { NextButton } from '../../components/ui/next-button.jsx';
 import { useTranslation } from '../../lib/useTranslation';

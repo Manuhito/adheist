@@ -5,7 +5,7 @@ import { CompanyLogoUpload } from './CompanyLogoUpload.jsx';
 import { ProductImageUpload } from './ProductImageUpload.jsx';
 import { AppScreenshotUpload } from './AppScreenshotUpload.jsx';
 import { ProductTypeSelect } from './ProductTypeSelect.jsx';
-import { Input } from '../../components/ui/input.jsx';
+import { Input } from '../../components/ui/input.tsx';
 import { useTranslation } from '../../lib/useTranslation';
 import BrandDropdown from './BrandDropdown.jsx';
 

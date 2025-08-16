@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover';
-import { Input } from '../../components/ui/input';
-import { Button } from '../../components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover.tsx';
+import { Input } from '../../components/ui/input.tsx';
+import { Button } from '../../components/ui/button.tsx';
 import { Search, Check, ChevronDown, Building, Factory } from 'lucide-react';
 import { useTranslation } from '../../lib/useTranslation';
 

@@ -1,14 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Select, 
-  SelectValue, 
-  SelectTrigger, 
-  SelectItem, 
-  SelectPopover, 
-  SelectListBox 
-} from '../../components/ui/select.tsx';
-import { Label } from '../../components/ui/field';
+import React, { useState, useEffect, useRef } from 'react';
+import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover.tsx';
 import { Button } from '../../components/ui/button.tsx';
+import { Check, ChevronDown, Building } from 'lucide-react';
 import { useTranslation } from '../../lib/useTranslation';
 import CreateBrandModal from './CreateBrandModal.jsx';
 
@@ -23,6 +16,9 @@ const BrandDropdown = ({ initialBrandId, onBrandChange }) => {
   const [selectedBrand, setSelectedBrand] = useState(initialBrandId ? initialBrandId.toString() : null);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const triggerRef = useRef(null);
+  const [contentWidth, setContentWidth] = useState(null);
 
   // Fetch brands on component mount
   useEffect(() => {
@@ -57,20 +53,35 @@ const BrandDropdown = ({ initialBrandId, onBrandChange }) => {
     }
   }, [initialBrandId]);
 
+  // When popover opens, measure trigger width to match content width
+  useEffect(() => {
+    if (isOpen && triggerRef.current) {
+      setContentWidth(triggerRef.current.offsetWidth);
+    }
+  }, [isOpen]);
+
   // Handle brand selection
-  const handleBrandChange = (brandId) => {
-    setSelectedBrand(brandId);
-    if (onBrandChange) {
-      // Find the selected brand object
-      const selectedBrandObj = brands.find(brand => brand.id.toString() === brandId);
-      onBrandChange(selectedBrandObj);
+  const handleSelectBrand = (brand) => {
+    setIsOpen(false);
+    // If clicking on the already selected brand, deselect it
+    if (selectedBrand === brand.id.toString()) {
+      setSelectedBrand(null);
+      if (onBrandChange) {
+        onBrandChange(null);
+      }
+    } else {
+      // Otherwise select the new brand
+      setSelectedBrand(brand.id.toString());
+      if (onBrandChange) {
+        onBrandChange(brand);
+      }
     }
   };
 
   if (isLoading) {
     return (
       <div className="w-full mb-6">
-        <Label>{t('step_two.brand', 'Brand')}</Label>
+        <label className="text-sm font-medium block mb-2">{t('step_two.brand', 'Brand')}</label>
         <div className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm flex items-center text-gray-400">
           {t('step_two.loading_brands', 'Loading brands...')}
         </div>
@@ -81,7 +92,7 @@ const BrandDropdown = ({ initialBrandId, onBrandChange }) => {
   if (error) {
     return (
       <div className="w-full mb-6">
-        <Label>{t('step_two.brand', 'Brand')}</Label>
+        <label className="text-sm font-medium block mb-2">{t('step_two.brand', 'Brand')}</label>
         <div className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm flex items-center text-red-500">
           {t('step_two.error_loading_brands', 'Error loading brands')}
         </div>
@@ -104,40 +115,82 @@ const BrandDropdown = ({ initialBrandId, onBrandChange }) => {
     }
   };
 
+  // Get selected brand name for display
+  const getSelectedBrandName = () => {
+    if (!selectedBrand) return null;
+    const brand = brands.find(b => b.id.toString() === selectedBrand);
+    return brand ? brand.name : null;
+  };
+
   return (
     <div className="w-full">
       <div className="flex items-end gap-2">
         <div className="flex-1">
-          <Select 
-            selectedKey={selectedBrand} 
-            onSelectionChange={handleBrandChange}
-            placeholder={t('step_two.select_brand', 'Select a brand')}
-          >
-            <Label>{t('step_two.brand', 'Brand')}</Label>
-            <SelectTrigger 
-              onClick={brands.length === 0 ? () => setIsModalOpen(true) : undefined}
+          <label className="text-sm font-medium block mb-2">{t('step_two.brand', 'Brand')}</label>
+          <Popover open={isOpen} onOpenChange={setIsOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={isOpen}
+                ref={triggerRef}
+                className="w-full justify-between bg-background px-3 py-2 text-sm font-normal h-10"
+                onClick={brands.length === 0 ? () => setIsModalOpen(true) : undefined}
+              >
+                <span className={!getSelectedBrandName() ? "text-muted-foreground flex items-center" : ""}>
+                  {getSelectedBrandName() || (
+                    <>
+                      <Building className="h-4 w-4 mr-2" />
+                      {brands.length === 0 
+                        ? t('step_two.no_brands_click_to_create', 'No brands available - Click to create one')
+                        : t('step_two.select_brand', 'Select a brand')
+                      }
+                    </>
+                  )}
+                </span>
+                <ChevronDown
+                  size={16}
+                  strokeWidth={2}
+                  className="shrink-0 text-muted-foreground/80"
+                  aria-hidden="true"
+                />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              className="p-0 overflow-hidden"
+              align="start"
+              style={contentWidth ? { width: `${contentWidth}px` } : undefined}
             >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectPopover>
-              <SelectListBox>
+              <div className="max-h-60 overflow-auto p-1 outline-none [clip-path:inset(0_0_0_0_round_calc(var(--radius)-2px))]">
                 {brands.length === 0 ? (
                   <div 
-                    className="p-2 text-sm text-gray-500 cursor-pointer hover:bg-gray-100"
-                    onClick={() => setIsModalOpen(true)}
+                    className="px-2 py-1.5 text-sm text-center cursor-pointer rounded-sm hover:bg-accent hover:text-accent-foreground"
+                    onClick={() => {
+                      setIsOpen(false);
+                      setIsModalOpen(true);
+                    }}
                   >
                     {t('step_two.no_brands_click_to_create', 'No brands available - Click to create one')}
                   </div>
                 ) : (
-                  brands.map(brand => (
-                    <SelectItem key={brand.id} id={brand.id.toString()}>
-                      {brand.name}
-                    </SelectItem>
-                  ))
+                  <div className="py-2">
+                    {brands.map((brand) => (
+                      <div
+                        key={brand.id}
+                        className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                        onClick={() => handleSelectBrand(brand)}
+                      >
+                        <span>{brand.name}</span>
+                        {selectedBrand === brand.id.toString() && (
+                          <Check className="ml-auto h-4 w-4" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 )}
-              </SelectListBox>
-            </SelectPopover>
-          </Select>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
         <Button 
           variant="outline" 

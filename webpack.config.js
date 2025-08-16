@@ -32,7 +32,7 @@ module.exports = {
     library: ["SiteJS", "[name]"],
   },
   resolve: {
-    extensions: ['.js', '.jsx', '.ts', '.tsx'],
+    extensions: ['.ts', '.tsx', '.js', '.jsx'],
     alias: {
       '@': path.resolve(__dirname, 'assets/javascript'),
       'react': path.resolve(__dirname, 'node_modules/react'),

@@ -1038,10 +1038,11 @@ def adrequest_update(request, pk):
                     # Associate the existing brand assets with the AdRequest
                     ad_request.base_assets = brand_assets
                     
-                    # Overwrite asset_overrides with brand assets data
+                    # Overwrite asset_overrides with brand assets data (including empty values)
                     ad_request.asset_overrides = brand_assets.to_dict()
                     
-                    # Overwrite image override fields with images from brand assets
+                    # Overwrite ALL image override fields with images from brand assets
+                    # This includes setting to None if the brand asset doesn't have the image
                     image_fields = [
                         'logo', 'product_image_1', 'product_image_2', 
                         'app_image_1', 'app_image_2',
@@ -1050,8 +1051,9 @@ def adrequest_update(request, pk):
                     
                     for field in image_fields:
                         base_image = getattr(brand_assets, field)
-                        if base_image:
-                            setattr(ad_request, f"{field}_override", base_image)
+                        # Always set the override field, even if base_image is None/empty
+                        # This ensures the adrequest reflects the current state of the brand assets
+                        setattr(ad_request, f"{field}_override", base_image)
                 else:
                     # If no brand assets exist for this brand, create a new one
                     print(f"Creating new AdRequestAssets for brand: {brand}")
