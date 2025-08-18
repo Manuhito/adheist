@@ -8,6 +8,7 @@ import { SubscriptionCancelSection } from '../components/sections/subscription-c
 import { useTranslation } from '../lib/useTranslation';
 import { SubscriptionUpdateConfirmation } from './subscription-update-confirmation';
 import { CreditPackageConfirmation } from './credit-package-confirmation';
+import { Badge } from '../shadcn/components/ui/badge.jsx';
 
 /**
  * Componente principal que contiene toda la página de facturación
@@ -169,7 +170,14 @@ export function BillingPage({ pricingData, onSubscribe }) {
       {/* Sección de créditos - visible para usuarios con suscripción activa o free tier */}
       {(hasActiveSubscription || window.__USAGE_DATA__?.max_general_credits > 0) && (
         <div className="mt-8 mb-4">
-          <h3 className="text-lg font-medium mb-3">{t('billing.plan_usage', 'Plan Usage')}</h3>
+          <div className="flex items-center gap-3 mb-3">
+            <h3 className="text-lg font-medium">{t('billing.plan_usage', 'Plan Usage')}</h3>
+            {window.__USAGE_DATA__?.is_free_tier && (
+              <Badge variant="outline" className="text-xs">
+                {t('billing.free_plan', 'Free')}
+              </Badge>
+            )}
+          </div>
           <div className="flex flex-col gap-4">
             <ProgressBarUsage
               label={t('billing.ads_generation', 'Ads Generation')}

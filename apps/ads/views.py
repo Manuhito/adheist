@@ -1707,7 +1707,8 @@ def get_user_credits(user):
         'max_general_credits': plan_limits['general_credits'],
         'max_version_credits': plan_limits['version_credits'],
         'extra_general_credits': extra_general_credits,
-        'extra_version_credits': extra_version_credits
+        'extra_version_credits': extra_version_credits,
+        'is_free_tier': is_free_tier
     }
 
 
