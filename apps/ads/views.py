@@ -1644,34 +1644,38 @@ def get_user_credits(user):
     is_free_tier = False
     
     try:
-        # Buscar primero el registro de suscripción activa (is_free_tier=False)
-        usage = AdRequestUsage.objects.filter(user=user, is_free_tier=False).order_by('-billing_period_start').first()
-        
-        # Si no existe registro de suscripción, buscar el registro de free tier
-        if not usage:
-            usage = AdRequestUsage.objects.filter(user=user, is_free_tier=True).first()
-        
-        # Si no hay ningún registro y el usuario no tiene suscripción activa, crear registro free tier
-        if not usage and not user.has_active_subscription():
-            from apps.ads.models import AppConfiguration
-            limits = AppConfiguration.get_limits()
-            general_credits_default = limits.get('default', {}).get('general_credits', 5)
-            version_credits_default = limits.get('default', {}).get('version_credits', 2)
-            
-            usage = AdRequestUsage.objects.create(
-                user=user,
-                billing_period_start=None,
-                billing_period_end=None,
-                is_free_tier=True,
-                general_credits=general_credits_default,
-                version_credits=version_credits_default
-            )
-        
-        if usage:
+        # Si el usuario tiene suscripción activa, usar get_current_usage que maneja toda la lógica
+        if user.has_active_subscription():
+            usage = AdRequestUsage.get_current_usage(user)
             general_credits += getattr(usage, 'general_credits', 0)
             version_credits += getattr(usage, 'version_credits', 0)
             plan_type = getattr(usage, 'plan_type', None)
             is_free_tier = getattr(usage, 'is_free_tier', False)
+        else:
+            # Para usuarios sin suscripción, buscar el registro de free tier
+            usage = AdRequestUsage.objects.filter(user=user, is_free_tier=True).first()
+            
+            # Si no hay registro free tier, crear uno
+            if not usage:
+                from apps.ads.models import AppConfiguration
+                limits = AppConfiguration.get_limits()
+                general_credits_default = limits.get('default', {}).get('general_credits', 5)
+                version_credits_default = limits.get('default', {}).get('version_credits', 2)
+                
+                usage = AdRequestUsage.objects.create(
+                    user=user,
+                    billing_period_start=None,
+                    billing_period_end=None,
+                    is_free_tier=True,
+                    general_credits=general_credits_default,
+                    version_credits=version_credits_default
+                )
+            
+            if usage:
+                general_credits += getattr(usage, 'general_credits', 0)
+                version_credits += getattr(usage, 'version_credits', 0)
+                plan_type = getattr(usage, 'plan_type', None)
+                is_free_tier = getattr(usage, 'is_free_tier', False)
     except Exception:
         pass
     
