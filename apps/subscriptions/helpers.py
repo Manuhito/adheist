@@ -158,7 +158,8 @@ def cancel_subscription(subscription_id: str, cancel_at_period_end: bool = True)
             log.error(f"Subscription with ID {subscription_id} not found in database")
             return None
             
-        # Store the current period end before modifying
+        # Store the current period fields before modifying
+        current_period_start = db_subscription.current_period_start
         current_period_end = db_subscription.current_period_end
         
         stripe = get_stripe_module()
@@ -172,14 +173,41 @@ def cancel_subscription(subscription_id: str, cancel_at_period_end: bool = True)
             # Cancel immediately
             subscription = stripe.Subscription.delete(subscription_id)
         
+        # Ensure required fields are preserved in Stripe data before sync
+        if not subscription.get('current_period_start') and current_period_start is not None:
+            # Convert datetime to timestamp for Stripe data
+            if hasattr(current_period_start, 'timestamp'):
+                subscription['current_period_start'] = int(current_period_start.timestamp())
+            else:
+                subscription['current_period_start'] = int(current_period_start)
+            log.info(f"Preserved current_period_start in Stripe data for subscription {subscription_id}")
+        
+        if not subscription.get('current_period_end') and current_period_end is not None:
+            # Convert datetime to timestamp for Stripe data
+            if hasattr(current_period_end, 'timestamp'):
+                subscription['current_period_end'] = int(current_period_end.timestamp())
+            else:
+                subscription['current_period_end'] = int(current_period_end)
+            log.info(f"Preserved current_period_end in Stripe data for subscription {subscription_id}")
+        
         # Sync the updated subscription with the local database
         updated_subscription = Subscription.sync_from_stripe_data(subscription)
         
-        # If current_period_end is None after sync, restore the original value
-        if updated_subscription and updated_subscription.current_period_end is None and current_period_end is not None:
-            updated_subscription.current_period_end = current_period_end
-            updated_subscription.save()
-            log.info(f"Restored current_period_end for subscription {subscription_id}")
+        # Double-check: Restore period fields if they were still set to None after sync
+        needs_save = False
+        if updated_subscription:
+            if updated_subscription.current_period_start is None and current_period_start is not None:
+                updated_subscription.current_period_start = current_period_start
+                needs_save = True
+                log.info(f"Restored current_period_start after sync for subscription {subscription_id}")
+            
+            if updated_subscription.current_period_end is None and current_period_end is not None:
+                updated_subscription.current_period_end = current_period_end
+                needs_save = True
+                log.info(f"Restored current_period_end after sync for subscription {subscription_id}")
+            
+            if needs_save:
+                updated_subscription.save()
             
         return updated_subscription
     except InvalidRequestError as e:

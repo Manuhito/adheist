@@ -1807,6 +1807,13 @@ def billing_page(request):
             # Check if this is the current plan
             is_current_plan = current_plan_id == product.product.id
             
+            # Get subscription details if this is the current plan
+            cancel_at_period_end = False
+            current_period_end = None
+            if is_current_plan and highest_tier_sub:
+                cancel_at_period_end = highest_tier_sub.cancel_at_period_end or False
+                current_period_end = highest_tier_sub.current_period_end.isoformat() if highest_tier_sub.current_period_end else None
+            
             # Check if this plan should be disabled (user has a higher tier plan)
             is_disabled = False
             if current_plan_name:
@@ -1844,7 +1851,9 @@ def billing_page(request):
                 "highlighted": product_mapping[slug]["highlighted"],
                 "popular": product_mapping[slug]["popular"],
                 "is_current_plan": is_current_plan,
-                "is_disabled": is_disabled
+                "is_disabled": is_disabled,
+                "cancel_at_period_end": cancel_at_period_end,
+                "current_period_end": current_period_end
             }
             
             pricing_data["tiers"].append(tier)

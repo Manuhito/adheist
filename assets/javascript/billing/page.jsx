@@ -216,7 +216,10 @@ export function BillingPage({ pricingData, onSubscribe }) {
       
       {/* Sección de cancelación de suscripción - solo visible si hay suscripción activa */}
       {hasActiveSubscription && currentPlan && (
-        <SubscriptionCancelSection currentPeriodEnd={currentPlan.current_period_end} />
+        <SubscriptionCancelSection 
+          currentPeriodEnd={currentPlan.current_period_end}
+          cancelAtPeriodEnd={currentPlan.cancel_at_period_end}
+        />
       )}
     </div>
   );

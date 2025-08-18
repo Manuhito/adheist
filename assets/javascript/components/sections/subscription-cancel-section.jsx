@@ -34,7 +34,7 @@ function getCsrfToken() {
 /**
  * Component for canceling a subscription
  */
-export const SubscriptionCancelSection = ({ currentPeriodEnd }) => {
+export const SubscriptionCancelSection = ({ currentPeriodEnd, cancelAtPeriodEnd = false }) => {
   const { t } = useTranslation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -111,19 +111,24 @@ export const SubscriptionCancelSection = ({ currentPeriodEnd }) => {
             <Button 
               variant="destructive" 
               onClick={handleCancelClick}
-              disabled={!!success}
+              disabled={!!success || cancelAtPeriodEnd}
             >
-              {t('billing.cancel_subscription_button', 'Cancel Subscription')}
+              {cancelAtPeriodEnd 
+                ? t('billing.subscription_cancelled', 'Subscription Cancelled')
+                : t('billing.cancel_subscription_button', 'Cancel Subscription')
+              }
             </Button>
           </div>
         </div>
         
-        {success && (
+        {(success || cancelAtPeriodEnd) && (
           <div className="px-6 pb-6">
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>{t('billing.success', 'Success')}</AlertTitle>
-              <AlertDescription>{success}</AlertDescription>
+              <AlertDescription>
+                {success || t('billing.subscription_scheduled_cancellation', 'Your subscription is scheduled for cancellation at the end of the current billing period.')}
+              </AlertDescription>
             </Alert>
           </div>
         )}
