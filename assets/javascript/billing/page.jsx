@@ -166,8 +166,8 @@ export function BillingPage({ pricingData, onSubscribe }) {
         t={t}
       />
 
-      {/* Sección de créditos - solo visible si el usuario tiene una suscripción activa */}
-      {hasActiveSubscription && (
+      {/* Sección de créditos - visible para usuarios con suscripción activa o free tier */}
+      {(hasActiveSubscription || window.__USAGE_DATA__?.max_general_credits > 0) && (
         <div className="mt-8 mb-4">
           <h3 className="text-lg font-medium mb-3">{t('billing.plan_usage', 'Plan Usage')}</h3>
           <div className="flex flex-col gap-4">
