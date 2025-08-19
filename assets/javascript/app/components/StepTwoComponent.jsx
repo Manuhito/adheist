@@ -70,7 +70,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     if (refreshData && initialData?.id && isDirectNavigation) {
       refreshData();
     }
-    
+
     // Ensure selectedBrand is set from initialData if available
     if (initialData.brand) {
       setSelectedBrand(initialData.brand);
@@ -808,41 +808,41 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   // Function to handle brand selection change
   const handleBrandChange = (brand) => {
     setSelectedBrand(brand);
-    
+
     // Only proceed if we have an ID and a brand
     if (!initialData.id || !brand) return;
-    
+
     // Clear any existing timer
     if (brandUpdateTimer.current) {
       clearTimeout(brandUpdateTimer.current);
     }
-    
+
     // Set a new timer to update the database after a short delay
     brandUpdateTimer.current = setTimeout(() => {
       updateBrand(brand);
     }, 500);
-    
+
     console.log('Brand updated locally:', brand);
   };
-  
+
   // Function to update brand in the database
   const updateBrand = async (brand) => {
     // Only proceed if we have an ID and a brand
     if (!initialData.id || !brand) return;
-    
+
     try {
       const csrfToken = getCsrfToken();
       if (!csrfToken) {
         console.error('CSRF token not found');
         return;
       }
-      
+
       // Create a FormData object for the request
       const formData = new FormData();
-      
+
       // Add the brand_id field
       formData.append('brand_id', brand.id);
-      
+
       // Make the API call to update the brand
       const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
         method: 'POST',
@@ -851,29 +851,29 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
         },
         body: formData
       });
-      
+
       if (!response.ok) {
         throw new Error(`Error updating brand: ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       console.log('Brand updated in database:', data);
-      
+
       // If we have a refreshData function, call it to update the UI
       if (refreshData) {
         console.log('Refreshing data after brand update...');
         // Fetch fresh data and update the component state with the new assets
         const freshData = await refreshData();
-        
+
         if (freshData) {
           // Update local state with the new asset_overrides
           if (freshData.asset_overrides !== undefined) {
             // Update website URL (force update even if empty)
             setWebsiteUrl(freshData.asset_overrides.company_website || '');
-            
+
             // Update key benefits (force update even if empty)
             setKeyBenefits(freshData.asset_overrides.key_benefits || '');
-            
+
             // Update brand color (force update even if empty)
             setSelectedColor(freshData.asset_overrides.main_hex_color || '');
           }
@@ -990,7 +990,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
           <main className="lg:col-span-8 flex flex-col">
             {/* Brand Dropdown - Global selection */}
             <div className="w-full">
-              <BrandDropdown 
+              <BrandDropdown
                 initialBrandId={initialData.brand?.id}
                 onBrandChange={handleBrandChange}
               />
@@ -1024,7 +1024,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
                     value={websiteUrl}
                     onChange={handleWebsiteUrlChange}
                     className="w-full"
-                    disabled={!selectedBrand}
+                    disabled={!initialData.brand}
                   />
                 </div>
                 <div className="w-full mb-6">
@@ -1042,7 +1042,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
                         value={selectedColor.replace('#', '')}
                         onChange={handleColorChange}
                         className={`w-full pl-6 ${colorError ? 'border-red-500' : ''}`}
-                        disabled={!selectedBrand}
+                        disabled={!initialData.brand}
                       />
                     </div>
                     {colorError && (
@@ -1070,7 +1070,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
                       value={keyBenefits}
                       onChange={handleKeyBenefitsChange}
                       className="w-full"
-                      disabled={!selectedBrand}
+                      disabled={!initialData.brand}
                     />
                   </div>
                 </div>
