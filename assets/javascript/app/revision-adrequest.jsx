@@ -486,6 +486,12 @@ const RevisionAdRequest = () => {
                                       placeholder={t("revision.comment_placeholder", "Share your thoughts about this generation...")}
                                       required
                                     />
+                                    <div className="text-xs text-right mt-1">
+                                      <span className={`${ratingComment.trim().length < 50 ? 'text-red-500' : 'text-gray-500'}`}>
+                                        {ratingComment.trim().length}
+                                      </span>
+                                      <span className="text-gray-500"> / 50 {t("revision.characters", "caracteres")}</span>
+                                    </div>
                                   </div>
                                 </div>
                                 <DialogFooter>
@@ -535,7 +541,7 @@ const RevisionAdRequest = () => {
                                             const notificationContainer = document.createElement('div');
                                             notificationContainer.id = 'rating-notification-container';
                                             document.body.appendChild(notificationContainer);
-                                            
+
                                             // Renderizar la notificación
                                             const notificationRoot = ReactDOM.createRoot(notificationContainer);
                                             notificationRoot.render(
@@ -556,7 +562,7 @@ const RevisionAdRequest = () => {
                                             const errorContainer = document.createElement('div');
                                             errorContainer.id = 'rating-error-container';
                                             document.body.appendChild(errorContainer);
-                                            
+
                                             // Renderizar la notificación de error
                                             const errorRoot = ReactDOM.createRoot(errorContainer);
                                             errorRoot.render(
@@ -576,12 +582,12 @@ const RevisionAdRequest = () => {
                                         })
                                         .catch(error => {
                                           console.error('Error submitting rating:', error);
-                                          
+
                                           // Crear contenedor para la notificación de error
                                           const errorContainer = document.createElement('div');
                                           errorContainer.id = 'rating-error-container';
                                           document.body.appendChild(errorContainer);
-                                          
+
                                           // Renderizar la notificación de error
                                           const errorRoot = ReactDOM.createRoot(errorContainer);
                                           errorRoot.render(
@@ -602,7 +608,7 @@ const RevisionAdRequest = () => {
                                           setRatingOpen(false);
                                         });
                                     }}
-                                    disabled={rating === 0 || !ratingComment.trim()}
+                                    disabled={rating === 0 || ratingComment.trim().length < 50}
                                   >
                                     {t("revision.submit_rating", "Submit")}
                                   </Button>
