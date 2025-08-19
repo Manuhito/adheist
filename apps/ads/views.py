@@ -1018,6 +1018,9 @@ def adrequest_update(request, pk):
                 # Otherwise, update with the new value
                 current_overrides[field] = request.POST.get(field)
                 
+        # Asignar los overrides actualizados de vuelta al modelo
+        ad_request.asset_overrides = current_overrides
+                
         # Handle brand_id if provided
         if 'brand_id' in request.POST:
             brand_id = request.POST.get('brand_id')
