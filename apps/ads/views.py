@@ -1715,8 +1715,50 @@ def get_user_credits(user):
     }
 
 
-@login_required
-@require_POST
+def reward_user_for_rating(user):
+    """
+    Reward a user with credits for submitting a rating.
+    Resets the user's free tier credits to the default values from AppConfiguration.
+    
+    Args:
+        user: The user to reward
+        
+    Returns:
+        dict: Dictionary with the updated credits information
+    """
+    try:
+        # Get default credits from AppConfiguration
+        from .models import AppConfiguration
+        config = AppConfiguration.get_config()
+        default_general_credits = config.default_general_credits
+        default_version_credits = config.default_version_credits
+        
+        # Get or create user's free tier usage record
+        from .models import AdRequestUsage
+        usage, created = AdRequestUsage.objects.get_or_create(
+            user=user,
+            is_free_tier=True,
+            defaults={
+                'general_credits': default_general_credits,
+                'version_credits': default_version_credits
+            }
+        )
+        
+        # If record already existed, update the credits
+        if not created:
+            usage.general_credits = default_general_credits
+            usage.version_credits = default_version_credits
+            usage.save(update_fields=['general_credits', 'version_credits'])
+        
+        return {
+            'general_credits': usage.general_credits,
+            'version_credits': usage.version_credits
+        }
+    except Exception as e:
+        print(f"Error rewarding user for rating: {str(e)}")
+        return None
+
+
 def adrequest_version_rate(request):
     """
     Submit a rating and review for an AdRequestVersion.
@@ -1773,13 +1815,22 @@ def adrequest_version_rate(request):
             }
         )
         
-        # Return success response
-        return JsonResponse({
+        # Reward the user with credits for submitting a rating
+        credits_info = reward_user_for_rating(request.user)
+        
+        # Return success response with credits info
+        response_data = {
             'success': True,
-            'message': 'Rating submitted successfully',
+            'message': 'Rating submitted successfully. Your credits have been replenished!',
             'version_id': version.id,
             'rating': rating
-        })
+        }
+        
+        # Add credits info to response if available
+        if credits_info:
+            response_data['credits'] = credits_info
+            
+        return JsonResponse(response_data)
         
     except ValueError:
         return JsonResponse({'error': 'Invalid rating format'}, status=400)
