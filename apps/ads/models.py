@@ -492,6 +492,10 @@ class AdRequestVersion(BaseModel):
     openai_response_metadata = models.JSONField(null=True, blank=True, help_text="Metadata from OpenAI API responses")
     error_logs = models.TextField(null=True, blank=True, help_text="Error logs when image generation fails")
     
+    # Rating fields
+    rating = models.PositiveSmallIntegerField(null=True, blank=True, help_text="User rating from 1 to 5 stars")
+    review = models.TextField(null=True, blank=True, help_text="User review text for the generated image")
+    
     def save(self, *args, **kwargs):
         """Override save method to update generated_prompt if needed and send email notifications"""
         # Check if this is a new instance or if generated_prompt is empty
