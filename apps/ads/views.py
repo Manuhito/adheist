@@ -1715,6 +1715,78 @@ def get_user_credits(user):
     }
 
 
+@login_required
+@require_POST
+def adrequest_version_rate(request):
+    """
+    Submit a rating and review for an AdRequestVersion.
+    
+    Required input:
+    - version_id: The primary key of the AdRequestVersion to rate
+    - rating: Integer rating from 1 to 5
+    - review: Text review for the generated image
+    
+    Returns: JSON with success or error message
+    """
+    version_id = request.POST.get('version_id')
+    rating = request.POST.get('rating')
+    review = request.POST.get('review')
+    
+    # Validate inputs
+    if not version_id:
+        return JsonResponse({'error': 'Version ID is required'}, status=400)
+    
+    if not rating:
+        return JsonResponse({'error': 'Rating is required'}, status=400)
+    
+    if not review:
+        return JsonResponse({'error': 'Review is required'}, status=400)
+    
+    try:
+        # Convert rating to integer
+        rating = int(rating)
+        if rating < 1 or rating > 5:
+            return JsonResponse({'error': 'Rating must be between 1 and 5'}, status=400)
+        
+        # Get the AdRequestVersion instance
+        version = get_object_or_404(AdRequestVersion, id=version_id)
+        
+        # Check if the user has permission to rate this version
+        if version.ad_request.user != request.user:
+            return JsonResponse({'error': 'You do not have permission to rate this version'}, status=403)
+        
+        # Update the version with rating and review
+        version.rating = rating
+        version.review = review
+        version.save(update_fields=['rating', 'review'])
+        
+        # Track event in PostHog when a version is rated
+        posthog.capture(
+            request.user.id,
+            'Ad Version Rated',
+            properties={
+                'version_id': version.id,
+                'ad_request_id': version.ad_request.id,
+                'rating': rating,
+                'has_review': bool(review),
+                'timestamp': timezone.now().isoformat()
+            }
+        )
+        
+        # Return success response
+        return JsonResponse({
+            'success': True,
+            'message': 'Rating submitted successfully',
+            'version_id': version.id,
+            'rating': rating
+        })
+        
+    except ValueError:
+        return JsonResponse({'error': 'Invalid rating format'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
 def billing_page(request):
     """
     Render the billing page with pricing information.

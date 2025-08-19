@@ -34,4 +34,5 @@ urlpatterns = [
     path("api/request-brand/", views.request_brand, name="request_brand"),
     path("api/user-brands/", views.get_user_brands, name="get_user_brands"),
     path("api/create-user-brand/", views.create_user_brand, name="create_user_brand"),
+    path("api/version/rate/", views.adrequest_version_rate, name="adrequest_version_rate"),
 ]

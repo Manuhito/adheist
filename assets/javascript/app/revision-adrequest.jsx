@@ -4,9 +4,11 @@ import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { useTranslation } from "../lib/useTranslation";
 import { Skeleton } from "../shadcn/components/ui/skeleton";
-import { ArrowLeft, Sparkles, AlertCircle } from "lucide-react";
+import { ArrowLeft, Sparkles, AlertCircle, Star, ThumbsUp } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../shadcn/components/ui/tooltip";
 import AnimatedDownloadButton from "../components/ui/animated-download-button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "../shadcn/components/ui/dialog";
+import { useToast } from "../hooks/use-toast";
 
 // Debug log
 console.log("Revision AdRequest script loaded");
@@ -14,6 +16,7 @@ console.log("Revision AdRequest script loaded");
 // Component to display the generated image from the latest AdRequestVersion
 const RevisionAdRequest = () => {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [adRequestData, setAdRequestData] = useState(null);
@@ -22,6 +25,12 @@ const RevisionAdRequest = () => {
   const [userPrompt, setUserPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [availableVersionCredits, setAvailableVersionCredits] = useState(0); // Available credits for creating new versions
+  
+  // Rating state
+  const [ratingOpen, setRatingOpen] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [ratingComment, setRatingComment] = useState("");
+  const [hoveredRating, setHoveredRating] = useState(0);
 
   useEffect(() => {
     const loadAdRequestData = () => {
@@ -426,11 +435,135 @@ const RevisionAdRequest = () => {
                             />
                           </div>
 
-                          {/* Download button */}
-                          <AnimatedDownloadButton
-                            downloadUrl={currentVersion.generated_image}
-                            fileName={`ad-image-${currentVersion.version_index}.jpg`}
-                          />
+                          {/* Download and Rating buttons */}
+                          <div className="flex items-center justify-center gap-4 mb-2">
+                            <AnimatedDownloadButton
+                              downloadUrl={currentVersion.generated_image}
+                              fileName={`ad-image-${currentVersion.version_index}.jpg`}
+                            />
+                            
+                            <Dialog open={ratingOpen} onOpenChange={setRatingOpen}>
+                              <DialogTrigger asChild>
+                                <Button 
+                                  variant="outline" 
+                                  className="flex items-center gap-2 hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-900 dark:hover:text-blue-300 transition-colors"
+                                >
+                                  <ThumbsUp className="h-4 w-4" />
+                                  {t("revision.rate_image", "Rate this image")}
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>{t("revision.rate_title", "Rate this generation")}</DialogTitle>
+                                </DialogHeader>
+                                <div className="py-4">
+                                  <div className="flex justify-center mb-6">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                      <button
+                                        key={star}
+                                        type="button"
+                                        className="p-1"
+                                        onMouseEnter={() => setHoveredRating(star)}
+                                        onMouseLeave={() => setHoveredRating(0)}
+                                        onClick={() => setRating(star)}
+                                      >
+                                        <Star
+                                          className={`h-8 w-8 ${(hoveredRating || rating) >= star ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
+                                        />
+                                      </button>
+                                    ))}
+                                  </div>
+                                  <div className="mt-4">
+                                    <label htmlFor="rating-comment" className="block text-sm font-medium mb-2">
+                                      {t("revision.comment_label", "Review")}
+                                    </label>
+                                    <textarea
+                                      id="rating-comment"
+                                      value={ratingComment}
+                                      onChange={(e) => setRatingComment(e.target.value)}
+                                      rows={4}
+                                      className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                                      placeholder={t("revision.comment_placeholder", "Share your thoughts about this generation...")}
+                                      required
+                                    />
+                                  </div>
+                                </div>
+                                <DialogFooter>
+                                  <Button variant="outline" onClick={() => setRatingOpen(false)}>
+                                    {t("revision.cancel", "Cancel")}
+                                  </Button>
+                                  <Button 
+                                    onClick={() => {
+                                      // Get CSRF token from cookie
+                                      function getCookie(name) {
+                                        let cookieValue = null;
+                                        if (document.cookie && document.cookie !== '') {
+                                          const cookies = document.cookie.split(';');
+                                          for (let i = 0; i < cookies.length; i++) {
+                                            const cookie = cookies[i].trim();
+                                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                              break;
+                                            }
+                                          }
+                                        }
+                                        return cookieValue;
+                                      }
+                                      
+                                      // Create form data for submission
+                                      const formData = new FormData();
+                                      formData.append('version_id', currentVersion.id);
+                                      formData.append('rating', rating);
+                                      formData.append('review', ratingComment);
+                                      
+                                      // Get CSRF token
+                                      const csrftoken = getCookie('csrftoken');
+                                      
+                                      // Submit the rating to the backend
+                                      fetch('/ads/api/version/rate/', {
+                                        method: 'POST',
+                                        body: formData,
+                                        credentials: 'same-origin',
+                                        headers: {
+                                          'X-CSRFToken': csrftoken
+                                        }
+                                      })
+                                      .then(response => response.json())
+                                      .then(data => {
+                                        if (data.success) {
+                                          toast({
+                                            title: t("revision.rating_success", "Rating submitted"),
+                                            description: t("revision.rating_success_message", "Thank you for your feedback!"),
+                                            variant: "success",
+                                          });
+                                        } else {
+                                          toast({
+                                            title: t("revision.rating_error", "Error"),
+                                            description: data.error || t("revision.rating_error_message", "Failed to submit rating. Please try again."),
+                                            variant: "destructive",
+                                          });
+                                        }
+                                      })
+                                      .catch(error => {
+                                        console.error('Error submitting rating:', error);
+                                        toast({
+                                          title: t("revision.rating_error", "Error"),
+                                          description: t("revision.rating_error_message", "Failed to submit rating. Please try again."),
+                                          variant: "destructive",
+                                        });
+                                      })
+                                      .finally(() => {
+                                        setRatingOpen(false);
+                                      });
+                                    }}
+                                    disabled={rating === 0 || !ratingComment.trim()}
+                                  >
+                                    {t("revision.submit_rating", "Submit")}
+                                  </Button>
+                                </DialogFooter>
+                              </DialogContent>
+                            </Dialog>
+                          </div>
 
                           <div className="w-full flex justify-between text-sm text-gray-500 mt-2 px-2">
                             <div>
