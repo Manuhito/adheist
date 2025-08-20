@@ -1805,12 +1805,15 @@ def adrequest_version_rate(request):
         # Track event in PostHog when a version is rated
         posthog.capture(
             request.user.id,
-            'Ad Version Rated',
+            'Ad Review',
             properties={
                 'version_id': version.id,
                 'ad_request_id': version.ad_request.id,
                 'rating': rating,
-                'has_review': bool(review),
+                'review': review,  # Incluir el contenido completo de la revisión
+                'review_length': len(review),
+                'user_id': request.user.id,
+                'username': request.user.username,
                 'timestamp': timezone.now().isoformat()
             }
         )
