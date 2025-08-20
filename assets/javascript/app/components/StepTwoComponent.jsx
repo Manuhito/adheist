@@ -6,8 +6,10 @@ import { ProductImageUpload } from './ProductImageUpload.jsx';
 import { AppScreenshotUpload } from './AppScreenshotUpload.jsx';
 import { ProductTypeSelect } from './ProductTypeSelect.jsx';
 import { Input } from '../../components/ui/input.tsx';
+import { Button } from '../../components/ui/button.tsx';
 import { useTranslation } from '../../lib/useTranslation';
 import BrandDropdown from './BrandDropdown.jsx';
+import ImageSelectionModal from './ImageSelectionModal.jsx';
 
 /**
  * Step Two Component for the Create Ad Request flow
@@ -16,6 +18,7 @@ import BrandDropdown from './BrandDropdown.jsx';
 const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const { t } = useTranslation();
   const [isBackSubmitting, setIsBackSubmitting] = useState(false);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
   // Estado para los datos completos del adlibrary
   const [adLibraryData, setAdLibraryData] = useState(null);
@@ -805,6 +808,40 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     }
   };
 
+  // Handle image selection from modal
+  const handleImageSelect = (image) => {
+    console.log('Selected image:', image);
+    
+    // Use the selected image as the logo override
+    if (image && image.url) {
+      // Update the initialData with the selected image
+      if (!initialData.asset_overrides) {
+        initialData.asset_overrides = {};
+      }
+      
+      // Store the selected image information
+      initialData.logo_override = image.url;
+      initialData.asset_overrides.logo_id = image.id;
+      
+      // Refresh the parent component data if needed
+      if (refreshData) {
+        refreshData({
+          ...initialData,
+          logo_override: image.url,
+          asset_overrides: {
+            ...initialData.asset_overrides,
+            logo_id: image.id
+          }
+        });
+      }
+    }
+  };
+
+  // Toggle image selection modal
+  const toggleImageModal = () => {
+    setIsImageModalOpen(!isImageModalOpen);
+  };
+
   // Function to handle brand selection change
   const handleBrandChange = (brand) => {
     setSelectedBrand(brand);
@@ -1001,11 +1038,21 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
             {/* Branding + Campaign Details en dos columnas */}
             <div className="flex flex-row gap-x-6 w-full">
               {/* Company Branding (izquierda) */}
-              <div className="bg-card rounded-xl flex items-start">
+              <div className="bg-card rounded-xl flex flex-col items-start">
                 <CompanyLogoUpload
                   onUpload={handleLogoUpload}
                   initialImage={initialData.logo_override}
                 />
+                <div className="mt-4 px-6 pb-6 w-full">
+                  <Button 
+                    onClick={toggleImageModal} 
+                    variant="outline" 
+                    className="w-full"
+                    disabled={!initialData.brand}
+                  >
+                    {t('step_two.select_from_library', 'Select from Image Library')}
+                  </Button>
+                </div>
               </div>
               {/* Campaign Details (derecha) */}
               <div className="bg-card p-6 rounded-xl overflow-hidden h-full flex-1">
@@ -1087,6 +1134,13 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
           </main>
         </div>
       </div>
+      {/* Image Selection Modal */}
+      <ImageSelectionModal 
+        isOpen={isImageModalOpen} 
+        onClose={toggleImageModal} 
+        onSelect={handleImageSelect} 
+      />
+
       {/* Botones de navegación */}
       <div className="w-full px-4 flex justify-between pb-8 max-w-7xl mx-auto">
         <BackButton

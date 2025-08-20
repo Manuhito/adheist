@@ -25,7 +25,7 @@ from django.utils import timezone
 from apps.aiinterface.tasks import send_slack_notification
 from django.contrib.auth import get_user_model
 
-from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion, AdRequestUsage, ExtraCredit, UserBrand
+from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion, AdRequestUsage, ExtraCredit, UserBrand, UserBrandAssets
 from .forms import AdLibraryForm
 from .services import can_create_ad_request, use_credit, can_create_ad_request_version, get_ad_request_version_limit, use_general_credit, use_version_credit, can_create_ad_version
 import boto3
@@ -822,6 +822,56 @@ def get_adlibrary_company_list(request):
         cache.set(cache_key, company_names, 3600)
     
     return JsonResponse({'companies': company_names}, safe=True)
+
+
+@login_required
+def user_images(request):
+    """
+    Fetch all images associated with the current user's selected brand.
+    
+    Returns: JSON with a list of image data
+    """
+    try:
+        # Get the brand_id from the request parameters
+        brand_id = request.GET.get('brand_id')
+        
+        # Base query for user's brand assets
+        query = UserBrandAssets.objects.filter(user=request.user)
+        
+        # If brand_id is provided, filter by that brand
+        if brand_id:
+            try:
+                brand_id = int(brand_id)
+                query = query.filter(brand_id=brand_id)
+            except ValueError:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Invalid brand ID'
+                }, status=400)
+        
+        # Get all user brand assets
+        assets = query.order_by('-created_at')
+        
+        # Format the assets as a list of dictionaries
+        images_data = [{
+            'id': asset.id,
+            'url': asset.image.url,
+            'category': asset.category,
+            'created_at': asset.created_at.isoformat(),
+            'brand_id': asset.brand_id,
+            'brand_name': asset.brand.brand_name
+        } for asset in assets]
+        
+        return JsonResponse({
+            'success': True,
+            'images': images_data
+        })
+    except Exception as e:
+        logging.error(f"Error fetching user images: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
 
 
 @login_required
