@@ -1148,10 +1148,32 @@ def adrequest_update(request, pk):
         
         for field in image_fields:
             override_field = f"{field}_override"
-            # Clear the field if it's mentioned in the request but no file is provided
-            if field in request.POST and field not in request.FILES:
+            asset_id_field = f"{field}_asset_id"
+            
+            # Caso 1: Reutilizar imagen existente de UserBrandAssets por ID
+            if asset_id_field in request.POST:
+                try:
+                    # Obtener el ID de la imagen
+                    asset_id = request.POST.get(asset_id_field)
+                    
+                    # Importar el modelo
+                    from .models import UserBrandAssets
+                    
+                    # Buscar la imagen directamente por ID
+                    asset = UserBrandAssets.objects.filter(id=asset_id).first()
+                    
+                    if asset:
+                        # Si encontramos la imagen, la asignamos directamente sin duplicarla
+                        setattr(ad_request, override_field, asset.image)
+                        print(f"Reutilizando imagen existente para {field}: {asset.image} (ID: {asset_id})")
+                    else:
+                        print(f"No se encontró la imagen con ID: {asset_id}")
+                except Exception as e:
+                    print(f"Error al procesar imagen existente: {str(e)}")
+            # Caso 2: Clear the field if it's mentioned in the request but no file is provided
+            elif field in request.POST and field not in request.FILES:
                 setattr(ad_request, override_field, None)
-            # Update the field if a file is provided
+            # Caso 3: Update the field if a file is provided
             elif field in request.FILES:
                 setattr(ad_request, override_field, request.FILES[field])
         

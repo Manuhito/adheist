@@ -4,7 +4,8 @@ import { BackButton } from '../../components/ui/back-button.jsx';
 import { CompanyLogoUpload } from './CompanyLogoUpload.jsx';
 import { ProductImageUpload } from './ProductImageUpload.jsx';
 import { AppScreenshotUpload } from './AppScreenshotUpload.jsx';
-import { ProductTypeSelect } from './ProductTypeSelect.jsx';
+import { ProductTypeSelect } from "./ProductTypeSelect";
+import { ProductImageSection } from "./ProductImageSection"; // No necesitas el .jsx al final
 import { Input } from '../../components/ui/input.tsx';
 import { Button } from '../../components/ui/button.tsx';
 import { useTranslation } from '../../lib/useTranslation';
@@ -19,6 +20,10 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const { t } = useTranslation();
   const [isBackSubmitting, setIsBackSubmitting] = useState(false);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [productLibraryImages, setProductLibraryImages] = useState({
+    primary: initialData.asset_overrides?.product_library_image_1 || null,
+    secondary: initialData.asset_overrides?.product_library_image_2 || null
+  });
 
   // Estado para los datos completos del adlibrary
   const [adLibraryData, setAdLibraryData] = useState(null);
@@ -645,6 +650,76 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     }
   };
 
+  // Save product library image to backend
+  const saveProductLibraryImage = async (fieldName, imageData) => {
+    // Only proceed if we have an ID
+    if (!initialData.id) return;
+    
+    try {
+      // Get CSRF token
+      const csrfToken = getCsrfToken();
+      
+      if (!csrfToken) {
+        console.error('CSRF token not found');
+        return;
+      }
+      
+      // Create FormData
+      const formData = new FormData();
+      
+      // If imageData is null or url is null, it means we want to delete the image
+      if (imageData === null || imageData.url === null) {
+        formData.append(fieldName, '');
+      } 
+      // Check if this is a blob URL (new upload)
+      else if (imageData.url.startsWith('blob:')) {
+        // Convert blob URL to file
+        const blobResponse = await fetch(imageData.url);
+        const blob = await blobResponse.blob();
+        
+        // Create file
+        const filename = `${fieldName}_${Date.now()}.${blob.type.split('/')[1] || 'png'}`;
+        const file = new File([blob], filename, { type: blob.type });
+        
+        // Add to FormData
+        formData.append(fieldName, file);
+      } 
+      // Es una imagen existente de UserBrandAssets
+      else if (imageData.id) {
+        // Enviamos el ID de la imagen directamente
+        formData.append(`${fieldName}_asset_id`, imageData.id);
+        
+        // También enviamos el campo vacío para indicar que queremos actualizar este campo
+        formData.append(fieldName, '');
+        
+        console.log(`Added image reference to FormData: ${fieldName}_asset_id=${imageData.id}`);
+      }
+      
+      // Make API call
+      const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrfToken
+        },
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error updating product library image: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log('Product library image updated successfully:', data);
+      
+      // Refresh data if needed
+      if (refreshData) {
+        refreshData();
+      }
+    } catch (error) {
+      console.error('Error saving product library image:', error);
+    }
+  };
+  
   // Function to update key benefits in the database
   const updateKeyBenefits = async (benefits) => {
     // Only proceed if we have an ID
@@ -810,36 +885,63 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
   // Handle image selection from modal
   const handleImageSelect = (image) => {
-    console.log('Selected image:', image);
+    console.log('Image selected from modal:', image);
+    // Get the selection source and field from window variables
+    const selectionSource = window.currentImageSelectionSource;
+    const fieldName = window.currentImageField;
     
-    // Use the selected image as the logo override
-    if (image && image.url) {
-      // Update the initialData with the selected image
-      if (!initialData.asset_overrides) {
-        initialData.asset_overrides = {};
-      }
+    // Extraer la URL del objeto de imagen para la visualización
+    const imageUrl = image?.url || null;
+    
+    if (selectionSource === 'product_library' && imageUrl && fieldName) {
+      // Update product library images state using the field name
+      // Map field name to state key (primary/secondary) for backward compatibility
+      const stateKey = fieldName === 'product_image_1' ? 'primary' : 'secondary';
       
-      // Store the selected image information
-      initialData.logo_override = image.url;
-      initialData.asset_overrides.logo_id = image.id;
+      setProductLibraryImages(prev => ({
+        ...prev,
+        [stateKey]: imageUrl
+      }));
       
-      // Refresh the parent component data if needed
-      if (refreshData) {
-        refreshData({
-          ...initialData,
-          logo_override: image.url,
-          asset_overrides: {
-            ...initialData.asset_overrides,
-            logo_id: image.id
-          }
-        });
+      // Save to backend if we have an ID
+      if (initialData.id) {
+        // Pasar el objeto completo de imagen que incluye el ID
+        saveProductLibraryImage(fieldName, image);
       }
+    } else {
+      // Default behavior (logo)
+      handleLogoUpload(imageUrl);
     }
+    
+    // Clear all selection variables
+    window.currentImageSelectionType = null;
+    window.currentImageSelectionSource = null;
+    window.currentImageField = null;
   };
 
   // Toggle image selection modal
   const toggleImageModal = () => {
-    setIsImageModalOpen(!isImageModalOpen);
+    const newState = !isImageModalOpen;
+    setIsImageModalOpen(newState);
+    
+    // Si estamos cerrando el modal, limpiar las variables globales
+    if (!newState) {
+      window.currentImageSelectionSource = null;
+      window.currentImageField = null;
+      window.currentImageSelectionType = null;
+    }
+  };
+  
+  // Handle product image library selection
+  const handleProductImageLibrarySelect = async (imageData) => {
+    console.log('Product library image selected:', imageData);
+    
+    // Open the image selection modal
+    setIsImageModalOpen(true);
+    
+    // Store only the field name and source - we don't need type anymore
+    window.currentImageSelectionSource = 'product_library';
+    window.currentImageField = imageData.field;
   };
 
   // Function to handle brand selection change
@@ -1129,6 +1231,14 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
                 onProductImageUpload={handleProductImageUpload}
                 onAppScreenshotUpload={handleAppScreenshotUpload}
                 initialData={initialData}
+              />
+            </div>
+            
+            {/* Product Image Section */}
+            <div className="mt-6">
+              <ProductImageSection
+                onSelectImage={handleProductImageLibrarySelect}
+                selectedImages={productLibraryImages}
               />
             </div>
           </main>
