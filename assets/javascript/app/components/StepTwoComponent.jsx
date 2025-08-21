@@ -4,7 +4,6 @@ import { BackButton } from '../../components/ui/back-button.jsx';
 import { CompanyLogoUpload } from './CompanyLogoUpload.jsx';
 import { ProductImageUpload } from './ProductImageUpload.jsx';
 import { AppScreenshotUpload } from './AppScreenshotUpload.jsx';
-import { ProductTypeSelect } from "./ProductTypeSelect";
 import { ProductImageSection } from "./ProductImageSection"; // No necesitas el .jsx al final
 import { AppImageSection } from "./AppImageSection";
 import { Input } from '../../components/ui/input.tsx';
@@ -67,7 +66,6 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const [colorError, setColorError] = useState(false);
   const [selectedBrand, setSelectedBrand] = useState(initialData.brand || null);
 
-  // We no longer need to track product type selection as both containers are always visible
 
   // Debounce timers
   const websiteUrlUpdateTimer = useRef(null);
@@ -580,7 +578,6 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   };
 
 
-  // Product type selection is no longer needed as both containers are always visible
 
   // Handle website URL input change with debouncing
   const handleWebsiteUrlChange = (e) => {
@@ -1218,7 +1215,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
               </div>
             </div>
           </aside>
-          {/* Main column derecha: branding, details, product type */}
+          {/* Main column derecha: branding, details */}
           <main className="lg:col-span-8 flex flex-col">
             {/* Brand Dropdown - Global selection */}
             <div className="w-full">
@@ -1308,31 +1305,26 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
                 </div>
               </div>
             </div>
-            {/* Product Type */}
-            <div>
-              <ProductTypeSelect
-                onProductImageUpload={handleProductImageUpload}
-                onAppScreenshotUpload={handleAppScreenshotUpload}
-                initialData={initialData}
-              />
-            </div>
 
-            {/* Product Image Section */}
-            <div className="mt-6">
-              <ProductImageSection
-                onSelectImage={handleProductImageLibrarySelect}
-                onDeleteImage={handleProductImageDelete}
-                selectedImages={productLibraryImages}
-              />
-            </div>
+            {/* Product and App Image Sections - Horizontal layout on larger screens */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+              {/* Product Image Section */}
+              <div>
+                <ProductImageSection
+                  onSelectImage={handleProductImageLibrarySelect}
+                  onDeleteImage={handleProductImageDelete}
+                  selectedImages={productLibraryImages}
+                />
+              </div>
 
-            {/* App Image Section */}
-            <div className="mt-6">
-              <AppImageSection
-                onSelectImage={handleAppImageLibrarySelect}
-                onDeleteImage={handleAppImageDelete}
-                selectedImages={appLibraryImages}
-              />
+              {/* App Image Section */}
+              <div>
+                <AppImageSection
+                  onSelectImage={handleAppImageLibrarySelect}
+                  onDeleteImage={handleAppImageDelete}
+                  selectedImages={appLibraryImages}
+                />
+              </div>
             </div>
           </main>
         </div>

@@ -13,7 +13,7 @@ export function AppImageSection({ className, onSelectImage, onDeleteImage, selec
 
   return (
     <div className={cn("w-full bg-card p-4 rounded-xl", className)}>
-      
+
       <div className="mt-6 relative">
         {/* Image Library Container */}
         <div className="flex flex-col rounded-lg border-2 border-border overflow-hidden">
@@ -31,10 +31,10 @@ export function AppImageSection({ className, onSelectImage, onDeleteImage, selec
               </p>
             </div>
           </div>
-          
+
           {/* Image selection section */}
           <div className="flex-grow">
-            <AppImageLibrarySelect 
+            <AppImageLibrarySelect
               onSelectImage={onSelectImage}
               onDeleteImage={onDeleteImage}
               selectedImages={selectedImages}
