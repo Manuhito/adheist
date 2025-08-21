@@ -8,7 +8,7 @@ import { useTranslation } from "../../lib/useTranslation";
  * Component for displaying the product image section
  * Has the same visual style as the Physical Product section
  */
-export function ProductImageSection({ className, onSelectImage, selectedImages }) {
+export function ProductImageSection({ className, onSelectImage, onDeleteImage, selectedImages }) {
   const { t } = useTranslation();
 
   return (
@@ -40,6 +40,7 @@ export function ProductImageSection({ className, onSelectImage, selectedImages }
           <div className="flex-grow">
             <ImageLibrarySelect 
               onSelectImage={onSelectImage}
+              onDeleteImage={onDeleteImage}
               selectedImages={selectedImages}
             />
           </div>

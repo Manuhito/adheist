@@ -943,6 +943,25 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     window.currentImageSelectionSource = 'product_library';
     window.currentImageField = imageData.field;
   };
+  
+  // Handle product image deletion
+  const handleProductImageDelete = async (imageData) => {
+    console.log('Product image delete requested:', imageData);
+    
+    // Map field name to state key (primary/secondary) for backward compatibility
+    const stateKey = imageData.field === 'product_image_1' ? 'primary' : 'secondary';
+    
+    // Update state to remove the image
+    setProductLibraryImages(prev => ({
+      ...prev,
+      [stateKey]: null
+    }));
+    
+    // Save to backend if we have an ID - pass null to indicate deletion
+    if (initialData.id) {
+      saveProductLibraryImage(imageData.field, null);
+    }
+  };
 
   // Function to handle brand selection change
   const handleBrandChange = (brand) => {
@@ -1238,6 +1257,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
             <div className="mt-6">
               <ProductImageSection
                 onSelectImage={handleProductImageLibrarySelect}
+                onDeleteImage={handleProductImageDelete}
                 selectedImages={productLibraryImages}
               />
             </div>

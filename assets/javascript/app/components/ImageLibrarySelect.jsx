@@ -1,5 +1,5 @@
 import React from "react";
-import { Image } from "lucide-react";
+import { Image, Trash2 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { cn } from "../../lib/utils";
 import { useTranslation } from "../../lib/useTranslation";
@@ -8,7 +8,7 @@ import { useTranslation } from "../../lib/useTranslation";
  * Component for selecting images from the image library
  * Provides two buttons for selecting different views of a product from the library
  */
-export function ImageLibrarySelect({ onSelectImage, className, selectedImages, ...props }) {
+export function ImageLibrarySelect({ onSelectImage, onDeleteImage, className, selectedImages, ...props }) {
   const { t } = useTranslation();
 
   return (
@@ -24,14 +24,22 @@ export function ImageLibrarySelect({ onSelectImage, className, selectedImages, .
                   alt={t('image_library.primary_image', 'Primary image')}
                   className="w-full h-full object-contain"
                 />
-                <Button 
-                  variant="secondary" 
-                  size="sm" 
-                  className="absolute bottom-2 right-2"
-                  onClick={() => onSelectImage?.({ type: 'primary', field: 'product_image_1' })}
-                >
-                  {t('image_library.change', 'Change')}
-                </Button>
+                <div className="absolute bottom-2 right-2 flex gap-2">
+                  <Button 
+                    variant="destructive" 
+                    size="sm"
+                    onClick={() => onDeleteImage?.({ type: 'primary', field: 'product_image_1' })}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="secondary" 
+                    size="sm"
+                    onClick={() => onSelectImage?.({ type: 'primary', field: 'product_image_1' })}
+                  >
+                    {t('image_library.change', 'Change')}
+                  </Button>
+                </div>
               </div>
             ) : (
               <Button 
@@ -54,14 +62,22 @@ export function ImageLibrarySelect({ onSelectImage, className, selectedImages, .
                   alt={t('image_library.secondary_image', 'Secondary image')}
                   className="w-full h-full object-contain"
                 />
-                <Button 
-                  variant="secondary" 
-                  size="sm" 
-                  className="absolute bottom-2 right-2"
-                  onClick={() => onSelectImage?.({ type: 'secondary', field: 'product_image_2' })}
-                >
-                  {t('image_library.change', 'Change')}
-                </Button>
+                <div className="absolute bottom-2 right-2 flex gap-2">
+                  <Button 
+                    variant="destructive" 
+                    size="sm"
+                    onClick={() => onDeleteImage?.({ type: 'secondary', field: 'product_image_2' })}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="secondary" 
+                    size="sm"
+                    onClick={() => onSelectImage?.({ type: 'secondary', field: 'product_image_2' })}
+                  >
+                    {t('image_library.change', 'Change')}
+                  </Button>
+                </div>
               </div>
             ) : (
               <Button 
