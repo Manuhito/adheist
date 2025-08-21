@@ -21,8 +21,8 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const [isBackSubmitting, setIsBackSubmitting] = useState(false);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [productLibraryImages, setProductLibraryImages] = useState({
-    primary: initialData.asset_overrides?.product_library_image_1 || null,
-    secondary: initialData.asset_overrides?.product_library_image_2 || null
+    primary: null,
+    secondary: null
   });
 
   // Estado para los datos completos del adlibrary
@@ -123,6 +123,27 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       .finally(() => setIsAdLibraryLoading(false));
   }, [initialData.ad_library_id]);
 
+  // Precargar imágenes de producto cuando cambia initialData
+  useEffect(() => {
+    console.log('Precargando imágenes de producto...', initialData);
+    
+    // Verificar si hay imágenes de producto en initialData
+    if (initialData && initialData.id) {
+      // Primero intentamos obtener las imágenes desde product_image_X_override
+      // que son las URLs directas a las imágenes
+      const primaryImage = initialData.product_image_1_override || null;
+      const secondaryImage = initialData.product_image_2_override || null;
+      
+      console.log('Imágenes encontradas:', { primaryImage, secondaryImage });
+      
+      // Actualizar el estado con las imágenes encontradas
+      setProductLibraryImages({
+        primary: primaryImage,
+        secondary: secondaryImage
+      });
+    }
+  }, [initialData]);
+  
   // Clean up debounce timers when component unmounts
   useEffect(() => {
     return () => {
