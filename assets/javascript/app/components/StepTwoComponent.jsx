@@ -6,6 +6,7 @@ import { ProductImageUpload } from './ProductImageUpload.jsx';
 import { AppScreenshotUpload } from './AppScreenshotUpload.jsx';
 import { ProductTypeSelect } from "./ProductTypeSelect";
 import { ProductImageSection } from "./ProductImageSection"; // No necesitas el .jsx al final
+import { AppImageSection } from "./AppImageSection";
 import { Input } from '../../components/ui/input.tsx';
 import { Button } from '../../components/ui/button.tsx';
 import { useTranslation } from '../../lib/useTranslation';
@@ -21,6 +22,11 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const [isBackSubmitting, setIsBackSubmitting] = useState(false);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [productLibraryImages, setProductLibraryImages] = useState({
+    primary: null,
+    secondary: null
+  });
+
+  const [appLibraryImages, setAppLibraryImages] = useState({
     primary: null,
     secondary: null
   });
@@ -126,24 +132,36 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   // Precargar imágenes de producto cuando cambia initialData
   useEffect(() => {
     console.log('Precargando imágenes de producto...', initialData);
-    
+
     // Verificar si hay imágenes de producto en initialData
     if (initialData && initialData.id) {
       // Primero intentamos obtener las imágenes desde product_image_X_override
       // que son las URLs directas a las imágenes
       const primaryImage = initialData.product_image_1_override || null;
       const secondaryImage = initialData.product_image_2_override || null;
-      
-      console.log('Imágenes encontradas:', { primaryImage, secondaryImage });
-      
+
+      console.log('Imágenes de producto encontradas:', { primaryImage, secondaryImage });
+
       // Actualizar el estado con las imágenes encontradas
       setProductLibraryImages({
         primary: primaryImage,
         secondary: secondaryImage
       });
+
+      // Precargar imágenes de app
+      const appPrimaryImage = initialData.app_image_1_override || null;
+      const appSecondaryImage = initialData.app_image_2_override || null;
+
+      console.log('Imágenes de app encontradas:', { appPrimaryImage, appSecondaryImage });
+
+      // Actualizar el estado con las imágenes de app encontradas
+      setAppLibraryImages({
+        primary: appPrimaryImage,
+        secondary: appSecondaryImage
+      });
     }
   }, [initialData]);
-  
+
   // Clean up debounce timers when component unmounts
   useEffect(() => {
     return () => {
@@ -493,68 +511,50 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     // If imageData is undefined, it means no action should be taken
     if (imageData === undefined) return;
 
-    // If imageData.url is null, it means the image should be deleted
-    const isDeleteOperation = imageData?.url === null;
-
     try {
-      // Get CSRF token from cookies
-      const csrfToken = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('csrftoken='))
-        ?.split('=')[1];
+      // Get CSRF token
+      const csrfToken = getCsrfToken();
 
       if (!csrfToken) {
         console.error('CSRF token not found');
         return;
       }
 
-      // Create a FormData object
+      // Create FormData
       const formData = new FormData();
 
-      // Handle image deletion
-      if (isDeleteOperation) {
-        console.log('Deleting app screenshot:', imageData.type);
-        // The backend expects the field name to be in POST data but not in FILES data
-        // to trigger deletion of the corresponding override field
-        if (imageData.type === 'primary') {
-          formData.append('app_image_1', ''); // Send empty value for the field
-        } else if (imageData.type === 'secondary') {
-          formData.append('app_image_2', ''); // Send empty value for the field
-        }
-      }
-      // Check if this is a blob URL (from a new upload) or a server URL (from initialData)
-      else if (imageData.url.startsWith('blob:')) {
-        console.log('Processing blob URL for app screenshot...');
+      // Map type to field name
+      const fieldName = imageData.type === 'primary' ? 'app_image_1' : 'app_image_2';
 
-        // Convert the blob URL to an actual file
+      // If imageData is null or url is null, it means we want to delete the image
+      if (imageData === null || imageData.url === null) {
+        formData.append(fieldName, '');
+      }
+      // Check if this is a blob URL (new upload)
+      else if (imageData.url.startsWith('blob:')) {
+        // Convert blob URL to file
         const blobResponse = await fetch(imageData.url);
         const blob = await blobResponse.blob();
 
-        // Create a file from the blob with a descriptive filename
-        const filename = `app_image_${imageData.type}_${Date.now()}.${blob.type.split('/')[1] || 'png'}`;
+        // Create file
+        const filename = `${fieldName}_${Date.now()}.${blob.type.split('/')[1] || 'png'}`;
         const file = new File([blob], filename, { type: blob.type });
 
-        console.log('Created file:', file.name, 'type:', file.type, 'size:', file.size);
+        // Add to FormData
+        formData.append(fieldName, file);
+      }
+      // Es una imagen existente de UserBrandAssets
+      else if (imageData.id) {
+        // Enviamos el ID de la imagen directamente
+        formData.append(`${fieldName}_asset_id`, imageData.id);
 
-        // Add the file to the FormData with the field name based on image type
-        if (imageData.type === 'primary') {
-          formData.append('app_image_1', file);
-        } else if (imageData.type === 'secondary') {
-          formData.append('app_image_2', file);
-        }
-      } else {
-        // This is a server URL (from initialData)
-        console.log('Processing server URL for app screenshot...');
+        // También enviamos el campo vacío para indicar que queremos actualizar este campo
+        formData.append(fieldName, '');
 
-        // For server URLs, we'll send the URL directly
-        if (imageData.type === 'primary') {
-          formData.append('app_image_1_override_url', imageData.url);
-        } else if (imageData.type === 'secondary') {
-          formData.append('app_image_2_override_url', imageData.url);
-        }
+        console.log(`Added image reference to FormData: ${fieldName}_asset_id=${imageData.id}`);
       }
 
-      // Make the API call to update the app screenshot
+      // Make API call
       const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
         method: 'POST',
         headers: {
@@ -564,18 +564,18 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       });
 
       if (!response.ok) {
-        throw new Error(`Error updating app screenshot: ${response.statusText}`);
+        throw new Error(`Error updating app image: ${response.statusText}`);
       }
 
       const data = await response.json();
-      console.log('App screenshot updated successfully:', data);
+      console.log('App image updated successfully:', data);
 
-      // If we have a refreshData function, call it to update the UI
+      // Refresh data if needed
       if (refreshData) {
         refreshData();
       }
     } catch (error) {
-      console.error('Error saving app screenshot:', error);
+      console.error('Error saving app image:', error);
     }
   };
 
@@ -675,47 +675,47 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const saveProductLibraryImage = async (fieldName, imageData) => {
     // Only proceed if we have an ID
     if (!initialData.id) return;
-    
+
     try {
       // Get CSRF token
       const csrfToken = getCsrfToken();
-      
+
       if (!csrfToken) {
         console.error('CSRF token not found');
         return;
       }
-      
+
       // Create FormData
       const formData = new FormData();
-      
+
       // If imageData is null or url is null, it means we want to delete the image
       if (imageData === null || imageData.url === null) {
         formData.append(fieldName, '');
-      } 
+      }
       // Check if this is a blob URL (new upload)
       else if (imageData.url.startsWith('blob:')) {
         // Convert blob URL to file
         const blobResponse = await fetch(imageData.url);
         const blob = await blobResponse.blob();
-        
+
         // Create file
         const filename = `${fieldName}_${Date.now()}.${blob.type.split('/')[1] || 'png'}`;
         const file = new File([blob], filename, { type: blob.type });
-        
+
         // Add to FormData
         formData.append(fieldName, file);
-      } 
+      }
       // Es una imagen existente de UserBrandAssets
       else if (imageData.id) {
         // Enviamos el ID de la imagen directamente
         formData.append(`${fieldName}_asset_id`, imageData.id);
-        
+
         // También enviamos el campo vacío para indicar que queremos actualizar este campo
         formData.append(fieldName, '');
-        
+
         console.log(`Added image reference to FormData: ${fieldName}_asset_id=${imageData.id}`);
       }
-      
+
       // Make API call
       const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
         method: 'POST',
@@ -724,14 +724,14 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
         },
         body: formData
       });
-      
+
       if (!response.ok) {
         throw new Error(`Error updating product library image: ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       console.log('Product library image updated successfully:', data);
-      
+
       // Refresh data if needed
       if (refreshData) {
         refreshData();
@@ -740,7 +740,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       console.error('Error saving product library image:', error);
     }
   };
-  
+
   // Function to update key benefits in the database
   const updateKeyBenefits = async (benefits) => {
     // Only proceed if we have an ID
@@ -910,30 +910,49 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     // Get the selection source and field from window variables
     const selectionSource = window.currentImageSelectionSource;
     const fieldName = window.currentImageField;
-    
+
     // Extraer la URL del objeto de imagen para la visualización
     const imageUrl = image?.url || null;
-    
+
     if (selectionSource === 'product_library' && imageUrl && fieldName) {
       // Update product library images state using the field name
       // Map field name to state key (primary/secondary) for backward compatibility
       const stateKey = fieldName === 'product_image_1' ? 'primary' : 'secondary';
-      
+
       setProductLibraryImages(prev => ({
         ...prev,
         [stateKey]: imageUrl
       }));
-      
+
       // Save to backend if we have an ID
       if (initialData.id) {
         // Pasar el objeto completo de imagen que incluye el ID
         saveProductLibraryImage(fieldName, image);
       }
+    } else if (selectionSource === 'app_library' && imageUrl && fieldName) {
+      // Update app library images state using the field name
+      // Map field name to state key (primary/secondary)
+      const stateKey = fieldName === 'app_image_1' ? 'primary' : 'secondary';
+
+      setAppLibraryImages(prev => ({
+        ...prev,
+        [stateKey]: imageUrl
+      }));
+
+      // Save to backend if we have an ID
+      if (initialData.id) {
+        // Handle app image selection similar to product images
+        handleAppScreenshotUpload({
+          type: stateKey,
+          url: imageUrl,
+          ...image // Include any other properties from the image object
+        });
+      }
     } else {
       // Default behavior (logo)
       handleLogoUpload(imageUrl);
     }
-    
+
     // Clear all selection variables
     window.currentImageSelectionType = null;
     window.currentImageSelectionSource = null;
@@ -944,7 +963,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const toggleImageModal = () => {
     const newState = !isImageModalOpen;
     setIsImageModalOpen(newState);
-    
+
     // Si estamos cerrando el modal, limpiar las variables globales
     if (!newState) {
       window.currentImageSelectionSource = null;
@@ -952,35 +971,69 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       window.currentImageSelectionType = null;
     }
   };
-  
+
   // Handle product image library selection
   const handleProductImageLibrarySelect = async (imageData) => {
     console.log('Product library image selected:', imageData);
-    
+
     // Open the image selection modal
     setIsImageModalOpen(true);
-    
+
     // Store only the field name and source - we don't need type anymore
     window.currentImageSelectionSource = 'product_library';
     window.currentImageField = imageData.field;
   };
-  
+
+  // Handle app image library selection
+  const handleAppImageLibrarySelect = async (imageData) => {
+    console.log('App library image selected:', imageData);
+
+    // Open the image selection modal
+    setIsImageModalOpen(true);
+
+    // Store only the field name and source
+    window.currentImageSelectionSource = 'app_library';
+    window.currentImageField = imageData.field;
+  };
+
   // Handle product image deletion
   const handleProductImageDelete = async (imageData) => {
     console.log('Product image delete requested:', imageData);
-    
+
     // Map field name to state key (primary/secondary) for backward compatibility
     const stateKey = imageData.field === 'product_image_1' ? 'primary' : 'secondary';
-    
+
     // Update state to remove the image
     setProductLibraryImages(prev => ({
       ...prev,
       [stateKey]: null
     }));
-    
+
     // Save to backend if we have an ID - pass null to indicate deletion
     if (initialData.id) {
       saveProductLibraryImage(imageData.field, null);
+    }
+  };
+
+  // Handle app image deletion
+  const handleAppImageDelete = async (imageData) => {
+    console.log('App image delete requested:', imageData);
+
+    // Map field name to state key (primary/secondary) for backward compatibility
+    const stateKey = imageData.field === 'app_image_1' ? 'primary' : 'secondary';
+
+    // Update state to remove the image
+    setAppLibraryImages(prev => ({
+      ...prev,
+      [stateKey]: null
+    }));
+
+    // Save to backend if we have an ID - pass null to indicate deletion
+    if (initialData.id) {
+      handleAppScreenshotUpload({
+        type: stateKey,
+        url: null
+      });
     }
   };
 
@@ -1263,7 +1316,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
                 initialData={initialData}
               />
             </div>
-            
+
             {/* Product Image Section */}
             <div className="mt-6">
               <ProductImageSection
@@ -1272,14 +1325,23 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
                 selectedImages={productLibraryImages}
               />
             </div>
+
+            {/* App Image Section */}
+            <div className="mt-6">
+              <AppImageSection
+                onSelectImage={handleAppImageLibrarySelect}
+                onDeleteImage={handleAppImageDelete}
+                selectedImages={appLibraryImages}
+              />
+            </div>
           </main>
         </div>
       </div>
       {/* Image Selection Modal */}
-      <ImageSelectionModal 
-        isOpen={isImageModalOpen} 
-        onClose={toggleImageModal} 
-        onSelect={handleImageSelect} 
+      <ImageSelectionModal
+        isOpen={isImageModalOpen}
+        onClose={toggleImageModal}
+        onSelect={handleImageSelect}
       />
 
       {/* Botones de navegación */}
