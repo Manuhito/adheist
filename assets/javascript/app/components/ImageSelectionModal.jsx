@@ -119,14 +119,45 @@ const ImageSelectionModal = ({ isOpen, onClose, onSelect }) => {
     }
   };
 
+  // Estilos personalizados para el scroll
+  const scrollbarStyles = `
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 10px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: hsl(var(--background));
+      border-radius: 8px;
+      margin: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: hsl(var(--muted-foreground) / 0.3);
+      border-radius: 8px;
+      border: 2px solid hsl(var(--background));
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: hsl(var(--muted-foreground) / 0.5);
+    }
+    .dark .custom-scrollbar::-webkit-scrollbar-track {
+      background: hsl(var(--background) / 0.8);
+    }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: hsl(var(--muted-foreground) / 0.4);
+      border: 2px solid hsl(var(--background) / 0.8);
+    }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: hsl(var(--muted-foreground) / 0.6);
+    }
+  `;
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
+      <style>{scrollbarStyles}</style>
       <DialogContent className="sm:max-w-[800px] max-h-[90vh] flex flex-col">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle>{t('image_selection.title', 'Select Image')}</DialogTitle>
         </DialogHeader>
         
-        <div className="py-4 flex-1 overflow-y-auto">
+        <div className="py-4 px-3 flex-1 overflow-y-auto custom-scrollbar">
           {loading ? (
             <div className="flex justify-center items-center h-64">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -138,59 +169,45 @@ const ImageSelectionModal = ({ isOpen, onClose, onSelect }) => {
               {t('image_selection.no_images', 'No images found. Upload images to your brand first.')}
             </div>
           ) : (
-            <Accordion type="single" collapsible className="w-full">
-              {brands.length > 0 ? (
-                brands.map((brand) => {
-                  const brandImages = imagesByBrand[brand.id] || [];
-                  return (
-                    <AccordionItem key={brand.id} value={`brand-${brand.id}`}>
-                      <AccordionTrigger className="hover:no-underline">
-                        <div className="flex items-center">
-                          <span>{brand.name}</span>
-                          <span className="ml-2 text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full">
-                            {brandImages.length}
-                          </span>
+            <Accordion type="single" collapsible className="w-full space-y-3">
+              {brands && brands.length > 0 ? (
+                brands.map((brand) => (
+                  <AccordionItem key={brand.id} value={`brand-${brand.id}`} className="border rounded-lg px-2 shadow-sm">
+                    <AccordionTrigger className="hover:no-underline py-3 px-3">
+                      <div className="flex items-center justify-between w-full pr-4">
+                        <span className="font-medium">{brand.name}</span>
+                        <span className="text-sm text-muted-foreground bg-muted/30 px-2 py-1 rounded-full">
+                          {(imagesByBrand[brand.id] || []).length} {t('image_selection.images', 'images')}
+                        </span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-3 pb-4 pt-2">
+                      {imagesByBrand[brand.id] && imagesByBrand[brand.id].length > 0 ? (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 place-items-center">
+                          {imagesByBrand[brand.id].map((image) => (
+                            <div
+                              key={image.id}
+                              className={`relative cursor-pointer rounded-md overflow-hidden border-2 transition-all hover:shadow-md ${selectedImage?.id === image.id ? 'border-primary ring-2 ring-primary/20' : 'border-transparent hover:border-muted-foreground/30'}`}
+                              onClick={() => handleImageClick(image)}
+                            >
+                              <img
+                                src={image.url}
+                                alt=""
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          ))}
                         </div>
-                      </AccordionTrigger>
-                      <AccordionContent>
-                        {brandImages.length === 0 ? (
-                          <div className="text-center text-gray-500 py-4">
-                            {t('image_selection.no_brand_images', 'No images uploaded to this brand yet.')}
-                          </div>
-                        ) : (
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-4">
-                            {brandImages.map((image) => (
-                              <div 
-                                key={image.id} 
-                                className={`relative aspect-square cursor-pointer rounded-md overflow-hidden border-2 transition-all ${
-                                  selectedImage?.id === image.id ? 'border-primary ring-2 ring-primary' : 'border-gray-200 hover:border-gray-300'
-                                }`}
-                                onClick={() => handleImageClick(image)}
-                              >
-                                <img 
-                                  src={image.url} 
-                                  alt={`${brand.name} image`}
-                                  className="object-cover w-full h-full"
-                                />
-                                {selectedImage?.id === image.id && (
-                                  <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                                    <div className="bg-primary text-white rounded-full p-1">
-                                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                      </svg>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </AccordionContent>
-                    </AccordionItem>
-                  );
-                })
+                      ) : (
+                        <div className="text-center text-muted-foreground py-4 bg-muted/20 rounded-md">
+                          {t('image_selection.no_brand_images', 'No images uploaded to this brand yet.')}
+                        </div>
+                      )}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))
               ) : (
-                <div className="text-center text-gray-500 py-4">
+                <div className="text-center text-gray-500 py-4 bg-muted/10 rounded-md">
                   {t('image_selection.no_brands', 'No brands found. Create a brand first.')}
                 </div>
               )}
