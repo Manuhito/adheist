@@ -1,5 +1,5 @@
 import React from "react";
-import { Image, Trash2 } from "lucide-react";
+import { Image, Trash2, Upload } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { cn } from "../../lib/utils";
 import { useTranslation } from "../../lib/useTranslation";
@@ -18,26 +18,26 @@ export function ImageLibrarySelect({ onSelectImage, onDeleteImage, className, se
           {/* First image selection button */}
           <div className="flex flex-col items-center justify-center border rounded-md p-4 h-48 bg-background hover:bg-muted/20 transition-colors">
             {selectedImages?.primary ? (
-              <div className="relative w-full h-full">
+              <div className="relative w-full h-full group">
                 <img 
                   src={selectedImages.primary} 
                   alt={t('image_library.primary_image', 'Primary image')}
                   className="w-full h-full object-contain"
                 />
-                <div className="absolute bottom-2 right-2 flex gap-2">
+                <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
                   <Button 
                     variant="destructive" 
-                    size="sm"
+                    size="icon"
                     onClick={() => onDeleteImage?.({ type: 'primary', field: 'product_image_1' })}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                   <Button 
                     variant="secondary" 
-                    size="sm"
+                    size="icon"
                     onClick={() => onSelectImage?.({ type: 'primary', field: 'product_image_1' })}
                   >
-                    {t('image_library.change', 'Change')}
+                    <Upload className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
@@ -56,26 +56,26 @@ export function ImageLibrarySelect({ onSelectImage, onDeleteImage, className, se
           {/* Second image selection button */}
           <div className="flex flex-col items-center justify-center border rounded-md p-4 h-48 bg-background hover:bg-muted/20 transition-colors">
             {selectedImages?.secondary ? (
-              <div className="relative w-full h-full">
+              <div className="relative w-full h-full group">
                 <img 
                   src={selectedImages.secondary} 
                   alt={t('image_library.secondary_image', 'Secondary image')}
                   className="w-full h-full object-contain"
                 />
-                <div className="absolute bottom-2 right-2 flex gap-2">
+                <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
                   <Button 
                     variant="destructive" 
-                    size="sm"
+                    size="icon"
                     onClick={() => onDeleteImage?.({ type: 'secondary', field: 'product_image_2' })}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                   <Button 
                     variant="secondary" 
-                    size="sm"
+                    size="icon"
                     onClick={() => onSelectImage?.({ type: 'secondary', field: 'product_image_2' })}
                   >
-                    {t('image_library.change', 'Change')}
+                    <Upload className="h-4 w-4" />
                   </Button>
                 </div>
               </div>

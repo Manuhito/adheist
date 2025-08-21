@@ -1185,16 +1185,6 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
                   onUpload={handleLogoUpload}
                   initialImage={initialData.logo_override}
                 />
-                <div className="mt-4 px-6 pb-6 w-full">
-                  <Button 
-                    onClick={toggleImageModal} 
-                    variant="outline" 
-                    className="w-full"
-                    disabled={!initialData.brand}
-                  >
-                    {t('step_two.select_from_library', 'Select from Image Library')}
-                  </Button>
-                </div>
               </div>
               {/* Campaign Details (derecha) */}
               <div className="bg-card p-6 rounded-xl overflow-hidden h-full flex-1">
