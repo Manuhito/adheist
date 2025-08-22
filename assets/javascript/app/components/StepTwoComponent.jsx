@@ -1,11 +1,11 @@
 import React, { useId, useState, useEffect, useRef } from 'react';
 import { NextButton } from '../../components/ui/next-button.jsx';
 import { BackButton } from '../../components/ui/back-button.jsx';
-import { CompanyLogoUpload } from './CompanyLogoUpload.jsx';
 import { ProductImageUpload } from './ProductImageUpload.jsx';
 import { AppScreenshotUpload } from './AppScreenshotUpload.jsx';
 import { ProductImageSection } from "./ProductImageSection"; // No necesitas el .jsx al final
 import { AppImageSection } from "./AppImageSection";
+import { LogoImageSection } from "./LogoImageSection";
 import { Input } from '../../components/ui/input.tsx';
 import { Button } from '../../components/ui/button.tsx';
 import { useTranslation } from '../../lib/useTranslation';
@@ -29,6 +29,9 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     primary: null,
     secondary: null
   });
+
+  // State for logo image from library
+  const [logoLibraryImage, setLogoLibraryImage] = useState(null);
 
   // Estado para los datos completos del adlibrary
   const [adLibraryData, setAdLibraryData] = useState(null);
@@ -157,6 +160,12 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
         primary: appPrimaryImage,
         secondary: appSecondaryImage
       });
+
+      // Check for logo image in initialData
+      const logoImage = initialData.logo_override;
+      
+      // Update state with existing logo image
+      setLogoLibraryImage(logoImage || null);
     }
   }, [initialData]);
 
@@ -307,101 +316,6 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     }
   };
 
-  // Handle logo image upload
-  const handleLogoUpload = async (url) => {
-    console.log('Logo uploaded or deleted:', url);
-
-    // Only proceed if we have an ID
-    if (!initialData.id) return;
-
-    // If url is explicitly null, it means the image should be deleted
-    // If url is undefined, it means no action should be taken
-    if (url === undefined) return;
-
-    try {
-      // Get CSRF token from cookies
-      const csrfToken = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('csrftoken='))
-        ?.split('=')[1];
-
-      if (!csrfToken) {
-        console.error('CSRF token not found');
-        return;
-      }
-
-      // Create a FormData object
-      const formData = new FormData();
-
-      // If url is null, it means we want to delete the image
-      if (url === null) {
-        console.log('Deleting logo image...');
-        // The backend expects the field name to be in POST data but not in FILES data
-        // to trigger deletion of the corresponding override field
-        formData.append('logo', ''); // Send empty value for the logo field
-      }
-      // Check if this is a blob URL (from a new upload) or a server URL (from initialData)
-      else if (url.startsWith('blob:')) {
-        console.log('Processing blob URL...');
-
-        // Convert the blob URL to an actual file
-        const blobResponse = await fetch(url);
-        const blob = await blobResponse.blob();
-
-        // Create a file from the blob
-        // Use a descriptive filename with timestamp to avoid caching issues
-        const filename = `company_logo_${Date.now()}.${blob.type.split('/')[1] || 'png'}`;
-        const file = new File([blob], filename, { type: blob.type });
-
-        console.log('Created file:', file.name, 'type:', file.type, 'size:', file.size);
-
-        // Add the file to the FormData with the field name 'logo'
-        // This matches what the Django view expects in request.FILES
-        formData.append('logo', file);
-        console.log('Added logo file to FormData');
-      } else {
-        // This is a server URL (from initialData)
-        console.log('Processing server URL...');
-
-        // For server URLs, we'll send the URL directly
-        // The server already has this image, so we don't need to upload it again
-        formData.append('logo_override_url', url);
-        console.log('Added logo_override_url to FormData');
-      }
-
-      // Log all form data entries
-      console.log('FormData entries:');
-      for (let pair of formData.entries()) {
-        console.log(pair[0] + ':', pair[1] instanceof File ?
-          `File: ${pair[1].name}, type: ${pair[1].type}, size: ${pair[1].size}` :
-          pair[1]);
-      }
-
-      // Make the API call to update the logo
-      const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': csrfToken
-          // Don't set Content-Type header for FormData
-        },
-        body: formData
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error updating logo: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      console.log('Logo updated successfully:', data);
-
-      // If we have a refreshData function, call it to update the UI
-      if (refreshData) {
-        refreshData();
-      }
-    } catch (error) {
-      console.error('Error saving logo:', error);
-    }
-  };
 
   // Handle product image upload
   const handleProductImageUpload = async (imageData) => {
@@ -636,7 +550,6 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       const formData = new FormData();
 
       // Add the company_website field directly
-      // The Django view expects fields directly in request.POST
       formData.append('company_website', url);
 
       // Make the API call to update the website URL
@@ -664,77 +577,151 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
         // refreshData();
       }
     } catch (error) {
-      console.error('Error saving website URL:', error);
+      console.error('Error updating website URL:', error);
     }
   };
 
-  // Save product library image to backend
+  // Function to save product library image to backend
   const saveProductLibraryImage = async (fieldName, imageData) => {
-    // Only proceed if we have an ID
     if (!initialData.id) return;
 
     try {
-      // Get CSRF token
-      const csrfToken = getCsrfToken();
+      console.log(`Saving product library image for field ${fieldName}:`, imageData);
+      
+      // Get CSRF token from cookies
+      const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken='))
+        ?.split('=')[1];
 
       if (!csrfToken) {
-        console.error('CSRF token not found');
+        console.error('CSRF token not found in cookies');
         return;
       }
-
-      // Create FormData
+      
       const formData = new FormData();
 
-      // If imageData is null or url is null, it means we want to delete the image
-      if (imageData === null || imageData.url === null) {
-        formData.append(fieldName, '');
-      }
-      // Check if this is a blob URL (new upload)
-      else if (imageData.url.startsWith('blob:')) {
-        // Convert blob URL to file
-        const blobResponse = await fetch(imageData.url);
-        const blob = await blobResponse.blob();
-
-        // Create file
-        const filename = `${fieldName}_${Date.now()}.${blob.type.split('/')[1] || 'png'}`;
-        const file = new File([blob], filename, { type: blob.type });
-
-        // Add to FormData
-        formData.append(fieldName, file);
-      }
-      // Es una imagen existente de UserBrandAssets
-      else if (imageData.id) {
-        // Enviamos el ID de la imagen directamente
+      // If we have image data with URL and ID (from image library)
+      if (imageData && imageData.url && imageData.id) {
+        // Send the asset_id to avoid re-uploading
         formData.append(`${fieldName}_asset_id`, imageData.id);
-
-        // También enviamos el campo vacío para indicar que queremos actualizar este campo
+        // Include the field name with empty value to indicate we want to update this field
         formData.append(fieldName, '');
-
-        console.log(`Added image reference to FormData: ${fieldName}_asset_id=${imageData.id}`);
+      } 
+      // If we have a null value, we're deleting the image
+      else if (imageData === null) {
+        // Include the field name with empty value to indicate deletion
+        formData.append(fieldName, '');
+      }
+      // Otherwise, we might have a File object or Blob URL
+      else if (imageData) {
+        // If it's a string URL (blob or otherwise), convert to file
+        if (typeof imageData === 'string' && imageData.startsWith('blob:')) {
+          const response = await fetch(imageData);
+          const blob = await response.blob();
+          const file = new File([blob], 'image.png', { type: 'image/png' });
+          formData.append(fieldName, file);
+        } 
+        // If it's already a File object
+        else if (imageData instanceof File) {
+          formData.append(fieldName, imageData);
+        }
       }
 
-      // Make API call
+      // Make the API call
       const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
         method: 'POST',
         headers: {
           'X-CSRFToken': csrfToken
+          // No Content-Type header for FormData
         },
         body: formData
       });
 
       if (!response.ok) {
-        throw new Error(`Error updating product library image: ${response.statusText}`);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('Product library image updated successfully:', data);
+      console.log('Product library image updated in database:', data);
 
       // Refresh data if needed
-      if (refreshData) {
-        refreshData();
-      }
+      if (refreshData) refreshData();
+
     } catch (error) {
       console.error('Error saving product library image:', error);
+    }
+  };
+
+  // Function to save logo library image to backend
+  const saveLogoLibraryImage = async (imageData) => {
+    if (!initialData.id) return;
+
+    try {
+      console.log(`Saving logo library image:`, imageData);
+      
+      // Get CSRF token from cookies
+      const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken='))
+        ?.split('=')[1];
+
+      if (!csrfToken) {
+        console.error('CSRF token not found in cookies');
+        return;
+      }
+      
+      const formData = new FormData();
+
+      // If we have image data with URL and ID (from image library)
+      if (imageData && imageData.url && imageData.id) {
+        // Send the asset_id to avoid re-uploading
+        formData.append('logo_asset_id', imageData.id);
+        // Include the field name with empty value to indicate we want to update this field
+        formData.append('logo', '');
+      } 
+      // If we have a null value, we're deleting the image
+      else if (imageData === null) {
+        // Include the field name with empty value to indicate deletion
+        formData.append('logo', '');
+      }
+      // Otherwise, we might have a File object or Blob URL
+      else if (imageData) {
+        // If it's a string URL (blob or otherwise), convert to file
+        if (typeof imageData === 'string' && imageData.startsWith('blob:')) {
+          const response = await fetch(imageData);
+          const blob = await response.blob();
+          const file = new File([blob], 'logo.png', { type: 'image/png' });
+          formData.append('logo', file);
+        } 
+        // If it's already a File object
+        else if (imageData instanceof File) {
+          formData.append('logo', imageData);
+        }
+      }
+
+      // Make the API call
+      const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrfToken
+          // No Content-Type header for FormData
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Logo library image updated in database:', data);
+
+      // Refresh data if needed
+      if (refreshData) refreshData();
+
+    } catch (error) {
+      console.error('Error saving logo library image:', error);
     }
   };
 
@@ -945,9 +932,17 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
           ...image // Include any other properties from the image object
         });
       }
+    } else if (selectionSource === 'logo_library' && imageUrl && fieldName) {
+      // Update logo library image state
+      setLogoLibraryImage(imageUrl);
+
+      // Save to backend if we have an ID
+      if (initialData.id) {
+        saveLogoLibraryImage(image);
+      }
     } else {
       // Default behavior (logo)
-      handleLogoUpload(imageUrl);
+      saveLogoLibraryImage({ url: imageUrl });
     }
 
     // Clear all selection variables
@@ -993,6 +988,18 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     window.currentImageField = imageData.field;
   };
 
+  // Handle logo image library selection
+  const handleLogoImageLibrarySelect = async (imageData) => {
+    console.log('Logo library image selected:', imageData);
+
+    // Open the image selection modal
+    setIsImageModalOpen(true);
+
+    // Store only the field name and source
+    window.currentImageSelectionSource = 'logo_library';
+    window.currentImageField = imageData.field;
+  };
+
   // Handle product image deletion
   const handleProductImageDelete = async (imageData) => {
     console.log('Product image delete requested:', imageData);
@@ -1031,6 +1038,19 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
         type: stateKey,
         url: null
       });
+    }
+  };
+
+  // Handle logo image deletion
+  const handleLogoImageDelete = async (imageData) => {
+    console.log('Logo image delete requested:', imageData);
+
+    // Update state to remove the image
+    setLogoLibraryImage(null);
+
+    // Save to backend if we have an ID - pass null to indicate deletion
+    if (initialData.id) {
+      saveLogoLibraryImage(null);
     }
   };
 
@@ -1228,12 +1248,13 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
               )}
             </div>
             {/* Branding + Campaign Details en dos columnas */}
-            <div className="flex flex-row gap-x-6 w-full">
+            <div className="flex flex-row w-full">
               {/* Company Branding (izquierda) */}
               <div className="bg-card rounded-xl flex flex-col items-start">
-                <CompanyLogoUpload
-                  onUpload={handleLogoUpload}
-                  initialImage={initialData.logo_override}
+                <LogoImageSection 
+                  onSelectImage={handleLogoImageLibrarySelect}
+                  onDeleteImage={handleLogoImageDelete}
+                  selectedImage={logoLibraryImage || initialData.logo_override}
                 />
               </div>
               {/* Campaign Details (derecha) */}
@@ -1309,8 +1330,8 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
             {/* Product and App Image Sections - Horizontal layout on larger screens */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Product Image Section */}
-              <div>
-                <ProductImageSection
+              <div className="mb-6">
+                <ProductImageSection 
                   onSelectImage={handleProductImageLibrarySelect}
                   onDeleteImage={handleProductImageDelete}
                   selectedImages={productLibraryImages}
@@ -1318,13 +1339,15 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
               </div>
 
               {/* App Image Section */}
-              <div>
-                <AppImageSection
+              <div className="mb-6">
+                <AppImageSection 
                   onSelectImage={handleAppImageLibrarySelect}
                   onDeleteImage={handleAppImageDelete}
                   selectedImages={appLibraryImages}
                 />
               </div>
+
+              {/* Logo Image Section - Ya se ha movido a la sección de branding */}
             </div>
           </main>
         </div>
