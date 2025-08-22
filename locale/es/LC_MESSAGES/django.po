@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-12 13:31+0000\n"
+"POT-Creation-Date: 2025-08-22 18:24+0000\n"
 "PO-Revision-Date: 2025-04-30 00:00+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Spanish <LL@li.org>\n"
@@ -100,22 +100,22 @@ msgstr "Producto"
 msgid "Whoops, we couldn't find a subscription associated with your account!"
 msgstr "¡Ups! No pudimos encontrar una suscripción asociada a tu cuenta."
 
-#: apps/subscriptions/helpers.py:210
+#: apps/subscriptions/helpers.py:238
 #, fuzzy
 #| msgid "No active subscription was found."
 msgid "No active subscription found to update."
 msgstr "No se encontró ninguna suscripción activa."
 
-#: apps/subscriptions/helpers.py:221
+#: apps/subscriptions/helpers.py:249
 msgid "No subscription items found for this subscription."
 msgstr ""
 
-#: apps/subscriptions/helpers.py:328
+#: apps/subscriptions/helpers.py:356
 #, python-brace-format
 msgid "Error updating subscription: {e.user_message}"
 msgstr ""
 
-#: apps/subscriptions/helpers.py:331
+#: apps/subscriptions/helpers.py:359
 #, fuzzy
 #| msgid "An unexpected error occurred. Please try again."
 msgid "Unexpected error updating subscription. Please try again later."
@@ -325,12 +325,14 @@ msgstr "Segundos para registrarse"
 msgid "Get 5 Free Backlinks"
 msgstr "Obtén 5 backlinks gratis"
 
-#: apps/web/context_processors.py:82 templates/account/login.html:36
+#: apps/web/context_processors.py:82
+#: templates/account/confirm_login_code.html:42 templates/account/login.html:36
 #: templates/web/components/top_nav.html:48
 msgid "Sign In"
 msgstr "Iniciar sesión"
 
 #: apps/web/context_processors.py:83 templates/account/login.html:47
+#: templates/account/request_login_code.html:8
 msgid "Mail me a sign-in code"
 msgstr "Envíame un código de acceso por correo"
 
@@ -643,6 +645,7 @@ msgid "Confirm Update"
 msgstr "Confirmar actualización"
 
 #: apps/web/context_processors.py:184 apps/web/context_processors.py:289
+#: apps/web/context_processors.py:513
 msgid "Cancel"
 msgstr "Cancelar"
 
@@ -1581,81 +1584,113 @@ msgstr "Revisión"
 msgid "credits available"
 msgstr "créditos disponibles"
 
+#: apps/web/context_processors.py:508
+msgid "Rate this image"
+msgstr "Califica esta imagen"
+
+#: apps/web/context_processors.py:509
+msgid "Rate this generation"
+msgstr "Califica esta generación"
+
 #: apps/web/context_processors.py:510
+msgid "Review"
+msgstr "Revisión"
+
+#: apps/web/context_processors.py:511
+msgid "Share your thoughts about this generation..."
+msgstr "Comparte tus pensamientos sobre esta generación..."
+
+#: apps/web/context_processors.py:512
+msgid "characters"
+msgstr "caracteres"
+
+#: apps/web/context_processors.py:514
+msgid "Submit"
+msgstr "Enviar"
+
+#: apps/web/context_processors.py:515
+msgid "Thank you for your feedback!"
+msgstr "Gracias por tu feedback!"
+
+#: apps/web/context_processors.py:516
+msgid "Failed to submit rating. Please try again."
+msgstr "Fallo al enviar la calificación. Por favor, inténtalo de nuevo."
+
+#: apps/web/context_processors.py:519
 msgid "Back to Ad Requests"
 msgstr "Volver a las solicitudes de anuncios"
 
-#: apps/web/context_processors.py:511
+#: apps/web/context_processors.py:520
 msgid "Generated Ad Image"
 msgstr "Imagen del anuncio generada"
 
-#: apps/web/context_processors.py:512
+#: apps/web/context_processors.py:521
 msgid "No version with generated image found for this ad request."
 msgstr ""
 "No se encontró ninguna versión con la imagen generada para esta solicitud de "
 "anuncio."
 
-#: apps/web/context_processors.py:515
+#: apps/web/context_processors.py:524
 #, fuzzy
 #| msgid "Confirm Purchase"
 msgid "Confirm Credit Package Purchase"
 msgstr "Confirmar compra"
 
-#: apps/web/context_processors.py:516
+#: apps/web/context_processors.py:525
 msgid "Credit Package"
 msgstr "Paquete de créditos"
 
-#: apps/web/context_processors.py:517
+#: apps/web/context_processors.py:526
 msgid "One-time purchase"
 msgstr "Pago único"
 
-#: apps/web/context_processors.py:518
+#: apps/web/context_processors.py:527
 msgid "Package Includes"
 msgstr "Incluye"
 
-#: apps/web/context_processors.py:519
+#: apps/web/context_processors.py:528
 msgid "Payment Information"
 msgstr "Información de pago"
 
-#: apps/web/context_processors.py:520
+#: apps/web/context_processors.py:529
 msgid ""
 "Your default payment method will be charged immediately for this purchase."
 msgstr ""
 "Tu método de pago predeterminado se cargará inmediatamente para esta compra."
 
-#: apps/web/context_processors.py:521
+#: apps/web/context_processors.py:530
 msgid "Credits will be available in your account immediately after purchase."
 msgstr ""
 "Los créditos estarán disponibles en tu cuenta inmediatamente después de la "
 "compra."
 
-#: apps/web/context_processors.py:522
+#: apps/web/context_processors.py:531
 msgid "To change your payment method, please go back to the billing page."
 msgstr ""
 "Para cambiar tu método de pago, por favor vuelve a la página de facturación."
 
-#: apps/web/context_processors.py:523
+#: apps/web/context_processors.py:532
 msgid "Confirm Purchase"
 msgstr "Confirmar compra"
 
-#: apps/web/context_processors.py:524
+#: apps/web/context_processors.py:533
 msgid "Back to Billing"
 msgstr "Volver a página de facturación"
 
-#: apps/web/context_processors.py:525
+#: apps/web/context_processors.py:534
 msgid "No price ID available for the selected package."
 msgstr ""
 "No se encontró ningún ID de precio disponible para el paquete seleccionado."
 
-#: apps/web/context_processors.py:526
+#: apps/web/context_processors.py:535
 msgid "Failed to purchase credit package."
 msgstr "Error al comprar el paquete de créditos."
 
-#: apps/web/context_processors.py:527
+#: apps/web/context_processors.py:536
 msgid "Received an unexpected response from the server."
 msgstr "Se recibió una respuesta inesperada del servidor."
 
-#: apps/web/context_processors.py:528
+#: apps/web/context_processors.py:537
 msgid "A network error occurred. Please try again."
 msgstr "Se produjo un error de red. Por favor, inténtalo de nuevo."
 
@@ -1749,6 +1784,30 @@ msgstr "Continuar con"
 #: templates/account/components/social/social_buttons.html:5
 msgid "or"
 msgstr "o"
+
+#: templates/account/confirm_login_code.html:6
+msgid "Confirm Login Code"
+msgstr "Confirmar código de inicio de sesión"
+
+#: templates/account/confirm_login_code.html:10
+msgid "Enter Sign-In Code"
+msgstr "Introduce el código de inicio de sesión"
+
+#: templates/account/confirm_login_code.html:15
+msgid ""
+"We've sent a code to your email. The code expires shortly, so please enter "
+"it soon."
+msgstr ""
+"Hemos enviado un código a tu correo electrónico. El código expira rapidamente, "
+"así que por favor introduce el código lo antes posible."
+
+#: templates/account/confirm_login_code.html:29
+msgid "Code"
+msgstr "Código"
+
+#: templates/account/confirm_login_code.html:49
+msgid "Back to login"
+msgstr "Volver a inicio de sesión"
 
 #: templates/account/email.html:4 templates/account/email.html:6
 msgid "E-mail Addresses"
@@ -2083,6 +2142,25 @@ msgstr ""
 msgid "Set Password"
 msgstr "Establecer contraseña"
 
+#: templates/account/request_login_code.html:13
+msgid ""
+"\n"
+"        You will receive an email containing a special code for a password-"
+"free sign-in.\n"
+"        "
+msgstr ""
+"\n"
+"        Recibirás un correo electrónico con un código especial para iniciar sesión sin contraseña.\n"
+"        "
+
+#: templates/account/request_login_code.html:30
+msgid "Request Code"
+msgstr "Solicitar código"
+
+#: templates/account/request_login_code.html:37
+msgid "Other sign-in options"
+msgstr "Otras opciones de inicio de sesión"
+
 #: templates/account/signup_closed.html:4
 #: templates/account/signup_closed.html:7
 msgid "Sign Up Closed"
@@ -2150,10 +2228,12 @@ msgid "New AdLibrary"
 msgstr "Sin biblioteca"
 
 #: templates/ads/adlibrary_form.html:67
-#, fuzzy
-#| msgid "Add image"
 msgid "Ad Image"
-msgstr "Añadir imagen"
+msgstr "Imagen de anuncio"
+
+#: templates/ads/adlibrary_form.html:71
+msgid "Current image:"
+msgstr "Imagen actual:"
 
 #: templates/ads/adlibrary_list.html:10 templates/ads/adlibrary_list.html:14
 msgid "All AdLibraries"

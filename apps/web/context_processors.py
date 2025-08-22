@@ -505,6 +505,15 @@ def translations(request):
             'revision.processing_info': _('Once submitted, your ad request will be processed. This may take a few minutes.'),
             'revision.generating': _('Generating...'),
             'revision.generate': _('Generate'),
+            'revision.rate_image': _('Rate this image'),
+            'revision.rate_title': _('Rate this generation'),
+            'revision.comment_label': _('Review'),
+            'revision.comment_placeholder': _('Share your thoughts about this generation...'),
+            'revision.characters': _('characters'),
+            'revision.cancel': _('Cancel'),
+            'revision.submit_rating': _('Submit'),
+            'revision.rating_success_message': _('Thank you for your feedback!'),
+            'revision.rating_error_message': _('Failed to submit rating. Please try again.'),
 
             # Ad Requests translations (from revision-adrequest.jsx)
             'ad_requests.back_to_list': _('Back to Ad Requests'),

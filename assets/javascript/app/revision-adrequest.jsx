@@ -487,10 +487,10 @@ const RevisionAdRequest = () => {
                                       required
                                     />
                                     <div className="text-xs text-right mt-1">
-                                      <span className={`${ratingComment.trim().length < 50 ? 'text-red-500' : 'text-gray-500'}`}>
+                                      <span className={`${ratingComment.trim().length < 30 ? 'text-red-500' : 'text-gray-500'}`}>
                                         {ratingComment.trim().length}
                                       </span>
-                                      <span className="text-gray-500"> / 50 {t("revision.characters", "caracteres")}</span>
+                                      <span className="text-gray-500"> / 30 {t("revision.characters", "characters")}</span>
                                     </div>
                                   </div>
                                 </div>
@@ -608,7 +608,7 @@ const RevisionAdRequest = () => {
                                           setRatingOpen(false);
                                         });
                                     }}
-                                    disabled={rating === 0 || ratingComment.trim().length < 50}
+                                    disabled={rating === 0 || ratingComment.trim().length < 30}
                                   >
                                     {t("revision.submit_rating", "Submit")}
                                   </Button>

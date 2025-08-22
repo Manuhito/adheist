@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-12 13:31+0000\n"
+"POT-Creation-Date: 2025-08-22 18:24+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -91,20 +91,20 @@ msgstr ""
 msgid "Whoops, we couldn't find a subscription associated with your account!"
 msgstr ""
 
-#: apps/subscriptions/helpers.py:210
+#: apps/subscriptions/helpers.py:238
 msgid "No active subscription found to update."
 msgstr ""
 
-#: apps/subscriptions/helpers.py:221
+#: apps/subscriptions/helpers.py:249
 msgid "No subscription items found for this subscription."
 msgstr ""
 
-#: apps/subscriptions/helpers.py:328
+#: apps/subscriptions/helpers.py:356
 #, python-brace-format
 msgid "Error updating subscription: {e.user_message}"
 msgstr ""
 
-#: apps/subscriptions/helpers.py:331
+#: apps/subscriptions/helpers.py:359
 #, fuzzy
 #| msgid "An unexpected error occurred. Please try again."
 msgid "Unexpected error updating subscription. Please try again later."
@@ -301,12 +301,14 @@ msgstr ""
 msgid "Get 5 Free Backlinks"
 msgstr ""
 
-#: apps/web/context_processors.py:82 templates/account/login.html:36
+#: apps/web/context_processors.py:82
+#: templates/account/confirm_login_code.html:42 templates/account/login.html:36
 #: templates/web/components/top_nav.html:48
 msgid "Sign In"
 msgstr ""
 
 #: apps/web/context_processors.py:83 templates/account/login.html:47
+#: templates/account/request_login_code.html:8
 msgid "Mail me a sign-in code"
 msgstr ""
 
@@ -617,6 +619,7 @@ msgid "Confirm Update"
 msgstr ""
 
 #: apps/web/context_processors.py:184 apps/web/context_processors.py:289
+#: apps/web/context_processors.py:513
 msgid "Cancel"
 msgstr ""
 
@@ -1528,76 +1531,112 @@ msgstr ""
 msgid "credits available"
 msgstr ""
 
+#: apps/web/context_processors.py:508
+msgid "Rate this image"
+msgstr ""
+
+#: apps/web/context_processors.py:509
+msgid "Rate this generation"
+msgstr ""
+
 #: apps/web/context_processors.py:510
-msgid "Back to Ad Requests"
+msgid "Review"
 msgstr ""
 
 #: apps/web/context_processors.py:511
-msgid "Generated Ad Image"
+msgid "Share your thoughts about this generation..."
 msgstr ""
 
 #: apps/web/context_processors.py:512
-msgid "No version with generated image found for this ad request."
+msgid "characters"
+msgstr ""
+
+#: apps/web/context_processors.py:514
+msgid "Submit"
 msgstr ""
 
 #: apps/web/context_processors.py:515
+#, fuzzy
+#| msgid "Thank you for your subscription."
+msgid "Thank you for your feedback!"
+msgstr "Thank you for your subscription."
+
+#: apps/web/context_processors.py:516
+#, fuzzy
+#| msgid "Failed to load payment form. Please try again."
+msgid "Failed to submit rating. Please try again."
+msgstr "Failed to load payment form. Please try again."
+
+#: apps/web/context_processors.py:519
+msgid "Back to Ad Requests"
+msgstr ""
+
+#: apps/web/context_processors.py:520
+msgid "Generated Ad Image"
+msgstr ""
+
+#: apps/web/context_processors.py:521
+msgid "No version with generated image found for this ad request."
+msgstr ""
+
+#: apps/web/context_processors.py:524
 msgid "Confirm Credit Package Purchase"
 msgstr ""
 
-#: apps/web/context_processors.py:516
+#: apps/web/context_processors.py:525
 msgid "Credit Package"
 msgstr ""
 
-#: apps/web/context_processors.py:517
+#: apps/web/context_processors.py:526
 msgid "One-time purchase"
 msgstr ""
 
-#: apps/web/context_processors.py:518
+#: apps/web/context_processors.py:527
 msgid "Package Includes"
 msgstr ""
 
-#: apps/web/context_processors.py:519
+#: apps/web/context_processors.py:528
 #, fuzzy
 #| msgid "Debug Information"
 msgid "Payment Information"
 msgstr "Debug Information"
 
-#: apps/web/context_processors.py:520
+#: apps/web/context_processors.py:529
 msgid ""
 "Your default payment method will be charged immediately for this purchase."
 msgstr ""
 
-#: apps/web/context_processors.py:521
+#: apps/web/context_processors.py:530
 msgid "Credits will be available in your account immediately after purchase."
 msgstr ""
 
-#: apps/web/context_processors.py:522
+#: apps/web/context_processors.py:531
 msgid "To change your payment method, please go back to the billing page."
 msgstr ""
 
-#: apps/web/context_processors.py:523
+#: apps/web/context_processors.py:532
 msgid "Confirm Purchase"
 msgstr ""
 
-#: apps/web/context_processors.py:524
+#: apps/web/context_processors.py:533
 #, fuzzy
 #| msgid "Return to Billing"
 msgid "Back to Billing"
 msgstr "Return to Billing"
 
-#: apps/web/context_processors.py:525
+#: apps/web/context_processors.py:534
 msgid "No price ID available for the selected package."
 msgstr ""
 
-#: apps/web/context_processors.py:526
+#: apps/web/context_processors.py:535
 msgid "Failed to purchase credit package."
 msgstr ""
 
-#: apps/web/context_processors.py:527
+#: apps/web/context_processors.py:536
 msgid "Received an unexpected response from the server."
 msgstr ""
 
-#: apps/web/context_processors.py:528
+#: apps/web/context_processors.py:537
 #, fuzzy
 #| msgid "An unexpected error occurred. Please try again."
 msgid "A network error occurred. Please try again."
@@ -1681,6 +1720,30 @@ msgstr ""
 #: templates/account/components/social/social_buttons.html:5
 msgid "or"
 msgstr ""
+
+#: templates/account/confirm_login_code.html:6
+msgid "Confirm Login Code"
+msgstr ""
+
+#: templates/account/confirm_login_code.html:10
+msgid "Enter Sign-In Code"
+msgstr ""
+
+#: templates/account/confirm_login_code.html:15
+msgid ""
+"We've sent a code to your email. The code expires shortly, so please enter "
+"it soon."
+msgstr ""
+
+#: templates/account/confirm_login_code.html:29
+msgid "Code"
+msgstr ""
+
+#: templates/account/confirm_login_code.html:49
+#, fuzzy
+#| msgid "Return to Billing"
+msgid "Back to login"
+msgstr "Return to Billing"
 
 #: templates/account/email.html:4 templates/account/email.html:6
 msgid "E-mail Addresses"
@@ -1924,6 +1987,22 @@ msgstr ""
 
 #: templates/account/password_set.html:8 templates/account/password_set.html:14
 msgid "Set Password"
+msgstr ""
+
+#: templates/account/request_login_code.html:13
+msgid ""
+"\n"
+"        You will receive an email containing a special code for a password-"
+"free sign-in.\n"
+"        "
+msgstr ""
+
+#: templates/account/request_login_code.html:30
+msgid "Request Code"
+msgstr ""
+
+#: templates/account/request_login_code.html:37
+msgid "Other sign-in options"
 msgstr ""
 
 #: templates/account/signup_closed.html:4
