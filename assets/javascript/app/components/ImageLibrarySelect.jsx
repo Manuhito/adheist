@@ -44,7 +44,7 @@ export function ImageLibrarySelect({ onSelectImage, onDeleteImage, className, se
             ) : (
               <Button 
                 variant="outline" 
-                className="w-full h-full flex flex-col gap-2"
+                className="w-full h-full flex flex-col gap-2 hover:bg-muted/40 dark:hover:bg-muted/20"
                 onClick={() => onSelectImage?.({ type: 'primary', field: 'product_image_1' })}
               >
                 <ImagePlus className="h-8 w-8 text-muted-foreground" />
@@ -81,7 +81,7 @@ export function ImageLibrarySelect({ onSelectImage, onDeleteImage, className, se
             ) : (
               <Button 
                 variant="outline" 
-                className="w-full h-full flex flex-col gap-2"
+                className="w-full h-full flex flex-col gap-2 hover:bg-muted/40 dark:hover:bg-muted/20"
                 onClick={() => onSelectImage?.({ type: 'secondary', field: 'product_image_2' })}
               >
                 <ImagePlus className="h-8 w-8 text-muted-foreground" />

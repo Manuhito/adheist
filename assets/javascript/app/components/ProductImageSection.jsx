@@ -14,7 +14,7 @@ export function ProductImageSection({ className, onSelectImage, onDeleteImage, s
   return (
     <div className={cn("w-full bg-card p-4 rounded-xl", className)}>
 
-      <div className="mt-6 relative">
+      <div className="relative">
         {/* Image Library Container */}
         <div className="flex flex-col rounded-lg border-2 border-border overflow-hidden">
           {/* Header section with icon and title */}

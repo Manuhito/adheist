@@ -1118,7 +1118,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       <div className="flex-1 w-full max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
           {/* Summary section lateral izquierdo */}
-          <aside className="lg:col-span-4 mb-8 lg:mb-0 h-full flex flex-col">
+          <aside className="lg:col-span-4 mb-8 lg:mb-0 h-full flex flex-col p-4">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 flex flex-col gap-y-4 items-start h-full">
               <h2 className="text-xl font-semibold mb-4">{t('step_two.summary', 'Summary')}</h2>
               <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-8 rounded-md h-full w-full flex flex-col flex-1">
@@ -1307,7 +1307,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
             </div>
 
             {/* Product and App Image Sections - Horizontal layout on larger screens */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Product Image Section */}
               <div>
                 <ProductImageSection
