@@ -872,7 +872,62 @@ def user_images(request):
             'success': False,
             'error': str(e)
         }, status=500)
-
+        
+@login_required
+@require_POST
+def upload_brand_asset(request):
+    """
+    Upload an image to UserBrandAssets model.
+    Expects 'image' file, 'category' (logo, product, app, marketing), and optional 'brand_id' in POST data.
+    """
+    try:
+        # Get the uploaded image
+        image = request.FILES.get('image')
+        if not image:
+            return JsonResponse({'success': False, 'error': 'No image provided'}, status=400)
+        
+        # Get the category
+        category = request.POST.get('category', 'product')
+        if category not in ['logo', 'product', 'app', 'marketing']:
+            category = 'product'  # Default to product if invalid category
+        
+        # Get the brand
+        brand_id = request.POST.get('brand_id')
+        if brand_id:
+            try:
+                brand = UserBrand.objects.get(id=brand_id, user=request.user)
+            except UserBrand.DoesNotExist:
+                return JsonResponse({'success': False, 'error': 'Brand not found'}, status=404)
+        else:
+            # If no brand specified, get the first brand or create a default one
+            brand = UserBrand.objects.filter(user=request.user).first()
+            if not brand:
+                brand = UserBrand.objects.create(
+                    user=request.user,
+                    brand_name=f"{request.user.username}'s Brand"
+                )
+        
+        # Create the UserBrandAssets object
+        asset = UserBrandAssets.objects.create(
+            user=request.user,
+            brand=brand,
+            image=image,
+            category=category
+        )
+        
+        # Return success response with the new asset data
+        return JsonResponse({
+            'success': True,
+            'image': {
+                'id': asset.id,
+                'url': asset.image.url,
+                'category': asset.category,
+                'brand_id': asset.brand.id,
+                'brand_name': asset.brand.brand_name
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @login_required
 @require_POST

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../components/ui/dialog.tsx';
 import { Button } from '../../components/ui/button.tsx';
+import { Upload } from 'lucide-react';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '../../components/ui/accordion.tsx';
 import { useTranslation } from '../../lib/useTranslation';
 
@@ -9,6 +10,7 @@ import { useTranslation } from '../../lib/useTranslation';
  * Displays a grid of images that can be selected by the user, grouped by brand
  */
 const ImageSelectionModal = ({ isOpen, onClose, onSelect }) => {
+  const fileInputRef = useRef(null);
   const { t } = useTranslation();
   const [images, setImages] = useState([]);
   const [brands, setBrands] = useState([]);
@@ -119,6 +121,77 @@ const ImageSelectionModal = ({ isOpen, onClose, onSelect }) => {
     }
   };
 
+  // Handle file upload
+  const handleFileUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Create FormData
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      // Get the source and category from window variables
+      const source = window.currentImageSelectionSource;
+      let category = 'product'; // Default
+      
+      if (source === 'logo_library') {
+        category = 'logo';
+      } else if (source === 'app_library') {
+        category = 'app';
+      } else if (source === 'product_library') {
+        category = 'product';
+      }
+      
+      formData.append('category', category);
+      console.log('Image upload category:', category);
+      
+      // Get selected brand from StepTwoComponent
+      if (window.selectedBrandId) {
+        formData.append('brand_id', window.selectedBrandId);
+        console.log('Using brand ID for upload:', window.selectedBrandId);
+      } else {
+        console.warn('No brand ID available for image upload');
+      }
+      
+      // Upload the image
+      const response = await fetch('/ads/upload-brand-asset/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCsrfToken(),
+        },
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Refresh the image list
+        fetchUserImages();
+        // Show success message
+        console.log('Image uploaded successfully');
+      } else {
+        throw new Error(data.error || 'Unknown error');
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      setError(t('image_selection.upload_error', 'Error uploading image. Please try again.'));
+    } finally {
+      setLoading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   // Estilos personalizados para el scroll
   const scrollbarStyles = `
     .custom-scrollbar::-webkit-scrollbar {
@@ -215,16 +288,39 @@ const ImageSelectionModal = ({ isOpen, onClose, onSelect }) => {
           )}
         </div>
 
-        <DialogFooter className="flex-shrink-0 mt-2">
-          <Button variant="outline" onClick={onClose}>
-            {t('image_selection.cancel', 'Cancel')}
-          </Button>
-          <Button 
-            onClick={handleSelect} 
-            disabled={!selectedImage || loading}
-          >
-            {t('image_selection.select', 'Select')}
-          </Button>
+        <DialogFooter className="flex-shrink-0 mt-2 flex justify-between w-full px-0">
+          <div className="mr-auto">
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              accept="image/*"
+              onChange={handleFileUpload}
+            />
+            <Button 
+              variant="outline" 
+              onClick={() => fileInputRef.current?.click()}
+              disabled={loading}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              {t('image_selection.upload', 'Upload')}
+            </Button>
+          </div>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={onClose}
+              className="hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
+            >
+              {t('image_selection.cancel', 'Cancel')}
+            </Button>
+            <Button 
+              onClick={handleSelect} 
+              disabled={!selectedImage || loading}
+            >
+              {t('image_selection.select', 'Select')}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

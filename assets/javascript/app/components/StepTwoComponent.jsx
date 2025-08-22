@@ -961,7 +961,9 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       window.currentImageSelectionSource = null;
       window.currentImageField = null;
       window.currentImageSelectionType = null;
+      window.selectedBrandId = null;
     }
+    // No need to set selectedBrandId here as it's now set in the individual handlers
   };
 
   // Handle product image library selection
@@ -971,9 +973,14 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     // Open the image selection modal
     setIsImageModalOpen(true);
 
-    // Store only the field name and source - we don't need type anymore
+    // Store the field name and source
     window.currentImageSelectionSource = 'product_library';
     window.currentImageField = imageData.field;
+    
+    // Store the brand ID directly from initialData
+    if (initialData.brand && initialData.brand.id) {
+      window.selectedBrandId = initialData.brand.id;
+    }
   };
 
   // Handle app image library selection
@@ -983,9 +990,14 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     // Open the image selection modal
     setIsImageModalOpen(true);
 
-    // Store only the field name and source
+    // Store the field name and source
     window.currentImageSelectionSource = 'app_library';
     window.currentImageField = imageData.field;
+    
+    // Store the brand ID directly from initialData
+    if (initialData.brand && initialData.brand.id) {
+      window.selectedBrandId = initialData.brand.id;
+    }
   };
 
   // Handle logo image library selection
@@ -995,9 +1007,14 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     // Open the image selection modal
     setIsImageModalOpen(true);
 
-    // Store only the field name and source
+    // Store the field name and source
     window.currentImageSelectionSource = 'logo_library';
     window.currentImageField = imageData.field;
+    
+    // Store the brand ID directly from initialData
+    if (initialData.brand && initialData.brand.id) {
+      window.selectedBrandId = initialData.brand.id;
+    }
   };
 
   // Handle product image deletion
