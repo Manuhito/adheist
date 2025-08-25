@@ -6,6 +6,7 @@ import { siteConfig } from "@/lib/config";
 import { formatDate } from "@/lib/utils";
 import { Image } from "@/components/common/index";
 import React, { Suspense } from "react";
+import { Calendar } from "lucide-react";
 import { useTranslation } from "@/lib/useTranslation";
 
 // Definir la interfaz para window con nuestra propiedad personalizada
@@ -60,23 +61,6 @@ export default function BlogPost({ post }: BlogPostProps) {
         }}
       />
       <div className="mx-auto w-full max-w-[800px] px-4 sm:px-6 lg:px-8 space-y-4 my-12">
-        <Suspense
-          fallback={
-            <div className="mb-8 w-full h-64 bg-gray-200 animate-pulse rounded-lg"></div>
-          }
-        >
-          {post.metadata.image && (
-            <div className="mb-8">
-              <Image
-                width={1920}
-                height={1080}
-                src={post.metadata.image}
-                alt={post.metadata.title}
-                className="w-full h-auto rounded-lg border shadow-md"
-              />
-            </div>
-          )}
-        </Suspense>
         <div className="flex flex-col">
           <h1 className="title font-medium text-3xl tracking-tighter">
             {post.metadata.title}
@@ -85,22 +69,19 @@ export default function BlogPost({ post }: BlogPostProps) {
         <div className="flex justify-between items-center text-sm">
           <Suspense fallback={<p className="h-5" />}>
             <div className="flex items-center space-x-2">
-              <time
-                dateTime={post.metadata.publishedAt}
-                className="text-sm text-gray-500"
-              >
-                {formatDate(
-                  post.metadata.publishedAt, 
-                  navigator.language, 
-                  {
-                    today: t('today', 'Today'),
-                    days_ago: t('days_ago', 'd ago'),
-                    weeks_ago: t('weeks_ago', 'w ago'),
-                    months_ago: t('months_ago', 'mo ago'),
-                    years_ago: t('years_ago', 'y ago')
-                  }
-                )}
-              </time>
+              <div className="flex items-center space-x-1">
+                <Calendar className="h-4 w-4 text-blue-500" />
+                <time
+                  dateTime={post.metadata.publishedAt}
+                  className="text-sm text-gray-500"
+                >
+                  {new Date(post.metadata.publishedAt).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </time>
+              </div>
             </div>
           </Suspense>
         </div>
