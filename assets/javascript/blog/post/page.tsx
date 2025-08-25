@@ -6,7 +6,7 @@ import { siteConfig } from "@/lib/config";
 import { formatDate } from "@/lib/utils";
 import { Image } from "@/components/common/index";
 import React, { Suspense } from "react";
-import { Calendar, Clock3 } from "lucide-react";
+import { Calendar, Clock3, BadgeCheck } from "lucide-react";
 import { useTranslation } from "@/lib/useTranslation";
 
 // Definir la interfaz para window con nuestra propiedad personalizada
@@ -68,7 +68,7 @@ export default function BlogPost({ post }: BlogPostProps) {
             <BadgeCheck className="h-4 w-4 text-blue-500" />
             <span className="text-sm text-blue-500 font-medium">Written by a human</span>
           </div>
-          <h1 className="title font-medium text-3xl tracking-tighter">
+          <h1 className="title font-medium text-4xl md:text-5xl tracking-tighter">
             {post.metadata.title}
           </h1>
         </div>
@@ -105,7 +105,7 @@ export default function BlogPost({ post }: BlogPostProps) {
           />
         </div>
         <article
-          className="prose dark:prose-invert mx-auto max-w-full"
+          className="prose dark:prose-invert mx-auto max-w-full text-black prose-p:text-black prose-li:text-black"
           dangerouslySetInnerHTML={{ __html: post.source }}
         ></article>
       </div>
