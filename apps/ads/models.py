@@ -810,6 +810,34 @@ class UserBrand(BaseModel):
         return f"{self.user.email} - {self.brand_name}"
 
 
+class UserBrandAssets(BaseModel):
+    """
+    Model to centralize storage of user-uploaded images.
+    Keeps track of all images uploaded by users for their ad requests.
+    """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="brand_assets")
+    brand = models.ForeignKey(UserBrand, on_delete=models.CASCADE, related_name="brand_assets")
+    image = models.ImageField(upload_to="brand_assets/", help_text="Image uploaded by the user")
+    category = models.CharField(
+        max_length=20, 
+        choices=[
+            ('logo', 'Logo'),
+            ('product', 'Product'),
+            ('app', 'App'),
+            ('marketing', 'Marketing')
+        ],
+        help_text="Category of the uploaded image"
+    )
+    
+    class Meta:
+        verbose_name = "User Brand Asset"
+        verbose_name_plural = "User Brand Assets"
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.user.email} - {self.brand.brand_name} - {self.category} asset"
+
+
 class FAQ(BaseModel):
     """
     Model to store Frequently Asked Questions and their answers for a FAQ page.

@@ -21,6 +21,7 @@ from .models import (
     AppConfiguration,
     FAQ,
     UserBrand,
+    UserBrandAssets,
 )
 
 
@@ -360,3 +361,22 @@ class FAQAdmin(admin.ModelAdmin):
             "fields": ["question", "answer", "order", "is_active"]
         })
     ]
+
+
+@admin.register(UserBrandAssets)
+class UserBrandAssetsAdmin(admin.ModelAdmin):
+    list_display = ["user", "brand", "category", "created_at", "updated_at"]
+    list_filter = ["category", "brand"]
+    search_fields = ["user__email", "brand__brand_name", "category"]
+    
+    fieldsets = [
+        (None, {
+            "fields": ["user", "brand", "image", "category"]
+        })
+    ]
+    
+    def get_readonly_fields(self, request, obj=None):
+        # Make user and brand read-only if the object already exists
+        if obj:
+            return ["user", "brand"]
+        return []

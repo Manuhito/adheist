@@ -25,7 +25,7 @@ from django.utils import timezone
 from apps.aiinterface.tasks import send_slack_notification
 from django.contrib.auth import get_user_model
 
-from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion, AdRequestUsage, ExtraCredit, UserBrand
+from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion, AdRequestUsage, ExtraCredit, UserBrand, UserBrandAssets
 from .forms import AdLibraryForm
 from .services import can_create_ad_request, use_credit, can_create_ad_request_version, get_ad_request_version_limit, use_general_credit, use_version_credit, can_create_ad_version
 import boto3
@@ -825,6 +825,111 @@ def get_adlibrary_company_list(request):
 
 
 @login_required
+def user_images(request):
+    """
+    Fetch all images associated with the current user's selected brand.
+    
+    Returns: JSON with a list of image data
+    """
+    try:
+        # Get the brand_id from the request parameters
+        brand_id = request.GET.get('brand_id')
+        
+        # Base query for user's brand assets
+        query = UserBrandAssets.objects.filter(user=request.user)
+        
+        # If brand_id is provided, filter by that brand
+        if brand_id:
+            try:
+                brand_id = int(brand_id)
+                query = query.filter(brand_id=brand_id)
+            except ValueError:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Invalid brand ID'
+                }, status=400)
+        
+        # Get all user brand assets
+        assets = query.order_by('-created_at')
+        
+        # Format the assets as a list of dictionaries
+        images_data = [{
+            'id': asset.id,
+            'url': asset.image.url,
+            'category': asset.category,
+            'created_at': asset.created_at.isoformat(),
+            'brand_id': asset.brand_id,
+            'brand_name': asset.brand.brand_name
+        } for asset in assets]
+        
+        return JsonResponse({
+            'success': True,
+            'images': images_data
+        })
+    except Exception as e:
+        logging.error(f"Error fetching user images: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+        
+@login_required
+@require_POST
+def upload_brand_asset(request):
+    """
+    Upload an image to UserBrandAssets model.
+    Expects 'image' file, 'category' (logo, product, app, marketing), and optional 'brand_id' in POST data.
+    """
+    try:
+        # Get the uploaded image
+        image = request.FILES.get('image')
+        if not image:
+            return JsonResponse({'success': False, 'error': 'No image provided'}, status=400)
+        
+        # Get the category
+        category = request.POST.get('category', 'product')
+        if category not in ['logo', 'product', 'app', 'marketing']:
+            category = 'product'  # Default to product if invalid category
+        
+        # Get the brand
+        brand_id = request.POST.get('brand_id')
+        if brand_id:
+            try:
+                brand = UserBrand.objects.get(id=brand_id, user=request.user)
+            except UserBrand.DoesNotExist:
+                return JsonResponse({'success': False, 'error': 'Brand not found'}, status=404)
+        else:
+            # If no brand specified, get the first brand or create a default one
+            brand = UserBrand.objects.filter(user=request.user).first()
+            if not brand:
+                brand = UserBrand.objects.create(
+                    user=request.user,
+                    brand_name=f"{request.user.username}'s Brand"
+                )
+        
+        # Create the UserBrandAssets object
+        asset = UserBrandAssets.objects.create(
+            user=request.user,
+            brand=brand,
+            image=image,
+            category=category
+        )
+        
+        # Return success response with the new asset data
+        return JsonResponse({
+            'success': True,
+            'image': {
+                'id': asset.id,
+                'url': asset.image.url,
+                'category': asset.category,
+                'brand_id': asset.brand.id,
+                'brand_name': asset.brand.brand_name
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@login_required
 @require_POST
 def adrequest_create(request):
     """
@@ -1098,10 +1203,32 @@ def adrequest_update(request, pk):
         
         for field in image_fields:
             override_field = f"{field}_override"
-            # Clear the field if it's mentioned in the request but no file is provided
-            if field in request.POST and field not in request.FILES:
+            asset_id_field = f"{field}_asset_id"
+            
+            # Caso 1: Reutilizar imagen existente de UserBrandAssets por ID
+            if asset_id_field in request.POST:
+                try:
+                    # Obtener el ID de la imagen
+                    asset_id = request.POST.get(asset_id_field)
+                    
+                    # Importar el modelo
+                    from .models import UserBrandAssets
+                    
+                    # Buscar la imagen directamente por ID
+                    asset = UserBrandAssets.objects.filter(id=asset_id).first()
+                    
+                    if asset:
+                        # Si encontramos la imagen, la asignamos directamente sin duplicarla
+                        setattr(ad_request, override_field, asset.image)
+                        print(f"Reutilizando imagen existente para {field}: {asset.image} (ID: {asset_id})")
+                    else:
+                        print(f"No se encontró la imagen con ID: {asset_id}")
+                except Exception as e:
+                    print(f"Error al procesar imagen existente: {str(e)}")
+            # Caso 2: Clear the field if it's mentioned in the request but no file is provided
+            elif field in request.POST and field not in request.FILES:
                 setattr(ad_request, override_field, None)
-            # Update the field if a file is provided
+            # Caso 3: Update the field if a file is provided
             elif field in request.FILES:
                 setattr(ad_request, override_field, request.FILES[field])
         
