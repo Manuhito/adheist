@@ -59,6 +59,7 @@ class BlogPage(Page):
     intro = models.CharField(max_length=250)
     body = StreamField(_get_default_block_types())
     post_id = models.CharField(max_length=100, blank=True, null=True, help_text="ID del post en la API externa")
+    read_time = models.PositiveIntegerField(default=1, help_text=_("Tiempo estimado de lectura en minutos"))
 
     search_fields = Page.search_fields + [
         index.SearchField("intro"),
@@ -68,6 +69,7 @@ class BlogPage(Page):
     content_panels = Page.content_panels + [
         FieldPanel("date"),
         FieldPanel("intro"),
+        FieldPanel("read_time"),
         FieldPanel("body", classname="full"),
         InlinePanel("gallery_images", label="Gallery images"),
     ]
