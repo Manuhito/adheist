@@ -73,8 +73,16 @@ export default function BlogPost({ post }: BlogPostProps) {
           </h1>
         </div>
         <div className="flex justify-between items-center text-sm">
+          <div className="flex items-center space-x-2">
+            <Author
+              twitterUsername={post.metadata.author}
+              name={post.metadata.author}
+              image={"/static/images/landing/author.jpg"}
+            />
+          </div>
+          
           <Suspense fallback={<p className="h-5" />}>
-            <div className="flex flex-col space-y-2">
+            <div className="flex flex-col items-start space-y-2">
               <div className="flex items-center space-x-1">
                 <Calendar className="h-4 w-4 text-blue-500" />
                 <time
@@ -96,13 +104,6 @@ export default function BlogPost({ post }: BlogPostProps) {
               </div>
             </div>
           </Suspense>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Author
-            twitterUsername={post.metadata.author}
-            name={post.metadata.author}
-            image={"/static/images/landing/author.jpg"}
-          />
         </div>
         <article
           className="prose dark:prose-invert mx-auto max-w-full text-black prose-p:text-black prose-li:text-black"
