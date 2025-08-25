@@ -6,7 +6,7 @@ import { siteConfig } from "@/lib/config";
 import { formatDate } from "@/lib/utils";
 import { Image } from "@/components/common/index";
 import React, { Suspense } from "react";
-import { Calendar } from "lucide-react";
+import { Calendar, Clock3 } from "lucide-react";
 import { useTranslation } from "@/lib/useTranslation";
 
 // Definir la interfaz para window con nuestra propiedad personalizada
@@ -22,9 +22,11 @@ interface Post {
   metadata: {
     title: string;
     publishedAt: string;
-    summary: string;
     author: string;
-    image?: string;
+    description: string;
+    image: string;
+    tags: string[];
+    readTime?: number;
   };
   slug: string;
   source: string;
@@ -61,14 +63,18 @@ export default function BlogPost({ post }: BlogPostProps) {
         }}
       />
       <div className="mx-auto w-full max-w-[800px] px-4 sm:px-6 lg:px-8 space-y-4 my-12">
-        <div className="flex flex-col">
+        <div className="flex flex-col space-y-2">
+          <div className="flex items-center space-x-1">
+            <BadgeCheck className="h-4 w-4 text-blue-500" />
+            <span className="text-sm text-blue-500 font-medium">Written by a human</span>
+          </div>
           <h1 className="title font-medium text-3xl tracking-tighter">
             {post.metadata.title}
           </h1>
         </div>
         <div className="flex justify-between items-center text-sm">
           <Suspense fallback={<p className="h-5" />}>
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-col space-y-2">
               <div className="flex items-center space-x-1">
                 <Calendar className="h-4 w-4 text-blue-500" />
                 <time
@@ -81,6 +87,12 @@ export default function BlogPost({ post }: BlogPostProps) {
                     day: 'numeric'
                   })}
                 </time>
+              </div>
+              <div className="flex items-center space-x-1">
+                <Clock3 className="h-4 w-4 text-blue-500" />
+                <span className="text-sm text-gray-500">
+                  {post.metadata.readTime || 1} min read
+                </span>
               </div>
             </div>
           </Suspense>

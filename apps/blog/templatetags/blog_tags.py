@@ -51,7 +51,10 @@ def serialize_blog_post(post):
             'publishedAt': date_filter(post.first_published_at, 'Y-m-d'),
             'summary': post.intro,
             'author': 'AdHeist Team',
-            'image': image_url
+            'image': image_url,
+            'readTime': post.read_time,
+            'description': post.intro,
+            'tags': []
         },
         'slug': post.slug,
         'source': str(post.body)

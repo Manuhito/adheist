@@ -102,10 +102,26 @@ def create_blog_post(
         date=publication_date,
         body=processed_body,
         post_id=post_id,
+        read_time=1,  # Default read time
     )
     
+    # Generate a slug if needed
+    from django.utils.text import slugify
+    if not blog_post.slug:
+        blog_post.slug = slugify(title)[:50]
+        
     # Add it as a child of the parent page
-    parent_page.add_child(instance=blog_post)
+    try:
+        parent_page.add_child(instance=blog_post)
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error adding blog post as child: {e}")
+        
+        # Alternative approach: save directly
+        blog_post.path = parent_page.path + '0001'
+        blog_post.depth = parent_page.depth + 1
+        blog_post.save()
     
     # Add gallery images if provided
     if gallery_images:
@@ -188,6 +204,7 @@ def update_blog_post(
     body_content: Optional[List[Dict]] = None,
     publication_date: Optional[date] = None,
     auto_publish: bool = True,
+    read_time: Optional[int] = None,
 ) -> BlogPage:
     """
     Update an existing blog post.
@@ -211,6 +228,9 @@ def update_blog_post(
     
     if publication_date is not None:
         blog_post.date = publication_date
+        
+    if read_time is not None:
+        blog_post.read_time = read_time
     
     if body_content is not None:
         # Process body content into StreamField format
@@ -351,6 +371,14 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
             else:
                 print(f"Warning: Post '{title}' has no ID in API response")
                 
+            # Extract read time from API
+            read_time = post_data.get('readTime')
+            if read_time is not None:
+                print(f"Read time for post '{title}': {read_time} minutes")
+            else:
+                read_time = 1  # Default value if not provided
+                print(f"Using default read time for post '{title}': {read_time} minutes")
+                
             # Get intro/excerpt (limited to 250 chars)
             intro = post_data.get('excerpt', '')
             
@@ -482,7 +510,8 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
                         intro=intro,
                         body_content=body_content,
                         publication_date=publication_date,
-                        auto_publish=True
+                        auto_publish=True,
+                        read_time=read_time
                     )
                     
                     # Update gallery image if it exists
@@ -509,6 +538,11 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
                         # No gallery_images parameter
                     )
                     
+                    # Set read time if available
+                    if read_time is not None:
+                        post.read_time = read_time
+                        post.save(update_fields=['read_time'])
+                    
                     # Add gallery image
                     from apps.blog.models import BlogPageGalleryImage
                     if post_image:
@@ -525,20 +559,50 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
                 # Try alternative approach
                 print("Trying alternative approach...")
                 
-                # Create the blog post with gallery images parameter
-                post = create_blog_post(
+                # Create a unique slug for the post
+                from django.utils.text import slugify
+                unique_slug = slugify(title)[:50]
+                
+                # Create the blog post directly with all fields
+                from apps.blog.models import BlogPage
+                post = BlogPage(
                     title=title,
                     intro=intro,
-                    body_content=body_content,
-                    publication_date=publication_date,
-                    parent_page=blog_index,
-                    auto_publish=True,
+                    date=publication_date or date.today(),
+                    body=body_content,  # This will be processed by Wagtail
                     post_id=post_id,
-                    gallery_images=[{
-                        "image": post_image,
-                        "caption": f"Featured image for {title}"
-                    }]
+                    read_time=read_time,
+                    slug=unique_slug,
+                    path=blog_index.path + '0001',  # Temporary path
+                    depth=blog_index.depth + 1,
+                    numchild=0
                 )
+                
+                # Save the post first
+                post.save()
+                
+                # Then try to properly set it as a child
+                try:
+                    # Clean up the temporary path
+                    post.delete()
+                    # Add properly as a child
+                    blog_index.add_child(instance=post)
+                except Exception as e:
+                    print(f"Alternative approach also failed: {e}")
+                    # The post is already saved with the temporary path
+                    pass
+                
+                # Add gallery image
+                if post_image:
+                    from apps.blog.models import BlogPageGalleryImage
+                    try:
+                        BlogPageGalleryImage.objects.create(
+                            page=post,
+                            image=post_image,
+                            caption=f"Featured image for {title}"
+                        )
+                    except Exception as e:
+                        print(f"Failed to add gallery image: {e}")
             
             created_posts.append(post)
             print(f"Created blog post: {post.title} (ID: {post.id})")
