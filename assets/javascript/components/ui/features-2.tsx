@@ -12,8 +12,8 @@ export function Features() {
                     <h2 className="text-balance text-4xl font-semibold lg:text-5xl">Creating Ads with <span className="text-primary">AdHeist</span> is Simple</h2>
                     <p className="mt-4">Our platform makes ad creation effortless and effective</p>
                 </div>
-                <div className="@min-4xl:max-w-full @min-4xl:grid-cols-3 mx-auto mt-8 grid max-w-sm gap-6 *:text-center md:mt-16">
-                    <Card className="group border-0 bg-muted shadow-none">
+                <div className="mx-auto mt-8 grid grid-cols-1 sm:grid-cols-3 gap-6 *:text-center md:mt-16">
+                    <Card className="group border-0 bg-neutral-50 dark:bg-neutral-900 shadow-none">
                         <CardHeader className="pb-3">
                             <CardDecorator>
                                 <Upload className="size-6 text-primary" aria-hidden />
@@ -25,7 +25,7 @@ export function Features() {
                         </CardContent>
                     </Card>
 
-                    <Card className="group border-0 bg-muted shadow-none">
+                    <Card className="group border-0 bg-neutral-50 dark:bg-neutral-900 shadow-none">
                         <CardHeader className="pb-3">
                             <CardDecorator>
                                 <Zap className="size-6 text-primary" aria-hidden />
@@ -37,7 +37,7 @@ export function Features() {
                         </CardContent>
                     </Card>
 
-                    <Card className="group border-0 bg-muted shadow-none">
+                    <Card className="group border-0 bg-neutral-50 dark:bg-neutral-900 shadow-none">
                         <CardHeader className="pb-3">
                             <CardDecorator>
                                 <Sparkles className="size-6 text-primary" aria-hidden />

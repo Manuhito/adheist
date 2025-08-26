@@ -6,7 +6,7 @@ import Hero from "@/components/sections/hero";
 import Logos from "@/components/sections/logos";
 import Problem from "@/components/sections/problem";
 import FeaturesSection from "@/components/sections/features-section";
-import Solution from "@/components/sections/solution";
+import SolutionSection from "@/components/sections/solution-section";
 import CTA from "@/components/sections/cta";
 // Import the FAQ component that matches the dedicated FAQ page styling
 import FAQ from "./faq";
@@ -18,7 +18,7 @@ const LandingPage = () => {
       <Logos />
       <Problem />
       <FeaturesSection />
-      <Solution />
+      <SolutionSection />
       <CTA />
       <FAQ />
     </div>
