@@ -6,6 +6,7 @@ import { siteConfig } from "@/lib/config";
 import { formatDate } from "@/lib/utils";
 import { Image } from "@/components/common/index";
 import React, { Suspense } from "react";
+import { Calendar, Clock3, BadgeCheck } from "lucide-react";
 import { useTranslation } from "@/lib/useTranslation";
 
 // Definir la interfaz para window con nuestra propiedad personalizada
@@ -21,9 +22,13 @@ interface Post {
   metadata: {
     title: string;
     publishedAt: string;
-    summary: string;
     author: string;
-    image?: string;
+    authorUsername?: string;
+    authorImage?: string;
+    description: string;
+    image: string;
+    tags: string[];
+    readTime?: number;
   };
   slug: string;
   source: string;
@@ -60,59 +65,51 @@ export default function BlogPost({ post }: BlogPostProps) {
         }}
       />
       <div className="mx-auto w-full max-w-[800px] px-4 sm:px-6 lg:px-8 space-y-4 my-12">
-        <Suspense
-          fallback={
-            <div className="mb-8 w-full h-64 bg-gray-200 animate-pulse rounded-lg"></div>
-          }
-        >
-          {post.metadata.image && (
-            <div className="mb-8">
-              <Image
-                width={1920}
-                height={1080}
-                src={post.metadata.image}
-                alt={post.metadata.title}
-                className="w-full h-auto rounded-lg border shadow-md"
-              />
-            </div>
-          )}
-        </Suspense>
-        <div className="flex flex-col">
-          <h1 className="title font-medium text-3xl tracking-tighter">
+        <div className="flex flex-col space-y-2">
+          <div className="flex items-center space-x-1">
+            <BadgeCheck className="h-4 w-4 text-blue-500" />
+            <span className="text-sm text-blue-500 font-medium">Written by a human</span>
+          </div>
+          <h1 className="title font-medium text-4xl md:text-5xl tracking-tighter">
             {post.metadata.title}
           </h1>
         </div>
         <div className="flex justify-between items-center text-sm">
+          <div className="flex items-center space-x-2">
+            <Author
+              twitterUsername={post.metadata.author}
+              authorUsername={post.metadata.authorUsername}
+              name={post.metadata.author}
+              image={post.metadata.authorImage || "/static/images/blog/default-avatar.png"}
+            />
+          </div>
+          
           <Suspense fallback={<p className="h-5" />}>
-            <div className="flex items-center space-x-2">
-              <time
-                dateTime={post.metadata.publishedAt}
-                className="text-sm text-gray-500"
-              >
-                {formatDate(
-                  post.metadata.publishedAt, 
-                  navigator.language, 
-                  {
-                    today: t('today', 'Today'),
-                    days_ago: t('days_ago', 'd ago'),
-                    weeks_ago: t('weeks_ago', 'w ago'),
-                    months_ago: t('months_ago', 'mo ago'),
-                    years_ago: t('years_ago', 'y ago')
-                  }
-                )}
-              </time>
+            <div className="flex flex-col items-start space-y-2">
+              <div className="flex items-center space-x-1">
+                <Calendar className="h-4 w-4 text-blue-500" />
+                <time
+                  dateTime={post.metadata.publishedAt}
+                  className="text-sm text-gray-500"
+                >
+                  {new Date(post.metadata.publishedAt).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </time>
+              </div>
+              <div className="flex items-center space-x-1">
+                <Clock3 className="h-4 w-4 text-blue-500" />
+                <span className="text-sm text-gray-500">
+                  {post.metadata.readTime || 1} min read
+                </span>
+              </div>
             </div>
           </Suspense>
         </div>
-        <div className="flex items-center space-x-2">
-          <Author
-            twitterUsername={post.metadata.author}
-            name={post.metadata.author}
-            image={"/static/images/landing/author.jpg"}
-          />
-        </div>
         <article
-          className="prose dark:prose-invert mx-auto max-w-full"
+          className="prose dark:prose-invert mx-auto max-w-full text-black dark:text-gray-100 prose-p:text-black dark:prose-p:text-gray-100 prose-li:text-black dark:prose-li:text-gray-100 prose-headings:text-black dark:prose-headings:text-white prose-strong:text-black dark:prose-strong:text-gray-100 prose-a:text-blue-600 dark:prose-a:text-blue-400"
           dangerouslySetInnerHTML={{ __html: post.source }}
         ></article>
       </div>
