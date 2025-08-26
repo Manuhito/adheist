@@ -30,6 +30,8 @@ def create_blog_post(
     post_id: Optional[str] = None,
     read_time: Optional[int] = 1,
     author_image_url: Optional[str] = None,
+    author_name: Optional[str] = None,
+    author_username: Optional[str] = None,
 ) -> BlogPage:
     """
     Create a new blog post programmatically.
@@ -45,6 +47,8 @@ def create_blog_post(
         post_id: Optional ID from the external API to store for reference
         read_time: Estimated reading time in minutes
         author_image_url: URL to the author's profile image
+        author_name: Name of the post author
+        author_username: Username or handle of the post author
         
     Returns:
         The created BlogPage instance
@@ -107,7 +111,9 @@ def create_blog_post(
         body=processed_body,
         post_id=post_id,
         read_time=read_time,
-        author_image_url=author_image_url
+        author_image_url=author_image_url,
+        author_name=author_name,
+        author_username=author_username
     )
     
     # Generate a slug if needed
@@ -211,6 +217,8 @@ def update_blog_post(
     auto_publish: bool = True,
     read_time: Optional[int] = None,
     author_image_url: Optional[str] = None,
+    author_name: Optional[str] = None,
+    author_username: Optional[str] = None,
 ) -> BlogPage:
     """
     Update an existing blog post.
@@ -224,6 +232,8 @@ def update_blog_post(
         auto_publish: Whether to automatically publish the changes
         read_time: Estimated reading time in minutes (if None, keeps existing)
         author_image_url: URL to the author's profile image (if None, keeps existing)
+        author_name: Name of the post author (if None, keeps existing)
+        author_username: Username or handle of the post author (if None, keeps existing)
         
     Returns:
         The updated BlogPage instance
@@ -242,6 +252,12 @@ def update_blog_post(
         
     if author_image_url is not None:
         blog_post.author_image_url = author_image_url
+        
+    if author_name is not None:
+        blog_post.author_name = author_name
+        
+    if author_username is not None:
+        blog_post.author_username = author_username
     
     if body_content is not None:
         # Process body content into StreamField format
@@ -390,12 +406,29 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
                 read_time = 1  # Default value if not provided
                 print(f"Using default read time for post '{title}': {read_time} minutes")
                 
-            # Extract author image URL from API
+            # Extract author data from API
             author_image_url = None
+            author_name = None
+            author_username = None
+            
+            # Check if user object exists and extract data
             if 'user' in post_data and isinstance(post_data['user'], dict):
-                author_image_url = post_data['user'].get('image')
+                user_data = post_data['user']
+                
+                # Extract author image
+                author_image_url = user_data.get('image')
                 if author_image_url:
                     print(f"Found author image URL for '{title}': {author_image_url}")
+                
+                # Extract author name
+                author_name = user_data.get('name')
+                if author_name:
+                    print(f"Found author name for '{title}': {author_name}")
+                
+                # Extract author username
+                author_username = user_data.get('username')
+                if author_username:
+                    print(f"Found author username for '{title}': {author_username}")
             
             # If no author image in user object, try other common fields
             if not author_image_url:
@@ -404,6 +437,22 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
                     if field in post_data and post_data[field]:
                         author_image_url = post_data[field]
                         print(f"Found author image URL in '{field}' field: {author_image_url}")
+                        break
+                        
+            # If no author name in user object, try other common fields
+            if not author_name:
+                for field in ['authorName', 'author', 'userName', 'writer']:
+                    if field in post_data and post_data[field]:
+                        author_name = post_data[field]
+                        print(f"Found author name in '{field}' field: {author_name}")
+                        break
+                        
+            # If no author username in user object, try other common fields
+            if not author_username:
+                for field in ['authorUsername', 'userHandle', 'handle', 'authorId']:
+                    if field in post_data and post_data[field]:
+                        author_username = post_data[field]
+                        print(f"Found author username in '{field}' field: {author_username}")
                         break
                 
             # Get intro/excerpt (limited to 250 chars)
@@ -539,6 +588,8 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
                         publication_date=publication_date,
                         read_time=read_time,
                         author_image_url=author_image_url,
+                        author_name=author_name,
+                        author_username=author_username,
                     )
                     
                     # Update gallery image if it exists
@@ -564,6 +615,8 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
                         post_id=post_id,
                         read_time=read_time,
                         author_image_url=author_image_url,
+                        author_name=author_name,
+                        author_username=author_username,
                     )
                     
                     # Set read time if available

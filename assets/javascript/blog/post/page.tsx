@@ -23,6 +23,7 @@ interface Post {
     title: string;
     publishedAt: string;
     author: string;
+    authorUsername?: string;
     authorImage?: string;
     description: string;
     image: string;
@@ -77,6 +78,7 @@ export default function BlogPost({ post }: BlogPostProps) {
           <div className="flex items-center space-x-2">
             <Author
               twitterUsername={post.metadata.author}
+              authorUsername={post.metadata.authorUsername}
               name={post.metadata.author}
               image={post.metadata.authorImage || "/static/images/blog/default-avatar.png"}
             />

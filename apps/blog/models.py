@@ -61,6 +61,8 @@ class BlogPage(Page):
     post_id = models.CharField(max_length=100, blank=True, null=True, help_text="ID del post en la API externa")
     read_time = models.PositiveIntegerField(default=1, help_text=_("Tiempo estimado de lectura en minutos"))
     author_image_url = models.URLField(max_length=500, blank=True, null=True, help_text=_("URL de la imagen del autor"))
+    author_name = models.CharField(max_length=255, blank=True, null=True, help_text=_("Nombre del autor del post"))
+    author_username = models.CharField(max_length=255, blank=True, null=True, help_text=_("Username del autor del post"))
 
     search_fields = Page.search_fields + [
         index.SearchField("intro"),

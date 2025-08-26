@@ -50,13 +50,24 @@ def serialize_blog_post(post):
     author_image = default_avatar
     if hasattr(post, 'author_image_url') and post.author_image_url:
         author_image = post.author_image_url
+        
+    # Get author name (use custom field if available, otherwise default)
+    author_name = 'AdHeist Team'
+    if hasattr(post, 'author_name') and post.author_name:
+        author_name = post.author_name
+        
+    # Get author username if available
+    author_username = None
+    if hasattr(post, 'author_username') and post.author_username:
+        author_username = post.author_username
 
     return json.dumps({
         'metadata': {
             'title': post.title,
             'publishedAt': date_filter(post.first_published_at, 'Y-m-d'),
             'summary': post.intro,
-            'author': 'AdHeist Team',
+            'author': author_name,
+            'authorUsername': author_username,
             'authorImage': author_image,
             'image': image_url,
             'readTime': post.read_time,

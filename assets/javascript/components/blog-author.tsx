@@ -6,15 +6,19 @@ export default function Author({
   name,
   image,
   twitterUsername,
+  authorUsername,
   updatedAt,
   imageOnly,
 }: {
   name: string;
   image: string;
   twitterUsername: string;
+  authorUsername?: string;
   updatedAt?: string;
   imageOnly?: boolean;
 }) {
+  // Use authorUsername if available, otherwise fallback to twitterUsername
+  const username = authorUsername || twitterUsername;
   if (imageOnly) {
     return (
       <Image
@@ -52,7 +56,7 @@ export default function Author({
 
   return (
     <Link
-      href={`https://twitter.com/${twitterUsername}`}
+      href={`https://twitter.com/${username}`}
       className="group flex items-center space-x-3"
       target="_blank"
       rel="noopener noreferrer"
@@ -66,7 +70,7 @@ export default function Author({
       />
       <div className="flex flex-col">
         <p className="font-semibold text-gray-700">{name}</p>
-        <p className="text-sm text-gray-500">@{twitterUsername}</p>
+        <p className="text-sm text-gray-500">@{username}</p>
       </div>
     </Link>
   );
