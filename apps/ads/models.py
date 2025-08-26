@@ -282,6 +282,7 @@ class AppConfiguration(BaseModel):
 
 class AdRequestAssets(BaseModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="asset_collections", null=True, blank=True)
+    brand = models.ForeignKey('UserBrand', on_delete=models.CASCADE, related_name="assets", null=True, blank=True, help_text="Brand associated with these assets")
     company_website = models.URLField(null=True, blank=True)
     logo = models.ImageField(upload_to="adrequest_assets/", null=True, blank=True)
     main_hex_color = models.CharField(max_length=7, null=True, blank=True)
@@ -300,6 +301,7 @@ class AdRequestAssets(BaseModel):
     def to_dict(self):
         """Convert asset fields to dictionary for easier override handling"""
         return {
+            # Removed 'brand' field to prevent assignment issues
             'company_website': self.company_website,
             'main_hex_color': self.main_hex_color,
             'key_benefits': self.key_benefits,
@@ -388,6 +390,10 @@ class AdRequest(BaseModel):
         if self.base_assets:
             # Update JSON fields from asset_overrides
             for field_name, value in self.asset_overrides.items():
+                # Skip the 'brand' field as it requires special handling
+                if field_name == 'brand':
+                    continue
+                    
                 if hasattr(self.base_assets, field_name):
                     setattr(self.base_assets, field_name, value)
             
@@ -485,6 +491,10 @@ class AdRequestVersion(BaseModel):
     # New fields for storing specific OpenAI responses
     openai_response_metadata = models.JSONField(null=True, blank=True, help_text="Metadata from OpenAI API responses")
     error_logs = models.TextField(null=True, blank=True, help_text="Error logs when image generation fails")
+    
+    # Rating fields
+    rating = models.PositiveSmallIntegerField(null=True, blank=True, help_text="User rating from 1 to 5 stars")
+    review = models.TextField(null=True, blank=True, help_text="User review text for the generated image")
     
     def save(self, *args, **kwargs):
         """Override save method to update generated_prompt if needed and send email notifications"""
@@ -776,6 +786,56 @@ class ExtraCredit(BaseModel):
     def use_credit(cls, user):
         """Use one extra credit if available (uses general_credits for backward compatibility)"""
         return cls.use_general_credit(user)
+
+
+class UserBrand(BaseModel):
+    """
+    Model to store user brands information.
+    """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="brands")
+    brand_name = models.CharField(max_length=255, help_text="Name of the brand")
+    
+    class Meta:
+        verbose_name = "User Brand"
+        verbose_name_plural = "User Brands"
+        ordering = ['created_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'brand_name'],
+                name='unique_user_brand'
+            )
+        ]
+    
+    def __str__(self):
+        return f"{self.user.email} - {self.brand_name}"
+
+
+class UserBrandAssets(BaseModel):
+    """
+    Model to centralize storage of user-uploaded images.
+    Keeps track of all images uploaded by users for their ad requests.
+    """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="brand_assets")
+    brand = models.ForeignKey(UserBrand, on_delete=models.CASCADE, related_name="brand_assets")
+    image = models.ImageField(upload_to="brand_assets/", help_text="Image uploaded by the user")
+    category = models.CharField(
+        max_length=20, 
+        choices=[
+            ('logo', 'Logo'),
+            ('product', 'Product'),
+            ('app', 'App'),
+            ('marketing', 'Marketing')
+        ],
+        help_text="Category of the uploaded image"
+    )
+    
+    class Meta:
+        verbose_name = "User Brand Asset"
+        verbose_name_plural = "User Brand Assets"
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.user.email} - {self.brand.brand_name} - {self.category} asset"
 
 
 class FAQ(BaseModel):

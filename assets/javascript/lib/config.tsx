@@ -225,8 +225,7 @@ export const siteConfig = {
         { href: "#", text: "Community", icon: null },
         { href: "#", text: "Contact", icon: null },
         { href: "#", text: "Support", icon: null },
-        { href: "#", text: "Status", icon: null },
-        { href: "/faq/", text: "FAQ", icon: null },
+        { href: "#", text: "Status", icon: null }
       ],
     },
     {

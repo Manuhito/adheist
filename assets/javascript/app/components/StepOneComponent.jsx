@@ -3,7 +3,7 @@ import { SearchComponent } from './SearchComponent';
 import { FilterFormComponent } from './FilterFormComponent';
 import InteractiveBentoGallery from '../../components/ui/interactive-bento-gallery.jsx';
 import { Building, X, Upload, ImageIcon, Plus } from 'lucide-react';
-import { Switch } from '../../components/ui/switch';
+import { Switch } from '../../components/ui/switch.tsx';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../shadcn/components/ui/tooltip';
 import { NextButton } from '../../components/ui/next-button.jsx';
 import { useTranslation } from '../../lib/useTranslation';
@@ -134,6 +134,10 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const [showOnlyActive, setShowOnlyActive] = useState(true);
   const [filteredResults, setFilteredResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  // Estados para la paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMorePages, setHasMorePages] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   // Initialize selected canvas size directly with the size value from initialData
   const [selectedCanvasSize, setSelectedCanvasSize] = useState(initialData.canvas_size || null);
   const [selectedAdLibrary, setSelectedAdLibrary] = useState(initialData.ad_library_id || null);
@@ -203,10 +207,17 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
   };
 
   // Function to call the API with all filters
-  const fetchFilteredResults = () => {
+  const fetchFilteredResults = (page = 1, append = false) => {
     // Build URL with parameters
     const params = new URLSearchParams();
-    setIsLoading(true);
+    
+    // Establecer estado de carga apropiado
+    if (page === 1) {
+      setIsLoading(true);
+      setIsLoadingMore(false);
+    } else {
+      setIsLoadingMore(true);
+    }
 
     // Add company if one is selected
     if (selectedCompany) {
@@ -225,42 +236,65 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
     
     // Add active filter
     params.append('is_active', showOnlyActive);
+    
+    // Add pagination parameters
+    params.append('page', page);
+    params.append('page_size', 20); // Tamaño de página fijo
 
     // Always call the API, even when no filters are selected
     fetch(`/ads/adlibraries/?${params.toString()}`)
       .then(response => response.json())
       .then(data => {
-        // Verify data structure
-        if (data && Array.isArray(data)) {
-          // If data is directly an array
-          setFilteredResults(data);
-        } else if (data && Array.isArray(data.results)) {
-          // If data has a results property that is an array
-          setFilteredResults(data.results);
-        } else if (data && Array.isArray(data.adlibraries)) {
-          // If data has an adlibraries property that is an array
-          setFilteredResults(data.adlibraries);
-        } else if (data && typeof data === 'object') {
-          // If data is an object, try to convert it to an array
-          const resultsArray = Object.values(data).filter(item => typeof item === 'object');
-
-          // If the first element is an array, use it directly
-          if (resultsArray.length > 0 && Array.isArray(resultsArray[0])) {
-            setFilteredResults(resultsArray[0]);
-          } else {
-            setFilteredResults(resultsArray);
-          }
+        // Actualizar estado de paginación
+        if (data && data.pagination) {
+          setHasMorePages(data.pagination.has_next);
+          setCurrentPage(data.pagination.current_page);
         } else {
-          // If structure cannot be determined, set an empty array
-          setFilteredResults([]);
+          setHasMorePages(false);
+        }
+        
+        // Procesar los resultados
+        let newResults = [];
+        
+        // Verify data structure
+        if (data && Array.isArray(data.adlibraries)) {
+          // Si tenemos la estructura esperada con el nuevo endpoint paginado
+          newResults = data.adlibraries;
+        } else if (data && Array.isArray(data)) {
+          // Si data es directamente un array
+          newResults = data;
+        } else if (data && Array.isArray(data.results)) {
+          // Si data tiene una propiedad results que es un array
+          newResults = data.results;
+        } else if (data && typeof data === 'object') {
+          // Si data es un objeto, intentar convertirlo a array
+          const resultsArray = Object.values(data).filter(item => typeof item === 'object');
+          if (resultsArray.length > 0 && Array.isArray(resultsArray[0])) {
+            newResults = resultsArray[0];
+          } else {
+            newResults = resultsArray;
+          }
+        }
+        
+        // Si estamos añadiendo más resultados (append), concatenar con los existentes
+        if (append && page > 1) {
+          setFilteredResults(prevResults => [...prevResults, ...newResults]);
+        } else {
+          // Si es la primera página o estamos reemplazando, establecer directamente
+          setFilteredResults(newResults);
         }
 
+        // Desactivar indicadores de carga
         setIsLoading(false);
+        setIsLoadingMore(false);
       })
       .catch(error => {
         console.error('Error applying filters:', error);
-        setFilteredResults([]);
+        if (!append) {
+          setFilteredResults([]);
+        }
         setIsLoading(false);
+        setIsLoadingMore(false);
       });
   };
 
@@ -315,15 +349,29 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
   // Call the API when any filter changes
   useEffect(() => {
-    fetchFilteredResults();
+    // Resetear a la primera página cuando cambian los filtros
+    setCurrentPage(1);
+    setHasMorePages(true);
+    fetchFilteredResults(1, false);
   }, [selectedCompany, selectedIndustries, selectedTags, showOnlyActive]);
 
   // Fetch fresh data when component mounts
   useEffect(() => {
     if (refreshData && initialData?.id) {
       refreshData();
+    } else {
+      // Cargar datos iniciales
+      fetchFilteredResults(1, false);
     }
   }, []);
+  
+  // Función para cargar más resultados
+  const loadMoreResults = () => {
+    if (!isLoading && !isLoadingMore && hasMorePages) {
+      const nextPage = currentPage + 1;
+      fetchFilteredResults(nextPage, true);
+    }
+  };
 
   // Handlers for each filter type
   const handleCompanyChange = (company) => {
@@ -434,7 +482,9 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
     setSelectedCompany(null);
     setSelectedIndustries([]);
     setSelectedTags([]);
-    setSelectedCanvasSize(null);
+    // Resetear a la primera página cuando se limpian los filtros
+    setCurrentPage(1);
+    setHasMorePages(true);
   };
 
   // Check if any filters are active
@@ -667,7 +717,17 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
               </div>
             ) : galleryItems.length > 0 ? (
               <>
-                <div className="overflow-y-auto max-h-[600px] border border-gray-200 rounded-lg shadow-sm">
+                <div 
+                  className="overflow-y-auto max-h-[600px] border border-gray-200 rounded-lg shadow-sm"
+                  onScroll={(e) => {
+                    // Detectar cuando el usuario ha llegado cerca del final del scroll
+                    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+                    // Si estamos a 200px o menos del final, cargar más resultados
+                    if (scrollHeight - scrollTop - clientHeight <= 200) {
+                      loadMoreResults();
+                    }
+                  }}
+                >
                   <InteractiveBentoGallery
                     mediaItems={galleryItems}
                     title={t('step_one.gallery_title', 'Select Your Ideal Ad Style')}
@@ -687,6 +747,11 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
                     onItemSelect={handleGalleryItemSelect}
                     selectedItemId={selectedAdLibrary}
                   />
+                  {isLoadingMore && (
+                    <div className="py-4 flex justify-center">
+                      <div className="w-8 h-8 border-3 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+                    </div>
+                  )}
                 </div>
               </>
             ) : (

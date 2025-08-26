@@ -1,7 +1,7 @@
 import logging
 import time
 import posthog
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from django.db import transaction
 from django.urls import reverse
@@ -158,7 +158,8 @@ def cancel_subscription(subscription_id: str, cancel_at_period_end: bool = True)
             log.error(f"Subscription with ID {subscription_id} not found in database")
             return None
             
-        # Store the current period end before modifying
+        # Store the current period fields before modifying
+        current_period_start = db_subscription.current_period_start
         current_period_end = db_subscription.current_period_end
         
         stripe = get_stripe_module()
@@ -172,14 +173,41 @@ def cancel_subscription(subscription_id: str, cancel_at_period_end: bool = True)
             # Cancel immediately
             subscription = stripe.Subscription.delete(subscription_id)
         
+        # Ensure required fields are preserved in Stripe data before sync
+        if not subscription.get('current_period_start') and current_period_start is not None:
+            # Convert datetime to timestamp for Stripe data
+            if hasattr(current_period_start, 'timestamp'):
+                subscription['current_period_start'] = int(current_period_start.timestamp())
+            else:
+                subscription['current_period_start'] = int(current_period_start)
+            log.info(f"Preserved current_period_start in Stripe data for subscription {subscription_id}")
+        
+        if not subscription.get('current_period_end') and current_period_end is not None:
+            # Convert datetime to timestamp for Stripe data
+            if hasattr(current_period_end, 'timestamp'):
+                subscription['current_period_end'] = int(current_period_end.timestamp())
+            else:
+                subscription['current_period_end'] = int(current_period_end)
+            log.info(f"Preserved current_period_end in Stripe data for subscription {subscription_id}")
+        
         # Sync the updated subscription with the local database
         updated_subscription = Subscription.sync_from_stripe_data(subscription)
         
-        # If current_period_end is None after sync, restore the original value
-        if updated_subscription and updated_subscription.current_period_end is None and current_period_end is not None:
-            updated_subscription.current_period_end = current_period_end
-            updated_subscription.save()
-            log.info(f"Restored current_period_end for subscription {subscription_id}")
+        # Double-check: Restore period fields if they were still set to None after sync
+        needs_save = False
+        if updated_subscription:
+            if updated_subscription.current_period_start is None and current_period_start is not None:
+                updated_subscription.current_period_start = current_period_start
+                needs_save = True
+                log.info(f"Restored current_period_start after sync for subscription {subscription_id}")
+            
+            if updated_subscription.current_period_end is None and current_period_end is not None:
+                updated_subscription.current_period_end = current_period_end
+                needs_save = True
+                log.info(f"Restored current_period_end after sync for subscription {subscription_id}")
+            
+            if needs_save:
+                updated_subscription.save()
             
         return updated_subscription
     except InvalidRequestError as e:
@@ -241,8 +269,8 @@ def update_subscription(subscription_holder: CustomUser, new_price_id: str) -> S
             proration_behavior='none',  # No crear prorrateos
             billing_cycle_anchor='now',  # Comenzar un nuevo período de facturación ahora
             payment_behavior='error_if_incomplete',  # Cobrar inmediatamente y devolver error si falla
-            # Expandir los items para obtener información completa
-            expand=['items'],
+            # Expandir los items y el plan para obtener información completa
+            expand=['items', 'plan'],
         )
         
         # Ensure required period fields are set
@@ -271,7 +299,43 @@ def update_subscription(subscription_holder: CustomUser, new_price_id: str) -> S
         # Sync the updated subscription with the local database
         try:
             with transaction.atomic():
+                # Primero, sincronizar la suscripción actualizada desde Stripe
                 djstripe_subscription = Subscription.sync_from_stripe_data(updated_subscription)
+                
+                # Verificar que el plan se haya actualizado correctamente
+                # Si no, forzar una actualización manual del plan
+                if new_price_id:
+                    # Obtener el nuevo precio y asegurarse de que esté sincronizado
+                    new_price = Price.objects.get(id=new_price_id)
+                    
+                    # Agregar logs para depuración
+                    log.info(f"Checking plan update: Current plan={djstripe_subscription.plan.id}, Expected plan={new_price.id}")
+                    
+                    # Verificar si el plan actual es diferente del esperado
+                    if djstripe_subscription.plan.id != new_price.id:
+                        log.warning(f"Plan not updated correctly. Forcing update from {djstripe_subscription.plan.id} to {new_price.id}")
+                        
+                        # Actualizar manualmente el plan
+                        djstripe_subscription.plan = new_price
+                        djstripe_subscription.save()
+                        log.info(f"Manually updated subscription plan to {new_price.id}")
+                
+                # Forzar la actualización de los períodos de facturación
+                # Esto es necesario porque Stripe no siempre actualiza estos campos correctamente
+                now = timezone.now()
+                # Establecer current_period_start a la fecha actual
+                djstripe_subscription.current_period_start = now
+                # Establecer current_period_end a 30 días desde ahora (o según la duración del plan)
+                if djstripe_subscription.plan and djstripe_subscription.plan.interval == 'month':
+                    djstripe_subscription.current_period_end = now + timedelta(days=30)
+                elif djstripe_subscription.plan and djstripe_subscription.plan.interval == 'year':
+                    djstripe_subscription.current_period_end = now + timedelta(days=365)
+                else:
+                    # Por defecto, 30 días
+                    djstripe_subscription.current_period_end = now + timedelta(days=30)
+                
+                log.info(f"Manually updated billing periods: start={djstripe_subscription.current_period_start}, end={djstripe_subscription.current_period_end}")
+                djstripe_subscription.save()
                 
                 # Añadir evento de PostHog para seguimiento de actualización de suscripción
                 try:
@@ -306,7 +370,8 @@ def update_subscription(subscription_holder: CustomUser, new_price_id: str) -> S
                 # Update subscription fields manually
                 djstripe_subscription.status = updated_subscription['status']
                 
-                # Handle required period fields
+                # No necesitamos manejar los campos de período aquí, ya que los actualizamos manualmente arriba
+                # Pero mantenemos el código por si acaso hay otros campos que necesiten ser actualizados
                 for field in required_period_fields:
                     if field in updated_subscription and updated_subscription[field]:
                         # Convert timestamp to datetime with timezone
@@ -314,14 +379,29 @@ def update_subscription(subscription_holder: CustomUser, new_price_id: str) -> S
                         dt = datetime.fromtimestamp(timestamp)
                         # Make it timezone aware
                         setattr(djstripe_subscription, field, timezone.make_aware(dt))
+                        log.info(f"Updated {field} from Stripe data to {getattr(djstripe_subscription, field)}")
+                
+                # Actualizar manualmente el plan si está disponible (como respaldo)
+                if new_price_id:
+                    try:
+                        new_price = Price.objects.get(id=new_price_id)
+                        # Verificar nuevamente si el plan es correcto
+                        if djstripe_subscription.plan.id != new_price.id:
+                            djstripe_subscription.plan = new_price
+                            log.info(f"Manually set subscription plan to {new_price.id} in fallback handler")
+                    except Exception as price_error:
+                        log.error(f"Error setting plan in fallback handler: {str(price_error)}")
                 
                 djstripe_subscription.save()
         
-        # Update the subscription on the user
-        subscription_holder.subscription = djstripe_subscription
+        # Actualizar la suscripción en el usuario
+        # Volver a cargar la suscripción para asegurarse de tener los datos más recientes
+        log.info(f"Reloading subscription {djstripe_subscription.id} to ensure fresh data")
+        refreshed_subscription = Subscription.objects.get(id=djstripe_subscription.id)
+        subscription_holder.subscription = refreshed_subscription
         subscription_holder.save()
         
-        return djstripe_subscription
+        return refreshed_subscription
         
     except InvalidRequestError as e:
         log.error(f"Error updating Stripe subscription: {e.user_message}")

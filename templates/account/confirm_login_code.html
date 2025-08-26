@@ -1,0 +1,55 @@
+{% extends "web/base.html" %}
+{% load i18n %}
+{% load static %}
+{% load form_tags %}
+
+{% block page_title %}{% translate "Confirm Login Code" %} - AdHeist{% endblock %}
+
+{% block content %}
+<div class="flex flex-col items-center justify-center py-16 mt-8 text-center px-4">
+  <h1 class="pg-title text-2xl font-bold mb-4 text-primary">{% translate "Enter Sign-In Code" %}</h1>
+  
+  <div class="w-full max-w-md">
+    <div class="bg-white dark:bg-gray-800 shadow-md rounded-lg px-8 py-6">
+      <p class="text-lg text-muted-foreground mb-6">
+        {% translate "We've sent a code to your email. The code expires shortly, so please enter it soon." %}
+      </p>
+
+      <form class="space-y-6" method="post">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+        <div class="text-red-500">
+          {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+
+        <div class="space-y-4">
+          <div class="form-control w-full">
+            <label for="id_code" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">{% translate "Code" %}</label>
+            <div>
+              <input type="text" name="code" id="id_code" class="block w-full px-3 py-2 rounded-md border dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary focus:ring-2 focus:ring-primary focus:ring-opacity-50 sm:text-sm" required>
+            </div>
+          </div>
+          
+          {% if redirect_field_value %}
+          <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+          {% endif %}
+        </div>
+
+        <div>
+          <button type="submit" class="group relative flex w-full justify-center rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-focus focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+            {% translate "Sign In" %}
+          </button>
+        </div>
+      </form>
+
+      <div class="mt-6 text-center">
+        <a href="{% url 'account_login' %}" class="text-sm text-primary hover:text-primary-focus">
+          {% translate "Back to login" %}
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

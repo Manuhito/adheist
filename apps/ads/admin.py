@@ -20,6 +20,8 @@ from .models import (
     ExtraCredit,
     AppConfiguration,
     FAQ,
+    UserBrand,
+    UserBrandAssets,
 )
 
 
@@ -96,8 +98,9 @@ class AdRequestAdmin(admin.ModelAdmin):
 
 @admin.register(AdRequestAssets)
 class AdRequestAssetsAdmin(admin.ModelAdmin):
-    list_display = ["user", "created_at", "updated_at"]
-    search_fields = ["user__email"]
+    list_display = ["user", "brand", "created_at", "updated_at"]
+    search_fields = ["user__email", "brand__brand_name"]
+    list_filter = ["brand"]
 
 
 @admin.register(AdRequestVersion)
@@ -332,6 +335,19 @@ class AppConfigurationAdmin(admin.ModelAdmin):
         return False
 
 
+@admin.register(UserBrand)
+class UserBrandAdmin(admin.ModelAdmin):
+    list_display = ["brand_name", "user", "created_at", "updated_at"]
+    search_fields = ["brand_name", "user__email"]
+    list_filter = ["user"]
+    
+    fieldsets = [
+        (None, {
+            "fields": ["user", "brand_name"]
+        })
+    ]
+
+
 @admin.register(FAQ)
 class FAQAdmin(admin.ModelAdmin):
     list_display = ["question", "order", "is_active", "created_at", "updated_at"]
@@ -345,3 +361,22 @@ class FAQAdmin(admin.ModelAdmin):
             "fields": ["question", "answer", "order", "is_active"]
         })
     ]
+
+
+@admin.register(UserBrandAssets)
+class UserBrandAssetsAdmin(admin.ModelAdmin):
+    list_display = ["user", "brand", "category", "created_at", "updated_at"]
+    list_filter = ["category", "brand"]
+    search_fields = ["user__email", "brand__brand_name", "category"]
+    
+    fieldsets = [
+        (None, {
+            "fields": ["user", "brand", "image", "category"]
+        })
+    ]
+    
+    def get_readonly_fields(self, request, obj=None):
+        # Make user and brand read-only if the object already exists
+        if obj:
+            return ["user", "brand"]
+        return []

@@ -25,7 +25,7 @@ from django.utils import timezone
 from apps.aiinterface.tasks import send_slack_notification
 from django.contrib.auth import get_user_model
 
-from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion, AdRequestUsage, ExtraCredit
+from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion, AdRequestUsage, ExtraCredit, UserBrand, UserBrandAssets
 from .forms import AdLibraryForm
 from .services import can_create_ad_request, use_credit, can_create_ad_request_version, get_ad_request_version_limit, use_general_credit, use_version_credit, can_create_ad_version
 import boto3
@@ -178,6 +178,13 @@ def provision_credit_package(request, user_id, product):
     print(f"Credits assigned to user {user.id}: {general_credits} general, {version_credits} version")
     
     import posthog
+    # Obtener el plan de suscripción actual del usuario
+    current_plan = "No Plan"
+    if hasattr(user, 'subscription') and user.subscription:
+        if user.has_active_subscription():
+            if user.subscription.plan and user.subscription.plan.product:
+                current_plan = user.subscription.plan.product.name
+    
     # Registrar la transacción en PostHog
     posthog.capture(
         user.id,
@@ -186,7 +193,8 @@ def provision_credit_package(request, user_id, product):
             'package': package_name,
             'general_credits': general_credits,
             'version_credits': version_credits,
-            'slug': slug
+            'slug': slug,
+            'current_subscription_plan': current_plan
         }
     )
     
@@ -641,10 +649,12 @@ def get_adlibrary_filters(request):
         industries: Filter by industry names (comma-separated list)
         tags: Filter by tag names (comma-separated list)
         is_active: Filter by active status (true/false)
+        page: Page number for pagination (default: 1)
+        page_size: Number of items per page (default: 20)
     
-    Returns: JSON with list of AdLibrary objects including company_name, industries, tags, and ad_image
+    Returns: JSON with list of AdLibrary objects including company_name, industries, tags, and ad_image,
+    plus pagination metadata
     """
-    from django.db.models import Q
     
     # Get filter parameters from request
     company_name = request.GET.get('company_name', '')
@@ -654,6 +664,19 @@ def get_adlibrary_filters(request):
     # Get is_active filter parameter (default to True if not provided)
     is_active_param = request.GET.get('is_active', 'true').lower()
     is_active = is_active_param in ['true', '1', 'yes']
+    
+    # Get pagination parameters
+    page = request.GET.get('page', '1')
+    page_size = request.GET.get('page_size', '20')
+    
+    try:
+        page = int(page)
+        page_size = int(page_size)
+        # Limitar el tamaño máximo de página para evitar consultas muy grandes
+        page_size = min(page_size, 100)
+    except (ValueError, TypeError):
+        page = 1
+        page_size = 20
     
     # If single values are provided instead of lists, convert them
     if not industries and request.GET.get('industry'):
@@ -711,9 +734,21 @@ def get_adlibrary_filters(request):
         else:
             adlibraries = AdLibrary.objects.filter(is_fav=True, is_active=True)
     
+    # Aplicar paginación a los resultados
+    paginator = Paginator(adlibraries, page_size)
+    
+    try:
+        paginated_adlibraries = paginator.page(page)
+    except PageNotAnInteger:
+        # Si la página no es un entero, mostrar la primera página
+        paginated_adlibraries = paginator.page(1)
+    except EmptyPage:
+        # Si la página está fuera de rango, mostrar la última página
+        paginated_adlibraries = paginator.page(paginator.num_pages)
+    
     # Convert to list of dictionaries with all required fields
     adlibrary_list = []
-    for adlibrary in adlibraries:
+    for adlibrary in paginated_adlibraries:
         # Get industries and tags as lists of names
         industry_names = [industry.name for industry in adlibrary.facebook_page.industries.all()]
         tag_names = [tag.name for tag in adlibrary.tags.all()]
@@ -736,11 +771,24 @@ def get_adlibrary_filters(request):
         properties={
             'company_name': company_name,
             'industries': industries,
-            'tags': tags
+            'tags': tags,
+            'page': page,
+            'page_size': page_size
         }
     )
     
-    return JsonResponse({'adlibraries': adlibrary_list}, safe=True)
+    # Incluir información de paginación en la respuesta
+    return JsonResponse({
+        'adlibraries': adlibrary_list,
+        'pagination': {
+            'total_items': paginator.count,
+            'total_pages': paginator.num_pages,
+            'current_page': paginated_adlibraries.number,
+            'has_next': paginated_adlibraries.has_next(),
+            'has_previous': paginated_adlibraries.has_previous(),
+            'page_size': page_size
+        }
+    }, safe=True)
 
 
 
@@ -777,6 +825,111 @@ def get_adlibrary_company_list(request):
 
 
 @login_required
+def user_images(request):
+    """
+    Fetch all images associated with the current user's selected brand.
+    
+    Returns: JSON with a list of image data
+    """
+    try:
+        # Get the brand_id from the request parameters
+        brand_id = request.GET.get('brand_id')
+        
+        # Base query for user's brand assets
+        query = UserBrandAssets.objects.filter(user=request.user)
+        
+        # If brand_id is provided, filter by that brand
+        if brand_id:
+            try:
+                brand_id = int(brand_id)
+                query = query.filter(brand_id=brand_id)
+            except ValueError:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Invalid brand ID'
+                }, status=400)
+        
+        # Get all user brand assets
+        assets = query.order_by('-created_at')
+        
+        # Format the assets as a list of dictionaries
+        images_data = [{
+            'id': asset.id,
+            'url': asset.image.url,
+            'category': asset.category,
+            'created_at': asset.created_at.isoformat(),
+            'brand_id': asset.brand_id,
+            'brand_name': asset.brand.brand_name
+        } for asset in assets]
+        
+        return JsonResponse({
+            'success': True,
+            'images': images_data
+        })
+    except Exception as e:
+        logging.error(f"Error fetching user images: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+        
+@login_required
+@require_POST
+def upload_brand_asset(request):
+    """
+    Upload an image to UserBrandAssets model.
+    Expects 'image' file, 'category' (logo, product, app, marketing), and optional 'brand_id' in POST data.
+    """
+    try:
+        # Get the uploaded image
+        image = request.FILES.get('image')
+        if not image:
+            return JsonResponse({'success': False, 'error': 'No image provided'}, status=400)
+        
+        # Get the category
+        category = request.POST.get('category', 'product')
+        if category not in ['logo', 'product', 'app', 'marketing']:
+            category = 'product'  # Default to product if invalid category
+        
+        # Get the brand
+        brand_id = request.POST.get('brand_id')
+        if brand_id:
+            try:
+                brand = UserBrand.objects.get(id=brand_id, user=request.user)
+            except UserBrand.DoesNotExist:
+                return JsonResponse({'success': False, 'error': 'Brand not found'}, status=404)
+        else:
+            # If no brand specified, get the first brand or create a default one
+            brand = UserBrand.objects.filter(user=request.user).first()
+            if not brand:
+                brand = UserBrand.objects.create(
+                    user=request.user,
+                    brand_name=f"{request.user.username}'s Brand"
+                )
+        
+        # Create the UserBrandAssets object
+        asset = UserBrandAssets.objects.create(
+            user=request.user,
+            brand=brand,
+            image=image,
+            category=category
+        )
+        
+        # Return success response with the new asset data
+        return JsonResponse({
+            'success': True,
+            'image': {
+                'id': asset.id,
+                'url': asset.image.url,
+                'category': asset.category,
+                'brand_id': asset.brand.id,
+                'brand_name': asset.brand.brand_name
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@login_required
 @require_POST
 def adrequest_create(request):
     """
@@ -789,36 +942,13 @@ def adrequest_create(request):
     
     try:
         
-        # Initialize create parameters
+        # Initialize create parameters with empty assets and overrides
         create_params = {
             'user': request.user,
-            'status': AdRequest.STATUS_NEW
+            'status': AdRequest.STATUS_NEW,
+            'base_assets': None,
+            'asset_overrides': {}
         }
-        
-        # Get user assets if they exist
-        user_assets = AdRequestAssets.objects.filter(user=request.user).first()
-        
-        # If user doesn't have assets, create a new AdRequestAssets instance
-        if not user_assets:
-            user_assets = AdRequestAssets.objects.create(user=request.user)
-            
-        # Set base_assets reference
-        create_params['base_assets'] = user_assets
-        
-        # Add text fields to asset_overrides
-        create_params['asset_overrides'] = user_assets.to_dict()
-        
-        # Add image fields to their respective override fields
-        image_fields = [
-            'logo', 'product_image_1', 'product_image_2', 
-            'app_image_1', 'app_image_2',
-            'marketing_image_1', 'marketing_image_2', 'marketing_image_3'
-        ]
-        
-        for field in image_fields:
-            base_image = getattr(user_assets, field)
-            if base_image:
-                create_params[f"{field}_override"] = base_image
         
         # Create the AdRequest with all fields at once
         ad_request = AdRequest.objects.create(**create_params)
@@ -896,6 +1026,15 @@ def adrequest_get(request, pk):
 
     ad_library = safe_get(ad_request, 'ad_library')
     user = safe_get(ad_request, 'user')
+    base_assets = safe_get(ad_request, 'base_assets')
+    
+    # Get brand information if available
+    brand = None
+    if base_assets and hasattr(base_assets, 'brand') and base_assets.brand:
+        brand = {
+            'id': base_assets.brand.id,
+            'name': base_assets.brand.brand_name
+        }
 
     created_at = safe_get(ad_request, 'created_at')
     updated_at = safe_get(ad_request, 'updated_at')
@@ -919,6 +1058,7 @@ def adrequest_get(request, pk):
         'marketing_image_1_override': safe_image_url(safe_get(ad_request, 'marketing_image_1_override')),
         'marketing_image_2_override': safe_image_url(safe_get(ad_request, 'marketing_image_2_override')),
         'marketing_image_3_override': safe_image_url(safe_get(ad_request, 'marketing_image_3_override')),
+        'brand': brand,
     })
 
 
@@ -982,9 +1122,77 @@ def adrequest_update(request, pk):
                 # If the field is explicitly empty, set it to empty
                 # Otherwise, update with the new value
                 current_overrides[field] = request.POST.get(field)
-        
-        # Save the updated overrides
+                
+        # Asignar los overrides actualizados de vuelta al modelo
         ad_request.asset_overrides = current_overrides
+                
+        # Handle brand_id if provided
+        if 'brand_id' in request.POST:
+            brand_id = request.POST.get('brand_id')
+            
+            try:
+                # Ensure brand_id is an integer
+                brand_id = int(brand_id)
+                
+                # Get the UserBrand instance
+                brand = get_object_or_404(UserBrand, id=brand_id, user=request.user)
+                print(f"Brand ID: {brand_id}, Brand: {brand}")
+                
+                # Check if assets already exist for this brand
+                brand_assets = AdRequestAssets.objects.filter(brand=brand).first()
+                print(f"Brand assets: {brand_assets}")
+
+                if brand_assets:
+                    # Associate the existing brand assets with the AdRequest
+                    ad_request.base_assets = brand_assets
+                    
+                    # Overwrite asset_overrides with brand assets data (including empty values)
+                    ad_request.asset_overrides = brand_assets.to_dict()
+                    
+                    # Overwrite ALL image override fields with images from brand assets
+                    # This includes setting to None if the brand asset doesn't have the image
+                    image_fields = [
+                        'logo', 'product_image_1', 'product_image_2', 
+                        'app_image_1', 'app_image_2',
+                        'marketing_image_1', 'marketing_image_2', 'marketing_image_3'
+                    ]
+                    
+                    for field in image_fields:
+                        base_image = getattr(brand_assets, field)
+                        # Always set the override field, even if base_image is None/empty
+                        # This ensures the adrequest reflects the current state of the brand assets
+                        setattr(ad_request, f"{field}_override", base_image)
+                else:
+                    # If no brand assets exist for this brand, create a new one
+                    print(f"Creating new AdRequestAssets for brand: {brand}")
+                    new_assets = AdRequestAssets.objects.create(
+                        user=request.user,
+                        brand=brand
+                    )
+                    # Associate the new assets with the AdRequest
+                    ad_request.base_assets = new_assets
+                    
+                    # Clear asset_overrides to prevent copying old data to new brand
+                    ad_request.asset_overrides = {}
+                    
+                    # Clear all image override fields to prevent copying old images
+                    image_fields = [
+                        'logo', 'product_image_1', 'product_image_2', 
+                        'app_image_1', 'app_image_2',
+                        'marketing_image_1', 'marketing_image_2', 'marketing_image_3'
+                    ]
+                    
+                    for field in image_fields:
+                        override_field = f"{field}_override"
+                        if hasattr(ad_request, override_field):
+                            setattr(ad_request, override_field, None)
+            except (ValueError, TypeError) as e:
+                return JsonResponse({'error': f'Invalid brand ID format: {str(e)}'}, status=400)
+            except Exception as e:
+                return JsonResponse({'error': f'Error processing brand: {str(e)}'}, status=400)
+                    
+            # Save the updated base_assets
+            ad_request.base_assets.save()
         
         # Update image override fields
         image_fields = [
@@ -995,10 +1203,32 @@ def adrequest_update(request, pk):
         
         for field in image_fields:
             override_field = f"{field}_override"
-            # Clear the field if it's mentioned in the request but no file is provided
-            if field in request.POST and field not in request.FILES:
+            asset_id_field = f"{field}_asset_id"
+            
+            # Caso 1: Reutilizar imagen existente de UserBrandAssets por ID
+            if asset_id_field in request.POST:
+                try:
+                    # Obtener el ID de la imagen
+                    asset_id = request.POST.get(asset_id_field)
+                    
+                    # Importar el modelo
+                    from .models import UserBrandAssets
+                    
+                    # Buscar la imagen directamente por ID
+                    asset = UserBrandAssets.objects.filter(id=asset_id).first()
+                    
+                    if asset:
+                        # Si encontramos la imagen, la asignamos directamente sin duplicarla
+                        setattr(ad_request, override_field, asset.image)
+                        print(f"Reutilizando imagen existente para {field}: {asset.image} (ID: {asset_id})")
+                    else:
+                        print(f"No se encontró la imagen con ID: {asset_id}")
+                except Exception as e:
+                    print(f"Error al procesar imagen existente: {str(e)}")
+            # Caso 2: Clear the field if it's mentioned in the request but no file is provided
+            elif field in request.POST and field not in request.FILES:
                 setattr(ad_request, override_field, None)
-            # Update the field if a file is provided
+            # Caso 3: Update the field if a file is provided
             elif field in request.FILES:
                 setattr(ad_request, override_field, request.FILES[field])
         
@@ -1541,14 +1771,44 @@ def get_user_credits(user):
     general_credits = 0
     version_credits = 0
     plan_type = None
+    is_free_tier = False
+    
     try:
-        usage = AdRequestUsage.objects.filter(user=user).order_by('-billing_period_start').first()
-        if usage:
+        # Si el usuario tiene suscripción activa, usar get_current_usage que maneja toda la lógica
+        if user.has_active_subscription():
+            usage = AdRequestUsage.get_current_usage(user)
             general_credits += getattr(usage, 'general_credits', 0)
             version_credits += getattr(usage, 'version_credits', 0)
             plan_type = getattr(usage, 'plan_type', None)
+            is_free_tier = getattr(usage, 'is_free_tier', False)
+        else:
+            # Para usuarios sin suscripción, buscar el registro de free tier
+            usage = AdRequestUsage.objects.filter(user=user, is_free_tier=True).first()
+            
+            # Si no hay registro free tier, crear uno
+            if not usage:
+                from apps.ads.models import AppConfiguration
+                limits = AppConfiguration.get_limits()
+                general_credits_default = limits.get('default', {}).get('general_credits', 5)
+                version_credits_default = limits.get('default', {}).get('version_credits', 2)
+                
+                usage = AdRequestUsage.objects.create(
+                    user=user,
+                    billing_period_start=None,
+                    billing_period_end=None,
+                    is_free_tier=True,
+                    general_credits=general_credits_default,
+                    version_credits=version_credits_default
+                )
+            
+            if usage:
+                general_credits += getattr(usage, 'general_credits', 0)
+                version_credits += getattr(usage, 'version_credits', 0)
+                plan_type = getattr(usage, 'plan_type', None)
+                is_free_tier = getattr(usage, 'is_free_tier', False)
     except Exception:
         pass
+    
     extra_general_credits = 0
     extra_version_credits = 0
     try:
@@ -1558,19 +1818,154 @@ def get_user_credits(user):
             extra_version_credits = getattr(extra, 'version_credits', 0)
     except Exception:
         pass
+    
     # Obtener los límites del plan
     from apps.ads.models import AppConfiguration
     limits = AppConfiguration.get_limits()
-    limits_key = str(plan_type).lower() if plan_type and str(plan_type).lower() in limits else 'default'
+    
+    # Si es free tier o no tiene plan_type, usar límites default
+    if is_free_tier or not plan_type:
+        limits_key = 'default'
+    else:
+        limits_key = str(plan_type).lower() if str(plan_type).lower() in limits else 'default'
+    
     plan_limits = limits.get(limits_key, limits['default'])
+    
     return {
         'general_credits': general_credits,
         'version_credits': version_credits,
         'max_general_credits': plan_limits['general_credits'],
         'max_version_credits': plan_limits['version_credits'],
         'extra_general_credits': extra_general_credits,
-        'extra_version_credits': extra_version_credits
+        'extra_version_credits': extra_version_credits,
+        'is_free_tier': is_free_tier
     }
+
+
+def reward_user_for_rating(user):
+    """
+    Reward a user with credits for submitting a rating.
+    Resets the user's free tier credits to the default values from AppConfiguration.
+    
+    Args:
+        user: The user to reward
+        
+    Returns:
+        dict: Dictionary with the updated credits information
+    """
+    try:
+        # Get default credits from AppConfiguration
+        from .models import AppConfiguration
+        config = AppConfiguration.get_config()
+        default_general_credits = config.default_general_credits
+        default_version_credits = config.default_version_credits
+        
+        # Get or create user's free tier usage record
+        from .models import AdRequestUsage
+        usage, created = AdRequestUsage.objects.get_or_create(
+            user=user,
+            is_free_tier=True,
+            defaults={
+                'general_credits': default_general_credits,
+                'version_credits': default_version_credits
+            }
+        )
+        
+        # If record already existed, update the credits
+        if not created:
+            usage.general_credits = default_general_credits
+            usage.version_credits = default_version_credits
+            usage.save(update_fields=['general_credits', 'version_credits'])
+        
+        return {
+            'general_credits': usage.general_credits,
+            'version_credits': usage.version_credits
+        }
+    except Exception as e:
+        print(f"Error rewarding user for rating: {str(e)}")
+        return None
+
+
+def adrequest_version_rate(request):
+    """
+    Submit a rating and review for an AdRequestVersion.
+    
+    Required input:
+    - version_id: The primary key of the AdRequestVersion to rate
+    - rating: Integer rating from 1 to 5
+    - review: Text review for the generated image
+    
+    Returns: JSON with success or error message
+    """
+    version_id = request.POST.get('version_id')
+    rating = request.POST.get('rating')
+    review = request.POST.get('review')
+    
+    # Validate inputs
+    if not version_id:
+        return JsonResponse({'error': 'Version ID is required'}, status=400)
+    
+    if not rating:
+        return JsonResponse({'error': 'Rating is required'}, status=400)
+    
+    if not review:
+        return JsonResponse({'error': 'Review is required'}, status=400)
+    
+    try:
+        # Convert rating to integer
+        rating = int(rating)
+        if rating < 1 or rating > 5:
+            return JsonResponse({'error': 'Rating must be between 1 and 5'}, status=400)
+        
+        # Get the AdRequestVersion instance
+        version = get_object_or_404(AdRequestVersion, id=version_id)
+        
+        # Check if the user has permission to rate this version
+        if version.ad_request.user != request.user:
+            return JsonResponse({'error': 'You do not have permission to rate this version'}, status=403)
+        
+        # Update the version with rating and review
+        version.rating = rating
+        version.review = review
+        version.save(update_fields=['rating', 'review'])
+        
+        # Track event in PostHog when a version is rated
+        posthog.capture(
+            request.user.id,
+            'Ad Review',
+            properties={
+                'version_id': version.id,
+                'ad_request_id': version.ad_request.id,
+                'rating': rating,
+                'review': review,  # Incluir el contenido completo de la revisión
+                'review_length': len(review),
+                'user_id': request.user.id,
+                'username': request.user.username,
+                'timestamp': timezone.now().isoformat()
+            }
+        )
+        
+        # Reward the user with credits for submitting a rating
+        credits_info = reward_user_for_rating(request.user)
+        
+        # Return success response with credits info
+        response_data = {
+            'success': True,
+            'message': 'Rating submitted successfully. Your credits have been replenished!',
+            'version_id': version.id,
+            'rating': rating
+        }
+        
+        # Add credits info to response if available
+        if credits_info:
+            response_data['credits'] = credits_info
+            
+        return JsonResponse(response_data)
+        
+    except ValueError:
+        return JsonResponse({'error': 'Invalid rating format'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 
 def billing_page(request):
@@ -1707,6 +2102,13 @@ def billing_page(request):
             # Check if this is the current plan
             is_current_plan = current_plan_id == product.product.id
             
+            # Get subscription details if this is the current plan
+            cancel_at_period_end = False
+            current_period_end = None
+            if is_current_plan and highest_tier_sub:
+                cancel_at_period_end = highest_tier_sub.cancel_at_period_end or False
+                current_period_end = highest_tier_sub.current_period_end.isoformat() if highest_tier_sub.current_period_end else None
+            
             # Check if this plan should be disabled (user has a higher tier plan)
             is_disabled = False
             if current_plan_name:
@@ -1744,7 +2146,9 @@ def billing_page(request):
                 "highlighted": product_mapping[slug]["highlighted"],
                 "popular": product_mapping[slug]["popular"],
                 "is_current_plan": is_current_plan,
-                "is_disabled": is_disabled
+                "is_disabled": is_disabled,
+                "cancel_at_period_end": cancel_at_period_end,
+                "current_period_end": current_period_end
             }
             
             pricing_data["tiers"].append(tier)
@@ -2105,6 +2509,86 @@ def request_brand(request):
     except Exception as e:
         logging.error(f"Error processing brand request: {str(e)}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["GET"])
+def get_user_brands(request):
+    """
+    Get all brands associated with the current user.
+    
+    Returns: JSON with list of user brands
+    """
+    try:
+        # Get all brands for the current user
+        brands = UserBrand.objects.filter(user=request.user).order_by('brand_name')
+        
+        # Format the brands as a list of dictionaries
+        brands_data = [{
+            'id': brand.id,
+            'name': brand.brand_name
+        } for brand in brands]
+        
+        return JsonResponse({
+            'success': True,
+            'brands': brands_data
+        })
+    except Exception as e:
+        logging.error(f"Error retrieving user brands: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
+
+
+@login_required
+@require_http_methods(["POST"])
+def create_user_brand(request):
+    """
+    Create a new brand for the current user.
+    
+    Expected POST data:
+    - brand_name: Name of the brand to create
+    
+    Returns: JSON with the created brand data
+    """
+    try:
+        # Get the brand name from the request
+        data = json.loads(request.body)
+        brand_name = data.get('brand_name')
+        
+        if not brand_name:
+            return JsonResponse({
+                'success': False,
+                'error': 'Brand name is required'
+            }, status=400)
+        
+        # Check if brand with this name already exists for this user
+        if UserBrand.objects.filter(user=request.user, brand_name=brand_name).exists():
+            return JsonResponse({
+                'success': False,
+                'error': 'A brand with this name already exists'
+            }, status=400)
+        
+        # Create the new brand
+        brand = UserBrand.objects.create(
+            user=request.user,
+            brand_name=brand_name
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'brand': {
+                'id': brand.id,
+                'name': brand.brand_name
+            }
+        })
+    except Exception as e:
+        logging.error(f"Error creating user brand: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
 
 
 @require_POST

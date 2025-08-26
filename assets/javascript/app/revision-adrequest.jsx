@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
+import ReactDOM from "react-dom/client";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { useTranslation } from "../lib/useTranslation";
 import { Skeleton } from "../shadcn/components/ui/skeleton";
-import { ArrowLeft, Sparkles, AlertCircle } from "lucide-react";
+import { ArrowLeft, Sparkles, AlertCircle, Star, ThumbsUp } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../shadcn/components/ui/tooltip";
 import AnimatedDownloadButton from "../components/ui/animated-download-button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "../shadcn/components/ui/dialog";
+import { AlertNotification } from "../components/ui/alert-notification";
 
 // Debug log
 console.log("Revision AdRequest script loaded");
@@ -23,29 +26,35 @@ const RevisionAdRequest = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [availableVersionCredits, setAvailableVersionCredits] = useState(0); // Available credits for creating new versions
 
+  // Rating state
+  const [ratingOpen, setRatingOpen] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [ratingComment, setRatingComment] = useState("");
+  const [hoveredRating, setHoveredRating] = useState(0);
+
   useEffect(() => {
     const loadAdRequestData = () => {
       try {
         // Get the ad request data from the JSON script tag
         const dataScript = document.getElementById("adrequest-data");
-        
+
         if (!dataScript) {
           throw new Error("Ad request data script not found");
         }
-        
+
         try {
           const jsonData = JSON.parse(dataScript.textContent);
           console.log("Ad request data from script:", jsonData);
-          
+
           // Set the ad request data
           setAdRequestData(jsonData);
-          
+
           // Process versions data
           if (jsonData.versions && jsonData.versions.length > 0) {
             console.log("Versions found:", jsonData.versions);
             setVersions(jsonData.versions);
             setCurrentVersionIndex(0); // Start with the first version (newest)
-            
+
             // Get available version credits from JSON data
             if (jsonData.available_version_credits !== undefined) {
               console.log("Available version credits:", jsonData.available_version_credits);
@@ -107,43 +116,43 @@ const RevisionAdRequest = () => {
       console.error(t('revision.prompt_required', 'Please enter a prompt before generating'));
       return;
     }
-    
+
     if (!adRequestData?.id) {
       console.error(t('revision.no_request_id', 'No ad request ID available'));
       return;
     }
-    
+
     // Check if we have a current version with an image
     const currentVersion = versions[currentVersionIndex];
     if (!currentVersion || !currentVersion.generated_image) {
       console.error(t('revision.no_image_available', 'No image available for revision'));
       return;
     }
-    
+
     setIsGenerating(true);
-    
+
     try {
       // First, update status to SUBMITTED in the backend
       const statusFormData = new FormData();
       statusFormData.append('status', 'REOPENED');
-      
+
       const statusResponse = await fetch(`/ads/adrequest/${adRequestData.id}/update/`, {
         method: 'POST',
         headers: { 'X-CSRFToken': getCsrfToken() },
         body: statusFormData
       });
-      
+
       if (!statusResponse.ok) {
         const errorData = await statusResponse.json();
         throw new Error(errorData.error || t('revision.update_status_failed', 'Failed to update status to SUBMITTED'));
       }
-      
+
       // Then create a new revision using the current image
       const revisionFormData = new FormData();
       revisionFormData.append('ad_request', adRequestData.id);
       revisionFormData.append('user_prompt', userPrompt);
       revisionFormData.append('url_image_revision', currentVersion.generated_image);
-      
+
       const response = await fetch('/ads/adrequest/revision/create/', {
         method: 'POST',
         body: revisionFormData,
@@ -151,12 +160,12 @@ const RevisionAdRequest = () => {
           'X-CSRFToken': getCsrfToken(),
         },
       });
-      
+
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.error || t('revision.generate_version_error', 'Error generating version'));
       }
-      
+
       // Save flag to show alert on home page and redirect
       sessionStorage.setItem('ads_success_alert', '1');
       window.location.href = '/ads/';
@@ -349,7 +358,7 @@ const RevisionAdRequest = () => {
                             })()}
                           </div>
                         </div>
-                        
+
                         {/* Product and Service Images */}
                         {(() => {
                           const productServiceImages = [
@@ -426,11 +435,187 @@ const RevisionAdRequest = () => {
                             />
                           </div>
 
-                          {/* Download button */}
-                          <AnimatedDownloadButton
-                            downloadUrl={currentVersion.generated_image}
-                            fileName={`ad-image-${currentVersion.version_index}.jpg`}
-                          />
+                          {/* Download and Rating buttons */}
+                          <div className="flex items-center justify-center gap-4 mb-2">
+                            <AnimatedDownloadButton
+                              downloadUrl={currentVersion.generated_image}
+                              fileName={`ad-image-${currentVersion.version_index}.jpg`}
+                            />
+
+                            <Dialog open={ratingOpen} onOpenChange={setRatingOpen}>
+                              <DialogTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  className="flex items-center gap-2 hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-900 dark:hover:text-blue-300 transition-colors"
+                                >
+                                  <ThumbsUp className="h-4 w-4" />
+                                  {t("revision.rate_image", "Rate this image")}
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>{t("revision.rate_title", "Rate this generation")}</DialogTitle>
+                                </DialogHeader>
+                                <div className="py-4">
+                                  <div className="flex justify-center mb-6">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                      <button
+                                        key={star}
+                                        type="button"
+                                        className="p-1"
+                                        onMouseEnter={() => setHoveredRating(star)}
+                                        onMouseLeave={() => setHoveredRating(0)}
+                                        onClick={() => setRating(star)}
+                                      >
+                                        <Star
+                                          className={`h-8 w-8 ${(hoveredRating || rating) >= star ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
+                                        />
+                                      </button>
+                                    ))}
+                                  </div>
+                                  <div className="mt-4">
+                                    <label htmlFor="rating-comment" className="block text-sm font-medium mb-2">
+                                      {t("revision.comment_label", "Review")}
+                                    </label>
+                                    <textarea
+                                      id="rating-comment"
+                                      value={ratingComment}
+                                      onChange={(e) => setRatingComment(e.target.value)}
+                                      rows={4}
+                                      className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                                      placeholder={t("revision.comment_placeholder", "Share your thoughts about this generation...")}
+                                      required
+                                    />
+                                    <div className="text-xs text-right mt-1">
+                                      <span className={`${ratingComment.trim().length < 30 ? 'text-red-500' : 'text-gray-500'}`}>
+                                        {ratingComment.trim().length}
+                                      </span>
+                                      <span className="text-gray-500"> / 30 {t("revision.characters", "characters")}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <DialogFooter>
+                                  <Button variant="outline" onClick={() => setRatingOpen(false)}>
+                                    {t("revision.cancel", "Cancel")}
+                                  </Button>
+                                  <Button
+                                    onClick={() => {
+                                      // Get CSRF token from cookie
+                                      function getCookie(name) {
+                                        let cookieValue = null;
+                                        if (document.cookie && document.cookie !== '') {
+                                          const cookies = document.cookie.split(';');
+                                          for (let i = 0; i < cookies.length; i++) {
+                                            const cookie = cookies[i].trim();
+                                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                              break;
+                                            }
+                                          }
+                                        }
+                                        return cookieValue;
+                                      }
+
+                                      // Create form data for submission
+                                      const formData = new FormData();
+                                      formData.append('version_id', currentVersion.id);
+                                      formData.append('rating', rating);
+                                      formData.append('review', ratingComment);
+
+                                      // Get CSRF token
+                                      const csrftoken = getCookie('csrftoken');
+
+                                      // Submit the rating to the backend
+                                      fetch('/ads/api/version/rate/', {
+                                        method: 'POST',
+                                        body: formData,
+                                        credentials: 'same-origin',
+                                        headers: {
+                                          'X-CSRFToken': csrftoken
+                                        }
+                                      })
+                                        .then(response => response.json())
+                                        .then(data => {
+                                          if (data.success) {
+                                            // Crear contenedor para la notificación
+                                            const notificationContainer = document.createElement('div');
+                                            notificationContainer.id = 'rating-notification-container';
+                                            document.body.appendChild(notificationContainer);
+
+                                            // Renderizar la notificación
+                                            const notificationRoot = ReactDOM.createRoot(notificationContainer);
+                                            notificationRoot.render(
+                                              <AlertNotification
+                                                message={t("revision.rating_success_message", "Thank you for your feedback!")}
+                                                variant="success"
+                                                duration={5000}
+                                                onClose={() => {
+                                                  // Eliminar el contenedor cuando se cierre
+                                                  if (notificationContainer.parentNode) {
+                                                    notificationContainer.parentNode.removeChild(notificationContainer);
+                                                  }
+                                                }}
+                                              />
+                                            );
+                                          } else {
+                                            // Crear contenedor para la notificación de error
+                                            const errorContainer = document.createElement('div');
+                                            errorContainer.id = 'rating-error-container';
+                                            document.body.appendChild(errorContainer);
+
+                                            // Renderizar la notificación de error
+                                            const errorRoot = ReactDOM.createRoot(errorContainer);
+                                            errorRoot.render(
+                                              <AlertNotification
+                                                message={data.error || t("revision.rating_error_message", "Failed to submit rating. Please try again.")}
+                                                variant="error"
+                                                duration={5000}
+                                                onClose={() => {
+                                                  // Eliminar el contenedor cuando se cierre
+                                                  if (errorContainer.parentNode) {
+                                                    errorContainer.parentNode.removeChild(errorContainer);
+                                                  }
+                                                }}
+                                              />
+                                            );
+                                          }
+                                        })
+                                        .catch(error => {
+                                          console.error('Error submitting rating:', error);
+
+                                          // Crear contenedor para la notificación de error
+                                          const errorContainer = document.createElement('div');
+                                          errorContainer.id = 'rating-error-container';
+                                          document.body.appendChild(errorContainer);
+
+                                          // Renderizar la notificación de error
+                                          const errorRoot = ReactDOM.createRoot(errorContainer);
+                                          errorRoot.render(
+                                            <AlertNotification
+                                              message={t("revision.rating_error_message", "Failed to submit rating. Please try again.")}
+                                              variant="error"
+                                              duration={5000}
+                                              onClose={() => {
+                                                // Eliminar el contenedor cuando se cierre
+                                                if (errorContainer.parentNode) {
+                                                  errorContainer.parentNode.removeChild(errorContainer);
+                                                }
+                                              }}
+                                            />
+                                          );
+                                        })
+                                        .finally(() => {
+                                          setRatingOpen(false);
+                                        });
+                                    }}
+                                    disabled={rating === 0 || ratingComment.trim().length < 30}
+                                  >
+                                    {t("revision.submit_rating", "Submit")}
+                                  </Button>
+                                </DialogFooter>
+                              </DialogContent>
+                            </Dialog>
+                          </div>
 
                           <div className="w-full flex justify-between text-sm text-gray-500 mt-2 px-2">
                             <div>

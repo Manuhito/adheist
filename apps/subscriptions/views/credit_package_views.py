@@ -2,6 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 import logging
+import uuid
 
 from apps.utils.billing import get_stripe_module
 from apps.ads.views import provision_credit_package
@@ -70,6 +71,48 @@ def purchase_credit_package_api(request):
         
         # Check if payment was successful
         if payment_intent.status == 'succeeded':
+            # Create an invoice manually for this purchase
+            try:
+                # Generate a unique invoice number
+                invoice_number = f"CREDIT-{uuid.uuid4().hex[:8]}"
+                
+                # Create a new invoice for the customer
+                invoice = stripe.Invoice.create(
+                    customer=subscription_holder.customer.id,
+                    auto_advance=True,  # Finaliza automáticamente la factura
+                    collection_method='charge_automatically',
+                    description=f"Purchase of {product.name}",
+                    metadata={
+                        'payment_intent_id': payment_intent.id,
+                        'user_id': subscription_holder.id,
+                        'product_id': price.product,
+                        'product_name': product.name
+                    },
+                    custom_fields=[{
+                        'name': 'Purchase Type',
+                        'value': 'Credit Package'
+                    }],
+                    number=invoice_number
+                )
+                
+                # Add the item to the invoice
+                stripe.InvoiceItem.create(
+                    customer=subscription_holder.customer.id,
+                    amount=price.unit_amount,
+                    currency=price.currency,
+                    description=f"{product.name}",
+                    invoice=invoice.id
+                )
+                
+                # Finalize and pay the invoice
+                stripe.Invoice.finalize_invoice(invoice.id)
+                stripe.Invoice.pay(invoice.id)
+                
+                logger.info(f"Created invoice {invoice.id} for credit package purchase {payment_intent.id}")
+            except Exception as e:
+                logger.error(f"Error creating invoice for credit package purchase: {str(e)}")
+                # Continue with provisioning even if invoice creation fails
+            
             # Provision the credit package
             try:
                 provision_result = provision_credit_package(

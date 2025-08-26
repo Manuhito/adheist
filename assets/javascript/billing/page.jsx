@@ -8,6 +8,7 @@ import { SubscriptionCancelSection } from '../components/sections/subscription-c
 import { useTranslation } from '../lib/useTranslation';
 import { SubscriptionUpdateConfirmation } from './subscription-update-confirmation';
 import { CreditPackageConfirmation } from './credit-package-confirmation';
+import { Badge } from '../shadcn/components/ui/badge.jsx';
 
 /**
  * Componente principal que contiene toda la página de facturación
@@ -166,20 +167,46 @@ export function BillingPage({ pricingData, onSubscribe }) {
         t={t}
       />
 
+      {/* Sección de créditos - visible para usuarios con suscripción activa o free tier */}
+      {(hasActiveSubscription || window.__USAGE_DATA__?.max_general_credits > 0) && (
+        <div className="mt-8 mb-4">
+          <div className="flex items-center gap-3 mb-3">
+            <h3 className="text-lg font-medium">{t('billing.plan_usage', 'Plan Usage')}</h3>
+            {window.__USAGE_DATA__?.is_free_tier && (
+              <Badge variant="outline" className="text-xs">
+                {t('billing.free_plan', 'Free')}
+              </Badge>
+            )}
+          </div>
+          <div className="flex flex-col gap-4">
+            <ProgressBarUsage
+              label={t('billing.ads_generation', 'Ads Generation')}
+              credits={window.__USAGE_DATA__?.general_credits || 0}
+              maxCredits={window.__USAGE_DATA__?.max_general_credits || 1}
+            />
+            <ProgressBarUsage
+              label={t('billing.revisions', 'Revisions')}
+              credits={window.__USAGE_DATA__?.version_credits || 0}
+              maxCredits={window.__USAGE_DATA__?.max_version_credits || 1}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Sección de créditos adicionales - solo visible si hay créditos extra */}
       {(window.__USAGE_DATA__?.extra_general_credits > 0 || window.__USAGE_DATA__?.extra_version_credits > 0) && (
         <div className="mt-8 mb-4">
-          <h3 className="text-lg font-medium mb-3">{t('billing.additional_credits', 'Additional Credits')}</h3>
+          <h3 className="text-lg font-medium mb-3">{t('billing.packages_and_additional_usage', 'Packages and Additional usage')}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
             {window.__USAGE_DATA__?.extra_general_credits > 0 && (
               <ExtraCreditCard
-                label={t('billing.ad_request_generations', 'Ad request generations')}
+                label={t('billing.ads_generation', 'Ads Generation')}
                 credits={window.__USAGE_DATA__?.extra_general_credits || 0}
               />
             )}
             {window.__USAGE_DATA__?.extra_version_credits > 0 && (
               <ExtraCreditCard
-                label={t('billing.ads_revisions', 'Ads Revisions')}
+                label={t('billing.revisions', 'Revisions')}
                 credits={window.__USAGE_DATA__?.extra_version_credits || 0}
               />
             )}
@@ -187,33 +214,20 @@ export function BillingPage({ pricingData, onSubscribe }) {
         </div>
       )}
       
-      {/* Solo mostrar las secciones adicionales si el usuario tiene una suscripción activa */}
-      {hasActiveSubscription && (
-        <>
-          {/* Sección de créditos */}
-          <div className="flex flex-col gap-4 mb-4">
-            <ProgressBarUsage
-              label={t('billing.general_credits', 'General credits')}
-              credits={window.__USAGE_DATA__?.general_credits || 0}
-              maxCredits={window.__USAGE_DATA__?.max_general_credits || 1}
-            />
-            <ProgressBarUsage
-              label={t('billing.version_credits', 'Version credits')}
-              credits={window.__USAGE_DATA__?.version_credits || 0}
-              maxCredits={window.__USAGE_DATA__?.max_version_credits || 1}
-            />
-          </div>
-          {/* Sección de método de pago */}
-          <PaymentMethodSection paymentMethodData={paymentMethodData} />
-          
-          {/* Sección de facturas */}
-          <InvoiceSection />
-          
-          {/* Sección de cancelación de suscripción */}
-          {currentPlan && (
-            <SubscriptionCancelSection currentPeriodEnd={currentPlan.current_period_end} />
-          )}
-        </>
+      {/* Sección de método de pago - visible si el usuario tiene un método de pago configurado */}
+      {paymentMethodData.has_payment_method && (
+        <PaymentMethodSection paymentMethodData={paymentMethodData} />
+      )}
+      
+      {/* Sección de facturas - siempre visible */}
+      <InvoiceSection />
+      
+      {/* Sección de cancelación de suscripción - solo visible si hay suscripción activa */}
+      {hasActiveSubscription && currentPlan && (
+        <SubscriptionCancelSection 
+          currentPeriodEnd={currentPlan.current_period_end}
+          cancelAtPeriodEnd={currentPlan.cancel_at_period_end}
+        />
       )}
     </div>
   );
