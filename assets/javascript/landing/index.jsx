@@ -5,7 +5,7 @@ import { createRoot } from 'react-dom/client';
 import Hero from "@/components/sections/hero";
 import Logos from "@/components/sections/logos";
 import Problem from "@/components/sections/problem";
-import HowItWorks from "@/components/sections/how-it-works";
+import FeaturesSection from "@/components/sections/features-section";
 import Solution from "@/components/sections/solution";
 import CTA from "@/components/sections/cta";
 // Import the FAQ component that matches the dedicated FAQ page styling
@@ -17,7 +17,7 @@ const LandingPage = () => {
       <Hero />
       <Logos />
       <Problem />
-      <HowItWorks />
+      <FeaturesSection />
       <Solution />
       <CTA />
       <FAQ />
