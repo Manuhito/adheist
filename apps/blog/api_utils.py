@@ -28,6 +28,8 @@ def create_blog_post(
     auto_publish: bool = True,
     gallery_images: Optional[List[Dict]] = None,
     post_id: Optional[str] = None,
+    read_time: Optional[int] = 1,
+    author_image_url: Optional[str] = None,
 ) -> BlogPage:
     """
     Create a new blog post programmatically.
@@ -41,6 +43,8 @@ def create_blog_post(
         auto_publish: Whether to automatically publish the page
         gallery_images: List of dicts with 'image' and 'caption' keys
         post_id: Optional ID from the external API to store for reference
+        read_time: Estimated reading time in minutes
+        author_image_url: URL to the author's profile image
         
     Returns:
         The created BlogPage instance
@@ -102,7 +106,8 @@ def create_blog_post(
         date=publication_date,
         body=processed_body,
         post_id=post_id,
-        read_time=1,  # Default read time
+        read_time=read_time,
+        author_image_url=author_image_url
     )
     
     # Generate a slug if needed
@@ -205,6 +210,7 @@ def update_blog_post(
     publication_date: Optional[date] = None,
     auto_publish: bool = True,
     read_time: Optional[int] = None,
+    author_image_url: Optional[str] = None,
 ) -> BlogPage:
     """
     Update an existing blog post.
@@ -216,6 +222,8 @@ def update_blog_post(
         body_content: New body content (if None, keeps existing)
         publication_date: New publication date (if None, keeps existing)
         auto_publish: Whether to automatically publish the changes
+        read_time: Estimated reading time in minutes (if None, keeps existing)
+        author_image_url: URL to the author's profile image (if None, keeps existing)
         
     Returns:
         The updated BlogPage instance
@@ -231,6 +239,9 @@ def update_blog_post(
         
     if read_time is not None:
         blog_post.read_time = read_time
+        
+    if author_image_url is not None:
+        blog_post.author_image_url = author_image_url
     
     if body_content is not None:
         # Process body content into StreamField format
@@ -379,6 +390,22 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
                 read_time = 1  # Default value if not provided
                 print(f"Using default read time for post '{title}': {read_time} minutes")
                 
+            # Extract author image URL from API
+            author_image_url = None
+            if 'user' in post_data and isinstance(post_data['user'], dict):
+                author_image_url = post_data['user'].get('image')
+                if author_image_url:
+                    print(f"Found author image URL for '{title}': {author_image_url}")
+            
+            # If no author image in user object, try other common fields
+            if not author_image_url:
+                # Try common field names for author images
+                for field in ['authorImage', 'userImage', 'authorAvatar', 'avatar']:
+                    if field in post_data and post_data[field]:
+                        author_image_url = post_data[field]
+                        print(f"Found author image URL in '{field}' field: {author_image_url}")
+                        break
+                
             # Get intro/excerpt (limited to 250 chars)
             intro = post_data.get('excerpt', '')
             
@@ -504,20 +531,20 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
             try:
                 if existing_post:
                     # Update existing post
-                    post = update_blog_post(
+                    update_blog_post(
                         blog_post=existing_post,
                         title=title,
                         intro=intro,
                         body_content=body_content,
                         publication_date=publication_date,
-                        auto_publish=True,
-                        read_time=read_time
+                        read_time=read_time,
+                        author_image_url=author_image_url,
                     )
                     
                     # Update gallery image if it exists
                     from apps.blog.models import BlogPageGalleryImage
                     # Delete existing images
-                    BlogPageGalleryImage.objects.filter(page=post).delete()
+                    BlogPageGalleryImage.objects.filter(page=existing_post).delete()
                     # Add new image
                     if post_image:
                         BlogPageGalleryImage.objects.create(
@@ -535,7 +562,8 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
                         parent_page=blog_index,
                         auto_publish=True,
                         post_id=post_id,
-                        # No gallery_images parameter
+                        read_time=read_time,
+                        author_image_url=author_image_url,
                     )
                     
                     # Set read time if available

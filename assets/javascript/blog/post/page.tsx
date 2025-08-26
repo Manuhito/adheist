@@ -23,6 +23,7 @@ interface Post {
     title: string;
     publishedAt: string;
     author: string;
+    authorImage?: string;
     description: string;
     image: string;
     tags: string[];
@@ -77,7 +78,7 @@ export default function BlogPost({ post }: BlogPostProps) {
             <Author
               twitterUsername={post.metadata.author}
               name={post.metadata.author}
-              image={"/static/images/landing/author.jpg"}
+              image={post.metadata.authorImage || "/static/images/blog/default-avatar.png"}
             />
           </div>
           
@@ -106,7 +107,7 @@ export default function BlogPost({ post }: BlogPostProps) {
           </Suspense>
         </div>
         <article
-          className="prose dark:prose-invert mx-auto max-w-full text-black prose-p:text-black prose-li:text-black"
+          className="prose dark:prose-invert mx-auto max-w-full text-black dark:text-gray-100 prose-p:text-black dark:prose-p:text-gray-100 prose-li:text-black dark:prose-li:text-gray-100 prose-headings:text-black dark:prose-headings:text-white prose-strong:text-black dark:prose-strong:text-gray-100 prose-a:text-blue-600 dark:prose-a:text-blue-400"
           dangerouslySetInnerHTML={{ __html: post.source }}
         ></article>
       </div>
