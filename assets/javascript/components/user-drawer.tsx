@@ -9,7 +9,7 @@ import {
   DrawerFooter,
   DrawerTrigger,
 } from "./ui/drawer";
-import { IoPersonCircleOutline } from "react-icons/io5";
+import { Menu } from "lucide-react";
 import { useTranslation } from "../lib/useTranslation";
 import { buttonVariants } from "./ui/button";
 import { cn } from "../lib/utils";
@@ -20,7 +20,7 @@ export default function UserDrawer() {
   return (
     <Drawer>
       <DrawerTrigger>
-        <IoPersonCircleOutline className="text-2xl" />
+        <Menu className="h-6 w-6" />
       </DrawerTrigger>
       <DrawerContent>
         <DrawerHeader className="px-6">
