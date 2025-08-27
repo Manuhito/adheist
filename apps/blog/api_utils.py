@@ -28,6 +28,10 @@ def create_blog_post(
     auto_publish: bool = True,
     gallery_images: Optional[List[Dict]] = None,
     post_id: Optional[str] = None,
+    read_time: Optional[int] = 1,
+    author_image_url: Optional[str] = None,
+    author_name: Optional[str] = None,
+    author_username: Optional[str] = None,
 ) -> BlogPage:
     """
     Create a new blog post programmatically.
@@ -41,6 +45,10 @@ def create_blog_post(
         auto_publish: Whether to automatically publish the page
         gallery_images: List of dicts with 'image' and 'caption' keys
         post_id: Optional ID from the external API to store for reference
+        read_time: Estimated reading time in minutes
+        author_image_url: URL to the author's profile image
+        author_name: Name of the post author
+        author_username: Username or handle of the post author
         
     Returns:
         The created BlogPage instance
@@ -102,10 +110,29 @@ def create_blog_post(
         date=publication_date,
         body=processed_body,
         post_id=post_id,
+        read_time=read_time,
+        author_image_url=author_image_url,
+        author_name=author_name,
+        author_username=author_username
     )
     
+    # Generate a slug if needed
+    from django.utils.text import slugify
+    if not blog_post.slug:
+        blog_post.slug = slugify(title)[:50]
+        
     # Add it as a child of the parent page
-    parent_page.add_child(instance=blog_post)
+    try:
+        parent_page.add_child(instance=blog_post)
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error adding blog post as child: {e}")
+        
+        # Alternative approach: save directly
+        blog_post.path = parent_page.path + '0001'
+        blog_post.depth = parent_page.depth + 1
+        blog_post.save()
     
     # Add gallery images if provided
     if gallery_images:
@@ -188,6 +215,10 @@ def update_blog_post(
     body_content: Optional[List[Dict]] = None,
     publication_date: Optional[date] = None,
     auto_publish: bool = True,
+    read_time: Optional[int] = None,
+    author_image_url: Optional[str] = None,
+    author_name: Optional[str] = None,
+    author_username: Optional[str] = None,
 ) -> BlogPage:
     """
     Update an existing blog post.
@@ -199,6 +230,10 @@ def update_blog_post(
         body_content: New body content (if None, keeps existing)
         publication_date: New publication date (if None, keeps existing)
         auto_publish: Whether to automatically publish the changes
+        read_time: Estimated reading time in minutes (if None, keeps existing)
+        author_image_url: URL to the author's profile image (if None, keeps existing)
+        author_name: Name of the post author (if None, keeps existing)
+        author_username: Username or handle of the post author (if None, keeps existing)
         
     Returns:
         The updated BlogPage instance
@@ -211,6 +246,18 @@ def update_blog_post(
     
     if publication_date is not None:
         blog_post.date = publication_date
+        
+    if read_time is not None:
+        blog_post.read_time = read_time
+        
+    if author_image_url is not None:
+        blog_post.author_image_url = author_image_url
+        
+    if author_name is not None:
+        blog_post.author_name = author_name
+        
+    if author_username is not None:
+        blog_post.author_username = author_username
     
     if body_content is not None:
         # Process body content into StreamField format
@@ -351,6 +398,63 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
             else:
                 print(f"Warning: Post '{title}' has no ID in API response")
                 
+            # Extract read time from API
+            read_time = post_data.get('readTime')
+            if read_time is not None:
+                print(f"Read time for post '{title}': {read_time} minutes")
+            else:
+                read_time = 1  # Default value if not provided
+                print(f"Using default read time for post '{title}': {read_time} minutes")
+                
+            # Extract author data from API
+            author_image_url = None
+            author_name = None
+            author_username = None
+            
+            # Check if user object exists and extract data
+            if 'user' in post_data and isinstance(post_data['user'], dict):
+                user_data = post_data['user']
+                
+                # Extract author image
+                author_image_url = user_data.get('image')
+                if author_image_url:
+                    print(f"Found author image URL for '{title}': {author_image_url}")
+                
+                # Extract author name
+                author_name = user_data.get('name')
+                if author_name:
+                    print(f"Found author name for '{title}': {author_name}")
+                
+                # Extract author username
+                author_username = user_data.get('username')
+                if author_username:
+                    print(f"Found author username for '{title}': {author_username}")
+            
+            # If no author image in user object, try other common fields
+            if not author_image_url:
+                # Try common field names for author images
+                for field in ['authorImage', 'userImage', 'authorAvatar', 'avatar']:
+                    if field in post_data and post_data[field]:
+                        author_image_url = post_data[field]
+                        print(f"Found author image URL in '{field}' field: {author_image_url}")
+                        break
+                        
+            # If no author name in user object, try other common fields
+            if not author_name:
+                for field in ['authorName', 'author', 'userName', 'writer']:
+                    if field in post_data and post_data[field]:
+                        author_name = post_data[field]
+                        print(f"Found author name in '{field}' field: {author_name}")
+                        break
+                        
+            # If no author username in user object, try other common fields
+            if not author_username:
+                for field in ['authorUsername', 'userHandle', 'handle', 'authorId']:
+                    if field in post_data and post_data[field]:
+                        author_username = post_data[field]
+                        print(f"Found author username in '{field}' field: {author_username}")
+                        break
+                
             # Get intro/excerpt (limited to 250 chars)
             intro = post_data.get('excerpt', '')
             
@@ -476,19 +580,22 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
             try:
                 if existing_post:
                     # Update existing post
-                    post = update_blog_post(
+                    update_blog_post(
                         blog_post=existing_post,
                         title=title,
                         intro=intro,
                         body_content=body_content,
                         publication_date=publication_date,
-                        auto_publish=True
+                        read_time=read_time,
+                        author_image_url=author_image_url,
+                        author_name=author_name,
+                        author_username=author_username,
                     )
                     
                     # Update gallery image if it exists
                     from apps.blog.models import BlogPageGalleryImage
                     # Delete existing images
-                    BlogPageGalleryImage.objects.filter(page=post).delete()
+                    BlogPageGalleryImage.objects.filter(page=existing_post).delete()
                     # Add new image
                     if post_image:
                         BlogPageGalleryImage.objects.create(
@@ -506,8 +613,16 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
                         parent_page=blog_index,
                         auto_publish=True,
                         post_id=post_id,
-                        # No gallery_images parameter
+                        read_time=read_time,
+                        author_image_url=author_image_url,
+                        author_name=author_name,
+                        author_username=author_username,
                     )
+                    
+                    # Set read time if available
+                    if read_time is not None:
+                        post.read_time = read_time
+                        post.save(update_fields=['read_time'])
                     
                     # Add gallery image
                     from apps.blog.models import BlogPageGalleryImage
@@ -525,20 +640,50 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
                 # Try alternative approach
                 print("Trying alternative approach...")
                 
-                # Create the blog post with gallery images parameter
-                post = create_blog_post(
+                # Create a unique slug for the post
+                from django.utils.text import slugify
+                unique_slug = slugify(title)[:50]
+                
+                # Create the blog post directly with all fields
+                from apps.blog.models import BlogPage
+                post = BlogPage(
                     title=title,
                     intro=intro,
-                    body_content=body_content,
-                    publication_date=publication_date,
-                    parent_page=blog_index,
-                    auto_publish=True,
+                    date=publication_date or date.today(),
+                    body=body_content,  # This will be processed by Wagtail
                     post_id=post_id,
-                    gallery_images=[{
-                        "image": post_image,
-                        "caption": f"Featured image for {title}"
-                    }]
+                    read_time=read_time,
+                    slug=unique_slug,
+                    path=blog_index.path + '0001',  # Temporary path
+                    depth=blog_index.depth + 1,
+                    numchild=0
                 )
+                
+                # Save the post first
+                post.save()
+                
+                # Then try to properly set it as a child
+                try:
+                    # Clean up the temporary path
+                    post.delete()
+                    # Add properly as a child
+                    blog_index.add_child(instance=post)
+                except Exception as e:
+                    print(f"Alternative approach also failed: {e}")
+                    # The post is already saved with the temporary path
+                    pass
+                
+                # Add gallery image
+                if post_image:
+                    from apps.blog.models import BlogPageGalleryImage
+                    try:
+                        BlogPageGalleryImage.objects.create(
+                            page=post,
+                            image=post_image,
+                            caption=f"Featured image for {title}"
+                        )
+                    except Exception as e:
+                        print(f"Failed to add gallery image: {e}")
             
             created_posts.append(post)
             print(f"Created blog post: {post.title} (ID: {post.id})")
