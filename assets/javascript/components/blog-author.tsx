@@ -55,23 +55,18 @@ export default function Author({
   }
 
   return (
-    <Link
-      href={`https://twitter.com/${username}`}
-      className="group flex items-center space-x-3"
-      target="_blank"
-      rel="noopener noreferrer"
-    >
+    <div className="flex items-center space-x-3">
       <Image
         src={image}
         alt={name}
         width={40}
         height={40}
-        className="rounded-full transition-all group-hover:brightness-90"
+        className="rounded-full"
       />
       <div className="flex flex-col">
         <p className="font-semibold text-gray-700">{name}</p>
-        <p className="text-sm text-gray-500">@{username}</p>
+        {username && <p className="text-sm text-gray-500">@{username}</p>}
       </div>
-    </Link>
+    </div>
   );
 }
