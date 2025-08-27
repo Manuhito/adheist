@@ -5,12 +5,12 @@
     <div class="pg-text-centered">
       <img class="avatar" src="{{ user.avatar_url }}">
       <div id='profile-upload-holder'>
-        <label for="profile-upload" >
+        <label for="profile-upload">
           <a id="profile-upload-label" class="pg-button-light">
             {% translate "Change Picture" %}
           </a>
         </label>
-        <input id="profile-upload" type="file" accept="image/*"/>
+        <input id="profile-upload" type="file" accept="image/*" />
       </div>
     </div>
   </div>
@@ -20,27 +20,28 @@
       {% csrf_token %}
       {% render_text_input form.email %}
       {% if user.emailaddress_set.count > 1 %}
-        <div class="pg-help"><a href="{% url "account_email" %}" class="link">{%  translate "Manage email addresses" %}</a></div>
+      <div class="pg-help"><a href="{% url " account_email" %}" class="link">{% translate "Manage email addresses"
+          %}</a></div>
       {% endif %}
       {% render_text_input form.first_name %}
       {% render_text_input form.last_name %}
       {% if form.fields.language.choices %}
-        {% render_select_input form.language %}
+      {% render_select_input form.language %}
       {% endif %}
       {% render_select_input form.timezone %}
       <div class="pg-help">
         {% if user.timezone %}
-          {% blocktranslate with  user_tz=user.timezone %}
-            Your current timezone is {{ user_tz }}, where it is {{ now }}.
-          {% endblocktranslate %}
+        {% blocktranslate with user_tz=user.timezone %}
+        Your current timezone is {{ user_tz }}, where it is {{ now }}.
+        {% endblocktranslate %}
         {% else %}
-          {% blocktranslate %}
-            You have not set a timezone, and are using the system timezone of {{ current_tz }} where it is {{ now }}.
-          {% endblocktranslate %}
+        {% blocktranslate %}
+        You have not set a timezone, and are using the system timezone of {{ current_tz }} where it is {{ now }}.
+        {% endblocktranslate %}
         {% endif %}
       </div>
       <div class="mt-2">
-        <input class="pg-button-primary" type="submit" value="{% translate "Save" %}">
+        <input class="pg-button-primary" type="submit" value="{% translate " Save" %}">
       </div>
     </form>
   </div>

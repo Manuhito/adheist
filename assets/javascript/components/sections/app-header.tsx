@@ -140,6 +140,7 @@ export default function AppHeader() {
                     }}
                   >
                     <div className="py-1" role="none">
+                      <a href="/users/profile/" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800" role="menuitem">{t('app_header.profile', 'Profile')}</a>
                       <a href="/ads/billing" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800" role="menuitem">{t('app_header.billing', 'Billing')}</a>
                       <div className="px-4 py-2 flex items-center justify-between border-t border-gray-200 dark:border-gray-700">
                         <span className="text-sm text-gray-700 dark:text-gray-100">{t('app_header.theme', 'Theme')}</span>

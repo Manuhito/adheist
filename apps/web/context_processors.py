@@ -266,6 +266,8 @@ def translations(request):
             'profile.no_timezone': _('You have not set a timezone, and are using the system timezone of {currentTz} where it is {now}.'),
             'profile.saving': _('Saving...'),
             'profile.save': _('Save'),
+            'profile.security': _('Security'),
+            'profile.change_password': _('Change Password'),
             
             # Two-factor auth translations
             'profile.two_factor': _('Two-Factor Auth'),

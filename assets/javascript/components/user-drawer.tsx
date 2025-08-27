@@ -28,6 +28,14 @@ export default function UserDrawer() {
             <ul className="mt-7 text-left">
               <li className="my-3">
                 <a 
+                  href="/users/profile/" 
+                  className="font-semibold"
+                >
+                  {t('app_header.profile', 'Profile')}
+                </a>
+              </li>
+              <li className="my-3">
+                <a 
                   href="/ads/billing" 
                   className="font-semibold"
                 >
