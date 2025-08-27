@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-27 17:08+0000\n"
+"POT-Creation-Date: 2025-08-27 17:38+0000\n"
 "PO-Revision-Date: 2025-04-30 00:00+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Spanish <LL@li.org>\n"
@@ -1806,6 +1806,12 @@ msgstr ""
 "horaria del sistema %(current_tz)s, donde son las %(now)s.\n"
 "          "
 
+#: templates/account/components/profile_form.html:44
+#, fuzzy
+#| msgid "Save"
+msgid " Save"
+msgstr "Guardar"
+
 #: templates/account/components/social/login_with_social_button.html:9
 msgid "Logo"
 msgstr "Logo"
@@ -1842,44 +1848,49 @@ msgstr "Código"
 msgid "Back to login"
 msgstr "Volver a inicio de sesión"
 
-#: templates/account/email.html:4 templates/account/email.html:6
+#: templates/account/email.html:4 templates/account/email.html:9
 msgid "E-mail Addresses"
 msgstr "Direcciones de correo electrónico"
 
-#: templates/account/email.html:8
-msgid "The following e-mail addresses are associated with your account:"
-msgstr ""
-"Las siguientes direcciones de correo electrónico están asociadas a tu cuenta:"
+#: templates/account/email.html:10
+msgid "Manage the email addresses associated with your account."
+msgstr "Gestiona las direcciones de correo electrónico asociadas a tu cuenta."
 
-#: templates/account/email.html:22
+#: templates/account/email.html:18
+msgid "Your email addresses:"
+msgstr "Tus direcciones de correo electrónico"
+
+#: templates/account/email.html:37
 msgid "Verified"
 msgstr "Verificada"
 
-#: templates/account/email.html:24
+#: templates/account/email.html:41
 msgid "Unverified"
 msgstr "No verificada"
 
-#: templates/account/email.html:26
+#: templates/account/email.html:46
 msgid "Primary"
 msgstr "Principal"
 
-#: templates/account/email.html:32
+#: templates/account/email.html:58
 msgid "Make Primary"
 msgstr "Establecer como principal"
 
-#: templates/account/email.html:33
+#: templates/account/email.html:65
 msgid "Re-send Verification"
 msgstr "Reenviar verificación"
 
-#: templates/account/email.html:34 templates/socialaccount/connections.html:32
+#: templates/account/email.html:72 templates/socialaccount/connections.html:32
 msgid "Remove"
 msgstr "Eliminar"
 
-#: templates/account/email.html:40
-msgid "Warning:"
+#: templates/account/email.html:86
+#, fuzzy
+#| msgid "Warning:"
+msgid "Warning"
 msgstr "Advertencia:"
 
-#: templates/account/email.html:40
+#: templates/account/email.html:88
 msgid ""
 "You currently do not have any e-mail address set up. You should really add "
 "an e-mail address so you can receive notifications, reset your password, etc."
@@ -1888,15 +1899,15 @@ msgstr ""
 "Deberías añadir una para poder recibir notificaciones, restablecer tu "
 "contraseña, etc."
 
-#: templates/account/email.html:45
+#: templates/account/email.html:99
 msgid "Add E-mail Address"
 msgstr "Añadir dirección de correo"
 
-#: templates/account/email.html:50
+#: templates/account/email.html:109
 msgid "Add E-mail"
 msgstr "Añadir correo electrónico"
 
-#: templates/account/email.html:58
+#: templates/account/email.html:121
 msgid "Do you really want to remove the selected e-mail address?"
 msgstr "¿Realmente deseas eliminar la dirección de correo seleccionada?"
 

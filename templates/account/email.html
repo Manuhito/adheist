@@ -1,56 +1,119 @@
-{% extends "account/base.html" %}
+{% extends "web/app/app_base.html" %}
 {% load i18n %}
 {% load form_tags %}
 {% block head_title %}{% translate "E-mail Addresses" %}{% endblock %}
-{% block content %}
-  <h1 class="pg-title">{% translate "E-mail Addresses" %}</h1>
-  {% if user.emailaddress_set.all %}
-  <p>{% translate 'The following e-mail addresses are associated with your account:' %}</p>
-  <form action="{% url 'account_email' %}" class="email_list" method="post">
-    {% csrf_token %}
-    <fieldset class="blockLabels">
-      {% for emailaddress in user.emailaddress_set.all %}
-        <div class="mb-2">
-          <label for="email_radio_{{ forloop.counter }}"
-                 class="{% if emailaddress.primary %}primary_email{% endif %}">
-          <input id="email_radio_{{ forloop.counter }}" type="radio" name="email"
-                 {% if emailaddress.primary or user.emailaddress_set.count == 1 %}checked="checked"{% endif %}
-                 value="{{ emailaddress.email }}"/>
-          {{ emailaddress.email }}
-          <span class="pg-help">
-            {% if emailaddress.verified %}
-              <span class="pg-text-success">{% translate "Verified" %}</span>
-            {% else %}
-              <span class="pg-text-muted">{% translate "Unverified" %}</span>
-            {% endif %}
-            {% if emailaddress.primary %}<span class="pg-text-info">{% translate "Primary" %}</span>{% endif %}
-          </span>
-          </label>
-        </div>
-      {% endfor %}
-      <div class="mt-2">
-        <button class="pg-button-primary" type="submit" name="action_primary">{% translate 'Make Primary' %}</button>
-        <button class="pg-button-secondary" type="submit" name="action_send">{% translate 'Re-send Verification' %}</button>
-        <button class="pg-button-danger" type="submit" name="action_remove">{% translate 'Remove' %}</button>
-      </div>
-    </fieldset>
-  </form>
-{% else %}
-  <p>
-    <strong>{% translate 'Warning:' %}</strong> {% translate "You currently do not have any e-mail address set up. You should really add an e-mail address so you can receive notifications, reset your password, etc." %}
-  </p>
-{% endif %}
-{% if can_add_email %}
-  <hr>
-  <h2 class="pg-subtitle">{% translate "Add E-mail Address" %}</h2>
-  <form method="post" action="{% url 'account_email' %}" class="add_email">
-    {% csrf_token %}
-    {% render_form_fields form %}
-    <div class="mt-2">
-      <button class="pg-button-primary" name="action_add" type="submit">{% translate "Add E-mail" %}</button>
+{% block app %}
+<div class="container max-w-3xl py-10">
+  <div class="space-y-6">
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight">{% translate "E-mail Addresses" %}</h1>
+      <p class="text-muted-foreground mt-2">{% translate 'Manage the email addresses associated with your account.' %}</p>
     </div>
-  </form>
-{% endif %}
+
+    <div class="border rounded-lg p-6 bg-card text-card-foreground shadow-sm">
+      {% if user.emailaddress_set.all %}
+      <form action="{% url 'account_email' %}" method="post">
+        {% csrf_token %}
+        <div class="space-y-4">
+          <div class="text-sm font-medium">{% translate 'Your email addresses:' %}</div>
+          
+          <div class="space-y-2">
+            {% for emailaddress in user.emailaddress_set.all %}
+            <div class="flex items-center space-x-2 p-3 rounded-md border {% if emailaddress.primary %}bg-muted{% endif %}">
+              <input 
+                id="email_radio_{{ forloop.counter }}" 
+                type="radio" 
+                name="email"
+                class="h-4 w-4 text-primary border-gray-300 focus:ring-primary"
+                {% if emailaddress.primary or user.emailaddress_set.count == 1 %}checked="checked"{% endif %}
+                value="{{ emailaddress.email }}"
+              />
+              <label for="email_radio_{{ forloop.counter }}" class="flex-1 text-sm font-medium">
+                {{ emailaddress.email }}
+              </label>
+              <div class="flex space-x-2">
+                {% if emailaddress.verified %}
+                <span class="inline-flex items-center rounded-full bg-green-50 dark:bg-green-900/20 px-2 py-1 text-xs font-medium text-green-700 dark:text-green-300">
+                  {% translate "Verified" %}
+                </span>
+                {% else %}
+                <span class="inline-flex items-center rounded-full bg-gray-100 dark:bg-gray-800 px-2 py-1 text-xs font-medium text-gray-600 dark:text-gray-400">
+                  {% translate "Unverified" %}
+                </span>
+                {% endif %}
+                {% if emailaddress.primary %}
+                <span class="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-900/20 px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-300">
+                  {% translate "Primary" %}
+                </span>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          <div class="flex flex-wrap gap-2 mt-4">
+            <button 
+              class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2" 
+              type="submit" 
+              name="action_primary"
+            >
+              {% translate 'Make Primary' %}
+            </button>
+            <button 
+              class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2" 
+              type="submit" 
+              name="action_send"
+            >
+              {% translate 'Re-send Verification' %}
+            </button>
+            <button 
+              class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-9 px-4 py-2" 
+              type="submit" 
+              name="action_remove"
+            >
+              {% translate 'Remove' %}
+            </button>
+          </div>
+        </div>
+      </form>
+      {% else %}
+      <div class="rounded-md bg-yellow-50 dark:bg-yellow-900/20 p-4 mt-2">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <h3 class="text-sm font-medium text-yellow-800 dark:text-yellow-200">{% translate 'Warning' %}</h3>
+            <div class="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
+              <p>{% translate "You currently do not have any e-mail address set up. You should really add an e-mail address so you can receive notifications, reset your password, etc." %}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    {% if can_add_email %}
+    <div class="mt-8"></div>
+    <div class="border rounded-lg p-6 bg-card text-card-foreground shadow-sm">
+      <h2 class="text-lg font-medium mb-4">{% translate "Add E-mail Address" %}</h2>
+      <form method="post" action="{% url 'account_email' %}" class="space-y-4">
+        {% csrf_token %}
+        {% render_form_fields form %}
+        <div>
+          <button 
+            class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2" 
+            name="action_add" 
+            type="submit"
+          >
+            {% translate "Add E-mail" %}
+          </button>
+        </div>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+</div>
 {% endblock %}
 {% block page_js %}
   <script>

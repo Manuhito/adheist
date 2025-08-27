@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-27 17:08+0000\n"
+"POT-Creation-Date: 2025-08-27 17:38+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1819,57 +1819,61 @@ msgstr ""
 msgid "Back to login"
 msgstr "Retour au paiement"
 
-#: templates/account/email.html:4 templates/account/email.html:6
+#: templates/account/email.html:4 templates/account/email.html:9
 msgid "E-mail Addresses"
 msgstr ""
 
-#: templates/account/email.html:8
-msgid "The following e-mail addresses are associated with your account:"
+#: templates/account/email.html:10
+msgid "Manage the email addresses associated with your account."
 msgstr ""
 
-#: templates/account/email.html:22
+#: templates/account/email.html:18
+msgid "Your email addresses:"
+msgstr ""
+
+#: templates/account/email.html:37
 msgid "Verified"
 msgstr ""
 
-#: templates/account/email.html:24
+#: templates/account/email.html:41
 msgid "Unverified"
 msgstr ""
 
-#: templates/account/email.html:26
+#: templates/account/email.html:46
 msgid "Primary"
 msgstr ""
 
-#: templates/account/email.html:32
+#: templates/account/email.html:58
 msgid "Make Primary"
 msgstr ""
 
-#: templates/account/email.html:33
+#: templates/account/email.html:65
 msgid "Re-send Verification"
 msgstr ""
 
-#: templates/account/email.html:34 templates/socialaccount/connections.html:32
+#: templates/account/email.html:72 templates/socialaccount/connections.html:32
 msgid "Remove"
 msgstr ""
 
-#: templates/account/email.html:40
-msgid "Warning:"
+#: templates/account/email.html:86
+msgid "Warning"
 msgstr ""
 
-#: templates/account/email.html:40
+#: templates/account/email.html:88
 msgid ""
 "You currently do not have any e-mail address set up. You should really add "
 "an e-mail address so you can receive notifications, reset your password, etc."
 msgstr ""
 
-#: templates/account/email.html:45
+#: templates/account/email.html:99
 msgid "Add E-mail Address"
 msgstr ""
 
-#: templates/account/email.html:50
+#: templates/account/email.html:109
 msgid "Add E-mail"
 msgstr ""
 
-#: templates/account/email.html:58
+#: templates/account/email.html:121
 msgid "Do you really want to remove the selected e-mail address?"
 msgstr ""
 
