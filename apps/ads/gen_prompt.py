@@ -11,12 +11,13 @@ import time
 
 logger = logging.getLogger(__name__)
 
-def generate_prompt_with_gpt5(version_data):
+def generate_prompt_with_gpt5(version_data, image_urls=None):
     """
     Generate a prompt using GPT-5 for an AdRequestVersion based on its data.
     
     Args:
         version_data: Dictionary containing the AdRequestVersion data
+        image_urls: List of image URLs or file paths to use as context images
         
     Returns:
         str: The generated prompt from GPT-5
@@ -99,50 +100,9 @@ The final output must **mirror the structure, layout, spacing, and visual hierar
 :arrow_right: Rule: *Always detect and mirror the same format as the old ad. Never switch types.*
 ---
 ##  Product Information
-**Brand Name:** {brand_name}
-**Target Audience:** 
-* Primary: Active professionals, outdoor enthusiasts, trend-conscious Gen Z & Millennials
-* Secondary: Eco-minded families, commuters, gym-goers
-**Tone of Voice:** 
-* Confident, straightforward, adventurous
-* Benefit-led with lifestyle edge
-* Slightly playful but trustworthy and premium
-**Font Direction:**
-* Bold, modern sans-serif (Helvetica Neue, Proxima Nova, or similar)
-* Headline: bold, all caps
-* Callouts: medium, sentence case
-* Proof: regular/small caps
-* CTA: bold, button-style
-**Core Features:**
-* 40 oz capacity
-* Double-wall vacuum insulation
-* Stainless steel construction
-* Comfort-grip handle
-* Reusable straw
-* Cup holder compatible
-* BPA-free
-* Dishwasher safe
-**Functional Benefits:**
-* 11 hours cold
-* 7 hours hot
-* No condensation
-* No flavor transfer
-* Drop resistant
-**Emotional/Lifestyle Benefits:**
-* All-day hydration
-* Adventure ready
-* Eco-friendly choice
-* Join the trend
-**Proof Points:**
-* 11 hour cold retention
-* 40 oz capacity
-* Lifetime warranty
-* 90% ice retention
-**Value Propositions:**
-* Lifetime warranty
-* Save $10 daily
-* Zero waste
-**Brand Colour Hex:** {main_hex_color}
+{brand_name_section}
+{functional_benefits_section}
+{brand_color_section}
 ---
 ##  Key Requirement
 The final ad must:
@@ -155,10 +115,25 @@ The final ad must:
 The output must be in the form of a highly detailed image generation prompt for the OpenAI image API that follows OpenAI API prompting best practices. You must make it very clear that the prompt is for repurposing the ad image for the new product and new final ad should be immediately recognizable as the same campaign style, just for a different product following your changes. This is adaptation, not reinvention.
 """
         
+        # Preparar la sección de Brand Name solo si existe
+        brand_name = version_data.get('company_name', '')
+        brand_name_section = f"**Brand Name:** {brand_name}\n" if brand_name else ""
+        
+        # Preparar la sección de Brand Colour Hex solo si existe
+        main_hex_color = version_data.get('main_hex_color', '')
+        brand_color_section = f"**Brand Colour Hex:** {main_hex_color}" if main_hex_color else ""
+        
+        # Preparar la sección de Functional Benefits solo si existe
+        key_benefits = version_data.get('key_benefits', '')
+        functional_benefits_section = f"**Functional Benefits:** {key_benefits}" if key_benefits else ""
+        
         # Format the user prompt with the version data
         formatted_user_prompt = user_prompt.format(
-            brand_name=version_data.get('company_name', 'Brand'),
-            main_hex_color=version_data.get('main_hex_color', '#000000')
+            brand_name=brand_name,
+            brand_name_section=brand_name_section,
+            main_hex_color=main_hex_color,
+            brand_color_section=brand_color_section,
+            functional_benefits_section=functional_benefits_section
         )
         
         # Log the complete formatted prompt for debugging
@@ -179,12 +154,109 @@ The output must be in the form of a highly detailed image generation prompt for 
         
         # Make the API call to GPT-5
         logger.info(f"Calling GPT-5 API to generate prompt for ad")
+        
+        # Prepare messages list
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": formatted_user_prompt}
+        ]
+        
+        # Add images to the user message if provided
+        if image_urls and len(image_urls) > 0:
+            logger.info(f"Adding {len(image_urls)} context images to GPT-5 prompt")
+            
+            # Process images for GPT-5
+            image_content_list = []
+            
+            import tempfile
+            import requests
+            from PIL import Image
+            import io
+            import base64
+            import os
+            from urllib.parse import urlparse
+            
+            # Lista para almacenar los archivos temporales
+            temp_image_paths = []
+            
+            try:
+                # Procesar cada imagen en la lista (máximo 16 imágenes)
+                image_urls = image_urls[:16]  # Limitar a 16 imágenes como máximo
+                
+                for i, image_source in enumerate(image_urls):
+                    temp_image_path = None
+                    image_data = None
+                    
+                    # Procesar URL o ruta de archivo
+                    if urlparse(image_source).scheme in ("http", "https"):
+                        try:
+                            # Descargar imagen desde URL
+                            resp = requests.get(image_source, stream=True)
+                            resp.raise_for_status()
+                            image_data = resp.content
+                        except Exception as e:
+                            logger.error(f"Error downloading image {i+1}: {str(e)}")
+                            continue
+                    else:
+                        # Leer imagen desde archivo local
+                        try:
+                            with open(image_source, "rb") as f:
+                                image_data = f.read()
+                        except Exception as e:
+                            logger.error(f"Error reading local image {i+1}: {str(e)}")
+                            continue
+                    
+                    # Convertir a base64 para GPT-5
+                    if image_data:
+                        try:
+                            # Detectar tipo de imagen
+                            img = Image.open(io.BytesIO(image_data))
+                            img_format = img.format.lower()
+                            
+                            # Convertir a base64
+                            base64_image = base64.b64encode(image_data).decode('utf-8')
+                            
+                            # Añadir a la lista de contenido de imágenes
+                            image_content_list.append({
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/{img_format};base64,{base64_image}"
+                                }
+                            })
+                            
+                            logger.info(f"Successfully processed image {i+1}")
+                        except Exception as e:
+                            logger.error(f"Error processing image {i+1}: {str(e)}")
+                
+                # Actualizar el mensaje del usuario para incluir imágenes
+                if image_content_list:
+                    # Crear un nuevo mensaje con contenido mixto (texto e imágenes)
+                    messages[1] = {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": formatted_user_prompt},
+                            *image_content_list
+                        ]
+                    }
+                    logger.info(f"Added {len(image_content_list)} images to GPT-5 prompt")
+            except Exception as e:
+                logger.exception(f"Error processing images for GPT-5: {str(e)}")
+                # Continuar sin imágenes si hay error
+                pass
+            finally:
+                # Limpiar archivos temporales
+                for temp_path in temp_image_paths:
+                    try:
+                        if temp_path and os.path.exists(temp_path):
+                            os.unlink(temp_path)
+                    except Exception:
+                        pass
+        
+        # Realizar la llamada a la API
         response = client.chat.completions.create(
             model="gpt-5",  # Use GPT-5 model
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": formatted_user_prompt}
-            ]
+            messages=messages
+            # Eliminados los parámetros temperature y max_tokens para permitir máximo rendimiento
         )
         
         # Extract the generated prompt from the response
@@ -276,12 +348,15 @@ def generate_prompt(version):
     # Get non-image fields from AdRequest
     canvas_size = ad_request.canvas_size
     
-    # Handle case when ad_library is None (user uploaded image)
-    if ad_request.ad_library:
-        company_name = ad_request.ad_library.facebook_page.page_name
-    else:
-        # Use a default value when using user uploaded image
-        company_name = "User Custom Image"
+    # Obtener el nombre de la marca desde base_assets.brand.brand_name
+    try:
+        if ad_request.base_assets and ad_request.base_assets.brand:
+            company_name = ad_request.base_assets.brand.brand_name
+        else:
+            company_name = ""
+    except (AttributeError, Exception):
+        # Fallback si no se puede acceder a base_assets.brand.brand_name
+        company_name = ""
     
     # Get text fields from base_assets or overrides
     company_website = ad_request.get_company_website()
@@ -361,10 +436,37 @@ def generate_prompt(version):
         'user_prompt': user_prompt or ''
     }
     
+    # Collect image URLs for context
+    image_urls = []
+    
+    # Add product images if available
+    if product_image_1_override:
+        image_urls.append(product_image_1_override.url)
+    if product_image_2_override:
+        image_urls.append(product_image_2_override.url)
+        
+    # Add app images if available
+    if app_image_1_override:
+        image_urls.append(app_image_1_override.url)
+    if app_image_2_override:
+        image_urls.append(app_image_2_override.url)
+        
+    # Add marketing images if available
+    if marketing_image_1_override:
+        image_urls.append(marketing_image_1_override.url)
+    if marketing_image_2_override:
+        image_urls.append(marketing_image_2_override.url)
+    if marketing_image_3_override:
+        image_urls.append(marketing_image_3_override.url)
+        
+    # Log the number of images collected
+    if image_urls:
+        logger.info(f"Collected {len(image_urls)} images for context")
+    
     # Generate the prompt using GPT-5
     start_time = time.time()
     try:
-        prompt = generate_prompt_with_gpt5(version_data)
+        prompt = generate_prompt_with_gpt5(version_data, image_urls)
         logger.info(f"GPT-5 prompt generated in {time.time() - start_time:.2f} seconds")
     except Exception as e:
         logger.exception(f"Failed to generate prompt with GPT-5, falling back to original method: {str(e)}")
