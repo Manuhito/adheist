@@ -497,10 +497,13 @@ class AdRequestVersion(BaseModel):
     review = models.TextField(null=True, blank=True, help_text="User review text for the generated image")
     
     def save(self, *args, **kwargs):
-        """Override save method to update generated_prompt if needed and send email notifications"""
-        # Check if this is a new instance or if generated_prompt is empty
+        """Override save method to handle status updates and send email notifications"""
+        # Check if this is a new instance
         is_new = self.pk is None
-        force_regenerate = kwargs.pop('regenerate_prompt', False)
+        
+        # Remove regenerate_prompt if present (for backward compatibility)
+        if 'regenerate_prompt' in kwargs:
+            kwargs.pop('regenerate_prompt')
         
         # Check if generated_image was just filled (for email notification)
         if not is_new and self.pk:
@@ -513,17 +516,8 @@ class AdRequestVersion(BaseModel):
         else:
             had_image = False
         
-        # First save the model to ensure it has an ID
+        # Save the model
         super().save(*args, **kwargs)
-        
-        # Generate prompt if it's empty, new, or forced
-        if is_new or not self.generated_prompt or force_regenerate:
-            from .gen_prompt import generate_prompt
-            prompt = generate_prompt(self)
-            # Save the generated prompt only in the legacy field
-            self.generated_prompt = prompt
-            # Save again to store the generated prompt
-            super().save(update_fields=['generated_prompt'])
         
         # Send email notification if generated_image is filled and wasn't before
         has_image_now = bool(self.generated_image)

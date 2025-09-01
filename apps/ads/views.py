@@ -1396,10 +1396,6 @@ def adrequest_version_create(request):
             # Get canvas size from AdRequest
             canvas_size = ad_request.canvas_size or "1024x1024"
             
-            # Generate the complete prompt using the generate_prompt function
-            from .gen_prompt import generate_prompt
-            complete_prompt = generate_prompt(version)
-            
             # Generate image using Celery task in the background
             from apps.aiinterface.tasks import generate_image_task
             
@@ -1409,7 +1405,6 @@ def adrequest_version_create(request):
             
             # Launch the Celery task
             task = generate_image_task.delay(
-                text_prompt=complete_prompt,
                 image_urls=image_urls,
                 canvas_size=canvas_size,
                 version_id=version.id,
@@ -1531,7 +1526,6 @@ def adrequest_revision_create(request):
             
             # Launch the Celery task
             task = generate_image_task.delay(
-                text_prompt=user_prompt,
                 image_urls=image_urls,
                 canvas_size=canvas_size,
                 version_id=version.id,
