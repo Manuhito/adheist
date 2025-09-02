@@ -23,6 +23,7 @@ export const siteConfig = {
     instagram: "https://instagram.com/magicuidesign/",
   },
   header: [
+    /* Features button - temporarily disabled
     {
       trigger: "Features",
       content: {
@@ -51,6 +52,8 @@ export const siteConfig = {
         ],
       },
     },
+    */
+    /* Solutions button - temporarily disabled
     {
       trigger: "Solutions",
       content: {
@@ -89,6 +92,7 @@ export const siteConfig = {
         ],
       },
     },
+    */
     {
       href: "/blog",
       label: "Blog",
