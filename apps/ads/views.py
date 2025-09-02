@@ -1111,7 +1111,12 @@ def adrequest_update(request, pk):
                 return JsonResponse({'error': f'Invalid status: {new_status}'}, status=400)
         
         # Update text fields in asset_overrides
-        text_fields = ['company_website', 'main_hex_color', 'key_benefits']
+        text_fields = [
+            'company_website', 'main_hex_color', 'key_benefits',
+            # New text fields
+            'target_audience', 'tone_of_voice', 'font_direction', 'core_features',
+            'emotional_lifestyle_benefits', 'proof_points', 'value_propositions'
+        ]
         
         # Get current overrides or initialize if needed
         current_overrides = ad_request.asset_overrides if ad_request.asset_overrides else {}

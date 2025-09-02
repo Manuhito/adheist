@@ -287,6 +287,15 @@ class AdRequestAssets(BaseModel):
     logo = models.ImageField(upload_to="adrequest_assets/", null=True, blank=True)
     main_hex_color = models.CharField(max_length=7, null=True, blank=True)
     key_benefits = models.TextField(null=True, blank=True)
+    # New text fields
+    target_audience = models.TextField(null=True, blank=True)
+    tone_of_voice = models.TextField(null=True, blank=True)
+    font_direction = models.TextField(null=True, blank=True)
+    core_features = models.TextField(null=True, blank=True)
+    emotional_lifestyle_benefits = models.TextField(null=True, blank=True)
+    proof_points = models.TextField(null=True, blank=True)
+    value_propositions = models.TextField(null=True, blank=True)
+    # Image fields
     product_image_1 = models.ImageField(upload_to="adrequest_assets/", null=True, blank=True)
     product_image_2 = models.ImageField(upload_to="adrequest_assets/", null=True, blank=True)
     app_image_1 = models.ImageField(upload_to="adrequest_assets/", null=True, blank=True)
@@ -305,6 +314,14 @@ class AdRequestAssets(BaseModel):
             'company_website': self.company_website,
             'main_hex_color': self.main_hex_color,
             'key_benefits': self.key_benefits,
+            # New text fields
+            'target_audience': self.target_audience,
+            'tone_of_voice': self.tone_of_voice,
+            'font_direction': self.font_direction,
+            'core_features': self.core_features,
+            'emotional_lifestyle_benefits': self.emotional_lifestyle_benefits,
+            'proof_points': self.proof_points,
+            'value_propositions': self.value_propositions,
             # We don't include images in the dict as they need special handling
         }
 

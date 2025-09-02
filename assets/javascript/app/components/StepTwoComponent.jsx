@@ -39,6 +39,15 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const websiteUrlId = useId();
   const keyBenefitsId = useId();
   const brandColorId = useId();
+  
+  // IDs for new text fields
+  const targetAudienceId = useId();
+  const toneOfVoiceId = useId();
+  const fontDirectionId = useId();
+  const coreFeaturesId = useId();
+  const emotionalLifestyleBenefitsId = useId();
+  const proofPointsId = useId();
+  const valuePropositionsId = useId();
 
   const [websiteUrl, setWebsiteUrl] = useState(
     // Check for company_website in asset_overrides first
@@ -50,12 +59,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   );
 
   const [keyBenefits, setKeyBenefits] = useState(
-    // Check for key_benefits in asset_overrides first
-    (initialData.asset_overrides?.key_benefits) ||
-    // Then fallback to keyBenefits if it exists
-    initialData.keyBenefits ||
-    // Finally default to empty string
-    ''
+    initialData.asset_overrides?.key_benefits || ''
   );
 
   const [selectedColor, setSelectedColor] = useState(
@@ -68,6 +72,35 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
   const [colorError, setColorError] = useState(false);
   const [selectedBrand, setSelectedBrand] = useState(initialData.brand || null);
+  
+  // New text fields state variables
+  const [targetAudience, setTargetAudience] = useState(
+    initialData.asset_overrides?.target_audience || ''
+  );
+  
+  const [toneOfVoice, setToneOfVoice] = useState(
+    initialData.asset_overrides?.tone_of_voice || ''
+  );
+  
+  const [fontDirection, setFontDirection] = useState(
+    initialData.asset_overrides?.font_direction || ''
+  );
+  
+  const [coreFeatures, setCoreFeatures] = useState(
+    initialData.asset_overrides?.core_features || ''
+  );
+  
+  const [emotionalLifestyleBenefits, setEmotionalLifestyleBenefits] = useState(
+    initialData.asset_overrides?.emotional_lifestyle_benefits || ''
+  );
+  
+  const [proofPoints, setProofPoints] = useState(
+    initialData.asset_overrides?.proof_points || ''
+  );
+  
+  const [valuePropositions, setValuePropositions] = useState(
+    initialData.asset_overrides?.value_propositions || ''
+  );
 
 
   // Debounce timers
@@ -75,15 +108,67 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const keyBenefitsUpdateTimer = useRef(null);
   const colorUpdateTimer = useRef(null);
   const brandUpdateTimer = useRef(null);
+  
+  // Debounce timers for new text fields
+  const targetAudienceUpdateTimer = useRef(null);
+  const toneOfVoiceUpdateTimer = useRef(null);
+  const fontDirectionUpdateTimer = useRef(null);
+  const coreFeaturesUpdateTimer = useRef(null);
+  const emotionalLifestyleBenefitsUpdateTimer = useRef(null);
+  const proofPointsUpdateTimer = useRef(null);
+  const valuePropositionsUpdateTimer = useRef(null);
 
   // Solo refrescar datos si es necesario (por ejemplo, al recargar la página directamente)
   // No hacemos la llamada automáticamente para evitar duplicación con handleStepComplete
+  // Función auxiliar para procesar los datos devueltos por refreshData y actualizar todos los campos
+  const processRefreshedData = async () => {
+    if (!refreshData) return;
+    
+    try {
+      const freshData = await refreshData();
+      
+      if (freshData && freshData.asset_overrides !== undefined) {
+        // Update website URL (force update even if empty)
+        setWebsiteUrl(freshData.asset_overrides.company_website || '');
+
+        // Update key benefits (force update even if empty)
+        setKeyBenefits(freshData.asset_overrides.key_benefits || '');
+
+        // Update brand color (force update even if empty)
+        setSelectedColor(freshData.asset_overrides.main_hex_color || '');
+        
+        // Update target audience (force update even if empty)
+        setTargetAudience(freshData.asset_overrides.target_audience || '');
+        
+        // Update tone of voice (force update even if empty)
+        setToneOfVoice(freshData.asset_overrides.tone_of_voice || '');
+        
+        // Update font direction (force update even if empty)
+        setFontDirection(freshData.asset_overrides.font_direction || '');
+        
+        // Update core features (force update even if empty)
+        setCoreFeatures(freshData.asset_overrides.core_features || '');
+        
+        // Update emotional/lifestyle benefits (force update even if empty)
+        setEmotionalLifestyleBenefits(freshData.asset_overrides.emotional_lifestyle_benefits || '');
+        
+        // Update proof points (force update even if empty)
+        setProofPoints(freshData.asset_overrides.proof_points || '');
+        
+        // Update value propositions (force update even if empty)
+        setValuePropositions(freshData.asset_overrides.value_propositions || '');
+      }
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+    }
+  };
+  
   useEffect(() => {
     // Comprobamos si venimos de una recarga de página o navegación directa
     const isDirectNavigation = !document.referrer.includes(window.location.host);
 
     if (refreshData && initialData?.id && isDirectNavigation) {
-      refreshData();
+      processRefreshedData();
     }
 
     // Ensure selectedBrand is set from initialData if available
@@ -289,7 +374,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
         // If we have a refreshData function, call it to update the UI
         if (refreshData) {
-          refreshData();
+          processRefreshedData();
         }
       } catch (error) {
         console.error('Error updating status to filled:', error);
@@ -406,7 +491,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
       // If we have a refreshData function, call it to update the UI
       if (refreshData) {
-        refreshData();
+        processRefreshedData();
       }
     } catch (error) {
       console.error('Error saving product image:', error);
@@ -484,7 +569,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
       // Refresh data if needed
       if (refreshData) {
-        refreshData();
+        processRefreshedData();
       }
     } catch (error) {
       console.error('Error saving app image:', error);
@@ -507,8 +592,6 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     websiteUrlUpdateTimer.current = setTimeout(() => {
       updateWebsiteUrl(newValue);
     }, 2000);
-
-    console.log('Website URL updated locally:', newValue);
   };
 
   // Handle key benefits input change with debouncing
@@ -529,25 +612,146 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     console.log('Key Benefits updated locally:', newValue);
   };
 
-  // Function to update website URL in the database
-  const updateWebsiteUrl = async (url) => {
-    // Only proceed if we have an ID
-    if (!initialData.id) return;
+  // Handler functions for new text fields
+  const handleTargetAudienceChange = (e) => {
+    const newValue = e.target.value;
+    setTargetAudience(newValue);
 
-    try {
-      // Get CSRF token from cookies
-      const csrfToken = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('csrftoken='))
-        ?.split('=')[1];
+    // Clear any existing timer
+    if (targetAudienceUpdateTimer.current) {
+      clearTimeout(targetAudienceUpdateTimer.current);
+    }
 
-      if (!csrfToken) {
-        console.error('CSRF token not found');
-        return;
-      }
+    // Set a new timer to update the database after 2 seconds of inactivity
+    targetAudienceUpdateTimer.current = setTimeout(() => {
+      updateTargetAudience(newValue);
+    }, 2000);
 
-      // Create a FormData object for the request
-      const formData = new FormData();
+    console.log('Target Audience updated locally:', newValue);
+  };
+
+  // Handler for tone of voice input changes
+  const handleToneOfVoiceChange = (e) => {
+    const newValue = e.target.value;
+    setToneOfVoice(newValue);
+
+    // Clear any existing timer
+    if (toneOfVoiceUpdateTimer.current) {
+      clearTimeout(toneOfVoiceUpdateTimer.current);
+    }
+
+    // Set a new timer to update the database after 2 seconds of inactivity
+    toneOfVoiceUpdateTimer.current = setTimeout(() => {
+      updateToneOfVoice(newValue);
+    }, 2000);
+
+    console.log('Tone of Voice updated locally:', newValue);
+  };
+
+  const handleFontDirectionChange = (e) => {
+    const newValue = e.target.value;
+    setFontDirection(newValue);
+
+    // Clear any existing timer
+    if (fontDirectionUpdateTimer.current) {
+      clearTimeout(fontDirectionUpdateTimer.current);
+    }
+
+    // Set a new timer to update the database after 2 seconds of inactivity
+    fontDirectionUpdateTimer.current = setTimeout(() => {
+      updateFontDirection(newValue);
+    }, 2000);
+
+    console.log('Font Direction updated locally:', newValue);
+  };
+
+  const handleCoreFeaturesChange = (e) => {
+    const newValue = e.target.value;
+    setCoreFeatures(newValue);
+
+    // Clear any existing timer
+    if (coreFeaturesUpdateTimer.current) {
+      clearTimeout(coreFeaturesUpdateTimer.current);
+    }
+
+    // Set a new timer to update the database after 2 seconds of inactivity
+    coreFeaturesUpdateTimer.current = setTimeout(() => {
+      updateCoreFeatures(newValue);
+    }, 2000);
+
+    console.log('Core Features updated locally:', newValue);
+  };
+  
+  const handleEmotionalLifestyleBenefitsChange = (e) => {
+    const newValue = e.target.value;
+    setEmotionalLifestyleBenefits(newValue);
+
+    // Clear any existing timer
+    if (emotionalLifestyleBenefitsUpdateTimer.current) {
+      clearTimeout(emotionalLifestyleBenefitsUpdateTimer.current);
+    }
+
+    // Set a new timer to update the database after 2 seconds of inactivity
+    emotionalLifestyleBenefitsUpdateTimer.current = setTimeout(() => {
+      updateEmotionalLifestyleBenefits(newValue);
+    }, 2000);
+
+    console.log('Emotional/Lifestyle Benefits updated locally:', newValue);
+  };
+
+  const handleProofPointsChange = (e) => {
+    const newValue = e.target.value;
+    setProofPoints(newValue);
+
+    // Clear any existing timer
+    if (proofPointsUpdateTimer.current) {
+      clearTimeout(proofPointsUpdateTimer.current);
+    }
+
+    // Set a new timer to update the database after 2 seconds of inactivity
+    proofPointsUpdateTimer.current = setTimeout(() => {
+      updateProofPoints(newValue);
+    }, 2000);
+
+    console.log('Proof Points updated locally:', newValue);
+  };
+
+  const handleValuePropositionsChange = (e) => {
+    const newValue = e.target.value;
+    setValuePropositions(newValue);
+
+    // Clear any existing timer
+    if (valuePropositionsUpdateTimer.current) {
+      clearTimeout(valuePropositionsUpdateTimer.current);
+    }
+
+    // Set a new timer to update the database after 2 seconds of inactivity
+    valuePropositionsUpdateTimer.current = setTimeout(() => {
+      updateValuePropositions(newValue);
+    }, 2000);
+
+    console.log('Value Propositions updated locally:', newValue);
+  };
+
+// Function to update website URL in the database
+const updateWebsiteUrl = async (url) => {
+  // Only proceed if we have an ID
+  if (!initialData.id) return;
+
+  try {
+    // Get CSRF token from cookies
+    const csrfToken = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('csrftoken='))
+      ?.split('=')[1];
+
+    if (!csrfToken) {
+      console.error('CSRF token not found');
+      return;
+    }
+
+    // Create a FormData object for the request
+    const formData = new FormData();
 
       // Add the company_website field directly
       formData.append('company_website', url);
@@ -574,7 +778,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       if (refreshData) {
         // We don't need to refresh data here as it would reset the input field
         // and potentially disrupt the user's typing
-        // refreshData();
+        // processRefreshedData();
       }
     } catch (error) {
       console.error('Error updating website URL:', error);
@@ -646,7 +850,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       console.log('Product library image updated in database:', data);
 
       // Refresh data if needed
-      if (refreshData) refreshData();
+      if (refreshData) processRefreshedData();
 
     } catch (error) {
       console.error('Error saving product library image:', error);
@@ -718,7 +922,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       console.log('Logo library image updated in database:', data);
 
       // Refresh data if needed
-      if (refreshData) refreshData();
+      if (refreshData) processRefreshedData();
 
     } catch (error) {
       console.error('Error saving logo library image:', error);
@@ -768,7 +972,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       if (refreshData) {
         // We don't need to refresh data here as it would reset the input field
         // and potentially disrupt the user's typing
-        // refreshData();
+        // processRefreshedData();
       }
     } catch (error) {
       console.error('Error saving key benefits:', error);
@@ -843,7 +1047,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       console.log('Brand color updated locally:', newValue);
     }
   };
-
+  
   // Function to update brand color in the database
   const updateBrandColor = async (color) => {
     // Only proceed if we have an ID
@@ -885,6 +1089,308 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
     } catch (error) {
       console.error('Error saving brand color:', error);
+    }
+  };
+  
+  // Update functions for new text fields
+  const updateTargetAudience = async (value) => {
+    // Only proceed if we have an ID
+    if (!initialData.id) return;
+
+    try {
+      // Get CSRF token from cookies
+      const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken='))
+        ?.split('=')[1];
+
+      if (!csrfToken) {
+        console.error('CSRF token not found');
+        return;
+      }
+
+      // Create a FormData object for the request
+      const formData = new FormData();
+
+      // Add the target_audience field directly
+      formData.append('target_audience', value);
+
+      // Make the API call to update the field
+      const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrfToken
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error updating target audience: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Target audience updated in database:', data);
+
+    } catch (error) {
+      console.error('Error saving target audience:', error);
+    }
+  };
+  
+  const updateToneOfVoice = async (value) => {
+    // Only proceed if we have an ID
+    if (!initialData.id) return;
+
+    try {
+      // Get CSRF token from cookies
+      const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken='))
+        ?.split('=')[1];
+
+      if (!csrfToken) {
+        console.error('CSRF token not found');
+        return;
+      }
+
+      // Create a FormData object for the request
+      const formData = new FormData();
+
+      // Add the tone_of_voice field directly
+      formData.append('tone_of_voice', value);
+
+      // Make the API call to update the field
+      const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrfToken
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error updating tone of voice: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Tone of voice updated in database:', data);
+
+    } catch (error) {
+      console.error('Error saving tone of voice:', error);
+    }
+  };
+  
+  const updateFontDirection = async (value) => {
+    // Only proceed if we have an ID
+    if (!initialData.id) return;
+
+    try {
+      // Get CSRF token from cookies
+      const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken='))
+        ?.split('=')[1];
+
+      if (!csrfToken) {
+        console.error('CSRF token not found');
+        return;
+      }
+
+      // Create a FormData object for the request
+      const formData = new FormData();
+
+      // Add the font_direction field directly
+      formData.append('font_direction', value);
+
+      // Make the API call to update the field
+      const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrfToken
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error updating font direction: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Font direction updated in database:', data);
+
+    } catch (error) {
+      console.error('Error saving font direction:', error);
+    }
+  };
+  
+  const updateCoreFeatures = async (value) => {
+    // Only proceed if we have an ID
+    if (!initialData.id) return;
+
+    try {
+      // Get CSRF token from cookies
+      const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken='))
+        ?.split('=')[1];
+
+      if (!csrfToken) {
+        console.error('CSRF token not found');
+        return;
+      }
+
+      // Create a FormData object for the request
+      const formData = new FormData();
+
+      // Add the core_features field directly
+      formData.append('core_features', value);
+
+      // Make the API call to update the field
+      const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrfToken
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error updating core features: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Core features updated in database:', data);
+
+    } catch (error) {
+      console.error('Error saving core features:', error);
+    }
+  };
+  
+  const updateEmotionalLifestyleBenefits = async (value) => {
+    // Only proceed if we have an ID
+    if (!initialData.id) return;
+
+    try {
+      // Get CSRF token from cookies
+      const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken='))
+        ?.split('=')[1];
+
+      if (!csrfToken) {
+        console.error('CSRF token not found');
+        return;
+      }
+
+      // Create a FormData object for the request
+      const formData = new FormData();
+
+      // Add the emotional_lifestyle_benefits field directly
+      formData.append('emotional_lifestyle_benefits', value);
+
+      // Make the API call to update the field
+      const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrfToken
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error updating emotional/lifestyle benefits: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Emotional/lifestyle benefits updated in database:', data);
+
+    } catch (error) {
+      console.error('Error saving emotional/lifestyle benefits:', error);
+    }
+  };
+  
+  const updateProofPoints = async (value) => {
+    // Only proceed if we have an ID
+    if (!initialData.id) return;
+
+    try {
+      // Get CSRF token from cookies
+      const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken='))
+        ?.split('=')[1];
+
+      if (!csrfToken) {
+        console.error('CSRF token not found');
+        return;
+      }
+
+      // Create a FormData object for the request
+      const formData = new FormData();
+
+      // Add the proof_points field directly
+      formData.append('proof_points', value);
+
+      // Make the API call to update the field
+      const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrfToken
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error updating proof points: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Proof points updated in database:', data);
+
+    } catch (error) {
+      console.error('Error saving proof points:', error);
+    }
+  };
+  
+  const updateValuePropositions = async (value) => {
+    // Only proceed if we have an ID
+    if (!initialData.id) return;
+
+    try {
+      // Get CSRF token from cookies
+      const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken='))
+        ?.split('=')[1];
+
+      if (!csrfToken) {
+        console.error('CSRF token not found');
+        return;
+      }
+
+      // Create a FormData object for the request
+      const formData = new FormData();
+
+      // Add the value_propositions field directly
+      formData.append('value_propositions', value);
+
+      // Make the API call to update the field
+      const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrfToken
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error updating value propositions: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Value propositions updated in database:', data);
+
+    } catch (error) {
+      console.error('Error saving value propositions:', error);
     }
   };
 
@@ -1128,22 +1634,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       // If we have a refreshData function, call it to update the UI
       if (refreshData) {
         console.log('Refreshing data after brand update...');
-        // Fetch fresh data and update the component state with the new assets
-        const freshData = await refreshData();
-
-        if (freshData) {
-          // Update local state with the new asset_overrides
-          if (freshData.asset_overrides !== undefined) {
-            // Update website URL (force update even if empty)
-            setWebsiteUrl(freshData.asset_overrides.company_website || '');
-
-            // Update key benefits (force update even if empty)
-            setKeyBenefits(freshData.asset_overrides.key_benefits || '');
-
-            // Update brand color (force update even if empty)
-            setSelectedColor(freshData.asset_overrides.main_hex_color || '');
-          }
-        }
+        processRefreshedData();
       }
     } catch (error) {
       console.error('Error saving brand:', error);
@@ -1326,7 +1817,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
                     )}
                   </div>
                 </div>
-                <div className="w-full">
+                <div className="w-full mb-6">
                   <h3 className="text-sm font-medium mb-2">{t('step_two.key_benefits', 'Key Benefits')}</h3>
                   <p className="text-xs text-muted-foreground mb-3">{t('step_two.add_key_benefits', 'Add the key benefits of your product or service')}</p>
                   <div>
@@ -1336,6 +1827,125 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
                       placeholder={t('step_two.key_benefits_example', 'E.g. Fast delivery, 24/7 support...')}
                       value={keyBenefits}
                       onChange={handleKeyBenefitsChange}
+                      className="w-full"
+                      disabled={!initialData.brand}
+                    />
+                  </div>
+                </div>
+                
+                {/* Target Audience */}
+                <div className="w-full mb-6">
+                  <h3 className="text-sm font-medium mb-2">{t('step_two.target_audience', 'Target Audience')}</h3>
+                  <p className="text-xs text-muted-foreground mb-3">{t('step_two.add_target_audience', 'Describe your target audience')}</p>
+                  <div>
+                    <Input
+                      id={targetAudienceId}
+                      type="text"
+                      placeholder={t('step_two.target_audience_example', 'E.g. Young professionals, 25-35 years old...')}
+                      value={targetAudience}
+                      onChange={handleTargetAudienceChange}
+                      className="w-full"
+                      disabled={!initialData.brand}
+                    />
+                  </div>
+                </div>
+                
+                {/* Tone of Voice */}
+                <div className="w-full mb-6">
+                  <h3 className="text-sm font-medium mb-2">{t('step_two.tone_of_voice', 'Tone of Voice')}</h3>
+                  <p className="text-xs text-muted-foreground mb-3">{t('step_two.add_tone_of_voice', 'Describe the tone of voice for your brand')}</p>
+                  <div>
+                    <Input
+                      id={toneOfVoiceId}
+                      type="text"
+                      placeholder={t('step_two.tone_of_voice_example', 'E.g. Professional, friendly, casual...')}
+                      value={toneOfVoice}
+                      onChange={handleToneOfVoiceChange}
+                      className="w-full"
+                      disabled={!initialData.brand}
+                    />
+                  </div>
+                </div>
+                
+                {/* Font Direction */}
+                <div className="w-full mb-6">
+                  <h3 className="text-sm font-medium mb-2">{t('step_two.font_direction', 'Font Direction')}</h3>
+                  <p className="text-xs text-muted-foreground mb-3">{t('step_two.add_font_direction', 'Specify font direction preferences')}</p>
+                  <div>
+                    <Input
+                      id={fontDirectionId}
+                      type="text"
+                      placeholder={t('step_two.font_direction_example', 'E.g. Modern sans-serif, elegant serif...')}
+                      value={fontDirection}
+                      onChange={handleFontDirectionChange}
+                      className="w-full"
+                      disabled={!initialData.brand}
+                    />
+                  </div>
+                </div>
+                
+                {/* Core Features */}
+                <div className="w-full mb-6">
+                  <h3 className="text-sm font-medium mb-2">{t('step_two.core_features', 'Core Features')}</h3>
+                  <p className="text-xs text-muted-foreground mb-3">{t('step_two.add_core_features', 'List the core features of your product or service')}</p>
+                  <div>
+                    <Input
+                      id={coreFeaturesId}
+                      type="text"
+                      placeholder={t('step_two.core_features_example', 'E.g. AI-powered, cloud storage, mobile app...')}
+                      value={coreFeatures}
+                      onChange={handleCoreFeaturesChange}
+                      className="w-full"
+                      disabled={!initialData.brand}
+                    />
+                  </div>
+                </div>
+                
+                {/* Emotional/Lifestyle Benefits */}
+                <div className="w-full mb-6">
+                  <h3 className="text-sm font-medium mb-2">{t('step_two.emotional_lifestyle_benefits', 'Emotional/Lifestyle Benefits')}</h3>
+                  <p className="text-xs text-muted-foreground mb-3">{t('step_two.add_emotional_lifestyle_benefits', 'Describe emotional or lifestyle benefits')}</p>
+                  <div>
+                    <Input
+                      id={emotionalLifestyleBenefitsId}
+                      type="text"
+                      placeholder={t('step_two.emotional_lifestyle_benefits_example', 'E.g. Peace of mind, more free time...')}
+                      value={emotionalLifestyleBenefits}
+                      onChange={handleEmotionalLifestyleBenefitsChange}
+                      className="w-full"
+                      disabled={!initialData.brand}
+                    />
+                  </div>
+                </div>
+                
+                {/* Proof Points */}
+                <div className="w-full mb-6">
+                  <h3 className="text-sm font-medium mb-2">{t('step_two.proof_points', 'Proof Points')}</h3>
+                  <p className="text-xs text-muted-foreground mb-3">{t('step_two.add_proof_points', 'Add proof points that support your claims')}</p>
+                  <div>
+                    <Input
+                      id={proofPointsId}
+                      type="text"
+                      placeholder={t('step_two.proof_points_example', 'E.g. 10,000+ happy customers, 4.8/5 rating...')}
+                      value={proofPoints}
+                      onChange={handleProofPointsChange}
+                      className="w-full"
+                      disabled={!initialData.brand}
+                    />
+                  </div>
+                </div>
+                
+                {/* Value Propositions */}
+                <div className="w-full">
+                  <h3 className="text-sm font-medium mb-2">{t('step_two.value_propositions', 'Value Propositions')}</h3>
+                  <p className="text-xs text-muted-foreground mb-3">{t('step_two.add_value_propositions', 'Describe your unique value propositions')}</p>
+                  <div>
+                    <Input
+                      id={valuePropositionsId}
+                      type="text"
+                      placeholder={t('step_two.value_propositions_example', 'E.g. Lowest price guarantee, fastest delivery...')}
+                      value={valuePropositions}
+                      onChange={handleValuePropositionsChange}
                       className="w-full"
                       disabled={!initialData.brand}
                     />
