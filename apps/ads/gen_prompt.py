@@ -101,7 +101,7 @@ The final output must **mirror the structure, layout, spacing, and visual hierar
 ---
 ##  Product Information
 {brand_name_section}
-{functional_benefits_section}
+{target_audience_section}{tone_of_voice_section}{font_direction_section}{core_features_section}{emotional_lifestyle_benefits_section}{proof_points_section}{value_propositions_section}{functional_benefits_section}
 {brand_color_section}
 ---
 ##  Key Requirement
@@ -127,13 +127,42 @@ The output must be in the form of a highly detailed image generation prompt for 
         key_benefits = version_data.get('key_benefits', '')
         functional_benefits_section = f"**Functional Benefits:** {key_benefits}" if key_benefits else ""
         
+        # Preparar las secciones adicionales solicitadas
+        target_audience = version_data.get('target_audience', '')
+        target_audience_section = f"**Target Audience:** {target_audience}\n" if target_audience else ""
+        
+        tone_of_voice = version_data.get('tone_of_voice', '')
+        tone_of_voice_section = f"**Tone of Voice:** {tone_of_voice}\n" if tone_of_voice else ""
+        
+        font_direction = version_data.get('font_direction', '')
+        font_direction_section = f"**Font Direction:** {font_direction}\n" if font_direction else ""
+        
+        core_features = version_data.get('core_features', '')
+        core_features_section = f"**Core Features:** {core_features}\n" if core_features else ""
+        
+        emotional_lifestyle_benefits = version_data.get('emotional_lifestyle_benefits', '')
+        emotional_lifestyle_benefits_section = f"**Emotional/Lifestyle Benefits:** {emotional_lifestyle_benefits}\n" if emotional_lifestyle_benefits else ""
+        
+        proof_points = version_data.get('proof_points', '')
+        proof_points_section = f"**Proof Points:** {proof_points}\n" if proof_points else ""
+        
+        value_propositions = version_data.get('value_propositions', '')
+        value_propositions_section = f"**Value Propositions:** {value_propositions}\n" if value_propositions else ""
+        
         # Format the user prompt with the version data
         formatted_user_prompt = user_prompt.format(
             brand_name=brand_name,
             brand_name_section=brand_name_section,
             main_hex_color=main_hex_color,
             brand_color_section=brand_color_section,
-            functional_benefits_section=functional_benefits_section
+            functional_benefits_section=functional_benefits_section,
+            target_audience_section=target_audience_section,
+            tone_of_voice_section=tone_of_voice_section,
+            font_direction_section=font_direction_section,
+            core_features_section=core_features_section,
+            emotional_lifestyle_benefits_section=emotional_lifestyle_benefits_section,
+            proof_points_section=proof_points_section,
+            value_propositions_section=value_propositions_section
         )
         
         # Log the complete formatted prompt for debugging
@@ -433,7 +462,14 @@ def generate_prompt(version):
         'concepts_info': concepts_info,
         'visual_requirements': visual_requirements,
         'key_benefits': key_benefits_text,
-        'user_prompt': user_prompt or ''
+        'user_prompt': user_prompt or '',
+        'target_audience': ad_request.get_asset_value('target_audience') or '',
+        'tone_of_voice': ad_request.get_asset_value('tone_of_voice') or '',
+        'font_direction': ad_request.get_asset_value('font_direction') or '',
+        'core_features': ad_request.get_asset_value('core_features') or '',
+        'emotional_lifestyle_benefits': ad_request.get_asset_value('emotional_lifestyle_benefits') or '',
+        'proof_points': ad_request.get_asset_value('proof_points') or '',
+        'value_propositions': ad_request.get_asset_value('value_propositions') or ''
     }
     
     # Collect image URLs for context
