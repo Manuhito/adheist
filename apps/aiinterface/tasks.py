@@ -7,11 +7,16 @@ from decimal import Decimal
 import json
 import os
 import requests
+import time
 
 from celery import shared_task
 from django.core.files.base import ContentFile
+from django.conf import settings
+from django.core.cache import cache
+from openai import OpenAI
 import posthog
 
+# Import AdRequestVersion at module level to ensure it's available throughout
 from apps.ads.models import AdRequestVersion
 
 from .services import ImageGenerationService
@@ -112,7 +117,7 @@ def send_slack_notification(error_message: str, context: Optional[Dict] = None, 
 @shared_task(bind=True, max_retries=3)
 def generate_image_task(
     self,
-    text_prompt: str,
+    text_prompt: str = None,
     image_urls: List[str] = None,
     canvas_size: str = "1024x1024",
     version_id: Optional[int] = None,
@@ -122,7 +127,7 @@ def generate_image_task(
     Celery task to generate an image using OpenAI's GPT-image-1 model.
     
     Args:
-        text_prompt: The text prompt describing the image to generate.
+        text_prompt: Optional. The text prompt describing the image to generate. If not provided, will be obtained from version.
         image_urls: List of image URLs or file paths to use as base images.
         canvas_size: The desired image size (e.g., "1024x1024").
         version_id: Optional ID of the AdRequestVersion to update with the generated image.
@@ -131,7 +136,37 @@ def generate_image_task(
     Returns:
         A dictionary containing the image data and metadata.
     """
+    # Import AdRequestVersion inside the function to ensure it's available in this scope
+    from apps.ads.models import AdRequestVersion
+    
     try:
+        # If version_id is provided but no text_prompt, generate the prompt directly
+        if version_id and not text_prompt:
+            try:
+                # Get the AdRequestVersion instance
+                version = AdRequestVersion.objects.get(id=version_id)
+                
+                # Import generate_prompt function here to avoid circular imports
+                from apps.ads.gen_prompt import generate_prompt
+                text_prompt = generate_prompt(version)
+                
+                # Save the generated prompt in the model for future reference
+                version.generated_prompt = text_prompt
+                version.save(update_fields=['generated_prompt'])
+                
+                logger.info(f"Generated prompt for version {version_id}: {text_prompt[:50]}...")
+            except Exception as e:
+                logger.exception(f"Error generating prompt for version {version_id}: {str(e)}")
+                raise
+        
+        if not text_prompt:
+            error_message = "No text prompt provided and couldn't get one from version"
+            logger.error(error_message)
+            raise ValueError(error_message)
+            
+        # Ensure text_prompt is a string to avoid NoneType errors
+        text_prompt = str(text_prompt)
+            
         logger.info(f"Starting image generation task with prompt: {text_prompt[:50]}...")
         
         # Generate the image
@@ -150,7 +185,7 @@ def generate_image_task(
                 
                 # Send Slack notification for functional errors
                 context = {
-                    "prompt": text_prompt[:100] + "..." if len(text_prompt) > 100 else text_prompt,
+                    "prompt": text_prompt[:100] + "..." if text_prompt and len(text_prompt) > 100 else text_prompt,
                     "canvas_size": canvas_size,
                     "version_id": version_id,
                     "version_type": version_type,
@@ -190,7 +225,7 @@ def generate_image_task(
             
             # Send Slack notification
             context = {
-                "prompt": text_prompt[:100] + "..." if len(text_prompt) > 100 else text_prompt,
+                "prompt": text_prompt[:100] + "..." if text_prompt and len(text_prompt) > 100 else text_prompt,
                 "canvas_size": canvas_size,
                 "version_id": version_id,
                 "version_type": version_type,
@@ -395,7 +430,7 @@ def generate_image_task(
         
         # Send Slack notification
         context = {
-            "prompt": text_prompt[:100] + "..." if len(text_prompt) > 100 else text_prompt,
+            "prompt": text_prompt[:100] + "..." if text_prompt and len(text_prompt) > 100 else text_prompt,
             "canvas_size": canvas_size,
             "version_id": version_id,
             "version_type": version_type,
