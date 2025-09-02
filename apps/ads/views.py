@@ -541,6 +541,8 @@ def home(request):
         request_data = {
             'ad_request_id': req.id,
             'ad_library_name': req.ad_library.facebook_page.page_name if req.ad_library else None,
+            'facebook_page': req.ad_library.facebook_page.page_name if req.ad_library else None,
+            'brand_name': req.base_assets.brand.brand_name if req.base_assets and req.base_assets.brand else None,
             'status': req.status,
             'display_status': display_status,
             'created_at': req.created_at.isoformat() if req.created_at else None,
