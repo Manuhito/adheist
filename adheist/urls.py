@@ -44,8 +44,8 @@ api_router.register_endpoint('images', ImagesAPIViewSet)
 PagesAPIViewSet.schema = None  # hacky workaround for https://github.com/wagtail/wagtail/issues/8583
 
 sitemaps = {
-    "static": StaticViewSitemap(),
     "wagtail": Sitemap(),
+    "static": StaticViewSitemap(),
 }
 
 urlpatterns = [
