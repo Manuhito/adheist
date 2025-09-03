@@ -16,7 +16,6 @@ class StaticViewSitemap(sitemaps.Sitemap):
     def items(self):
         # add any urls (by name) for static content you want to appear in your sitemap to this list
         return [
-            "web:home",
             "web:terms",
             "web:pricing_page"
         ]
