@@ -121,7 +121,7 @@ def generate_image_task(
     image_urls: List[str] = None,
     canvas_size: str = "1024x1024",
     version_id: Optional[int] = None,
-    version_type: str = "initial"
+    version_type: Optional[str] = None
 ) -> dict:
     """
     Celery task to generate an image using OpenAI's GPT-image-1 model.
@@ -145,6 +145,9 @@ def generate_image_task(
             try:
                 # Get the AdRequestVersion instance
                 version = AdRequestVersion.objects.get(id=version_id)
+                # Propagate version_type to version for conditional prompt generation
+                if version_type:
+                    setattr(version, "_version_type", version_type)
                 
                 # Import generate_prompt function here to avoid circular imports
                 from apps.ads.gen_prompt import generate_prompt

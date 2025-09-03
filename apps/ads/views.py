@@ -1518,8 +1518,12 @@ def adrequest_revision_create(request):
         task_id = None
         
         try:
-            # For revision, we only use the provided revision image URL
+            # For revision, we use the provided revision image URL
             image_urls = [url_image_revision]
+            
+            # Add logo_override if it exists
+            if ad_request.logo_override and ad_request.logo_override.url:
+                image_urls.append(request.build_absolute_uri(ad_request.logo_override.url))
             
             # Get canvas size from AdRequest
             canvas_size = ad_request.canvas_size or "1024x1024"
