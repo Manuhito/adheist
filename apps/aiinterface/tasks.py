@@ -374,9 +374,18 @@ def generate_image_task(
                             # Add costs to response metadata
                             metadata['costs'] = costs
                         
-                        # Update the response metadata
-                        version.openai_response_metadata = metadata
-                        update_fields.append('openai_response_metadata')
+                        # Update the response metadata - ensure it's JSON serializable
+                        import json
+                        try:
+                            # Convert to JSON and back to ensure serializability
+                            serializable_metadata = json.loads(json.dumps(metadata, default=str))
+                            version.openai_response_metadata = serializable_metadata
+                            update_fields.append('openai_response_metadata')
+                        except (TypeError, ValueError) as e:
+                            logger.warning(f"Could not serialize metadata for AdRequestVersion {version_id}: {e}")
+                            # Save a simplified version with just the costs
+                            version.openai_response_metadata = {'costs': costs} if 'costs' in locals() else {}
+                            update_fields.append('openai_response_metadata')
                         
                     # Save the updated fields
                     if update_fields:

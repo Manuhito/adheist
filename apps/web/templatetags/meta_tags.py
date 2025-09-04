@@ -9,8 +9,11 @@ register = template.Library()
 
 @register.filter
 def get_title(project_meta, page_title=None):
+    # Make sure we're only using the title, not description
     if page_title:
-        return "{} | {}".format(page_title, project_meta["NAME"])
+        # Clean the page_title to ensure it doesn't contain description text
+        clean_title = page_title.split('|')[0].strip() if '|' in page_title else page_title
+        return "{} | {}".format(clean_title, project_meta["NAME"])
     else:
         return project_meta["TITLE"]
 
