@@ -111,9 +111,9 @@ class AdRequestVersionAdmin(admin.ModelAdmin):
     list_display = ["get_version_id", "status", "user_admin_assigned", "created_at", "updated_at"]
     search_fields = ["ad_request__ad_library__facebook_page__page_name", "status"]
     list_filter = ["status", "user_admin_assigned"]
-    readonly_fields = ["user_admin_assigned", "generated_prompt_with_copy", "status", "download_overrides_button"]
+    readonly_fields = ["user_admin_assigned", "generated_prompt_with_copy", "status", "download_overrides_button", "user_prompt"]
     # readonly_fields = ["ad_request", "generated_prompt", "status", "download_overrides_button"]
-    exclude = ["user_prompt", "generated_prompt"]
+    exclude = ["generated_prompt"]
     actions = ["assign_to_me"]
     
     def get_urls(self):
