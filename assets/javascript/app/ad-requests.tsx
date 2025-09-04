@@ -54,17 +54,31 @@ interface AdRequest {
     canvas_size: string;
     tags: string[];
     industries: string[];
+    brand_name?: string;
+    facebook_page?: string;
 }
 
 // Function to format the date
 function formatDate(dateString: string): string {
     if (!dateString) return "";
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-    });
+    
+    // Format as "Month day+th Year"
+    const day = date.getDate();
+    const month = date.toLocaleDateString("en-US", { month: "long" });
+    const year = date.getFullYear();
+    
+    // Add the appropriate suffix to the day
+    let suffix = "th";
+    if (day % 10 === 1 && day !== 11) {
+        suffix = "st";
+    } else if (day % 10 === 2 && day !== 12) {
+        suffix = "nd";
+    } else if (day % 10 === 3 && day !== 13) {
+        suffix = "rd";
+    }
+    
+    return `${month} ${day}${suffix} ${year}`;
 }
 
 // Function to convert AdRequest to BentoItem
@@ -90,11 +104,9 @@ function adRequestToBentoItem(adRequest: AdRequest, t: (key: string, fallback?: 
     };
 
     return {
-        title: adRequest.ad_library_name || t('ad_requests.no_library', "No library"),
-        meta: `${adRequest.canvas_size}`,
-        description: adRequest.industries.length > 0 
-            ? `${t('ad_requests.industries', 'Industries')}: ${adRequest.industries.join(", ")}` 
-            : t('ad_requests.no_industries', "No associated industries"),
+        title: adRequest.brand_name || t('ad_requests.no_brand', "No brand"),
+        meta: formatDate(adRequest.created_at),
+        description: adRequest.facebook_page || adRequest.ad_library_name || t('ad_requests.no_page', "No Facebook page"),
         icon: statusIconMap[adRequest.status] || statusIconMap.DEFAULT,
         status: adRequest.display_status,  // Use display_status instead of status
         tags: adRequest.tags,

@@ -1,7 +1,7 @@
 import React from "react";
 import { Icons } from "@/components/icons";
 import { FaTwitter } from "react-icons/fa";
-import { FaYoutube } from "react-icons/fa6";
+import { FaFacebook } from "react-icons/fa6";
 import { RiInstagramFill } from "react-icons/ri";
 
 export const BLUR_FADE_DELAY = 0.15;
@@ -23,6 +23,7 @@ export const siteConfig = {
     instagram: "https://instagram.com/magicuidesign/",
   },
   header: [
+    /* Features button - temporarily disabled
     {
       trigger: "Features",
       content: {
@@ -51,6 +52,8 @@ export const siteConfig = {
         ],
       },
     },
+    */
+    /* Solutions button - temporarily disabled
     {
       trigger: "Solutions",
       content: {
@@ -89,6 +92,7 @@ export const siteConfig = {
         ],
       },
     },
+    */
     {
       href: "/blog",
       label: "Blog",
@@ -201,50 +205,35 @@ export const siteConfig = {
   ],
   footer: [
     {
-      title: "Product",
-      links: [
-        { href: "#", text: "Features", icon: null },
-        { href: "#", text: "Pricing", icon: null },
-        { href: "#", text: "Documentation", icon: null },
-        { href: "#", text: "API", icon: null },
-      ],
-    },
-    {
       title: "Company",
       links: [
-        { href: "#", text: "About Us", icon: null },
-        { href: "#", text: "Careers", icon: null },
-        { href: "#", text: "Blog", icon: null },
-        { href: "#", text: "Press", icon: null },
-        { href: "#", text: "Partners", icon: null },
+        { href: "/pricing", text: "Pricing", icon: null }
       ],
     },
     {
       title: "Resources",
       links: [
-        { href: "#", text: "Community", icon: null },
-        { href: "#", text: "Contact", icon: null },
-        { href: "#", text: "Support", icon: null },
-        { href: "#", text: "Status", icon: null }
+        { href: "/blog", text: "Blog", icon: null },
+        { href: "mailto:hey@adheist.ai", text: "Support", icon: null },
       ],
     },
     {
       title: "Social",
       links: [
         {
-          href: "#",
-          text: "Twitter",
+          href: "https://www.facebook.com/people/AdHeist/61579908885918/",
+          text: "Facebook",
+          icon: <FaFacebook />,
+        },
+        {
+          href: "https://x.com/AdHeist_saas",
+          text: "X",
           icon: <FaTwitter />,
         },
         {
-          href: "#",
+          href: "https://www.instagram.com/adheist_saas/",
           text: "Instagram",
           icon: <RiInstagramFill />,
-        },
-        {
-          href: "#",
-          text: "Youtube",
-          icon: <FaYoutube />,
         },
       ],
     },
