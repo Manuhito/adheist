@@ -433,9 +433,9 @@ WAGTAILADMIN_BASE_URL = "http://localhost:8000"
 
 # replace any values below with specifics for your project
 PROJECT_METADATA = {
-    "NAME": gettext_lazy("AdHeist"),
+    "NAME": gettext_lazy("AdHeist | #1 Ai Ad Generator"), # Meta Title
     "URL": "https://adheist.ai",
-    "DESCRIPTION": gettext_lazy("AdHeist description"),
+    "DESCRIPTION": gettext_lazy("AdHeist is an AI Ad Generator that produces professional advertising creatives and content instantly."),
     "IMAGE": "{{STATIC_URL}}images/web/logo-adheist.png",
     "KEYWORDS": "AI, Ads, SaaS, AdHeist",
     "CONTACT_EMAIL": "hey@adheist.ai",
