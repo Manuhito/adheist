@@ -14,59 +14,6 @@ function createDefaultPricingData(t) {
     title: t('pricing.title', "Pricing Plans"),
     subtitle: t('pricing.subtitle', "Choose the perfect plan for your needs"),
     frequencies: ["monthly", "usage"],
-    tiers: [
-      {
-        name: t('pricing.beta', "Beta"),
-        description: t('pricing.free_description', "Basic features for individuals"),
-        price: {
-          monthly: 0,
-          yearly: 0
-        },
-        features: [
-          t('pricing.feature_free_1', "Search 1M+ Ads Library"),
-          t('pricing.feature_free_2', "Unlimited Ads (With Feedback)"),
-          t('pricing.feature_free_3', "Unlimited Revisions (With Feedback)"),
-          t('pricing.feature_free_4', "20 BrandKits"),
-          t('pricing.feature_free_5', "5 GB of assets")
-        ],
-        cta: t('pricing.get_started', "Get Started"),
-        highlighted: false,
-        popular: false
-      },
-      {
-        name: t('pricing.pro', "Pro"),
-        description: t('pricing.pro_description', "Advanced features for professionals"),
-        price: {
-          monthly: 29,
-          yearly: 24
-        },
-        features: [
-          t('pricing.feature_pro_1', "20 ad requests per month"),
-          t('pricing.feature_pro_2', "Premium templates"),
-          t('pricing.feature_pro_3', "Priority support"),
-          t('pricing.feature_pro_4', "Custom branding")
-        ],
-        cta: t('pricing.upgrade_to_pro', "Upgrade to Pro"),
-        highlighted: true,
-        popular: true
-      },
-      {
-        name: t('pricing.starter', "Starter"),
-        description: t('pricing.starter_description', "For small businesses"),
-        price: {
-          monthly: 19
-        },
-        features: [
-          t('pricing.feature_starter_1', "10 ad requests per month"),
-          t('pricing.feature_starter_2', "Standard templates"),
-          t('pricing.feature_starter_3', "Email support"),
-          t('pricing.feature_starter_4', "Basic analytics")
-        ],
-        cta: t('pricing.upgrade_to_starter', "Upgrade to Starter"),
-        highlighted: false,
-        popular: false
-      }
-    ],
     usagePackages: [
       {
         name: t('pricing.package_1', "Package 1"),
