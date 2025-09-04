@@ -1,0 +1,212 @@
+{% extends "web/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="space-y-16">
+  <!-- Hero Section -->
+  <section class="container mx-auto py-12 px-4 md:px-6 text-center">
+    <h1 class="text-4xl md:text-5xl font-bold tracking-tight mb-6">Create High-Converting Ads with AI</h1>
+    <p class="text-xl mb-8 max-w-3xl mx-auto">Generate professional ad creatives in minutes, not days. AdHeist uses AI to create ads that convert.</p>
+    <div class="flex flex-col sm:flex-row justify-center gap-4">
+      <a href="{% url 'account_signup' %}" class="inline-flex items-center justify-center rounded-md bg-primary px-6 py-3 text-white font-medium hover:bg-primary/90">Get Started Free</a>
+      <a href="#features" class="inline-flex items-center justify-center rounded-md border border-input px-6 py-3 font-medium hover:bg-accent hover:text-accent-foreground">Learn More</a>
+    </div>
+    <div class="mt-12">
+      <img src="{% static 'images/hero-image.png' %}" alt="AdHeist Platform" class="mx-auto rounded-lg shadow-lg" />
+    </div>
+  </section>
+
+  <!-- Logos Section -->
+  <section class="container mx-auto py-8 px-4 md:px-6">
+    <div class="text-center mb-6">
+      <p class="text-lg font-medium">Trusted by innovative companies</p>
+    </div>
+    <div class="flex flex-wrap justify-center items-center gap-8 md:gap-12">
+      <!-- Replace with your actual client logos -->
+      <div class="grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all">
+        <img src="{% static 'images/logos/logo1.png' %}" alt="Client Logo" class="h-8" />
+      </div>
+      <div class="grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all">
+        <img src="{% static 'images/logos/logo2.png' %}" alt="Client Logo" class="h-8" />
+      </div>
+      <div class="grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all">
+        <img src="{% static 'images/logos/logo3.png' %}" alt="Client Logo" class="h-8" />
+      </div>
+      <div class="grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all">
+        <img src="{% static 'images/logos/logo4.png' %}" alt="Client Logo" class="h-8" />
+      </div>
+    </div>
+  </section>
+
+  <!-- Problem Section -->
+  <section class="container mx-auto py-12 px-4 md:px-6 bg-muted/50 rounded-lg">
+    <div class="max-w-4xl mx-auto">
+      <h2 class="text-3xl font-bold tracking-tight mb-6 text-center">The Problem with Traditional Ad Creation</h2>
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="flex flex-col items-start">
+          <div class="rounded-full bg-primary/10 p-3 mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Time-Consuming Process</h3>
+          <p>Traditional ad creation takes days or weeks, requiring multiple revisions and approvals before launch.</p>
+        </div>
+        <div class="flex flex-col items-start">
+          <div class="rounded-full bg-primary/10 p-3 mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><circle cx="12" cy="12" r="10"/><path d="M16 10h.01"/><path d="M8 10h.01"/><path d="M15 14a3 3 0 0 1-6 0"/></svg>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Expensive Resources</h3>
+          <p>Hiring designers and copywriters for ad creation is costly, especially for small businesses and startups.</p>
+        </div>
+        <div class="flex flex-col items-start">
+          <div class="rounded-full bg-primary/10 p-3 mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Inconsistent Results</h3>
+          <p>Manual ad creation often leads to inconsistent messaging and branding across campaigns.</p>
+        </div>
+        <div class="flex flex-col items-start">
+          <div class="rounded-full bg-primary/10 p-3 mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><circle cx="12" cy="12" r="10"/><path d="M8 15h8"/><path d="M9.5 9h.01"/><path d="M14.5 9h.01"/></svg>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Limited Testing</h3>
+          <p>Creating multiple ad variations for A/B testing is often too resource-intensive for most marketing teams.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="container mx-auto py-12 px-4 md:px-6">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl font-bold tracking-tight mb-4">Powerful Features</h2>
+      <p class="text-xl max-w-3xl mx-auto">Everything you need to create high-converting ads in minutes</p>
+    </div>
+    <div class="grid md:grid-cols-3 gap-8">
+      <div class="flex flex-col items-start p-6 bg-card rounded-lg border border-border">
+        <div class="rounded-full bg-primary/10 p-3 mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M12 2v8"/><path d="m4.93 10.93 1.41 1.41"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.07 10.93-1.41 1.41"/><path d="M22 22H2"/><path d="M16 6 8 14"/><path d="M16 14 8 6"/></svg>
+        </div>
+        <h3 class="text-xl font-semibold mb-2">AI-Powered Ad Creation</h3>
+        <p>Generate professional ad creatives with just a few clicks using our advanced AI algorithms.</p>
+      </div>
+      <div class="flex flex-col items-start p-6 bg-card rounded-lg border border-border">
+        <div class="rounded-full bg-primary/10 p-3 mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h10"/><path d="M7 12h10"/><path d="M7 17h10"/></svg>
+        </div>
+        <h3 class="text-xl font-semibold mb-2">Customizable Templates</h3>
+        <p>Choose from hundreds of templates designed for different industries and campaign objectives.</p>
+      </div>
+      <div class="flex flex-col items-start p-6 bg-card rounded-lg border border-border">
+        <div class="rounded-full bg-primary/10 p-3 mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </div>
+        <h3 class="text-xl font-semibold mb-2">Smart Copy Generation</h3>
+        <p>Create compelling ad copy that resonates with your target audience and drives conversions.</p>
+      </div>
+      <div class="flex flex-col items-start p-6 bg-card rounded-lg border border-border">
+        <div class="rounded-full bg-primary/10 p-3 mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
+        </div>
+        <h3 class="text-xl font-semibold mb-2">Brand Consistency</h3>
+        <p>Maintain consistent branding across all your ad campaigns with our brand management tools.</p>
+      </div>
+      <div class="flex flex-col items-start p-6 bg-card rounded-lg border border-border">
+        <div class="rounded-full bg-primary/10 p-3 mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+        </div>
+        <h3 class="text-xl font-semibold mb-2">Performance Analytics</h3>
+        <p>Track and analyze your ad performance to optimize for better results over time.</p>
+      </div>
+      <div class="flex flex-col items-start p-6 bg-card rounded-lg border border-border">
+        <div class="rounded-full bg-primary/10 p-3 mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <h3 class="text-xl font-semibold mb-2">Collaboration Tools</h3>
+        <p>Work seamlessly with your team to create, review, and approve ad creatives in one place.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Solution Section -->
+  <section class="container mx-auto py-12 px-4 md:px-6 bg-muted/50 rounded-lg">
+    <div class="grid md:grid-cols-2 gap-12 items-center">
+      <div>
+        <h2 class="text-3xl font-bold tracking-tight mb-6">How AdHeist Solves Your Ad Creation Challenges</h2>
+        <ul class="space-y-4">
+          <li class="flex items-start">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary mr-3 mt-1"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+            <div>
+              <h3 class="text-lg font-semibold">Speed & Efficiency</h3>
+              <p>Create professional ads in minutes instead of days or weeks.</p>
+            </div>
+          </li>
+          <li class="flex items-start">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary mr-3 mt-1"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+            <div>
+              <h3 class="text-lg font-semibold">Cost Reduction</h3>
+              <p>Save thousands on design and copywriting resources.</p>
+            </div>
+          </li>
+          <li class="flex items-start">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary mr-3 mt-1"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+            <div>
+              <h3 class="text-lg font-semibold">Consistent Quality</h3>
+              <p>Maintain brand consistency across all your campaigns.</p>
+            </div>
+          </li>
+          <li class="flex items-start">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary mr-3 mt-1"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+            <div>
+              <h3 class="text-lg font-semibold">A/B Testing at Scale</h3>
+              <p>Create multiple variations to find what works best for your audience.</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <div class="relative">
+        <img src="{% static 'images/solution-image.png' %}" alt="AdHeist Solution" class="rounded-lg shadow-lg" />
+        <div class="absolute -bottom-6 -right-6 bg-background p-4 rounded-lg shadow-lg border border-border">
+          <div class="flex items-center gap-4">
+            <div class="text-4xl font-bold text-primary">85%</div>
+            <div class="text-sm">Faster ad creation compared to traditional methods</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="container mx-auto py-12 px-4 md:px-6">
+    <div class="bg-primary text-primary-foreground rounded-lg p-8 md:p-12 text-center">
+      <h2 class="text-3xl font-bold tracking-tight mb-4">Ready to Transform Your Ad Creation Process?</h2>
+      <p class="text-xl mb-8 max-w-2xl mx-auto">Join thousands of marketers who are saving time and money while creating better-performing ads.</p>
+      <div class="flex flex-col sm:flex-row justify-center gap-4">
+        <a href="{% url 'account_signup' %}" class="inline-flex items-center justify-center rounded-md bg-white text-primary px-6 py-3 font-medium hover:bg-white/90">Start Free Trial</a>
+        <a href="{% url 'web:pricing_page' %}" class="inline-flex items-center justify-center rounded-md border border-primary-foreground px-6 py-3 text-white font-medium hover:bg-primary-foreground/10">View Pricing</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section class="container mx-auto py-12 px-4 md:px-6">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl font-bold tracking-tight">Frequently Asked Questions</h2>
+    </div>
+    
+    <div class="max-w-3xl mx-auto">
+      {% for faq in faq_data %}
+      <div class="mb-4 border-b border-border pb-4">
+        <h3 class="text-lg font-medium mb-2">{{ faq.question }}</h3>
+        <div class="prose prose-sm dark:prose-invert">
+          {{ faq.answer|safe }}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- No JavaScript needed for this HTML version -->
+{% endblock %}

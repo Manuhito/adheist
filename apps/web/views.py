@@ -22,11 +22,11 @@ def home(request):
             'order': item.order
         } for item in faq_items]
         
-        # Convert FAQ data to JSON for the React component
-        faq_json = json.dumps(faq_data)
+        # Pass the raw FAQ data to the HTML template instead of JSON
+        # This allows direct rendering in the template with {{ faq.answer|safe }}
         
-        return render(request, "web/landing_page.html", {
-            "faq_data": faq_json
+        return render(request, "web/landing_page_html.html", {
+            "faq_data": faq_data
         })
 
 
