@@ -1,0 +1,250 @@
+{% extends "web/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="space-y-16">
+  <!-- Hero Section -->
+  <section class="container mx-auto py-12 px-4 md:px-6 text-center">
+    <div class="flex flex-col items-center max-w-2xl mx-auto w-full pt-8 md:pt-12">
+      <p class="text-xs font-medium text-primary sm:text-sm">Create Winning Ads in Minutes</p>
+      <h1 class="text-4xl font-bold tracking-tight sm:text-6xl text-neutral-700 dark:text-white max-w-4xl leading-relaxed lg:leading-snug text-center mx-auto mt-16">
+        <span class="text-black dark:text-white">#1 Ai Ad Generator</span>
+        <br />
+        that Converts
+      </h1>
+      
+      <div class="flex flex-col md:flex-row justify-center items-center gap-4 md:gap-8 mt-12 max-w-4xl w-full px-4">
+        <div class="flex items-center gap-2">
+          <span class="text-primary text-sm">✓</span>
+          <span class="text-sm text-muted-foreground whitespace-nowrap">
+            Save <span class="font-medium">$2K-$10K</span>/month
+          </span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-primary text-sm">✓</span>
+          <span class="text-sm text-muted-foreground whitespace-nowrap">
+            <span class="font-medium">Create Ads</span> 24/7
+          </span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-primary text-sm">✓</span>
+          <span class="text-sm text-muted-foreground whitespace-nowrap">
+            <span class="font-medium">100%</span> Money Back Guarantee
+          </span>
+        </div>
+      </div>
+      
+      <div class="mx-auto mt-12 flex w-full max-w-2xl flex-col items-center justify-center space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0">
+        <a href="{% url 'account_signup' %}" class="inline-flex items-center justify-center rounded-md bg-primary px-8 py-6 text-lg text-white font-medium hover:bg-primary/90 w-full sm:w-auto">Start Free Beta</a>
+        <form method="post" action="/accounts/google/login/">
+          {% csrf_token %}
+          <button type="submit" class="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-8 py-6 text-lg text-gray-600 font-medium hover:bg-gray-50 hover:text-gray-600 w-full sm:w-auto">
+            <img src="{% static 'images/socialauth/google-logo.svg' %}" alt="Google" class="h-5 w-5 mr-2">
+            Start Free with Google
+          </button>
+        </form>
+      </div>
+      <p class="mt-6 text-sm text-muted-foreground">No Credit Card Required</p>
+    </div>
+  </section>
+
+  <!-- Logos Section -->
+  <section class="container mx-auto py-8 px-4 md:px-6">
+    <div class="text-center mb-6">
+      <p class="text-lg font-medium">Trusted by innovative companies</p>
+    </div>
+    <div class="flex flex-wrap justify-center items-center gap-8 md:gap-12">
+      <!-- Google icon -->
+      <div class="grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-8 w-8">
+          <path
+            fill="#4285F4"
+            d="M23.745 12.27c0-.79-.07-1.54-.19-2.27h-11.3v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82z"
+          />
+          <path
+            fill="#34A853"
+            d="M12.255 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96h-3.98v3.09C3.515 21.3 7.565 24 12.255 24z"
+          />
+          <path
+            fill="#FBBC05"
+            d="M5.525 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.62h-3.98a11.86 11.86 0 000 10.76l3.98-3.09z"
+          />
+          <path
+            fill="#EA4335"
+            d="M12.255 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C18.205 1.19 15.495 0 12.255 0c-4.69 0-8.74 2.7-10.71 6.62l3.98 3.09c.95-2.85 3.6-4.96 6.73-4.96z"
+          />
+        </svg>
+      </div>
+      <!-- React icon -->
+      <div class="grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all">
+        <svg viewBox="0 0 24 24" class="h-8 w-8" fill="currentColor">
+          <path
+            d="M14.23 12.004a2.236 2.236 0 0 1-2.235 2.236 2.236 2.236 0 0 1-2.236-2.236 2.236 2.236 0 0 1 2.235-2.236 2.236 2.236 0 0 1 2.236 2.236zm2.648-10.69c-1.346 0-3.107.96-4.888 2.622-1.78-1.653-3.542-2.602-4.887-2.602-.41 0-.783.093-1.106.278-1.375.793-1.683 3.264-.973 6.365C1.98 8.917 0 10.42 0 12.004c0 1.59 1.99 3.097 5.043 4.03-.704 3.113-.39 5.588.988 6.38.32.187.69.275 1.102.275 1.345 0 3.107-.96 4.888-2.624 1.78 1.654 3.542 2.603 4.887 2.603.41 0 .783-.09 1.106-.275 1.374-.792 1.683-3.263.973-6.365C22.02 15.096 24 13.59 24 12.004c0-1.59-1.99-3.097-5.043-4.032.704-3.11.39-5.587-.988-6.38-.318-.184-.688-.277-1.092-.278zm-.005 1.09v.006c.225 0 .406.044.558.127.666.382.955 1.835.73 3.704-.054.46-.142.945-.25 1.44-.96-.236-2.006-.417-3.107-.534-.66-.905-1.345-1.727-2.035-2.447 1.592-1.48 3.087-2.292 4.105-2.295zm-9.77.02c1.012 0 2.514.808 4.11 2.28-.686.72-1.37 1.537-2.02 2.442-1.107.117-2.154.298-3.113.538-.112-.49-.195-.964-.254-1.42-.23-1.868.054-3.32.714-3.708.147.09.338.128.563.128 1.012 0 2.514-.807 4.11-2.28.44-.572.895-1.096 1.345-1.565zm4.882 3.05c.455.468.91.992 1.36 1.564-.44-.572.895-1.096 1.345-1.565.455-.468.91-.992 1.36-1.564zM17.92 16.32c.112.493.2.968.254 1.423.23 1.868-.054 3.32-.714 3.708-.147.09-.338.128-.563.128-1.012 0-2.514-.807-4.11-2.28.686-.72 1.37-1.536 2.02-2.44 1.107-.118 2.154-.3 3.113-.54zm-11.83.01c.96.234 2.006.415 3.107.532.66.905 1.345 1.727 2.035 2.446-1.595 1.483-3.092 2.295-4.11 2.295-.22-.005-.406-.05-.553-.132-.666-.38-.955-1.834-.73-3.703.054-.46.142-.944.25-1.438zm4.56.64c.44.02.89.034 1.345.034.46 0 .915-.01 1.36-.034-.44.572-.895 1.095-1.345 1.565-.455-.47-.91-.993-1.36-1.565z"
+          />
+        </svg>
+      </div>
+      <!-- Tailwind icon -->
+      <div class="grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all">
+        <svg viewBox="0 0 24 24" class="h-8 w-8" fill="currentColor">
+          <path
+            d="M12.001,4.8c-3.2,0-5.2,1.6-6,4.8c1.2-1.6,2.6-2.2,4.2-1.8c0.913,0.228,1.565,0.89,2.288,1.624 C13.666,10.618,15.027,12,18.001,12c3.2,0,5.2-1.6,6-4.8c-1.2,1.6-2.6,2.2-4.2,1.8c-0.913-0.228-1.565-0.89-2.288-1.624 C16.337,6.182,14.976,4.8,12.001,4.8z M6.001,12c-3.2,0-5.2,1.6-6,4.8c1.2-1.6,2.6-2.2,4.2-1.8c0.913,0.228,1.565,0.89,2.288,1.624 c1.177,1.194,2.538,2.576,5.512,2.576c3.2,0,5.2-1.6,6-4.8c-1.2,1.6-2.6,2.2-4.2,1.8c-0.913-0.228-1.565-0.89-2.288-1.624 C10.337,13.382,8.976,12,6.001,12z"
+          />
+        </svg>
+      </div>
+      <!-- GitHub icon -->
+      <div class="grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all">
+        <svg viewBox="0 0 24 24" class="h-8 w-8" fill="currentColor">
+          <path
+            d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+          />
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- Problem Section -->
+  <section class="container mx-auto py-12 px-4 md:px-6 bg-muted/50 rounded-lg">
+    <div class="max-w-4xl mx-auto">
+      <h2 class="text-3xl font-bold tracking-tight mb-6 text-center">The Ad Creation Challenges</h2>
+      <div class="grid md:grid-cols-3 gap-8 mt-12">
+        <div class="flex flex-col items-start p-6 bg-background border-none shadow-none">
+          <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-primary"><path d="M12 2v6a2 2 0 0 0 2 2h6"/><path d="M22 12v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6"/></svg>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Agencies Are Expensive</h3>
+          <p class="text-muted-foreground">Hiring agencies or freelancers costs $2K-$10K per month for ad creation.</p>
+        </div>
+        <div class="flex flex-col items-start p-6 bg-background border-none shadow-none">
+          <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-primary"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Most Ads Don't Convert</h3>
+          <p class="text-muted-foreground">Creating ads without real data leads to wasted budget and poor results.</p>
+        </div>
+        <div class="flex flex-col items-start p-6 bg-background border-none shadow-none">
+          <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-primary"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Too Many Scattered Tools</h3>
+          <p class="text-muted-foreground">Planning, writing, designing, and launching ads typically requires multiple disjointed tools.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="container mx-auto py-12 px-4 md:px-6">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl font-bold tracking-tight mb-4">How It Works</h2>
+      <p class="text-xl max-w-3xl mx-auto">Create high-converting ads in 3 simple steps</p>
+    </div>
+    <div class="grid md:grid-cols-3 gap-8">
+      <div class="flex flex-col items-start p-6 bg-background border-none shadow-none">
+        <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-primary"><path d="m21.21 15.89-9-9a2.12 2.12 0 0 0-3 0l-9 9"/><path d="M2.32 13.32 9 9.18"/><path d="m12 6.18 7.75 4.4"/><path d="M2 17.57h12"/><path d="M16 17.57h6"/></svg>
+        </div>
+        <h3 class="text-xl font-semibold mb-2">Find Winning Ad Ideas</h3>
+        <p class="text-muted-foreground">Analyze your competitors' best ads and get inspiration for your campaigns.</p>
+      </div>
+      <div class="flex flex-col items-start p-6 bg-background border-none shadow-none">
+        <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-primary"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M8 5H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-4"/></svg>
+        </div>
+        <h3 class="text-xl font-semibold mb-2">Create Ads Automatically</h3>
+        <p class="text-muted-foreground">Generate 100+ ad variations with AI. No design skills needed.</p>
+      </div>
+      <div class="flex flex-col items-start p-6 bg-background border-none shadow-none">
+        <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-primary"><path d="M12 2v4"/><path d="M12 18v4"/><path d="m4.93 4.93 2.83 2.83"/><path d="m16.24 16.24 2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="m4.93 19.07 2.83-2.83"/><path d="m16.24 7.76 2.83-2.83"/></svg>
+        </div>
+        <h3 class="text-xl font-semibold mb-2">Polish and Launch</h3>
+        <p class="text-muted-foreground">Fine-tune your ads and export them to your ad platform of choice.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Solution Section -->
+  <section class="container mx-auto py-12 px-4 md:px-6 bg-muted/50 rounded-lg">
+    <div class="max-w-4xl mx-auto">
+      <h2 class="text-3xl font-bold tracking-tight mb-6 text-center">Advanced Features</h2>
+      <h3 class="text-xl text-center mb-12">Everything You Need for <span class="text-primary">Successful Ad Creation</span></h3>
+      
+      <div class="grid grid-cols-1 divide-x divide-y divide-dashed border border-dashed sm:grid-cols-2 mt-16">
+        <div class="p-6 flex flex-col items-start">
+          <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-primary"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Generate Unlimited Ad Variations</h3>
+          <p class="text-muted-foreground">Create 100+ versions from a single product URL. Test what works.</p>
+        </div>
+        
+        <div class="p-6 flex flex-col items-start">
+          <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-primary"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Works Everywhere</h3>
+          <p class="text-muted-foreground">Export to Facebook Ads, Instagram or Social Media.</p>
+        </div>
+        
+        <div class="p-6 flex flex-col items-start">
+          <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-primary"><path d="M15 4V2"/><path d="M15 16v-2"/><path d="M8 9h2"/><path d="M20 9h2"/><path d="M17.8 11.8 19 13"/><path d="M15 9h0"/><path d="M17.8 6.2 19 5"/><path d="m3 21 9-9"/><path d="M12.2 6.2 11 5"/></svg>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">No Design Skills Needed</h3>
+          <p class="text-muted-foreground">AI handles the creative process. You handle the strategy.</p>
+        </div>
+        
+        <div class="p-6 flex flex-col items-start">
+          <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-primary"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Scale A/B Testing Faster</h3>
+          <p class="text-muted-foreground">Create variants faster than ever.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section id="cta" class="container mx-auto py-12 px-4 md:px-6">
+    <div class="bg-primary/10 rounded-xl py-16 text-center">
+      <h2 class="text-3xl font-bold tracking-tight mb-4">Ready to create winning ads?</h2>
+      <p class="text-xl mb-8 max-w-2xl mx-auto">Zero Risk, Full Refund - No Questions Asked</p>
+      <div class="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4 pt-4">
+        <a href="{% url 'account_signup' %}" class="w-full sm:w-auto text-background flex gap-2 bg-primary hover:bg-primary/90 inline-flex items-center justify-center rounded-md px-8 py-3 font-medium">
+          Start Free Beta
+        </a>
+        <form method="post" action="/accounts/google/login/">
+          {% csrf_token %}
+          <button type="submit" class="w-full sm:w-auto flex items-center gap-2 bg-white text-gray-600 hover:text-gray-600 hover:bg-gray-50 border-gray-300 inline-flex items-center justify-center rounded-md border px-8 py-3 font-medium">
+            <img src="{% static 'images/socialauth/google-logo.svg' %}" alt="Google" class="h-5 w-5 mr-2">
+            Start Free with Google
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section class="container mx-auto py-12 px-4 md:px-6">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl font-bold tracking-tight">Frequently Asked Questions</h2>
+    </div>
+    
+    <div class="max-w-3xl mx-auto">
+      {% for faq in faq_data %}
+      <div class="mb-4 border-b border-border pb-4">
+        <h3 class="text-lg font-medium mb-2">{{ faq.question }}</h3>
+        <div class="prose prose-sm dark:prose-invert">
+          {{ faq.answer|safe }}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- No JavaScript needed for this HTML version -->
+{% endblock %}
