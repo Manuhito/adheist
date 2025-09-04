@@ -27,74 +27,23 @@ document.addEventListener('DOMContentLoaded', () => {
       frequencies: ["monthly", "yearly"],
       tiers: [
         {
-          name: "Free",
+          name: "Beta",
           description: "Basic features for individuals",
           price: {
             monthly: 0,
             yearly: 0
           },
           features: [
-            "3 ad requests per month",
-            "Basic templates",
-            "Standard support"
+            "Search 1M+ Ads Library",
+            "Unlimited Ads (With Feedback)",
+            "Unlimited Revisions (With Feedback)",
+            "20 BrandKits",
+            "5 GB of assets"
           ],
           cta: "Get Started",
           highlighted: false,
           popular: false
         },
-        {
-          name: "Pro",
-          description: "Advanced features for professionals",
-          price: {
-            monthly: 29,
-            yearly: 24
-          },
-          features: [
-            "20 ad requests per month",
-            "Premium templates",
-            "Priority support",
-            "Custom branding"
-          ],
-          cta: "Upgrade to Pro",
-          highlighted: true,
-          popular: true
-        },
-        {
-          name: "Team",
-          description: "For teams and businesses",
-          price: {
-            monthly: 49,
-            yearly: 39
-          },
-          features: [
-            "50 ad requests per month",
-            "All premium templates",
-            "24/7 support",
-            "Custom branding",
-            "Team collaboration"
-          ],
-          cta: "Upgrade to Team",
-          highlighted: false,
-          popular: false
-        },
-        {
-          name: "Enterprise",
-          description: "For large organizations",
-          price: {
-            monthly: "Custom",
-            yearly: "Custom"
-          },
-          features: [
-            "Unlimited ad requests",
-            "Custom templates",
-            "Dedicated support",
-            "API access",
-            "Advanced analytics"
-          ],
-          cta: "Contact Sales",
-          highlighted: false,
-          popular: false
-        }
       ]
     };
     

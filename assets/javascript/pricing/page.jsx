@@ -14,57 +14,6 @@ function createDefaultPricingData(t) {
     title: t('pricing.title', "Pricing Plans"),
     subtitle: t('pricing.subtitle', "Choose the perfect plan for your needs"),
     frequencies: ["monthly", "usage"],
-    tiers: [
-      {
-        name: t('pricing.free', "Free"),
-        description: t('pricing.free_description', "Basic features for individuals"),
-        price: {
-          monthly: 0,
-          yearly: 0
-        },
-        features: [
-          t('pricing.feature_free_1', "3 ad requests per month"),
-          t('pricing.feature_free_2', "Basic templates"),
-          t('pricing.feature_free_3', "Standard support")
-        ],
-        cta: t('pricing.get_started', "Get Started"),
-        highlighted: false,
-        popular: false
-      },
-      {
-        name: t('pricing.pro', "Pro"),
-        description: t('pricing.pro_description', "Advanced features for professionals"),
-        price: {
-          monthly: 29,
-          yearly: 24
-        },
-        features: [
-          t('pricing.feature_pro_1', "20 ad requests per month"),
-          t('pricing.feature_pro_2', "Premium templates"),
-          t('pricing.feature_pro_3', "Priority support"),
-          t('pricing.feature_pro_4', "Custom branding")
-        ],
-        cta: t('pricing.upgrade_to_pro', "Upgrade to Pro"),
-        highlighted: true,
-        popular: true
-      },
-      {
-        name: t('pricing.starter', "Starter"),
-        description: t('pricing.starter_description', "For small businesses"),
-        price: {
-          monthly: 19
-        },
-        features: [
-          t('pricing.feature_starter_1', "10 ad requests per month"),
-          t('pricing.feature_starter_2', "Standard templates"),
-          t('pricing.feature_starter_3', "Email support"),
-          t('pricing.feature_starter_4', "Basic analytics")
-        ],
-        cta: t('pricing.upgrade_to_starter', "Upgrade to Starter"),
-        highlighted: false,
-        popular: false
-      }
-    ],
     usagePackages: [
       {
         name: t('pricing.package_1', "Package 1"),
@@ -72,8 +21,9 @@ function createDefaultPricingData(t) {
         price: 100,
         priceId: "price_package_1",
         features: [
-          t('pricing.feature_package_1_1', "100 images"),
-          t('pricing.feature_package_1_2', "200 revisions")
+          t('pricing.feature_package_1_1', "Search 1M+ Ads Library"),
+          t('pricing.feature_package_1_2', "40 Ads Creations"),
+          t('pricing.feature_package_1_3', "40 Ad Revisions")
         ],
         cta: t('pricing.buy_package', "Buy Package"),
         highlighted: true,
@@ -85,8 +35,9 @@ function createDefaultPricingData(t) {
         price: 200,
         priceId: "price_package_2",
         features: [
-          t('pricing.feature_package_2_1', "200 images"),
-          t('pricing.feature_package_2_2', "500 revisions")
+          t('pricing.feature_package_2_1', "Search 1M+ Ads Library"),
+          t('pricing.feature_package_2_2', "100 Ads Creations"),
+          t('pricing.feature_package_2_3', "100 Ad Revisions")
         ],
         cta: t('pricing.buy_package', "Buy Package"),
         highlighted: false,
@@ -98,30 +49,28 @@ function createDefaultPricingData(t) {
 
 export default function PricingPage() {
   const { t } = useTranslation();
-  
+
   // Obtener datos de precios del objeto window o usar el fallback con traducciones
   const defaultData = createDefaultPricingData(t);
   const backendData = window.__PRICING_DATA__;
-  
+
   // Si hay datos del backend, traducir sus textos
   let pricingData;
   if (backendData) {
     // Filtrar los tiers para mantener solo Free, Starter y Pro
-    const filteredTiers = backendData.tiers.filter(tier => 
+    const filteredTiers = backendData.tiers.filter(tier =>
       ['Free', 'Starter', 'Pro'].includes(tier.name)
     );
-    
+
     // Traducir los tiers del backend
     const translatedTiers = filteredTiers.map(tier => ({
       ...tier,
       name: t(`pricing.${tier.name.toLowerCase()}`, tier.name),
       description: t(`pricing.${tier.name.toLowerCase()}_description`, tier.description),
-      features: tier.features.map((feature, index) => 
-        t(`pricing.feature_${tier.name.toLowerCase()}_${index + 1}`, feature)
-      ),
+      features: tier.features, // Use backend features directly without translation
       cta: t(`pricing.${tier.cta.toLowerCase().replace(/ /g, '_')}`, tier.cta)
     }));
-    
+
     // Usar los paquetes de uso de los datos predeterminados
     pricingData = {
       ...backendData,
@@ -136,9 +85,9 @@ export default function PricingPage() {
   } else {
     pricingData = defaultData;
   }
-  
+
   console.log("Pricing data after translation:", pricingData);
-  
+
   // Asegurarse de que no haya frecuencia "yearly"
   if (pricingData.frequencies.includes("yearly")) {
     pricingData.frequencies = pricingData.frequencies.filter(freq => freq !== "yearly");
