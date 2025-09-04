@@ -27,16 +27,18 @@ document.addEventListener('DOMContentLoaded', () => {
       frequencies: ["monthly", "yearly"],
       tiers: [
         {
-          name: "Free",
+          name: "Beta",
           description: "Basic features for individuals",
           price: {
             monthly: 0,
             yearly: 0
           },
           features: [
-            "3 ad requests per month",
-            "Basic templates",
-            "Standard support"
+            "Search 1M+ Ads Library",
+            "Unlimited Ads (With Feedback)",
+            "Unlimited Revisions (With Feedback)",
+            "20 BrandKits",
+            "5 GB of assets"
           ],
           cta: "Get Started",
           highlighted: false,

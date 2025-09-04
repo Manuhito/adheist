@@ -55,7 +55,7 @@ async function handleCreatePaymentIntent(priceId) {
  */
 document.addEventListener('DOMContentLoaded', () => {
   const container = document.getElementById('pricing-section-container');
-  
+
   if (container) {
     // Get pricing data from window object
     const pricingData = window.__PRICING_DATA__ || {
@@ -134,13 +134,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       ]
     };
-    
+
     // Create root and render component
     const root = createRoot(container);
     root.render(
-      <BillingPage 
-        pricingData={pricingData} 
-        onSubscribe={handleCreatePaymentIntent} 
+      <BillingPage
+        pricingData={pricingData}
+        onSubscribe={handleCreatePaymentIntent}
       />
     );
   } else {

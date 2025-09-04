@@ -16,16 +16,18 @@ function createDefaultPricingData(t) {
     frequencies: ["monthly", "usage"],
     tiers: [
       {
-        name: t('pricing.free', "Free"),
+        name: t('pricing.beta', "Beta"),
         description: t('pricing.free_description', "Basic features for individuals"),
         price: {
           monthly: 0,
           yearly: 0
         },
         features: [
-          t('pricing.feature_free_1', "3 ad requests per month"),
-          t('pricing.feature_free_2', "Basic templates"),
-          t('pricing.feature_free_3', "Standard support")
+          t('pricing.feature_free_1', "Search 1M+ Ads Library"),
+          t('pricing.feature_free_2', "Unlimited Ads (With Feedback)"),
+          t('pricing.feature_free_3', "Unlimited Revisions (With Feedback)"),
+          t('pricing.feature_free_4', "20 BrandKits"),
+          t('pricing.feature_free_5', "5 GB of assets")
         ],
         cta: t('pricing.get_started', "Get Started"),
         highlighted: false,
@@ -72,8 +74,9 @@ function createDefaultPricingData(t) {
         price: 100,
         priceId: "price_package_1",
         features: [
-          t('pricing.feature_package_1_1', "100 images"),
-          t('pricing.feature_package_1_2', "200 revisions")
+          t('pricing.feature_package_1_1', "Search 1M+ Ads Library"),
+          t('pricing.feature_package_1_2', "40 Ads Creations"),
+          t('pricing.feature_package_1_3', "40 Ad Revisions")
         ],
         cta: t('pricing.buy_package', "Buy Package"),
         highlighted: true,
@@ -85,8 +88,9 @@ function createDefaultPricingData(t) {
         price: 200,
         priceId: "price_package_2",
         features: [
-          t('pricing.feature_package_2_1', "200 images"),
-          t('pricing.feature_package_2_2', "500 revisions")
+          t('pricing.feature_package_2_1', "Search 1M+ Ads Library"),
+          t('pricing.feature_package_2_2', "100 Ads Creations"),
+          t('pricing.feature_package_2_3', "100 Ad Revisions")
         ],
         cta: t('pricing.buy_package', "Buy Package"),
         highlighted: false,
@@ -98,30 +102,28 @@ function createDefaultPricingData(t) {
 
 export default function PricingPage() {
   const { t } = useTranslation();
-  
+
   // Obtener datos de precios del objeto window o usar el fallback con traducciones
   const defaultData = createDefaultPricingData(t);
   const backendData = window.__PRICING_DATA__;
-  
+
   // Si hay datos del backend, traducir sus textos
   let pricingData;
   if (backendData) {
     // Filtrar los tiers para mantener solo Free, Starter y Pro
-    const filteredTiers = backendData.tiers.filter(tier => 
+    const filteredTiers = backendData.tiers.filter(tier =>
       ['Free', 'Starter', 'Pro'].includes(tier.name)
     );
-    
+
     // Traducir los tiers del backend
     const translatedTiers = filteredTiers.map(tier => ({
       ...tier,
       name: t(`pricing.${tier.name.toLowerCase()}`, tier.name),
       description: t(`pricing.${tier.name.toLowerCase()}_description`, tier.description),
-      features: tier.features.map((feature, index) => 
-        t(`pricing.feature_${tier.name.toLowerCase()}_${index + 1}`, feature)
-      ),
+      features: tier.features, // Use backend features directly without translation
       cta: t(`pricing.${tier.cta.toLowerCase().replace(/ /g, '_')}`, tier.cta)
     }));
-    
+
     // Usar los paquetes de uso de los datos predeterminados
     pricingData = {
       ...backendData,
@@ -136,9 +138,9 @@ export default function PricingPage() {
   } else {
     pricingData = defaultData;
   }
-  
+
   console.log("Pricing data after translation:", pricingData);
-  
+
   // Asegurarse de que no haya frecuencia "yearly"
   if (pricingData.frequencies.includes("yearly")) {
     pricingData.frequencies = pricingData.frequencies.filter(freq => freq !== "yearly");

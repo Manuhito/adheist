@@ -65,7 +65,7 @@ def pricing_page(request):
             # Enterprise plan will be added manually
         }
         
-        # Initialize pricing data with Free plan
+        # Initialize pricing data with Beta plan
         pricing_data = {
             "title": "Pricing Plans",
             "subtitle": "Choose the perfect plan for your needs",
@@ -79,9 +79,11 @@ def pricing_page(request):
                         "yearly": 0
                     },
                     "features": [
-                        "3 ad requests per month",
-                        "Basic templates",
-                        "Standard support"
+                        "Search 1M+ Ads Library",
+                        "Unlimited Ads (With Feedback)",
+                        "Unlimited Revisions (With Feedback)",
+                        "20 BrandKits",
+                        "5 GB of assets"
                     ],
                     "cta": "Get Started",
                     "highlighted": False,
