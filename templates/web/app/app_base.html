@@ -1,6 +1,11 @@
 {% extends "web/base_core.html" %}
 {% load static %}
 {% block extra_js %}
+{{ block.super }}
+<script>
+  // Mark this as a private page for no-index
+  window.__IS_PRIVATE_PAGE__ = true;
+</script>
 <script>
   // Pass user data to the React component
   window.__USER_DATA__ = {

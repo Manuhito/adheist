@@ -558,6 +558,43 @@ def robot_index(request):
     """
     Makes robot_index setting available to templates
     """
+    # Define URLs that should not be indexed even on public pages
+    noindex_urls = [
+        'account_login', 'account_logout', 'account_signup', 
+        'account_reset_password', 'account_confirm_email',
+        'account_email', 'account_set_password', 'account_change_password',
+        'account_request_login_code', 'socialaccount_signup', 'socialaccount_connections',
+        'mfa_index', 'mfa_activate_totp',
+        # Legal pages
+        'web:terms',
+        # Error pages
+        '400', '403', '404', '500'
+    ]
+    
+    # Check if current page should be marked as private/no-index
+    force_noindex = False
+    if hasattr(request, 'resolver_match') and request.resolver_match:
+        url_name = request.resolver_match.url_name
+        force_noindex = url_name in noindex_urls
+    
+    # Determine if this is a private page (extends app_base.html)
+    # We'll detect this by checking if user is authenticated and URL patterns
+    is_private_page = False
+    if request.user.is_authenticated:
+        # Common patterns for private pages
+        private_url_patterns = [
+            'ads:', 'dashboard', 'billing', 'profile', 'settings',
+            'adrequest', 'subscription', 'usage'
+        ]
+        if hasattr(request, 'resolver_match') and request.resolver_match:
+            url_name = request.resolver_match.url_name or ''
+            namespace = request.resolver_match.namespace or ''
+            full_name = f"{namespace}:{url_name}" if namespace else url_name
+            
+            is_private_page = any(pattern in full_name for pattern in private_url_patterns)
+    
     return {
         "ROBOT_INDEX": settings.ROBOT_INDEX,
+        "is_private_page": is_private_page,
+        "force_noindex": force_noindex,
     }

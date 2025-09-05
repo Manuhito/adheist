@@ -9,7 +9,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <!--Mobile friendly-->
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  {% if not ROBOT_INDEX %}
+  {% if not ROBOT_INDEX or is_private_page or force_noindex %}
   <meta name="robots" content="noindex, nofollow">
   {% endif %}
   {% block meta %}
