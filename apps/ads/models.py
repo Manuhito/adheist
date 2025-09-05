@@ -507,6 +507,7 @@ class AdRequestVersion(BaseModel):
     
     # New fields for storing specific OpenAI responses
     openai_response_metadata = models.JSONField(null=True, blank=True, help_text="Metadata from OpenAI API responses")
+    openai_prompt_response_metadata = models.JSONField(null=True, blank=True, help_text="Metadata from OpenAI API responses for prompt generation")
     error_logs = models.TextField(null=True, blank=True, help_text="Error logs when image generation fails")
     
     # Rating fields
