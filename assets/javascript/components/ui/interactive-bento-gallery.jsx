@@ -168,7 +168,28 @@ const GalleryModal = ({
             >
                 {/* Header */}
                 <div className="p-4 border-b border-border flex items-center justify-between">
-                    <h3 className="text-lg font-semibold">{selectedItem.title}</h3>
+                    <div className="flex items-center gap-3">
+                        {/* Avatar */}
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-muted flex-shrink-0">
+                            {selectedItem.page_url ? (
+                                <img
+                                    src={`https://twenty-icons.com/${selectedItem.page_url.replace(/^https?:\/\//, '')}`}
+                                    alt={`${selectedItem.title} logo`}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                        // Fallback to a default avatar if the icon service fails
+                                        e.target.style.display = 'none';
+                                        e.target.parentNode.innerHTML = `<div class="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">${selectedItem.title.charAt(0).toUpperCase()}</div>`;
+                                    }}
+                                />
+                            ) : (
+                                <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
+                                    {selectedItem.title.charAt(0).toUpperCase()}
+                                </div>
+                            )}
+                        </div>
+                        <h3 className="text-lg font-semibold">{selectedItem.title}</h3>
+                    </div>
                     <button
                         onClick={onClose}
                         className="p-1 rounded-full hover:bg-accent"

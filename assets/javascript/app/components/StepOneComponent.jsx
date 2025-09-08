@@ -342,7 +342,8 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
         desc: desc,
         url: imageUrl,
         industry: industry,
-        is_fav: item.is_fav || false // Incluir la propiedad is_fav para que funcione el icono de estrella
+        is_fav: item.is_fav || false, // Incluir la propiedad is_fav para que funcione el icono de estrella
+        page_url: item.page_url || null // Incluir page_url para el avatar
       };
     });
   };

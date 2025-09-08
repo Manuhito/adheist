@@ -6,6 +6,7 @@ import redis
 from django.conf import settings
 
 from .models import AdLibrary, IndustryList, TagList, AdRequest
+from apps.apify.models import FacebookPage
 
 # Initialize Redis connection
 redis_client = redis.from_url(settings.REDIS_URL)
@@ -105,3 +106,25 @@ def track_adrequest_status_changes(sender, instance, **kwargs):
         except AdRequest.DoesNotExist:
             # This is a new instance, no previous state to compare
             pass
+
+
+@receiver([post_save, post_delete], sender=FacebookPage)
+def invalidate_facebook_page_cache(sender, instance, **kwargs):
+    """
+    Signal handler to invalidate the FacebookPage cache
+    when a FacebookPage instance is created, updated, or deleted.
+    """
+    # Delete the specific cache key for this FacebookPage
+    cache_key = f'facebook_page_data_{instance.id}'
+    cache.delete(cache_key)
+
+
+@receiver(post_save, sender=FacebookPage)
+def invalidate_facebook_page_industries_cache(sender, instance, **kwargs):
+    """
+    Signal handler to invalidate FacebookPage cache when industries are updated.
+    This handles the many-to-many relationship changes.
+    """
+    # When industries change, we need to invalidate the cache
+    cache_key = f'facebook_page_data_{instance.id}'
+    cache.delete(cache_key)
