@@ -579,7 +579,7 @@ Generate a **highly detailed image generation prompt for the OpenAI Image API** 
         
         # Get OpenAI configuration
         openai_config = OpenAIConfiguration.get_openai_config()
-        model_name = openai_config.get('openai_prompt_model', 'gpt-4o')
+        model_name = openai_config.get('openai_prompt_model', 'gpt-5')
         input_price = float(openai_config.get('text_input_price_prompt', 1.25))
         output_price = float(openai_config.get('text_output_price_prompt', 10.00))
         

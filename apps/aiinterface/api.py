@@ -47,7 +47,7 @@ def test_openai_connection(request):
 @require_POST
 def generate_image(request):
     """
-    API endpoint to generate images using OpenAI's GPT-4o and gpt-image-1.
+    API endpoint to generate images using OpenAI's GPT-5 and gpt-image-1.
     
     Accepts:
         - text_prompt: Required text description
