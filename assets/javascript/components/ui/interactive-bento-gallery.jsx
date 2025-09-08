@@ -164,7 +164,7 @@ const GalleryModal = ({
                 initial={{ scale: 0.95 }}
                 animate={{ scale: 1 }}
                 exit={{ scale: 0.95 }}
-                className="bg-background rounded-xl overflow-hidden max-h-[90vh] shadow-2xl flex flex-col"
+                className="bg-background rounded-xl overflow-hidden max-h-[90vh] min-w-[500px] shadow-2xl flex flex-col"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Scrollable Content */}
