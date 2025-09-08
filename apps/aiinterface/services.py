@@ -14,7 +14,7 @@ from apps.aiinterface.models import OpenAIConfiguration
 
 
 class ImageGenerationService:
-    """Service for generating images using OpenAI's GPT-4o and gpt-image-1 models."""
+    """Service for generating images using OpenAI's GPT-5 and gpt-image-1 models."""
 
     def __init__(self):
         """Initialize the service with OpenAI client."""
@@ -205,8 +205,7 @@ class ImageGenerationService:
                     "image_content": image_bytes,
                     "is_binary": True,  # Indicador de que estamos enviando datos binarios
                     
-                    # Como ya no estamos usando GPT-4o para mejorar el prompt,
-                    # simplemente pasamos el prompt original
+                    # Pasamos el prompt original
                     "enhanced_prompt": text_prompt,
                     
                     # Incluir metadatos incluyendo la información de uso
