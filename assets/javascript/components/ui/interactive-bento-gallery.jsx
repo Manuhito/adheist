@@ -4,6 +4,65 @@ import { X, Check, Star, Trash2 } from 'lucide-react';
 import { useTranslation } from '../../lib/useTranslation';
 import { Switch } from '../ui/switch';
 
+// Custom scrollbar styles
+const scrollbarStyles = `
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgb(156 163 175);
+    border-radius: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(107 114 128);
+  }
+  @media (prefers-color-scheme: dark) {
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background-color: rgb(75 85 99);
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background-color: rgb(107 114 128);
+    }
+  }
+  
+  /* Global scrollbar styles for main page scroll */
+  body::-webkit-scrollbar {
+    width: 8px;
+  }
+  body::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  body::-webkit-scrollbar-thumb {
+    background-color: rgb(156 163 175);
+    border-radius: 4px;
+  }
+  body::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(107 114 128);
+  }
+  @media (prefers-color-scheme: dark) {
+    body::-webkit-scrollbar-thumb {
+      background-color: rgb(75 85 99);
+    }
+    body::-webkit-scrollbar-thumb:hover {
+      background-color: rgb(107 114 128);
+    }
+  }
+`;
+
+// Inject styles into head
+if (typeof document !== 'undefined') {
+  const styleElement = document.createElement('style');
+  styleElement.textContent = scrollbarStyles;
+  document.head.appendChild(styleElement);
+  
+  // Apply Firefox scrollbar styles to body
+  document.body.style.scrollbarWidth = 'thin';
+  document.body.style.scrollbarColor = 'rgb(156 163 175) transparent';
+}
+
 /**
  * MediaItem component renders an image with optional selection indicator
  * Includes a star icon that indicates if the image is marked as favorite
@@ -168,7 +227,13 @@ const GalleryModal = ({
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Scrollable Content */}
-                <div className="flex-1 overflow-y-auto">
+                <div 
+                    className="flex-1 overflow-y-auto custom-scrollbar"
+                    style={{
+                        scrollbarWidth: 'thin',
+                        scrollbarColor: 'rgb(156 163 175) transparent'
+                    }}
+                >
                     {/* Header */}
                     <div className="pt-4 px-4">
                         <div className="flex items-start justify-between mb-3">
@@ -492,7 +557,11 @@ const InteractiveBentoGallery = ({
     };
 
     return (
-        <div className="container mx-auto px-4 py-6 max-w-5xl">
+        <div className="container mx-auto px-4 py-6 max-w-5xl"
+            style={{
+                scrollbarWidth: 'thin',
+                scrollbarColor: 'rgb(156 163 175) transparent'
+            }}>
             <div className="mb-6 relative">
                 <div className="text-center">
                     <motion.h2
