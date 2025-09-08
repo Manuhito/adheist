@@ -110,6 +110,7 @@ const GalleryModal = ({
     onDeactivateImage
 }) => {
     const { t } = useTranslation();
+    const [isAdBodiesExpanded, setIsAdBodiesExpanded] = useState(false);
     if (!isOpen) return null;
 
     // Determine if this item is marked as favorite
@@ -167,35 +168,70 @@ const GalleryModal = ({
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="p-4 border-b border-border flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        {/* Avatar */}
-                        <div className="w-10 h-10 rounded-full overflow-hidden bg-muted flex-shrink-0">
-                            {selectedItem.page_url ? (
-                                <img
-                                    src={`https://twenty-icons.com/${selectedItem.page_url.replace(/^https?:\/\//, '')}`}
-                                    alt={`${selectedItem.title} logo`}
-                                    className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                        // Fallback to a default avatar if the icon service fails
-                                        e.target.style.display = 'none';
-                                        e.target.parentNode.innerHTML = `<div class="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">${selectedItem.title.charAt(0).toUpperCase()}</div>`;
-                                    }}
-                                />
-                            ) : (
-                                <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
-                                    {selectedItem.title.charAt(0).toUpperCase()}
-                                </div>
-                            )}
+                <div className="p-4 border-b border-border">
+                    <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                            {/* Avatar */}
+                            <div className="w-10 h-10 rounded-full overflow-hidden bg-muted flex-shrink-0">
+                                {selectedItem.page_url ? (
+                                    <img
+                                        src={`https://twenty-icons.com/${selectedItem.page_url.replace(/^https?:\/\//, '')}`}
+                                        alt={`${selectedItem.title} logo`}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            // Fallback to a default avatar if the icon service fails
+                                            e.target.style.display = 'none';
+                                            e.target.parentNode.innerHTML = `<div class="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">${selectedItem.title.charAt(0).toUpperCase()}</div>`;
+                                        }}
+                                    />
+                                ) : (
+                                    <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
+                                        {selectedItem.title.charAt(0).toUpperCase()}
+                                    </div>
+                                )}
+                            </div>
+                            <h3 className="text-lg font-semibold">{selectedItem.title}</h3>
                         </div>
-                        <h3 className="text-lg font-semibold">{selectedItem.title}</h3>
+                        <button
+                            onClick={onClose}
+                            className="p-1 rounded-full hover:bg-accent"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="p-1 rounded-full hover:bg-accent"
-                    >
-                        <X className="w-5 h-5" />
-                    </button>
+                    
+                    {/* Ad Creative Bodies */}
+                    {selectedItem.ad_creative_bodies && (
+                        <div className="mt-3">
+                            <div className="relative">
+                                {!isAdBodiesExpanded && selectedItem.ad_creative_bodies.length > 150 ? (
+                                    <p className="text-sm text-foreground leading-relaxed">
+                                        {selectedItem.ad_creative_bodies.substring(0, 150)}...{' '}
+                                        <button
+                                            onClick={() => setIsAdBodiesExpanded(true)}
+                                            className="text-gray-500 hover:text-gray-700 text-sm underline inline"
+                                        >
+                                            {t('bento_gallery.read_more', 'read more')}
+                                        </button>
+                                    </p>
+                                ) : (
+                                    <div>
+                                        <p className="text-sm text-foreground leading-relaxed">
+                                            {selectedItem.ad_creative_bodies}
+                                        </p>
+                                        {isAdBodiesExpanded && selectedItem.ad_creative_bodies.length > 150 && (
+                                            <button
+                                                onClick={() => setIsAdBodiesExpanded(false)}
+                                                className="text-gray-500 hover:text-gray-700 text-sm underline mt-1"
+                                            >
+                                                {t('bento_gallery.read_less', 'Read less')}
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Content */}

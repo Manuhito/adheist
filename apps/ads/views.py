@@ -653,6 +653,7 @@ def get_adlibrary_by_id(request, adlibrary_id):
             'tags': tag_names,
             'ad_image': adlibrary.ad_image.url if adlibrary.ad_image else None,
             'is_fav': adlibrary.is_fav,
+            'ad_creative_bodies': adlibrary.ad_creative_bodies,
         }
         
         return JsonResponse(adlibrary_data, safe=True)
@@ -798,6 +799,7 @@ def get_adlibrary_filters(request):
             'tags': tag_names,
             'ad_image': adlibrary.ad_image.url if adlibrary.ad_image else None,
             'is_fav': adlibrary.is_fav,
+            'ad_creative_bodies': adlibrary.ad_creative_bodies,
         }
         adlibrary_list.append(adlibrary_data)
     
