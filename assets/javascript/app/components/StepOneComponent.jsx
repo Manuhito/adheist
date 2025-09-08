@@ -344,7 +344,9 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
         industry: industry,
         is_fav: item.is_fav || false, // Incluir la propiedad is_fav para que funcione el icono de estrella
         page_url: item.page_url || null, // Incluir page_url para el avatar
-        ad_creative_bodies: item.ad_creative_bodies || null // Incluir ad_creative_bodies para el modal
+        ad_creative_bodies: item.ad_creative_bodies || null, // Incluir ad_creative_bodies para el modal
+        ad_creation_time: item.ad_creation_time || null, // Incluir fecha de creación
+        ad_delivery_stop_time: item.ad_delivery_stop_time || null // Incluir fecha de finalización
       };
     });
   };

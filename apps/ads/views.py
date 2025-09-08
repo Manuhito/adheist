@@ -654,6 +654,8 @@ def get_adlibrary_by_id(request, adlibrary_id):
             'ad_image': adlibrary.ad_image.url if adlibrary.ad_image else None,
             'is_fav': adlibrary.is_fav,
             'ad_creative_bodies': adlibrary.ad_creative_bodies,
+            'ad_creation_time': adlibrary.ad_creation_time.isoformat() if adlibrary.ad_creation_time else None,
+            'ad_delivery_stop_time': adlibrary.ad_delivery_stop_time.isoformat() if adlibrary.ad_delivery_stop_time else None,
         }
         
         return JsonResponse(adlibrary_data, safe=True)
@@ -800,6 +802,8 @@ def get_adlibrary_filters(request):
             'ad_image': adlibrary.ad_image.url if adlibrary.ad_image else None,
             'is_fav': adlibrary.is_fav,
             'ad_creative_bodies': adlibrary.ad_creative_bodies,
+            'ad_creation_time': adlibrary.ad_creation_time.isoformat() if adlibrary.ad_creation_time else None,
+            'ad_delivery_stop_time': adlibrary.ad_delivery_stop_time.isoformat() if adlibrary.ad_delivery_stop_time else None,
         }
         adlibrary_list.append(adlibrary_data)
     
