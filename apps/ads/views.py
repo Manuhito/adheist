@@ -3,6 +3,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.contrib import messages
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http.response import HttpResponseRedirect, JsonResponse, HttpResponse
+from django.core.cache import cache
 import logging
 
 # Importar el servicio de generación de imágenes
@@ -623,18 +624,38 @@ def get_adlibrary_by_id(request, adlibrary_id):
         # Get the AdLibrary object by ID
         adlibrary = get_object_or_404(AdLibrary, id=adlibrary_id)
         
-        # Get industries and tags as lists of names
-        industry_names = [industry.name for industry in adlibrary.facebook_page.industries.all()]
+        # Get cached FacebookPage data to avoid repeated queries
+        facebook_page_id = adlibrary.facebook_page_id
+        cache_key = f'facebook_page_data_{facebook_page_id}'
+        facebook_page_data = cache.get(cache_key)
+        
+        if facebook_page_data is None:
+            # Cache miss - get FacebookPage data
+            facebook_page = adlibrary.facebook_page
+            industry_names = [industry.name for industry in facebook_page.industries.all()]
+            facebook_page_data = {
+                'page_name': facebook_page.page_name,
+                'page_url': facebook_page.page_url,
+                'industries': industry_names,
+            }
+            # Cache with no expiration - will be invalidated by signals
+            cache.set(cache_key, facebook_page_data, None)
+        
+        # Get tags as lists of names
         tag_names = [tag.name for tag in adlibrary.tags.all()]
         
         # Create dictionary with all fields
         adlibrary_data = {
             'id': adlibrary.id,
-            'company_name': adlibrary.facebook_page.page_name,
-            'industries': industry_names,
+            'company_name': facebook_page_data['page_name'],
+            'page_url': facebook_page_data['page_url'],
+            'industries': facebook_page_data['industries'],
             'tags': tag_names,
             'ad_image': adlibrary.ad_image.url if adlibrary.ad_image else None,
             'is_fav': adlibrary.is_fav,
+            'ad_creative_bodies': adlibrary.ad_creative_bodies,
+            'ad_creation_time': adlibrary.ad_creation_time.isoformat() if adlibrary.ad_creation_time else None,
+            'ad_delivery_stop_time': adlibrary.ad_delivery_stop_time.isoformat() if adlibrary.ad_delivery_stop_time else None,
         }
         
         return JsonResponse(adlibrary_data, safe=True)
@@ -751,18 +772,38 @@ def get_adlibrary_filters(request):
     # Convert to list of dictionaries with all required fields
     adlibrary_list = []
     for adlibrary in paginated_adlibraries:
-        # Get industries and tags as lists of names
-        industry_names = [industry.name for industry in adlibrary.facebook_page.industries.all()]
+        # Get cached FacebookPage data to avoid repeated queries
+        facebook_page_id = adlibrary.facebook_page_id
+        cache_key = f'facebook_page_data_{facebook_page_id}'
+        facebook_page_data = cache.get(cache_key)
+        
+        if facebook_page_data is None:
+            # Cache miss - get FacebookPage data
+            facebook_page = adlibrary.facebook_page
+            industry_names = [industry.name for industry in facebook_page.industries.all()]
+            facebook_page_data = {
+                'page_name': facebook_page.page_name,
+                'page_url': facebook_page.page_url,
+                'industries': industry_names,
+            }
+            # Cache with no expiration - will be invalidated by signals
+            cache.set(cache_key, facebook_page_data, None)
+        
+        # Get tags as lists of names
         tag_names = [tag.name for tag in adlibrary.tags.all()]
         
         # Create dictionary with all fields
         adlibrary_data = {
             'id': adlibrary.id,
-            'company_name': adlibrary.facebook_page.page_name,
-            'industries': industry_names,
+            'company_name': facebook_page_data['page_name'],
+            'page_url': facebook_page_data['page_url'],
+            'industries': facebook_page_data['industries'],
             'tags': tag_names,
             'ad_image': adlibrary.ad_image.url if adlibrary.ad_image else None,
             'is_fav': adlibrary.is_fav,
+            'ad_creative_bodies': adlibrary.ad_creative_bodies,
+            'ad_creation_time': adlibrary.ad_creation_time.isoformat() if adlibrary.ad_creation_time else None,
+            'ad_delivery_stop_time': adlibrary.ad_delivery_stop_time.isoformat() if adlibrary.ad_delivery_stop_time else None,
         }
         adlibrary_list.append(adlibrary_data)
     
