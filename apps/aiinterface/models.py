@@ -7,14 +7,14 @@ class OpenAIConfiguration(models.Model):
     Model to store OpenAI-related configuration settings.
     Only one instance of this model should exist in the database.
     """
-    # OpenAI model configuration
+    # OpenAI Image Generation Configuration
     openai_image_model = models.CharField(
         max_length=50,
         default="gpt-image-1",
         help_text="OpenAI model to use for image generation"
     )
     
-    # Pricing configuration (in USD)
+    # Image generation pricing (in USD)
     text_input_price = models.DecimalField(
         max_digits=6,
         decimal_places=2,
@@ -34,6 +34,28 @@ class OpenAIConfiguration(models.Model):
         decimal_places=2,
         default=0.00,
         help_text="Price per 1M tokens (in USD)"
+    )
+    
+    # OpenAI Prompt Generation Configuration
+    openai_prompt_model = models.CharField(
+        max_length=50,
+        default="gpt-5",
+        help_text="OpenAI model to use for prompt generation"
+    )
+    
+    # Prompt generation pricing (in USD)
+    text_input_price_prompt = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=1.25,
+        help_text="Price per 1M input tokens for prompt generation (in USD)"
+    )
+    
+    text_output_price_prompt = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=10.00,
+        help_text="Price per 1M output tokens for prompt generation (in USD)"
     )
     
     class Meta:
@@ -88,4 +110,7 @@ class OpenAIConfiguration(models.Model):
             'text_input_price': config.text_input_price,
             'image_input_price': config.image_input_price,
             'image_output_price': config.image_output_price,
+            'openai_prompt_model': config.openai_prompt_model,
+            'text_input_price_prompt': config.text_input_price_prompt,
+            'text_output_price_prompt': config.text_output_price_prompt,
         }
