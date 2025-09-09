@@ -656,6 +656,11 @@ def get_adlibrary_by_id(request, adlibrary_id):
             'ad_creative_bodies': adlibrary.ad_creative_bodies,
             'ad_creation_time': adlibrary.ad_creation_time.isoformat() if adlibrary.ad_creation_time else None,
             'ad_delivery_stop_time': adlibrary.ad_delivery_stop_time.isoformat() if adlibrary.ad_delivery_stop_time else None,
+            # New fields
+            'meta_status': adlibrary.meta_status,
+            'media_type': adlibrary.media_type,
+            'publisher_platform': list(adlibrary.publisher_platform) if adlibrary.publisher_platform else [],
+            'ad_creative_link_titles': adlibrary.ad_creative_link_titles,
         }
         
         return JsonResponse(adlibrary_data, safe=True)
@@ -804,6 +809,11 @@ def get_adlibrary_filters(request):
             'ad_creative_bodies': adlibrary.ad_creative_bodies,
             'ad_creation_time': adlibrary.ad_creation_time.isoformat() if adlibrary.ad_creation_time else None,
             'ad_delivery_stop_time': adlibrary.ad_delivery_stop_time.isoformat() if adlibrary.ad_delivery_stop_time else None,
+            # New fields
+            'meta_status': adlibrary.meta_status,
+            'media_type': adlibrary.media_type,
+            'publisher_platform': list(adlibrary.publisher_platform) if adlibrary.publisher_platform else [],
+            'ad_creative_link_titles': adlibrary.ad_creative_link_titles,
         }
         adlibrary_list.append(adlibrary_data)
     

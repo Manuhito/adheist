@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Check, Star, Trash2 } from 'lucide-react';
+import { X, Check, Star, Trash2, ExternalLink } from 'lucide-react';
 import { useTranslation } from '../../lib/useTranslation';
 import { Switch } from '../ui/switch';
 
@@ -62,6 +62,65 @@ if (typeof document !== 'undefined') {
   document.body.style.scrollbarWidth = 'thin';
   document.body.style.scrollbarColor = 'rgb(156 163 175) transparent';
 }
+
+// Helper function to calculate days between two dates
+const calculateDaysRunning = (startDate, endDate) => {
+  if (!startDate) return null;
+  
+  const start = new Date(startDate);
+  const end = endDate ? new Date(endDate) : new Date();
+  const diffTime = Math.abs(end - start);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  return diffDays;
+};
+
+// Platform icon components
+const PlatformIcon = ({ platform }) => {
+  const iconStyle = "w-4 h-4 inline-block";
+  
+  switch (platform) {
+    case 'FACEBOOK':
+      return (
+        <svg className={iconStyle} viewBox="0 0 24 24" fill="#1877F2">
+          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+        </svg>
+      );
+    case 'INSTAGRAM':
+      return (
+        <svg className={iconStyle} viewBox="0 0 24 24" fill="url(#instagram-gradient)">
+          <defs>
+            <linearGradient id="instagram-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#833AB4"/>
+              <stop offset="50%" stopColor="#FD1D1D"/>
+              <stop offset="100%" stopColor="#FCB045"/>
+            </linearGradient>
+          </defs>
+          <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+        </svg>
+      );
+    case 'AUDIENCE_NETWORK':
+      return (
+        <svg className={iconStyle} viewBox="0 0 24 24" fill="#4267B2">
+          <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.568 8.16c-.169 1.858-.896 5.728-.896 5.728-.634 2.114-1.547 2.114-1.547 2.114-.955 0-1.557-.955-1.557-.955L12 11.19l-1.568 3.857s-.602.955-1.557.955c0 0-.913 0-1.547-2.114 0 0-.727-3.87-.896-5.728-.169-1.858.602-2.539.602-2.539.424-.511 1.135-.511 1.135-.511h5.662s.711 0 1.135.511c0 0 .771.681.602 2.539z"/>
+        </svg>
+      );
+    case 'MESSENGER':
+      return (
+        <svg className={iconStyle} viewBox="0 0 24 24" fill="#00B2FF">
+          <path d="M12 0C5.373 0 0 4.975 0 11.111c0 3.497 1.745 6.616 4.472 8.652V24l4.086-2.242c1.09.301 2.246.464 3.442.464 6.627 0 12-4.974 12-11.111C24 4.975 18.627 0 12 0zm1.193 14.963l-3.056-3.259-5.963 3.259L10.733 8.5l3.13 3.259L19.794 8.5l-6.601 6.463z"/>
+        </svg>
+      );
+    case 'THREADS':
+      return (
+        <svg className={iconStyle} viewBox="0 0 24 24" fill="#000000">
+          <path d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.472 12.01v-.017C1.5 8.417 2.35 5.563 3.995 3.512 5.845 1.205 8.598.024 12.179 0h.014c2.746.02 5.043.725 6.826 2.098 1.677 1.29 2.858 3.13 3.509 5.467l-2.04.569c-.542-1.864-1.48-3.323-2.787-4.339C16.516 2.856 14.6 2.3 12.193 2.286h-.011c-2.922.019-5.094.813-6.456 2.363-.8.91-1.312 2.066-1.515 3.43-.132.882-.145 1.776-.145 2.927v.006c0 1.15.013 2.044.145 2.927.203 1.364.715 2.52 1.515 3.43 1.362 1.55 3.534 2.344 6.456 2.364h.011c.381 0 .749-.015 1.114-.043 1.297-.099 2.318-.394 3.034-.877.715-.482 1.064-1.01 1.064-1.611 0-.384-.126-.735-.376-1.044-.25-.309-.612-.549-1.076-.713-.464-.164-1.017-.246-1.645-.246-.628 0-1.181.082-1.645.246-.464.164-.826.404-1.076.713-.25.309-.376.66-.376 1.044 0 .601.349 1.129 1.064 1.611.716.483 1.737.778 3.034.877.365.028.733.043 1.114.043h.011c2.922-.02 5.094-.814 6.456-2.364.8-.91 1.312-2.066 1.515-3.43.132-.883.145-1.777.145-2.927v-.006c0-1.15-.013-2.045-.145-2.927-.203-1.364-.715-2.52-1.515-3.43C17.287 1.099 15.115.305 12.193.286h-.011z"/>
+        </svg>
+      );
+    default:
+      return <span className="text-xs bg-muted px-1 py-0.5 rounded">{platform}</span>;
+  }
+};
 
 /**
  * MediaItem component renders a card with company info, ad content, and image
@@ -309,7 +368,7 @@ const GalleryModal = ({
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             {/* Avatar */}
-                            <div className="w-10 h-10 rounded-full overflow-hidden bg-muted flex-shrink-0">
+                            <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted flex-shrink-0">
                                 {selectedItem.page_url ? (
                                     <img
                                         src={`https://twenty-icons.com/${selectedItem.page_url.replace(/^https?:\/\//, '')}`}
@@ -471,19 +530,98 @@ const GalleryModal = ({
                                     {t('bento_gallery.ad_details', 'Ad Details')}
                                 </h4>
                                 
-                                {/* Date Information */}
-                                <div className="space-y-2 text-sm">
+                                {/* Enhanced Ad Details */}
+                                <div className="space-y-3 text-sm">
+                                    {/* Status */}
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-medium">Status:</span>
+                                        <div className="flex items-center gap-1">
+                                            <div className={`w-2 h-2 rounded-full ${selectedItem.meta_status === 'ACTIVE' ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                                            <span className="text-muted-foreground capitalize">
+                                                {selectedItem.meta_status ? selectedItem.meta_status.toLowerCase() : 'unknown'}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Start Date */}
                                     <div>
-                                        <span className="font-medium">Created:</span>
+                                        <span className="font-medium">Start Date:</span>
                                         <span className="ml-2 text-muted-foreground">
                                             {selectedItem.ad_creation_time ? new Date(selectedItem.ad_creation_time).toLocaleDateString() : 'Unknown'}
                                         </span>
                                     </div>
+
+                                    {/* Time Running */}
+                                    {selectedItem.ad_creation_time && (
+                                        <div>
+                                            <span className="font-medium">Time Running:</span>
+                                            <span className="ml-2 text-muted-foreground">
+                                                {(() => {
+                                                    const days = calculateDaysRunning(selectedItem.ad_creation_time, selectedItem.ad_delivery_stop_time);
+                                                    return days ? `${days} days` : 'Unknown';
+                                                })()}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    {/* Format */}
                                     <div>
-                                        <span className="font-medium">Ended:</span>
-                                        <span className="ml-2 text-muted-foreground">
-                                            {selectedItem.ad_delivery_stop_time ? new Date(selectedItem.ad_delivery_stop_time).toLocaleDateString() : 'Present'}
+                                        <span className="font-medium">Format:</span>
+                                        <span className="ml-2 text-muted-foreground capitalize">
+                                            {selectedItem.media_type ? selectedItem.media_type.toLowerCase() : 'unknown'}
                                         </span>
+                                    </div>
+
+                                    {/* Niche */}
+                                    {selectedItem.industry && (
+                                        <div>
+                                            <span className="font-medium">Niche:</span>
+                                            <span className="ml-2 text-muted-foreground">
+                                                {selectedItem.industry}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    {/* Landing Page */}
+                                    <div>
+                                        <span className="font-medium">Landing Page:</span>
+                                        <div className="mt-1">
+                                            {selectedItem.ad_creative_link_titles ? (
+                                                <a 
+                                                    href={selectedItem.ad_creative_link_titles} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="text-primary hover:text-primary/80 transition-colors text-xs flex items-center gap-1 truncate"
+                                                    title={selectedItem.ad_creative_link_titles}
+                                                >
+                                                    <span className="truncate">
+                                                        {selectedItem.ad_creative_link_titles}
+                                                    </span>
+                                                    <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                                                </a>
+                                            ) : (
+                                                <span className="text-muted-foreground text-xs">Not available</span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Platforms */}
+                                    <div>
+                                        <span className="font-medium">Platforms:</span>
+                                        <div className="flex flex-wrap gap-2 mt-1">
+                                            {selectedItem.publisher_platform && selectedItem.publisher_platform.length > 0 ? (
+                                                selectedItem.publisher_platform.map((platform, index) => (
+                                                    <div key={index} className="flex items-center gap-1 bg-muted/50 px-2 py-1 rounded-md">
+                                                        <PlatformIcon platform={platform} />
+                                                        <span className="text-xs capitalize">
+                                                            {platform.toLowerCase().replace('_', ' ')}
+                                                        </span>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <span className="text-muted-foreground text-xs">Not available</span>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -499,12 +637,12 @@ const GalleryModal = ({
                             )}
 
                             {/* Select Button */}
-                            <div className="pt-4 border-t border-border">
+                            <div className="pt-4">
                                 <button
                                     onClick={() => onSelect(selectedItem)}
                                     className="w-full py-3 px-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors font-medium"
                                 >
-                                    {t('bento_gallery.select_style', 'Select This Ad Style')}
+                                    {t('bento_gallery.create_similar', 'Create similar Ad')}
                                 </button>
                             </div>
                         </div>
