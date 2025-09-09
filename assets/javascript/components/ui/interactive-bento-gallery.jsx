@@ -301,140 +301,214 @@ const GalleryModal = ({
                 initial={{ scale: 0.95 }}
                 animate={{ scale: 1 }}
                 exit={{ scale: 0.95 }}
-                className="bg-background rounded-xl overflow-hidden max-h-[90vh] min-w-[500px] shadow-2xl flex flex-col"
+                className="bg-background rounded-xl overflow-hidden max-h-[90vh] max-w-6xl w-full shadow-2xl flex flex-col"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* Scrollable Content */}
-                <div 
-                    className="flex-1 overflow-y-auto custom-scrollbar"
-                    style={{
-                        scrollbarWidth: 'thin',
-                        scrollbarColor: 'rgb(156 163 175) transparent'
-                    }}
-                >
-                    {/* Header */}
-                    <div className="pt-4 px-4">
-                        <div className="flex items-start justify-between mb-3">
-                            <div className="flex items-start gap-3 flex-1 min-w-0">
-                                {/* Avatar */}
-                                <div className="w-10 h-10 rounded-full overflow-hidden bg-muted flex-shrink-0">
-                                    {selectedItem.page_url ? (
-                                        <img
-                                            src={`https://twenty-icons.com/${selectedItem.page_url.replace(/^https?:\/\//, '')}`}
-                                            alt={`${selectedItem.title} logo`}
-                                            className="w-full h-full object-cover"
-                                            onError={(e) => {
-                                                // Fallback to a default avatar if the icon service fails
-                                                e.target.style.display = 'none';
-                                                e.target.parentNode.innerHTML = `<div class="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">${selectedItem.title.charAt(0).toUpperCase()}</div>`;
-                                            }}
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
-                                            {selectedItem.title.charAt(0).toUpperCase()}
-                                        </div>
-                                    )}
-                                </div>
-                                <h3 className="text-lg font-semibold break-words">{selectedItem.title}</h3>
+                {/* Simplified Header - only avatar, name and close button */}
+                <div className="p-4 border-b border-border">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            {/* Avatar */}
+                            <div className="w-10 h-10 rounded-full overflow-hidden bg-muted flex-shrink-0">
+                                {selectedItem.page_url ? (
+                                    <img
+                                        src={`https://twenty-icons.com/${selectedItem.page_url.replace(/^https?:\/\//, '')}`}
+                                        alt={`${selectedItem.title} logo`}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            // Fallback to a default avatar if the icon service fails
+                                            e.target.style.display = 'none';
+                                            e.target.parentNode.innerHTML = `<div class="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">${selectedItem.title.charAt(0).toUpperCase()}</div>`;
+                                        }}
+                                    />
+                                ) : (
+                                    <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
+                                        {selectedItem.title.charAt(0).toUpperCase()}
+                                    </div>
+                                )}
                             </div>
-                            <button
-                                onClick={onClose}
-                                className="p-1 rounded-full hover:bg-accent flex-shrink-0 ml-2"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
+                            <h3 className="text-lg font-semibold break-words">{selectedItem.title}</h3>
                         </div>
-
-                        {/* Ad Creative Bodies */}
-                        {selectedItem.ad_creative_bodies && (
-                            <div className="mt-3">
-                                <div className="relative w-0 min-w-full">
-                                    {!isAdBodiesExpanded && selectedItem.ad_creative_bodies.length > 150 ? (
-                                        <p className="text-sm text-foreground leading-relaxed break-words">
-                                            {selectedItem.ad_creative_bodies.substring(0, 150)}...{' '}
-                                            <button
-                                                onClick={() => setIsAdBodiesExpanded(true)}
-                                                className="text-gray-500 hover:text-gray-700 text-sm underline inline"
-                                            >
-                                                {t('bento_gallery.read_more', 'read more')}
-                                            </button>
-                                        </p>
-                                    ) : (
-                                        <div>
-                                            <p className="text-sm text-foreground leading-relaxed break-words">
-                                                {selectedItem.ad_creative_bodies}
-                                            </p>
-                                            {isAdBodiesExpanded && selectedItem.ad_creative_bodies.length > 150 && (
-                                                <button
-                                                    onClick={() => setIsAdBodiesExpanded(false)}
-                                                    className="text-gray-500 hover:text-gray-700 text-sm underline mt-1"
-                                                >
-                                                    {t('bento_gallery.read_less', 'Read less')}
-                                                </button>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Content */}
-                    <div className="pt-4 px-4">
-                        {/* Image */}
-                        <div className="h-[400px] relative w-fit mx-auto">
-                            <img
-                                src={selectedItem.url}
-                                alt={selectedItem.title}
-                                className="h-full object-contain"
-                            />
-                            {/* Action icons in modal - only visible for staff users */}
-                            {canManageItems && (
-                                <div className="absolute top-3 right-3 flex space-x-3">
-                                    {/* Favorite star icon */}
-                                    <button
-                                        type="button"
-                                        className="cursor-pointer bg-transparent border-0 p-1 rounded-full hover:bg-gray-100/20"
-                                        onClick={handleToggleFavorite}
-                                        title={isFavorite ? "Remove from favorites" : "Add to favorites"}
-                                    >
-                                        <Star
-                                            className={`w-7 h-7 ${isFavorite ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
-                                            strokeWidth={1.5}
-                                        />
-                                    </button>
-
-                                    {/* Delete trash icon */}
-                                    <button
-                                        type="button"
-                                        className="cursor-pointer bg-transparent border-0 p-1 rounded-full hover:bg-gray-100/20"
-                                        onClick={handleDeactivateImage}
-                                        title="Deactivate this image"
-                                    >
-                                        <Trash2
-                                            className="w-7 h-7 text-red-500 hover:text-red-600"
-                                            strokeWidth={1.5}
-                                        />
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                        
-                        {/* Date Information */}
-                        <div className="text-sm text-gray-500">
-                            {selectedItem.ad_creation_time ? new Date(selectedItem.ad_creation_time).toLocaleDateString() : 'Unknown'} - {selectedItem.ad_delivery_stop_time ? new Date(selectedItem.ad_delivery_stop_time).toLocaleDateString() : 'Present'}
-                        </div>
+                        <button
+                            onClick={onClose}
+                            className="p-1 rounded-full hover:bg-accent flex-shrink-0"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
                     </div>
                 </div>
 
-                {/* Footer */}
-                <div className="p-4 flex justify-end">
-                    <button
-                        onClick={() => onSelect(selectedItem)}
-                        className="py-3 px-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors font-medium"
-                    >
-                        {t('bento_gallery.select_style', 'Select This Ad Style')}
-                    </button>
+                {/* Main Content Area */}
+                <div className="flex-1 flex overflow-hidden">
+                    {/* Left Side - Card with ad content */}
+                    <div className="flex-1 flex">
+                        {/* Background container with project color - expanded with top margin only */}
+                        <div className="rounded-xl my-4 mx-16 px-6 py-6 bg-accent/10 flex-1 flex items-center justify-center">
+                            {/* Card with rounded borders - width adjusts to image */}
+                            <div className="bg-card rounded-xl overflow-hidden shadow-sm w-fit p-2 min-w-64">
+                                {/* Card Header */}
+                                <div>
+                                    <div className="flex items-center gap-3 mb-2">
+                                        {/* Avatar */}
+                                        <div className="w-8 h-8 rounded-full overflow-hidden bg-muted flex-shrink-0">
+                                            {selectedItem.page_url ? (
+                                                <img
+                                                    src={`https://twenty-icons.com/${selectedItem.page_url.replace(/^https?:\/\//, '')}`}
+                                                    alt={`${selectedItem.title} logo`}
+                                                    className="w-full h-full object-cover"
+                                                    onError={(e) => {
+                                                        // Fallback to a default avatar if the icon service fails
+                                                        e.target.style.display = 'none';
+                                                        e.target.parentNode.innerHTML = `<div class="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-xs">${selectedItem.title.charAt(0).toUpperCase()}</div>`;
+                                                    }}
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-xs">
+                                                    {selectedItem.title.charAt(0).toUpperCase()}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <h4 className="font-medium text-sm break-words">{selectedItem.title}</h4>
+                                    </div>
+                                    
+                                    {/* Ad Creative Bodies - separate line below */}
+                                    {selectedItem.ad_creative_bodies && (
+                                        <div>
+                                            <div className="relative w-0 min-w-full">
+                                                {!isAdBodiesExpanded && selectedItem.ad_creative_bodies.length > 100 ? (
+                                                    <p className="text-xs text-foreground leading-relaxed break-words">
+                                                        {selectedItem.ad_creative_bodies.substring(0, 100)}...{' '}
+                                                        <button
+                                                            onClick={() => setIsAdBodiesExpanded(true)}
+                                                            className="text-gray-500 hover:text-gray-700 text-xs underline inline"
+                                                        >
+                                                            {t('bento_gallery.read_more', 'read more')}
+                                                        </button>
+                                                    </p>
+                                                ) : (
+                                                    <div>
+                                                        <p className="text-xs text-foreground leading-relaxed break-words">
+                                                            {selectedItem.ad_creative_bodies}
+                                                        </p>
+                                                        {isAdBodiesExpanded && selectedItem.ad_creative_bodies.length > 100 && (
+                                                            <button
+                                                                onClick={() => setIsAdBodiesExpanded(false)}
+                                                                className="text-gray-500 hover:text-gray-700 text-xs underline mt-1"
+                                                            >
+                                                                {t('bento_gallery.read_less', 'Read less')}
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Card Body - Image */}
+                                <div className="py-3">
+                                    <div className="h-[250px] relative w-fit mx-auto">
+                                        <img
+                                            src={selectedItem.url}
+                                            alt={selectedItem.title}
+                                            className="h-full object-contain rounded-lg"
+                                        />
+                                        {/* Action icons in modal - only visible for staff users */}
+                                        {canManageItems && (
+                                            <div className="absolute top-2 right-2 flex space-x-2">
+                                                {/* Favorite star icon */}
+                                                <button
+                                                    type="button"
+                                                    className="cursor-pointer bg-transparent border-0 p-1 rounded-full hover:bg-gray-100/20"
+                                                    onClick={handleToggleFavorite}
+                                                    title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                                                >
+                                                    <Star
+                                                        className={`w-5 h-5 ${isFavorite ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
+                                                        strokeWidth={1.5}
+                                                    />
+                                                </button>
+
+                                                {/* Delete trash icon */}
+                                                <button
+                                                    type="button"
+                                                    className="cursor-pointer bg-transparent border-0 p-1 rounded-full hover:bg-gray-100/20"
+                                                    onClick={handleDeactivateImage}
+                                                    title="Deactivate this image"
+                                                >
+                                                    <Trash2
+                                                        className="w-5 h-5 text-red-500 hover:text-red-600"
+                                                        strokeWidth={1.5}
+                                                    />
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Card Footer - expanded container */}
+                                <div>
+                                    <div className="bg-accent/10 px-3 py-2 rounded-lg border border-border">
+                                        <a 
+                                            href={selectedItem.page_url} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="text-xs text-primary hover:text-primary/80 transition-colors block text-center"
+                                        >
+                                            {selectedItem.page_url?.replace(/^https?:\/\//, '') || 'Visit Page'}
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right Sidebar - selectedItem data and Select button */}
+                    <div className="w-80 border-l border-border p-4 bg-muted/20">
+                        <div className="space-y-4">
+                            <div>
+                                <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-3">
+                                    {t('bento_gallery.ad_details', 'Ad Details')}
+                                </h4>
+                                
+                                {/* Date Information */}
+                                <div className="space-y-2 text-sm">
+                                    <div>
+                                        <span className="font-medium">Created:</span>
+                                        <span className="ml-2 text-muted-foreground">
+                                            {selectedItem.ad_creation_time ? new Date(selectedItem.ad_creation_time).toLocaleDateString() : 'Unknown'}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span className="font-medium">Ended:</span>
+                                        <span className="ml-2 text-muted-foreground">
+                                            {selectedItem.ad_delivery_stop_time ? new Date(selectedItem.ad_delivery_stop_time).toLocaleDateString() : 'Present'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Additional metadata if available */}
+                            {selectedItem.ad_creative_link_captions && (
+                                <div>
+                                    <span className="font-medium text-sm">Caption:</span>
+                                    <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                                        {selectedItem.ad_creative_link_captions}
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Select Button */}
+                            <div className="pt-4 border-t border-border">
+                                <button
+                                    onClick={() => onSelect(selectedItem)}
+                                    className="w-full py-3 px-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors font-medium"
+                                >
+                                    {t('bento_gallery.select_style', 'Select This Ad Style')}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </motion.div>
         </motion.div>
