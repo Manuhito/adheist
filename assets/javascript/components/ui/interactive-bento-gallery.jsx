@@ -64,10 +64,13 @@ if (typeof document !== 'undefined') {
 }
 
 /**
- * MediaItem component renders an image with optional selection indicator
- * Includes a star icon that indicates if the image is marked as favorite
+ * MediaItem component renders a card with company info, ad content, and image
+ * Similar to GalleryModal but in card format without footer and close button
  */
 const MediaItem = ({ item, className, onClick, isSelected, userPermissions = { isStaff: false }, onToggleFavorite, onDeactivateImage }) => {
+    const { t } = useTranslation();
+    const [isAdBodiesExpanded, setIsAdBodiesExpanded] = useState(false);
+    
     // Determine if this item is marked as favorite
     const isFavorite = item.is_fav || false;
     // Check if user has permission to manage items
@@ -100,57 +103,132 @@ const MediaItem = ({ item, className, onClick, isSelected, userPermissions = { i
     };
 
     return (
-        <div className={`${className} relative overflow-hidden group`}>
-            <img
-                src={item.url}
-                alt={item.title}
-                className={`w-full h-full object-cover cursor-pointer transition-transform duration-300 group-hover:scale-105`}
-                onClick={onClick}
-                loading="lazy"
-                decoding="async"
-            />
-            {/* Selection indicator */}
-            {isSelected && (
-                <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                    <div className="bg-background rounded-full p-1">
-                        <Check className="w-5 h-5 text-primary" />
+        <div className={`${className} bg-background rounded-xl overflow-hidden border border-border hover:border-primary/50 transition-colors cursor-pointer group`} onClick={onClick}>
+            {/* Header */}
+            <div className="p-3">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                    {/* Avatar */}
+                    <div className="w-8 h-8 rounded-full overflow-hidden bg-muted flex-shrink-0">
+                        {item.page_url ? (
+                            <img
+                                src={`https://twenty-icons.com/${item.page_url.replace(/^https?:\/\//, '')}`}
+                                alt={`${item.title} logo`}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                    // Fallback to a default avatar if the icon service fails
+                                    e.target.style.display = 'none';
+                                    e.target.parentNode.innerHTML = `<div class="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-xs">${item.title.charAt(0).toUpperCase()}</div>`;
+                                }}
+                            />
+                        ) : (
+                            <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-xs">
+                                {item.title.charAt(0).toUpperCase()}
+                            </div>
+                        )}
                     </div>
+                    <h3 className="text-sm font-semibold break-words line-clamp-2 flex-1">{item.title}</h3>
                 </div>
-            )}
 
-            {/* Action icons - appear on hover only for staff users */}
-            {canManageItems && (
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex space-x-2">
-                    {/* Favorite star icon */}
-                    <button
-                        type="button"
-                        className="cursor-pointer bg-transparent border-0 p-1 rounded-full hover:bg-gray-100/20"
-                        onClick={handleToggleFavorite}
-                        title={isFavorite ? "Remove from favorites" : "Add to favorites"}
-                    >
-                        <Star
-                            className={`w-6 h-6 ${isFavorite ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
-                            strokeWidth={1.5}
-                        />
-                    </button>
+                {/* Ad Creative Bodies */}
+                {item.ad_creative_bodies && (
+                    <div className="mt-2">
+                        <div className="relative w-0 min-w-full">
+                            {!isAdBodiesExpanded && item.ad_creative_bodies.length > 80 ? (
+                                <p className="text-xs text-foreground leading-relaxed break-words">
+                                    {item.ad_creative_bodies.substring(0, 80)}...{' '}
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setIsAdBodiesExpanded(true);
+                                        }}
+                                        className="text-gray-500 hover:text-gray-700 text-xs underline inline"
+                                    >
+                                        {t('bento_gallery.read_more', 'read more')}
+                                    </button>
+                                </p>
+                            ) : (
+                                <div>
+                                    <p className="text-xs text-foreground leading-relaxed break-words">
+                                        {item.ad_creative_bodies}
+                                    </p>
+                                    {isAdBodiesExpanded && item.ad_creative_bodies.length > 80 && (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setIsAdBodiesExpanded(false);
+                                            }}
+                                            className="text-gray-500 hover:text-gray-700 text-xs underline mt-1"
+                                        >
+                                            {t('bento_gallery.read_less', 'Read less')}
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
 
-                    {/* Delete trash icon */}
-                    <button
-                        type="button"
-                        className="cursor-pointer bg-transparent border-0 p-1 rounded-full hover:bg-gray-100/20"
-                        onClick={handleDeactivateImage}
-                        title="Deactivate this image"
-                    >
-                        <Trash2
-                            className="w-6 h-6 text-red-500 hover:text-red-600"
-                            strokeWidth={1.5}
-                        />
-                    </button>
+            {/* Image Content */}
+            <div className="relative aspect-square rounded-lg overflow-hidden mx-3">
+                <img
+                    src={item.url}
+                    alt={item.title}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    loading="lazy"
+                    decoding="async"
+                />
+                
+                {/* Selection indicator */}
+                {isSelected && (
+                    <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                        <div className="bg-background rounded-full p-1">
+                            <Check className="w-5 h-5 text-primary" />
+                        </div>
+                    </div>
+                )}
+
+                {/* Action icons - appear on hover only for staff users */}
+                {canManageItems && (
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex space-x-2">
+                        {/* Favorite star icon */}
+                        <button
+                            type="button"
+                            className="cursor-pointer bg-transparent border-0 p-1 rounded-full hover:bg-gray-100/20"
+                            onClick={handleToggleFavorite}
+                            title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                        >
+                            <Star
+                                className={`w-5 h-5 ${isFavorite ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
+                                strokeWidth={1.5}
+                            />
+                        </button>
+
+                        {/* Delete trash icon */}
+                        <button
+                            type="button"
+                            className="cursor-pointer bg-transparent border-0 p-1 rounded-full hover:bg-gray-100/20"
+                            onClick={handleDeactivateImage}
+                            title="Deactivate this image"
+                        >
+                            <Trash2
+                                className="w-5 h-5 text-red-500 hover:text-red-600"
+                                strokeWidth={1.5}
+                            />
+                        </button>
+                    </div>
+                )}
+
+                {/* Gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            </div>
+
+            {/* Date Information */}
+            <div className="p-3 pt-2">
+                <div className="text-xs text-gray-500">
+                    {item.ad_creation_time ? new Date(item.ad_creation_time).toLocaleDateString() : 'Unknown'} - {item.ad_delivery_stop_time ? new Date(item.ad_delivery_stop_time).toLocaleDateString() : 'Present'}
                 </div>
-            )}
-
-            {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            </div>
         </div>
     );
 };
@@ -557,7 +635,7 @@ const InteractiveBentoGallery = ({
     };
 
     return (
-        <div className="container mx-auto px-4 py-6 max-w-5xl"
+        <div className="container mx-auto px-1 py-1 max-w-5xl"
             style={{
                 scrollbarWidth: 'thin',
                 scrollbarColor: 'rgb(156 163 175) transparent'
@@ -620,7 +698,7 @@ const InteractiveBentoGallery = ({
             </AnimatePresence>
 
             <motion.div
-                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"
                 initial="hidden"
                 animate="visible"
                 variants={{
@@ -635,7 +713,7 @@ const InteractiveBentoGallery = ({
                     <motion.div
                         key={item.id}
                         layoutId={`media-${item.id}`}
-                        className={`relative overflow-hidden rounded-xl shadow-md hover:shadow-lg transition-shadow aspect-square ${selectedItemId === item.id ? 'ring-2 ring-primary ring-offset-2' : ''}`}
+                        className={`${selectedItemId === item.id ? 'ring-2 ring-primary ring-offset-2 rounded-xl' : ''}`}
                         onClick={() => {
                             // Only open the modal, don't select the item yet
                             setSelectedItem(item);
@@ -658,25 +736,13 @@ const InteractiveBentoGallery = ({
                         <MediaItem
                             key={item.id}
                             item={updatedItems[item.id] || item} // Use updated item if available
-                            className="absolute inset-0 w-full h-full"
+                            className=""
                             onClick={() => setSelectedItem(updatedItems[item.id] || item)}
                             isSelected={selectedAdStyle && selectedAdStyle.id === item.id}
                             userPermissions={userPermissions}
                             onToggleFavorite={handleToggleFavorite}
                             onDeactivateImage={handleDeactivateImage}
                         />
-                        <div className="absolute inset-x-0 bottom-0 p-3">
-                            <div className="relative z-10">
-                                <h3 className="text-primary-foreground text-sm font-medium truncate">
-                                    {item.title}
-                                </h3>
-                                {item.desc && (
-                                    <p className="text-primary-foreground/80 text-xs mt-0.5 line-clamp-1">
-                                        {item.desc}
-                                    </p>
-                                )}
-                            </div>
-                        </div>
                     </motion.div>
                 ))}
             </motion.div>
