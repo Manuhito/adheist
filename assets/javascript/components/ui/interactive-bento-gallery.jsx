@@ -453,7 +453,7 @@ const GalleryModal = ({
                                             href={selectedItem.page_url} 
                                             target="_blank" 
                                             rel="noopener noreferrer"
-                                            className="text-xs text-primary hover:text-primary/80 transition-colors block text-center"
+                                            className="text-xs text-primary hover:text-primary/80 transition-colors block uppercase"
                                         >
                                             {selectedItem.page_url?.replace(/^https?:\/\//, '') || 'Visit Page'}
                                         </a>
