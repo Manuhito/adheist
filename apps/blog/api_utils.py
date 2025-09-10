@@ -223,6 +223,7 @@ def update_blog_post(
     author_name: Optional[str] = None,
     author_username: Optional[str] = None,
     search_description: Optional[str] = None,
+    slug: Optional[str] = None,
 ) -> BlogPage:
     """
     Update an existing blog post.
@@ -239,6 +240,7 @@ def update_blog_post(
         author_name: Name of the post author (if None, keeps existing)
         author_username: Username or handle of the post author (if None, keeps existing)
         search_description: SEO meta description for the post (if None, keeps existing)
+        slug: URL slug for the post (if None, keeps existing or regenerates from title)
         
     Returns:
         The updated BlogPage instance
@@ -266,6 +268,13 @@ def update_blog_post(
     
     if search_description is not None:
         blog_post.search_description = search_description
+    
+    if slug is not None:
+        blog_post.slug = slug
+    elif title is not None:
+        # If title changed but no slug provided, regenerate slug from new title
+        from django.utils.text import slugify
+        blog_post.slug = slugify(title)[:50]
     
     if body_content is not None:
         # Process body content into StreamField format
@@ -587,6 +596,7 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
                         author_name=author_name,
                         author_username=author_username,
                         search_description=search_description,
+                        slug=slug,
                     )
                     
                     # Update gallery image if it exists
