@@ -610,6 +610,100 @@ def get_all_tags(request):
     return JsonResponse({'tags': tag_list}, safe=True)
 
 
+def _extract_url_from_text(text):
+    """
+    Extract the first valid URL from a text string.
+    
+    Args:
+        text: The text to search for URLs
+        
+    Returns:
+        str: The first valid URL found, or None if no URL is found
+    """
+    import re
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    if not text:
+        return None
+    
+    # More comprehensive URL pattern that handles query parameters, fragments, etc.
+    # This pattern allows for most URL-safe characters including query parameters with = and &
+    url_pattern = r'https?://[^\s<>"{}|\\^`\[\]]+(?:\?[^\s<>"{}|\\^`\[\]]*)?(?:#[^\s<>"{}|\\^`\[\]]*)?'
+    
+    logger.info(f"Searching for URLs in text: {repr(text[:200])}")  # Log first 200 chars
+    
+    # Find all URLs in the text
+    urls = re.findall(url_pattern, text)
+    
+    logger.info(f"Found URLs: {urls}")
+    
+    if urls:
+        # Return the first URL found, cleaned up
+        url = urls[0]
+        # Remove trailing punctuation that might not be part of the URL
+        url = re.sub(r'[.,;!?]+$', '', url)
+        logger.info(f"Returning cleaned URL: {url}")
+        return url
+    
+    logger.info("No URLs found in text")
+    return None
+
+
+def _is_valid_url(text):
+    """
+    Helper function to validate if a text contains a valid URL.
+    
+    Args:
+        text: The text to validate
+        
+    Returns:
+        bool: True if the text contains a valid URL, False otherwise
+    """
+    return _extract_url_from_text(text) is not None
+
+
+def _extract_cta_link(adlibrary):
+    """
+    Extract CTA link from AdLibrary fields in order of priority.
+    
+    Args:
+        adlibrary: AdLibrary instance
+        
+    Returns:
+        str: Valid URL or 'Unknown' if no valid URL found
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    # Fields to check in order of priority
+    fields_to_check = [
+        'ad_creative_link_titles',
+        'ad_creative_link_captions', 
+        'ad_creative_link_descriptions',
+        'bylines',
+        'ad_creative_bodies'
+    ]
+    
+    logger.info(f"Extracting CTA link for AdLibrary ID: {adlibrary.id}")
+    
+    for field_name in fields_to_check:
+        field_value = getattr(adlibrary, field_name, None)
+        logger.info(f"Checking field '{field_name}': {repr(field_value)}")
+        
+        extracted_url = _extract_url_from_text(field_value)
+        if extracted_url:
+            logger.info(f"Found URL in field '{field_name}': {extracted_url}")
+            return extracted_url
+        else:
+            logger.info(f"No URL found in field '{field_name}'")
+    
+    logger.info("No URL found in any field, returning 'Unknown'")
+    return 'Unknown'
+
+
+
+
 def get_adlibrary_by_id(request, adlibrary_id):
     """
     Get a specific AdLibrary object by its ID.
@@ -644,6 +738,9 @@ def get_adlibrary_by_id(request, adlibrary_id):
         # Get tags as lists of names
         tag_names = [tag.name for tag in adlibrary.tags.all()]
         
+        # Extract CTA link using the new validation logic
+        cta_link = _extract_cta_link(adlibrary)
+        
         # Create dictionary with all fields
         adlibrary_data = {
             'id': adlibrary.id,
@@ -656,6 +753,12 @@ def get_adlibrary_by_id(request, adlibrary_id):
             'ad_creative_bodies': adlibrary.ad_creative_bodies,
             'ad_creation_time': adlibrary.ad_creation_time.isoformat() if adlibrary.ad_creation_time else None,
             'ad_delivery_stop_time': adlibrary.ad_delivery_stop_time.isoformat() if adlibrary.ad_delivery_stop_time else None,
+            # New fields
+            'meta_status': adlibrary.meta_status,
+            'media_type': adlibrary.media_type,
+            'publisher_platform': list(adlibrary.publisher_platform) if adlibrary.publisher_platform else [],
+            'ad_creative_link_titles': adlibrary.ad_creative_link_titles,
+            'cta_link': cta_link,  # New field for CTA link
         }
         
         return JsonResponse(adlibrary_data, safe=True)
@@ -792,6 +895,9 @@ def get_adlibrary_filters(request):
         # Get tags as lists of names
         tag_names = [tag.name for tag in adlibrary.tags.all()]
         
+        # Extract CTA link using the same logic as get_adlibrary_by_id
+        cta_link = _extract_cta_link(adlibrary)
+        
         # Create dictionary with all fields
         adlibrary_data = {
             'id': adlibrary.id,
@@ -804,6 +910,12 @@ def get_adlibrary_filters(request):
             'ad_creative_bodies': adlibrary.ad_creative_bodies,
             'ad_creation_time': adlibrary.ad_creation_time.isoformat() if adlibrary.ad_creation_time else None,
             'ad_delivery_stop_time': adlibrary.ad_delivery_stop_time.isoformat() if adlibrary.ad_delivery_stop_time else None,
+            # New fields
+            'meta_status': adlibrary.meta_status,
+            'media_type': adlibrary.media_type,
+            'publisher_platform': list(adlibrary.publisher_platform) if adlibrary.publisher_platform else [],
+            'ad_creative_link_titles': adlibrary.ad_creative_link_titles,
+            'cta_link': cta_link,  # New field for CTA link
         }
         adlibrary_list.append(adlibrary_data)
     
