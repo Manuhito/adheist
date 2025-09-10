@@ -505,19 +505,6 @@ const GalleryModal = ({
                                     </div>
                                 </div>
 
-                                {/* Card Footer - expanded container */}
-                                <div>
-                                    <div className="bg-accent/10 px-3 py-2 rounded-lg border border-border">
-                                        <a 
-                                            href={selectedItem.page_url} 
-                                            target="_blank" 
-                                            rel="noopener noreferrer"
-                                            className="text-xs text-primary hover:text-primary/80 transition-colors block uppercase"
-                                        >
-                                            {selectedItem.page_url?.replace(/^https?:\/\//, '') || 'Visit Page'}
-                                        </a>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
