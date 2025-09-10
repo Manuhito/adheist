@@ -350,7 +350,8 @@ const StepOneComponent = ({ onComplete, initialData = {}, refreshData }) => {
         meta_status: item.meta_status || null, // Status del anuncio
         media_type: item.media_type || null, // Tipo de medio
         publisher_platform: item.publisher_platform || [], // Plataformas de publicación
-        ad_creative_link_titles: item.ad_creative_link_titles || null // Títulos de enlaces creativos
+        ad_creative_link_titles: item.ad_creative_link_titles || null, // Títulos de enlaces creativos
+        cta_link: item.cta_link || null // CTA link extraído del backend
       };
     });
   };

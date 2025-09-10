@@ -570,25 +570,25 @@ const GalleryModal = ({
                                         </div>
                                     )}
 
-                                    {/* Landing Page */}
+                                    {/* CTA Links */}
                                     <div>
-                                        <span className="font-medium">Landing Page:</span>
+                                        <span className="font-medium">CTA Links:</span>
                                         <div className="mt-1">
-                                            {selectedItem.ad_creative_link_titles ? (
+                                            {selectedItem.cta_link && selectedItem.cta_link !== 'Unknown' ? (
                                                 <a
-                                                    href={selectedItem.ad_creative_link_titles}
+                                                    href={selectedItem.cta_link}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="text-primary hover:text-primary/80 transition-colors text-xs flex items-center gap-1 truncate"
-                                                    title={selectedItem.ad_creative_link_titles}
+                                                    title={selectedItem.cta_link}
                                                 >
                                                     <span className="truncate">
-                                                        {selectedItem.ad_creative_link_titles}
+                                                        {selectedItem.cta_link}
                                                     </span>
                                                     <ExternalLink className="w-3 h-3 flex-shrink-0" />
                                                 </a>
                                             ) : (
-                                                <span className="text-muted-foreground text-xs">Not available</span>
+                                                <span className="text-muted-foreground text-xs">Unknown</span>
                                             )}
                                         </div>
                                     </div>
