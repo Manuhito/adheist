@@ -9,18 +9,20 @@ class OpenAIConfigurationAdmin(admin.ModelAdmin):
     """
     list_display = (
         'openai_image_model',
+        'openai_prompt_model',
         'text_input_price',
         'image_input_price',
         'image_output_price',
     )
     
     fieldsets = (
-        ('Model Configuration', {
-            'fields': ('openai_image_model',),
+        ('OpenAI Image Generation', {
+            'fields': ('openai_image_model', 'text_input_price', 'image_input_price', 'image_output_price'),
+            'description': 'Configure OpenAI settings for image generation (in USD per 1M tokens)'
         }),
-        ('Pricing Configuration', {
-            'fields': ('text_input_price', 'image_input_price', 'image_output_price'),
-            'description': 'Configure pricing for different types of OpenAI API requests (in USD)'
+        ('OpenAI Prompt Generation', {
+            'fields': ('openai_prompt_model', 'text_input_price_prompt', 'text_output_price_prompt'),
+            'description': 'Configure OpenAI settings for prompt generation (in USD per 1M tokens)'
         }),
     )
     

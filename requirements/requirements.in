@@ -12,7 +12,7 @@ django-storages
 django-waffle
 djangorestframework
 drf-spectacular
-openai>=1.12.0  # Para GPT-4o y DALL·E 3
+openai>=1.12.0  # Para GPT-5 y DALL·E 3
 posthog  # Para analítica de eventos y tracking de usuarios
 psycopg2-binary
 redis

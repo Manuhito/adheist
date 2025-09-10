@@ -136,14 +136,14 @@ class BackloadAdmin(admin.ModelAdmin):
 
 @admin.register(FacebookPage)
 class FacebookPageAdmin(admin.ModelAdmin):
-    list_display = ["page_id", "page_name", "country", "is_active"]
+    list_display = ["page_id", "page_name", "page_url", "country", "is_active"]
     list_filter = ["country", "is_active", "industries"]
     search_fields = ["page_id", "page_name"]
     readonly_fields = ["created_at", "updated_at"]
     filter_horizontal = ["industries"]
     fieldsets = (
         (None, {
-            "fields": ("page_id", "page_name", "is_active")
+            "fields": ("page_id", "page_name", "page_url", "is_active")
         }),
         ("Additional Information", {
             "fields": ("industries", "country", "notes")

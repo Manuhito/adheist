@@ -39,6 +39,10 @@ class FacebookPage(BaseModel):
         blank=True,
         help_text="Facebook page name"
     )
+    page_url = models.URLField(
+        blank=True,
+        help_text="Facebook page URL"
+    )
     industries = models.ManyToManyField('ads.IndustryList', related_name="apify_facebook_pages", blank=True)
     country = models.CharField(
         max_length=2, 

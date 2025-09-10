@@ -32,6 +32,7 @@ def create_blog_post(
     author_image_url: Optional[str] = None,
     author_name: Optional[str] = None,
     author_username: Optional[str] = None,
+    search_description: Optional[str] = None,
 ) -> BlogPage:
     """
     Create a new blog post programmatically.
@@ -49,6 +50,7 @@ def create_blog_post(
         author_image_url: URL to the author's profile image
         author_name: Name of the post author
         author_username: Username or handle of the post author
+        search_description: SEO meta description for the post
         
     Returns:
         The created BlogPage instance
@@ -113,7 +115,8 @@ def create_blog_post(
         read_time=read_time,
         author_image_url=author_image_url,
         author_name=author_name,
-        author_username=author_username
+        author_username=author_username,
+        search_description=search_description
     )
     
     # Generate a slug if needed
@@ -219,6 +222,8 @@ def update_blog_post(
     author_image_url: Optional[str] = None,
     author_name: Optional[str] = None,
     author_username: Optional[str] = None,
+    search_description: Optional[str] = None,
+    slug: Optional[str] = None,
 ) -> BlogPage:
     """
     Update an existing blog post.
@@ -234,6 +239,8 @@ def update_blog_post(
         author_image_url: URL to the author's profile image (if None, keeps existing)
         author_name: Name of the post author (if None, keeps existing)
         author_username: Username or handle of the post author (if None, keeps existing)
+        search_description: SEO meta description for the post (if None, keeps existing)
+        slug: URL slug for the post (if None, keeps existing or regenerates from title)
         
     Returns:
         The updated BlogPage instance
@@ -258,6 +265,16 @@ def update_blog_post(
         
     if author_username is not None:
         blog_post.author_username = author_username
+    
+    if search_description is not None:
+        blog_post.search_description = search_description
+    
+    if slug is not None:
+        blog_post.slug = slug
+    elif title is not None:
+        # If title changed but no slug provided, regenerate slug from new title
+        from django.utils.text import slugify
+        blog_post.slug = slugify(title)[:50]
     
     if body_content is not None:
         # Process body content into StreamField format
@@ -458,24 +475,16 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
             # Get intro/excerpt (limited to 250 chars)
             intro = post_data.get('excerpt', '')
             
-            # If excerpt is empty, generate one from the content
-            if not intro:
-                content_text = post_data.get('content', '')
-                if content_text:
-                    # Remove basic HTML tags to get plain text
-                    import re
-                    clean_content = re.sub(r'<[^>]+>', '', content_text)
-                    # Use the first 250 characters as intro
-                    intro = clean_content[:250].strip()
-                    print(f"Generating intro from content for '{title}': {intro[:50]}...")
-                
-            # If we still don't have an intro, use the title as fallback
+            # If no excerpt, use title as fallback
             if not intro:
                 intro = f"Article about {title}"
                 print(f"Using title as intro for '{title}'")
             
             # Limit to 250 characters
             intro = intro[:250]
+            
+            # Use excerpt as search_description for SEO
+            search_description = post_data.get('excerpt', '')
             
             # Get content
             content = post_data.get('content', '')
@@ -505,12 +514,8 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
                 except Exception as e:
                     print(f"Error parsing date '{date_str}': {e}")
             
-            # Create body content with intro as paragraph and content as raw HTML
+            # Create body content with only the content from API
             body_content = [
-                {
-                    "type": "paragraph",
-                    "value": f"<p>{intro}</p>"
-                },
                 {
                     "type": "html",
                     "value": content  # Usar el HTML tal cual, sin envolverlo en <p>
@@ -590,6 +595,8 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
                         author_image_url=author_image_url,
                         author_name=author_name,
                         author_username=author_username,
+                        search_description=search_description,
+                        slug=slug,
                     )
                     
                     # Update gallery image if it exists
@@ -617,6 +624,7 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
                         author_image_url=author_image_url,
                         author_name=author_name,
                         author_username=author_username,
+                        search_description=search_description,
                     )
                     
                     # Set read time if available
@@ -656,7 +664,8 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
                     slug=unique_slug,
                     path=blog_index.path + '0001',  # Temporary path
                     depth=blog_index.depth + 1,
-                    numchild=0
+                    numchild=0,
+                    search_description=search_description
                 )
                 
                 # Save the post first

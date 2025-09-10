@@ -8,6 +8,7 @@ from openai import OpenAI
 from django.core.cache import cache
 import json
 import time
+from apps.aiinterface.models import OpenAIConfiguration
 
 logger = logging.getLogger(__name__)
 
@@ -205,8 +206,14 @@ The output must be in the form of a highly detailed image generation prompt for 
             logger.info(f"Using cached GPT-5 prompt result for {cache_key}")
             return cached_result
         
-        # Make the API call to GPT-5
-        logger.info(f"Calling GPT-5 API to generate prompt for ad")
+        # Get OpenAI configuration
+        openai_config = OpenAIConfiguration.get_openai_config()
+        model_name = openai_config.get('openai_prompt_model', 'gpt-5')
+        input_price = float(openai_config.get('text_input_price_prompt', 1.25))
+        output_price = float(openai_config.get('text_output_price_prompt', 10.00))
+        
+        # Make the API call to configured model
+        logger.info(f"Calling {model_name} API to generate prompt for ad")
         
         # Prepare messages list
         messages = [
@@ -307,7 +314,7 @@ The output must be in the form of a highly detailed image generation prompt for 
         
         # Realizar la llamada a la API
         response = client.chat.completions.create(
-            model="gpt-5",  # Use GPT-5 model
+            model=model_name,  # Use configured model
             messages=messages
             # Eliminados los parámetros temperature y max_tokens para permitir máximo rendimiento
         )
@@ -315,20 +322,47 @@ The output must be in the form of a highly detailed image generation prompt for 
         # Extract the generated prompt from the response
         generated_prompt = response.choices[0].message.content.strip()
         
-        # Log the response from GPT-5
-        print("\n\n==== RESPUESTA DE GPT-5 ====\n")
-        print(generated_prompt)
-        print("\n==== FIN DE LA RESPUESTA ====\n\n")
+        # Calculate costs
+        usage = response.usage
+        input_tokens = usage.prompt_tokens if usage else 0
+        output_tokens = usage.completion_tokens if usage else 0
+        
+        # Calculate costs in USD (prices are per 1M tokens)
+        input_cost = (input_tokens / 1_000_000) * input_price
+        output_cost = (output_tokens / 1_000_000) * output_price
+        total_cost = input_cost + output_cost
+        
+        # Prepare cost metadata
+        cost_metadata = {
+            'model': model_name,
+            'input_tokens': input_tokens,
+            'output_tokens': output_tokens,
+            'total_tokens': input_tokens + output_tokens,
+            'input_cost_usd': round(input_cost, 6),
+            'output_cost_usd': round(output_cost, 6),
+            'total_cost_usd': round(total_cost, 6),
+            'timestamp': time.time()
+        }
+        
+        # Log the response and costs
+        logger.info(f"\n\n==== RESPUESTA DE {model_name.upper()} ====\n")
+        logger.info(generated_prompt)
+        logger.info(f"\n==== COSTOS ====\n")
+        logger.info(f"Tokens de entrada: {input_tokens}")
+        logger.info(f"Tokens de salida: {output_tokens}")
+        logger.info(f"Costo total: ${total_cost:.6f} USD")
+        logger.info("\n==== FIN DE LA RESPUESTA ====\n\n")
         
         # Cache the result for future use (1 hour expiration)
         cache.set(cache_key, generated_prompt, 3600)
         
-        return generated_prompt
+        # Return both the prompt and metadata
+        return generated_prompt, cost_metadata
         
     except Exception as e:
-        logger.exception(f"Error generating prompt with GPT-5: {str(e)}")
+        logger.exception(f"Error generating prompt with {model_name}: {str(e)}")
         # Fall back to the original prompt generation method
-        return generate_prompt_fallback(version_data)
+        return generate_prompt_fallback(version_data), None
 
 def generate_revision_prompt(version_data, image_urls=None, called_from=None):
     """
@@ -543,8 +577,14 @@ Generate a **highly detailed image generation prompt for the OpenAI Image API** 
             logger.info(f"Using cached GPT-5 prompt result for {cache_key}")
             return cached_result
         
-        # Make the API call to GPT-5
-        logger.info(f"Calling GPT-5 API to generate prompt for ad")
+        # Get OpenAI configuration
+        openai_config = OpenAIConfiguration.get_openai_config()
+        model_name = openai_config.get('openai_prompt_model', 'gpt-5')
+        input_price = float(openai_config.get('text_input_price_prompt', 1.25))
+        output_price = float(openai_config.get('text_output_price_prompt', 10.00))
+        
+        # Make the API call to configured model
+        logger.info(f"Calling {model_name} API to generate prompt for ad")
         
         # Prepare messages list
         messages = [
@@ -645,7 +685,7 @@ Generate a **highly detailed image generation prompt for the OpenAI Image API** 
         
         # Realizar la llamada a la API
         response = client.chat.completions.create(
-            model="gpt-5",  # Use GPT-5 model
+            model=model_name,  # Use configured model
             messages=messages
             # Eliminados los parámetros temperature y max_tokens para permitir máximo rendimiento
         )
@@ -653,20 +693,47 @@ Generate a **highly detailed image generation prompt for the OpenAI Image API** 
         # Extract the generated prompt from the response
         generated_prompt = response.choices[0].message.content.strip()
         
-        # Log the response from GPT-5
-        print("\n\n==== RESPUESTA DE GPT-5 ====\n")
-        print(generated_prompt)
-        print("\n==== FIN DE LA RESPUESTA ====\n\n")
+        # Calculate costs
+        usage = response.usage
+        input_tokens = usage.prompt_tokens if usage else 0
+        output_tokens = usage.completion_tokens if usage else 0
+        
+        # Calculate costs in USD (prices are per 1M tokens)
+        input_cost = (input_tokens / 1_000_000) * input_price
+        output_cost = (output_tokens / 1_000_000) * output_price
+        total_cost = input_cost + output_cost
+        
+        # Prepare cost metadata
+        cost_metadata = {
+            'model': model_name,
+            'input_tokens': input_tokens,
+            'output_tokens': output_tokens,
+            'total_tokens': input_tokens + output_tokens,
+            'input_cost_usd': round(input_cost, 6),
+            'output_cost_usd': round(output_cost, 6),
+            'total_cost_usd': round(total_cost, 6),
+            'timestamp': time.time()
+        }
+        
+        # Log the response and costs
+        logger.info(f"\n\n==== RESPUESTA DE {model_name.upper()} ====\n")
+        logger.info(generated_prompt)
+        logger.info(f"\n==== COSTOS ====\n")
+        logger.info(f"Tokens de entrada: {input_tokens}")
+        logger.info(f"Tokens de salida: {output_tokens}")
+        logger.info(f"Costo total: ${total_cost:.6f} USD")
+        logger.info("\n==== FIN DE LA RESPUESTA ====\n\n")
         
         # Cache the result for future use (1 hour expiration)
         cache.set(cache_key, generated_prompt, 3600)
         
-        return generated_prompt
+        # Return both the prompt and metadata
+        return generated_prompt, cost_metadata
         
     except Exception as e:
-        logger.exception(f"Error generating prompt with GPT-5: {str(e)}")
+        logger.exception(f"Error generating prompt with {model_name}: {str(e)}")
         # Fall back to the original prompt generation method
-        return generate_prompt_fallback(version_data)
+        return generate_prompt_fallback(version_data), None
 def generate_prompt_fallback(version_data):
     """
     Fallback method to generate a prompt without GPT-5.
@@ -862,14 +929,15 @@ def generate_prompt(version):
     
     # Generate the prompt (use GPT-5 when version_type == 'initial' or 'revision')
     start_time = time.time()
+    cost_metadata = None
     try:
         # The version_type will be injected by the caller when needed
         version_type = getattr(version, "_version_type", None)
         if version_type == 'initial':
-            prompt = generate_version_prompt(version_data, image_urls)
+            prompt, cost_metadata = generate_version_prompt(version_data, image_urls)
             logger.info(f"GPT-5 prompt generated in {time.time() - start_time:.2f} seconds")
         elif version_type == 'revision':
-            prompt = generate_revision_prompt(version_data, image_urls)
+            prompt, cost_metadata = generate_revision_prompt(version_data, image_urls)
             logger.info(f"GPT-5 revision prompt generated in {time.time() - start_time:.2f} seconds")
         else:
             prompt = generate_prompt_fallback(version_data)
@@ -879,5 +947,17 @@ def generate_prompt(version):
         # Fall back to original method if GPT-5 fails
         prompt = generate_prompt_fallback(version_data)
         logger.info(f"Fallback prompt generated in {time.time() - start_time:.2f} seconds")
+    
+    # Save cost metadata to the version if available
+    if cost_metadata and hasattr(version, 'openai_prompt_response_metadata'):
+        try:
+            # Convert to JSON and back to ensure serializability
+            import json
+            serializable_metadata = json.loads(json.dumps(cost_metadata, default=str))
+            version.openai_prompt_response_metadata = serializable_metadata
+            version.save(update_fields=['openai_prompt_response_metadata'])
+            logger.info(f"Saved prompt cost metadata: ${cost_metadata.get('total_cost_usd', 0):.6f} USD")
+        except (TypeError, ValueError) as e:
+            logger.warning(f"Could not serialize prompt cost metadata for AdRequestVersion {version.id}: {e}")
     
     return prompt
