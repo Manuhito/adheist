@@ -32,6 +32,7 @@ def create_blog_post(
     author_image_url: Optional[str] = None,
     author_name: Optional[str] = None,
     author_username: Optional[str] = None,
+    search_description: Optional[str] = None,
 ) -> BlogPage:
     """
     Create a new blog post programmatically.
@@ -49,6 +50,7 @@ def create_blog_post(
         author_image_url: URL to the author's profile image
         author_name: Name of the post author
         author_username: Username or handle of the post author
+        search_description: SEO meta description for the post
         
     Returns:
         The created BlogPage instance
@@ -113,7 +115,8 @@ def create_blog_post(
         read_time=read_time,
         author_image_url=author_image_url,
         author_name=author_name,
-        author_username=author_username
+        author_username=author_username,
+        search_description=search_description
     )
     
     # Generate a slug if needed
@@ -219,6 +222,7 @@ def update_blog_post(
     author_image_url: Optional[str] = None,
     author_name: Optional[str] = None,
     author_username: Optional[str] = None,
+    search_description: Optional[str] = None,
 ) -> BlogPage:
     """
     Update an existing blog post.
@@ -234,6 +238,7 @@ def update_blog_post(
         author_image_url: URL to the author's profile image (if None, keeps existing)
         author_name: Name of the post author (if None, keeps existing)
         author_username: Username or handle of the post author (if None, keeps existing)
+        search_description: SEO meta description for the post (if None, keeps existing)
         
     Returns:
         The updated BlogPage instance
@@ -258,6 +263,9 @@ def update_blog_post(
         
     if author_username is not None:
         blog_post.author_username = author_username
+    
+    if search_description is not None:
+        blog_post.search_description = search_description
     
     if body_content is not None:
         # Process body content into StreamField format
@@ -466,6 +474,9 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
             # Limit to 250 characters
             intro = intro[:250]
             
+            # Use excerpt as search_description for SEO
+            search_description = post_data.get('excerpt', '')
+            
             # Get content
             content = post_data.get('content', '')
             if not content:
@@ -575,6 +586,7 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
                         author_image_url=author_image_url,
                         author_name=author_name,
                         author_username=author_username,
+                        search_description=search_description,
                     )
                     
                     # Update gallery image if it exists
@@ -602,6 +614,7 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
                         author_image_url=author_image_url,
                         author_name=author_name,
                         author_username=author_username,
+                        search_description=search_description,
                     )
                     
                     # Set read time if available
@@ -641,7 +654,8 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
                     slug=unique_slug,
                     path=blog_index.path + '0001',  # Temporary path
                     depth=blog_index.depth + 1,
-                    numchild=0
+                    numchild=0,
+                    search_description=search_description
                 )
                 
                 # Save the post first
