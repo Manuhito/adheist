@@ -458,18 +458,7 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
             # Get intro/excerpt (limited to 250 chars)
             intro = post_data.get('excerpt', '')
             
-            # If excerpt is empty, generate one from the content
-            if not intro:
-                content_text = post_data.get('content', '')
-                if content_text:
-                    # Remove basic HTML tags to get plain text
-                    import re
-                    clean_content = re.sub(r'<[^>]+>', '', content_text)
-                    # Use the first 250 characters as intro
-                    intro = clean_content[:250].strip()
-                    print(f"Generating intro from content for '{title}': {intro[:50]}...")
-                
-            # If we still don't have an intro, use the title as fallback
+            # If no excerpt, use title as fallback
             if not intro:
                 intro = f"Article about {title}"
                 print(f"Using title as intro for '{title}'")
@@ -505,12 +494,8 @@ def import_posts_from_api(max_posts: int = None) -> List[BlogPage]:
                 except Exception as e:
                     print(f"Error parsing date '{date_str}': {e}")
             
-            # Create body content with intro as paragraph and content as raw HTML
+            # Create body content with only the content from API
             body_content = [
-                {
-                    "type": "paragraph",
-                    "value": f"<p>{intro}</p>"
-                },
                 {
                     "type": "html",
                     "value": content  # Usar el HTML tal cual, sin envolverlo en <p>
