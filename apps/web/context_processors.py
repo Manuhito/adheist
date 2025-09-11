@@ -566,7 +566,7 @@ def robot_index(request):
         'account_request_login_code', 'socialaccount_signup', 'socialaccount_connections',
         'mfa_index', 'mfa_activate_totp',
         # Legal pages
-        'web:terms',
+        'terms', 'privacy',
         # Error pages
         '400', '403', '404', '500'
     ]

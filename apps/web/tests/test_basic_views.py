@@ -13,7 +13,7 @@ class TestBasicViews(TestCase):
         self._assert_200(reverse("account_login"))
 
     def test_terms(self):
-        self._assert_200(reverse("web:terms"))
+        self._assert_200(reverse("terms"))
 
     def test_robots(self):
         self._assert_200(reverse("web:robots.txt"))
