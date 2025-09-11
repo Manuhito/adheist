@@ -1,0 +1,13 @@
+{% extends "web/base.html" %}
+{% load static %}
+{% load i18n %}
+{% block content %}
+<div class="flex justify-center my-8 ">
+  <div class=" px-4 py-4">
+    <div class="pg-content">
+      <h1>{{ title }}</h1>
+      {{ content|safe }}
+    </div>
+  </div>
+</div>
+{% endblock %}

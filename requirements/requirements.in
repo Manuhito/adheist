@@ -9,6 +9,7 @@ django-anymail[resend]  # email services
 django-celery-beat
 django-environ
 django-storages
+django-summernote
 django-waffle
 djangorestframework
 drf-spectacular

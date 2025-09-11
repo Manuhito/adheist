@@ -32,6 +32,7 @@ from wagtail.api.v2.router import WagtailAPIRouter
 from wagtail.contrib.sitemaps import Sitemap
 from wagtail.documents import urls as wagtaildocs_urls
 from apps.web.sitemaps import StaticViewSitemap
+from apps.termspages import views as termspages_views
 
 # Create the API router
 api_router = WagtailAPIRouter('wagtailapi')
@@ -61,6 +62,9 @@ urlpatterns = [
     path("subscriptions/", include("apps.subscriptions.urls")),
     path("ads/", include("apps.ads.urls")),
     path("aiinterface/", include("apps.aiinterface.urls")),
+    path("terms-of-service/", termspages_views.terms_of_service, name="terms"),
+    path("privacy-policy/", termspages_views.privacy_policy, name="privacy"),
+    path('summernote/', include('django_summernote.urls')),
     path("", include("apps.web.urls")),
     path("celery-progress/", include("celery_progress.urls")),
     # API docs

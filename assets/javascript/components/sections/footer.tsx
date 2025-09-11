@@ -54,14 +54,14 @@ export default function Footer() {
   </span>
   < ul className = "flex justify-start md:justify-end text-sm tracking-tight text-foreground" >
     <li className="mr-3 md:mx-4" >
-      <a href="#" target = "_blank" rel = "noopener noreferrer" >
+      <a href="/privacy-policy/" rel="noopener noreferrer">
         {t('privacy_policy', 'Privacy Policy')}
-          </a>
-          </li>
-          < li className = "mr-3 md:mx-4" >
-            <a href="#" target = "_blank" rel = "noopener noreferrer" >
-              {t('terms_of_service', 'Terms of Service')}
-                </a>
+      </a>
+      </li>
+      < li className = "mr-3 md:mx-4" >
+        <a href="/terms-of-service/" rel="noopener noreferrer">
+          {t('terms_of_service', 'Terms of Service')}
+        </a>
                 </li>
                 </ul>
                 </div>
