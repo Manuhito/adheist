@@ -25,6 +25,8 @@ module.exports = {
     'payment': './assets/javascript/payment.js',  // entry point for the payment page
     'update-payment-method': './assets/javascript/update-payment-method.js',  // entry point for the payment method update page
     'profile': './assets/javascript/profile/index.js',  // entry point for the user profile page
+    'discover-page': './assets/javascript/app/discover-page.jsx',  // entry point for the discover page
+    'app-sidebar-layout': './assets/javascript/app/app-sidebar-layout.jsx',  // entry point for the sidebar layout
   },
   output: {
     path: path.resolve(__dirname, './static'),

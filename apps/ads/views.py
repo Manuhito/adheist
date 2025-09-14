@@ -511,6 +511,19 @@ def payment_success(request):
 
 
 @login_required
+def discover_page(request):
+    """
+    Render the discover page with React components.
+    """
+    template = "ads/discover.html"
+    context = {
+        "active_tab": "discover",
+    }
+    
+    return TemplateResponse(request, template, context)
+
+
+@login_required
 def home(request):
     template = "ads/ads_home.html"
     

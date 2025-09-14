@@ -37,4 +37,5 @@ urlpatterns = [
     path("api/version/rate/", views.adrequest_version_rate, name="adrequest_version_rate"),
     path("user-images/", views.user_images, name="user_images"),
     path("upload-brand-asset/", views.upload_brand_asset),
+    path("discover/", views.discover_page, name="discover_page"),
 ]

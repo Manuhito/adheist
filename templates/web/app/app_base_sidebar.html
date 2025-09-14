@@ -1,0 +1,35 @@
+{% extends "web/base_core.html" %}
+{% load static %}
+{% block extra_js %}
+{{ block.super }}
+<script>
+  // Mark this as a private page for no-index
+  window.__IS_PRIVATE_PAGE__ = true;
+</script>
+<script>
+  // Pass user data to the React component
+  window.__USER_DATA__ = {
+    name: "{{ request.user.get_full_name|default:'' }}",
+    email: "{{ request.user.email|default:'' }}",
+    avatar: "{{ request.user.profile.avatar_url|default:'' }}"
+  };
+</script>
+<script>
+  // Pass active tab to sidebar
+  window.__SIDEBAR_DATA__ = {
+    activeTab: "{{ active_tab|default:'' }}"
+  };
+</script>
+<script src="{% static 'js/app-sidebar-layout-bundle.js' %}" defer></script>
+{% endblock %}
+
+{% block body %}
+{% block notifications %}
+{% endblock %}
+
+<!-- App Sidebar Layout Container -->
+<div id="app-sidebar-layout-container">
+  {% block app %}
+  {% endblock %}
+</div>
+{% endblock %}
