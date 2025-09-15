@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { ActionSearchBar } from '../../components/ui/action-search-bar.jsx';
 import { Building } from 'lucide-react';
+import DiscoverFilterModal from './DiscoverFilterModal.jsx';
 
 /**
  * Componente de búsqueda personalizado para la página Discover
  * @param {Object} props - Propiedades del componente
  * @param {Function} props.onSearch - Función a llamar cuando se realiza una búsqueda
  */
-function DiscoverSearchBar({ onSearch }) {
+function DiscoverSearchBar({ onSearch, onFiltersApply }) {
   const [companies, setCompanies] = useState([]);
   const [companyActions, setCompanyActions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -82,12 +83,20 @@ function DiscoverSearchBar({ onSearch }) {
 
   return (
     <div className="w-full">
-      <ActionSearchBar 
-        actions={companyActions} 
-        onSearch={handleSearch}
-        onActionSelect={handleCompanySelect}
-        placeholder={placeholder}
-      />
+      <div className="flex items-center gap-0">
+        <div className="flex-1">
+          <ActionSearchBar 
+            actions={companyActions} 
+            onSearch={handleSearch}
+            onActionSelect={handleCompanySelect}
+            placeholder={placeholder}
+          />
+        </div>
+        <DiscoverFilterModal 
+          selectedCompany={selectedCompany}
+          onFiltersApply={onFiltersApply}
+        />
+      </div>
     </div>
   );
 }

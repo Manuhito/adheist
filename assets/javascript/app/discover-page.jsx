@@ -181,7 +181,6 @@ function DiscoverContent() {
     // Add pagination parameters
     params.append('page', page);
     params.append('page_size', 30); // Tamaño de página mayor para mostrar más resultados
-    params.append('is_active', true); // Solo mostrar anuncios activos
     
     // Añadir parámetro de búsqueda si existe
     if (effectiveQuery !== null && effectiveQuery !== undefined && effectiveQuery !== '') {
@@ -323,6 +322,53 @@ function DiscoverContent() {
     fetchFilteredResultsWithQuery(1, false, query);
   };
   
+  // Función para manejar los filtros aplicados
+  const handleFiltersApply = (filterParams) => {
+    console.log(`🔧 handleFiltersApply called with:`, filterParams);
+    setCurrentPage(1);
+    
+    // Build URL with filter parameters
+    const params = new URLSearchParams();
+    params.append('page', 1);
+    params.append('page_size', 30);
+    
+    // Add filter parameters
+    if (filterParams) {
+      const filterParamsObj = new URLSearchParams(filterParams);
+      for (const [key, value] of filterParamsObj) {
+        params.append(key, value);
+      }
+    }
+    
+    const finalUrl = `/ads/adlibraries/?${params.toString()}`;
+    console.log(`🌐 Making API call to: ${finalUrl}`);
+    
+    // Call the API with filters
+    setIsLoading(true);
+    fetch(finalUrl)
+      .then(response => response.json())
+      .then(data => {
+        console.log(`📊 API Response:`, data);
+        if (data && data.adlibraries) {
+          console.log(`✅ Setting ${data.adlibraries.length} filtered results`);
+          setFilteredResults(data.adlibraries);
+          setHasMorePages(data.pagination && data.pagination.has_next);
+          setCurrentPage(1);
+        } else {
+          console.log(`❌ No results in API response, setting empty array`);
+          setFilteredResults([]);
+          setHasMorePages(false);
+        }
+        setIsLoading(false);
+      })
+      .catch(error => {
+        console.error('Error fetching filtered results:', error);
+        setFilteredResults([]);
+        setHasMorePages(false);
+        setIsLoading(false);
+      });
+  };
+  
   // Renderizar el componente de búsqueda en el header cuando se monta el componente
   useEffect(() => {
     let searchRoot = null;
@@ -334,7 +380,7 @@ function DiscoverContent() {
     if (searchContainer) {
       // Crear root y renderizar el componente
       searchRoot = createRoot(searchContainer);
-      searchRoot.render(<DiscoverSearchBar onSearch={handleSearch} />);
+      searchRoot.render(<DiscoverSearchBar onSearch={handleSearch} onFiltersApply={handleFiltersApply} />);
     }
     
     // Limpiar el componente cuando se desmonte
@@ -348,6 +394,7 @@ function DiscoverContent() {
   // Fetch data when component mounts (only once)
   useEffect(() => {
     if (!searchQuery) {
+      console.log(`🚀 Initial load: calling fetchFilteredResultsWithQuery`);
       fetchFilteredResultsWithQuery(1, false, null);
     }
   }, []);

@@ -785,9 +785,13 @@ def get_adlibrary_filters(request):
     
     GET Parameters:
         company_name: Filter by company name (case-insensitive contains)
+        page_id: Filter by Facebook page ID (takes priority over company_name)
         industries: Filter by industry names (comma-separated list)
         tags: Filter by tag names (comma-separated list)
-        is_active: Filter by active status (true/false)
+        media_type: Filter by media type ('image', 'meme', 'image_and_meme')
+        publisher_platform: Filter by platform ('FACEBOOK', 'INSTAGRAM', 'AUDIENCE_NETWORK', 'MESSENGER', 'THREADS', or comma-separated for multiple)
+        meta_status: Filter by meta status ('ACTIVE', 'INACTIVE', or 'all' for both)
+        is_active: Filter by active status (true/false, default: true)
         page: Page number for pagination (default: 1)
         page_size: Number of items per page (default: 20)
     
@@ -800,6 +804,12 @@ def get_adlibrary_filters(request):
     page_id = request.GET.get('page_id', '')  # New parameter for Facebook page ID
     industries = request.GET.getlist('industries', [])
     tags = request.GET.getlist('tags', [])
+    media_type = request.GET.get('media_type', '')  # New parameter for media type
+    publisher_platform = request.GET.get('publisher_platform', '')  # New parameter for platform
+    meta_status = request.GET.get('meta_status', '')  # New parameter for meta status
+    
+    # DEBUG: Print all received parameters
+    print(f"DEBUG: Received parameters - media_type='{media_type}', meta_status='{meta_status}', has_filters check will be: {bool(company_name or page_id or industries or tags or media_type or publisher_platform or meta_status)}")
     
     # Get is_active filter parameter (default to True if not provided)
     is_active_param = request.GET.get('is_active', 'true').lower()
@@ -826,7 +836,8 @@ def get_adlibrary_filters(request):
         tags = [request.GET.get('tag')]
     
     # Check if any filter parameters are provided
-    has_filters = company_name or page_id or industries or tags
+    has_filters = company_name or page_id or industries or tags or media_type or publisher_platform or meta_status
+    print(f"DEBUG: has_filters = {has_filters}")
     
     if has_filters:
         # Comenzar con una consulta base con filtros básicos de estado
@@ -875,12 +886,44 @@ def get_adlibrary_filters(request):
         # Apply the combined filter if any conditions exist
         if combined_query:
             adlibraries = adlibraries.filter(combined_query).distinct()
+        
+        # Apply media_type filter if provided
+        if media_type:
+            print(f"DEBUG: Filtering by media_type='{media_type}'")
+            print(f"DEBUG: Before filter count: {adlibraries.count()}")
+            adlibraries = adlibraries.filter(media_type=media_type)
+            print(f"DEBUG: After filter count: {adlibraries.count()}")
+            print(f"DEBUG: Sample media_types in filtered results: {list(adlibraries.values_list('media_type', flat=True).distinct())}")
+        
+        # Apply publisher_platform filter if provided
+        if publisher_platform:
+            print(f"DEBUG: Filtering by publisher_platform='{publisher_platform}'")
+            print(f"DEBUG: Before platform filter count: {adlibraries.count()}")
+            try:
+                # Handle comma-separated platforms (for "All" option)
+                if ',' in publisher_platform:
+                    platform_list = [p.strip() for p in publisher_platform.split(',')]
+                    print(f"DEBUG: Platform list: {platform_list}")
+                    adlibraries = adlibraries.filter(publisher_platform__overlap=platform_list)
+                else:
+                    print(f"DEBUG: Single platform: {publisher_platform}")
+                    adlibraries = adlibraries.filter(publisher_platform__contains=[publisher_platform])
+                print(f"DEBUG: After platform filter count: {adlibraries.count()}")
+            except Exception as e:
+                print(f"DEBUG: Error in publisher_platform filter: {e}")
+                raise
+        
+        # Apply meta_status filter if provided
+        if meta_status and meta_status != 'all':
+            adlibraries = adlibraries.filter(meta_status=meta_status.upper())
     else:
         # Si no hay filtros específicos, mostrar solo favoritos
+        print("DEBUG: No filters detected, showing favorites only")
         if is_active:
             adlibraries = AdLibrary.objects.filter(is_fav=True, meta_status=AdLibrary.STATUS_ACTIVE, is_active=True)
         else:
             adlibraries = AdLibrary.objects.filter(is_fav=True, is_active=True)
+        print(f"DEBUG: Favorites query count: {adlibraries.count()}")
     
     # Aplicar paginación a los resultados
     paginator = Paginator(adlibraries, page_size)
