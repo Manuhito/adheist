@@ -129,6 +129,16 @@ function ConditionalHeader({ content, customComponent }) {
           <Menu className="h-6 w-6 text-muted-foreground" />
         </CustomSidebarTrigger>
       )}
+      
+      {/* Logo de la app */}
+      <div className="flex items-center">
+        <img
+          src="/static/images/web/logo-adheist.png"
+          alt="AdHeist Logo"
+          className="h-8 w-auto"
+        />
+      </div>
+      
       {!open && headerContent && <div className="h-4 w-px bg-border mx-2" />}
       {headerContent && (
         <div className="flex items-center gap-2 text-sm">
