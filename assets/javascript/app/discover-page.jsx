@@ -6,153 +6,26 @@ import { useTranslation } from '../lib/useTranslation.ts';
 import { motion, AnimatePresence } from 'framer-motion';
 import DiscoverSearchBar from './components/DiscoverSearchBar.jsx';
 
-/**
- * CustomGallery component wraps InteractiveBentoGallery and modifies its grid structure
- * to display 4 columns that adapt to 3 when the screen narrows
- */
-function CustomGallery({ mediaItems, onItemSelect, selectedItemId, userPermissions }) {
-  const { t } = useTranslation();
-  const [selectedItem, setSelectedItem] = useState(null);
-  
-  // Handle gallery item selection
-  const handleItemSelect = (item) => {
-    if (onItemSelect) {
-      onItemSelect(item);
+// Function to get CSRF token from cookie
+const getCsrfToken = () => {
+  const name = 'csrftoken';
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
     }
-  };
-  
-  return (
-    <div className="container mx-auto px-1 py-1 max-w-7xl">
-      <AnimatePresence mode="wait">
-        {selectedItem && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-               onClick={() => setSelectedItem(null)}>
-            <div className="bg-background rounded-xl overflow-hidden max-w-6xl w-full shadow-2xl"
-                 onClick={(e) => e.stopPropagation()}>
-              {/* Modal content would go here */}
-            </div>
-          </div>
-        )}
-      </AnimatePresence>
-      
-      <motion.div
-        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
-        initial="hidden"
-        animate="visible"
-        variants={{
-          hidden: { opacity: 0 },
-          visible: {
-            opacity: 1,
-            transition: { staggerChildren: 0.05 }
-          }
-        }}
-      >
-        {mediaItems.map((item, index) => (
-          <motion.div
-            key={`${item.id}-${index}`}
-            layoutId={`media-${item.id}-${index}`}
-            className={`${selectedItemId === item.id ? 'ring-2 ring-primary ring-offset-2 rounded-xl' : ''}`}
-            onClick={() => {
-              setSelectedItem(item);
-              handleItemSelect(item);
-            }}
-            variants={{
-              hidden: { y: 20, opacity: 0 },
-              visible: {
-                y: 0,
-                opacity: 1,
-                transition: {
-                  type: "spring",
-                  stiffness: 300,
-                  damping: 25,
-                  delay: index * 0.03
-                }
-              }
-            }}
-          >
-            <div className="bg-background rounded-xl overflow-hidden border border-border hover:border-primary/50 transition-colors cursor-pointer group">
-              {/* Header */}
-              <div className="p-3">
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  {/* Avatar */}
-                  <div className="w-8 h-8 rounded-full overflow-hidden bg-muted flex-shrink-0">
-                    {item.page_url ? (
-                      <img
-                        src={`https://twenty-icons.com/${item.page_url.replace(/^https?:\/\//, '')}`}
-                        alt={`${item.title} logo`}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                          e.target.parentNode.innerHTML = `<div class="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-xs">${item.title.charAt(0).toUpperCase()}</div>`;
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-xs">
-                        {item.title.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                  </div>
-                  <h3 className="text-sm font-semibold break-words line-clamp-2 flex-1">{item.title}</h3>
-                </div>
-                
-                {/* Ad Creative Bodies */}
-                {item.ad_creative_bodies && (
-                  <div className="mt-2">
-                    <p className="text-xs text-foreground leading-relaxed break-words line-clamp-2">
-                      {item.ad_creative_bodies}
-                    </p>
-                  </div>
-                )}
-              </div>
-              
-              {/* Image Content */}
-              <div className="relative aspect-square rounded-lg overflow-hidden mx-3">
-                <img
-                  src={item.url}
-                  alt={item.title}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  loading="lazy"
-                  decoding="async"
-                />
-                
-                {/* Selection indicator */}
-                {selectedItemId === item.id && (
-                  <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                    <div className="bg-background rounded-full p-1">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                      </svg>
-                    </div>
-                  </div>
-                )}
-                
-                {/* Gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              </div>
-              
-              {/* Date Information */}
-              <div className="p-3 pt-2">
-                <div className="text-xs text-gray-500">
-                  {item.ad_creation_time ? new Date(item.ad_creation_time).toLocaleDateString() : 'Unknown'} - {item.ad_delivery_stop_time ? new Date(item.ad_delivery_stop_time).toLocaleDateString() : 'Present'}
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </motion.div>
-      
-      {mediaItems.length === 0 && (
-        <div className="py-12 text-center text-muted-foreground">
-          <p>No ad examples available.</p>
-        </div>
-      )}
-    </div>
-  );
-}
+  }
+  return cookieValue;
+};
 
 /**
  * DiscoverContent component displays a gallery of ad examples
- * Similar to StepOneComponent but without filters and taking the full page
+ * Uses InteractiveBentoGallery for consistency with StepOneComponent
  */
 function DiscoverContent() {
   const { t } = useTranslation();
@@ -180,7 +53,7 @@ function DiscoverContent() {
 
     // Add pagination parameters
     params.append('page', page);
-    params.append('page_size', 30); // Tamaño de página mayor para mostrar más resultados
+    params.append('page_size', 20); // Same page size as StepOneComponent
     
     // Añadir parámetro de búsqueda si existe
     if (effectiveQuery !== null && effectiveQuery !== undefined && effectiveQuery !== '') {
@@ -330,7 +203,7 @@ function DiscoverContent() {
     // Build URL with filter parameters
     const params = new URLSearchParams();
     params.append('page', 1);
-    params.append('page_size', 30);
+    params.append('page_size', 20);
     
     // Add filter parameters
     if (filterParams) {
@@ -414,6 +287,18 @@ function DiscoverContent() {
     setSelectedAdLibrary(item.id);
   };
 
+  // Handle toggle favorite functionality (placeholder for now)
+  const handleToggleFavorite = async (item) => {
+    console.log('Toggle favorite for item:', item);
+    // TODO: Implement favorite toggle API call
+  };
+
+  // Handle deactivate image functionality (placeholder for now)
+  const handleDeactivateImage = async (item) => {
+    console.log('Deactivate image for item:', item);
+    // TODO: Implement deactivate image API call
+  };
+
   // Prepare media items for the gallery
   const galleryItems = transformToMediaItems(filteredResults);
 
@@ -445,20 +330,28 @@ function DiscoverContent() {
             <p className="text-muted-foreground">{t('discover.loading', 'Loading gallery...')}</p>
           </div>
         </div>
-      ) : (
+      ) : galleryItems.length > 0 ? (
         <>
-          <CustomGallery
+          <InteractiveBentoGallery
             mediaItems={galleryItems}
+            title=""
+            description=""
             onItemSelect={handleGalleryItemSelect}
             selectedItemId={selectedAdLibrary}
+            onToggleFavorite={handleToggleFavorite}
+            onDeactivateImage={handleDeactivateImage}
+            userPermissions={window.__USER_PERMISSIONS__ || { isStaff: false }}
           />
-          
           {isLoadingMore && (
             <div className="py-4 flex justify-center">
               <div className="w-8 h-8 border-3 border-primary/30 border-t-primary rounded-full animate-spin"></div>
             </div>
           )}
         </>
+      ) : (
+        <div className="p-8 text-center text-gray-500">
+          {t('discover.no_results', 'No ad examples found. Try adjusting your search.')}
+        </div>
       )}
     </div>
   );
