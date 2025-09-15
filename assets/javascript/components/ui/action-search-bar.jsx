@@ -70,13 +70,22 @@ const allActions = [
     },
 ];
 
-function ActionSearchBar({ actions = allActions, onSearch, onActionSelect, placeholder = "Search for a brand name or keywords...." }) {
+function ActionSearchBar({ actions = allActions, onSearch, onActionSelect, onKeywordSearch, hideIcons = false, clearInput = false, placeholder = "Search for a brand name or keywords...." }) {
     const [query, setQuery] = useState("");
     const [result, setResult] = useState(null);
     const [isFocused, setIsFocused] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
     const [selectedAction, setSelectedAction] = useState(null);
     const debouncedQuery = useDebounce(query, 200);
+
+    // Clear input when clearInput prop changes to true
+    useEffect(() => {
+        if (clearInput) {
+            setQuery("");
+            setIsFocused(false);
+            setResult(null);
+        }
+    }, [clearInput]);
 
     useEffect(() => {
         if (!isFocused) {
@@ -119,6 +128,14 @@ function ActionSearchBar({ actions = allActions, onSearch, onActionSelect, place
     const handleInputChange = (e) => {
         setQuery(e.target.value);
         setIsTyping(true);
+    };
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter' && query.trim() && onKeywordSearch) {
+            e.preventDefault();
+            onKeywordSearch(query.trim());
+            setIsFocused(false);
+        }
     };
 
     const container = {
@@ -181,37 +198,40 @@ function ActionSearchBar({ actions = allActions, onSearch, onActionSelect, place
                             placeholder={placeholder}
                             value={query}
                             onChange={handleInputChange}
+                            onKeyDown={handleKeyDown}
                             onFocus={handleFocus}
                             onBlur={() =>
                                 setTimeout(() => setIsFocused(false), 200)
                             }
                             className="pl-3 pr-9 py-1.5 h-9 text-sm rounded-lg focus-visible:ring-offset-0"
                         />
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4">
-                            <AnimatePresence mode="popLayout">
-                                {query.length > 0 ? (
-                                    <motion.div
-                                        key="send"
-                                        initial={{ y: -20, opacity: 0 }}
-                                        animate={{ y: 0, opacity: 1 }}
-                                        exit={{ y: 20, opacity: 0 }}
-                                        transition={{ duration: 0.2 }}
-                                    >
-                                        <Send className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-                                    </motion.div>
-                                ) : (
-                                    <motion.div
-                                        key="search"
-                                        initial={{ y: -20, opacity: 0 }}
-                                        animate={{ y: 0, opacity: 1 }}
-                                        exit={{ y: 20, opacity: 0 }}
-                                        transition={{ duration: 0.2 }}
-                                    >
-                                        <Search className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
+                        {!hideIcons && (
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4">
+                                <AnimatePresence mode="popLayout">
+                                    {query.length > 0 ? (
+                                        <motion.div
+                                            key="send"
+                                            initial={{ y: -20, opacity: 0 }}
+                                            animate={{ y: 0, opacity: 1 }}
+                                            exit={{ y: 20, opacity: 0 }}
+                                            transition={{ duration: 0.2 }}
+                                        >
+                                            <Send className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                                        </motion.div>
+                                    ) : (
+                                        <motion.div
+                                            key="search"
+                                            initial={{ y: -20, opacity: 0 }}
+                                            animate={{ y: 0, opacity: 1 }}
+                                            exit={{ y: 20, opacity: 0 }}
+                                            transition={{ duration: 0.2 }}
+                                        >
+                                            <Search className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        )}
                     </div>
                 </div>
 
