@@ -42,7 +42,7 @@ function DiscoverContent() {
     const effectiveQuery = queryOverride !== null ? queryOverride : searchQuery;
     // Build URL with parameters
     const params = new URLSearchParams();
-    
+
     // Establecer estado de carga apropiado
     if (page === 1) {
       setIsLoading(true);
@@ -54,12 +54,12 @@ function DiscoverContent() {
     // Add pagination parameters
     params.append('page', page);
     params.append('page_size', 20); // Same page size as StepOneComponent
-    
+
     // Añadir parámetro de búsqueda si existe
     if (effectiveQuery !== null && effectiveQuery !== undefined && effectiveQuery !== '') {
       // Convert to string to ensure we can work with it
       const searchStr = String(effectiveQuery);
-      
+
       // Check if effectiveQuery is a number (page_id) or string (company_name)
       if (!isNaN(searchStr)) {
         params.append('page_id', searchStr);
@@ -80,10 +80,10 @@ function DiscoverContent() {
         } else {
           setHasMorePages(false);
         }
-        
+
         // Procesar los resultados
         let newResults = [];
-        
+
         // Verify data structure
         if (data && Array.isArray(data.adlibraries)) {
           // Si tenemos la estructura esperada con el nuevo endpoint paginado
@@ -103,7 +103,7 @@ function DiscoverContent() {
             newResults = resultsArray;
           }
         }
-        
+
         // Si estamos añadiendo más resultados (append), concatenar con los existentes
         if (append && page > 1) {
           setFilteredResults(prevResults => {
@@ -194,17 +194,17 @@ function DiscoverContent() {
     setCurrentPage(1); // Reiniciar la paginación
     fetchFilteredResultsWithQuery(1, false, query);
   };
-  
+
   // Función para manejar los filtros aplicados
   const handleFiltersApply = (filterParams) => {
     console.log(`🔧 handleFiltersApply called with:`, filterParams);
     setCurrentPage(1);
-    
+
     // Build URL with filter parameters
     const params = new URLSearchParams();
     params.append('page', 1);
     params.append('page_size', 20);
-    
+
     // Add filter parameters
     if (filterParams) {
       const filterParamsObj = new URLSearchParams(filterParams);
@@ -212,10 +212,10 @@ function DiscoverContent() {
         params.append(key, value);
       }
     }
-    
+
     const finalUrl = `/ads/adlibraries/?${params.toString()}`;
     console.log(`🌐 Making API call to: ${finalUrl}`);
-    
+
     // Call the API with filters
     setIsLoading(true);
     fetch(finalUrl)
@@ -241,21 +241,21 @@ function DiscoverContent() {
         setIsLoading(false);
       });
   };
-  
+
   // Renderizar el componente de búsqueda en el header cuando se monta el componente
   useEffect(() => {
     let searchRoot = null;
-    
+
     // Buscar el contenedor en el header
     const searchContainer = document.getElementById('header-search-container');
-    
+
     // Si existe el contenedor, renderizar el componente de búsqueda
     if (searchContainer) {
       // Crear root y renderizar el componente
       searchRoot = createRoot(searchContainer);
       searchRoot.render(<DiscoverSearchBar onSearch={handleSearch} onFiltersApply={handleFiltersApply} />);
     }
-    
+
     // Limpiar el componente cuando se desmonte
     return () => {
       if (searchRoot) {
@@ -263,7 +263,7 @@ function DiscoverContent() {
       }
     };
   }, []);
-  
+
   // Fetch data when component mounts (only once)
   useEffect(() => {
     if (!searchQuery) {
@@ -271,7 +271,7 @@ function DiscoverContent() {
       fetchFilteredResultsWithQuery(1, false, null);
     }
   }, []);
-  
+
   // Función para cargar más resultados
   const loadMoreResults = () => {
     if (!isLoading && !isLoadingMore && hasMorePages) {
@@ -281,10 +281,58 @@ function DiscoverContent() {
     }
   };
 
-  // Handle gallery item selection
-  const handleGalleryItemSelect = (item) => {
+  // Handle gallery item selection - create AdRequest with selected ad library
+  const handleGalleryItemSelect = async (item) => {
     console.log('Selected gallery item:', item);
     setSelectedAdLibrary(item.id);
+    
+    try {
+      // Step 1: Create a new AdRequest
+      console.log('Creating new AdRequest...');
+      const createResponse = await fetch('/ads/adrequest/create/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCsrfToken(),
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      });
+
+      if (!createResponse.ok) {
+        throw new Error('Failed to create AdRequest');
+      }
+
+      const createData = await createResponse.json();
+      console.log('AdRequest created with ID:', createData.id);
+
+      // Step 2: Update the AdRequest with the selected ad_library
+      console.log('Updating AdRequest with ad_library:', item.id);
+      const formData = new FormData();
+      formData.append('ad_library', item.id);
+      formData.append('status', 'DRAFT'); // Set status to DRAFT
+
+      const updateResponse = await fetch(`/ads/adrequest/${createData.id}/update/`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-CSRFToken': getCsrfToken(),
+        },
+      });
+
+      if (!updateResponse.ok) {
+        throw new Error('Failed to update AdRequest with ad_library');
+      }
+
+      const updateData = await updateResponse.json();
+      console.log('AdRequest updated successfully:', updateData);
+
+      // Step 3: Redirect to the create page with the new AdRequest
+      window.location.href = `/ads/create/?id=${createData.id}`;
+
+    } catch (error) {
+      console.error('Error creating AdRequest:', error);
+      // TODO: Show user-friendly error message
+      alert('Error creating ad request. Please try again.');
+    }
   };
 
   // Handle toggle favorite functionality (placeholder for now)
@@ -309,7 +357,7 @@ function DiscoverContent() {
       const scrollHeight = document.documentElement.scrollHeight;
       const clientHeight = window.innerHeight;
       const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
-      
+
       // Si estamos a 200px o menos del final, cargar más resultados
       if (distanceFromBottom <= 200) {
         console.log(`🎯 Loading more results...`);
@@ -375,7 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(checkSidebarReady, 50);
     }
   };
-  
+
   checkSidebarReady();
 });
 
