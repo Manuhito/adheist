@@ -70,7 +70,7 @@ const allActions = [
     },
 ];
 
-function ActionSearchBar({ actions = allActions, onSearch }) {
+function ActionSearchBar({ actions = allActions, onSearch, onActionSelect }) {
     const [query, setQuery] = useState("");
     const [result, setResult] = useState(null);
     const [isFocused, setIsFocused] = useState(false);
@@ -222,7 +222,9 @@ function ActionSearchBar({ actions = allActions, onSearch }) {
                                             layout
                                             onClick={() => {
                                                 setSelectedAction(action);
-                                                if (onSearch) {
+                                                if (onActionSelect) {
+                                                    onActionSelect(action);
+                                                } else if (onSearch) {
                                                     onSearch(action.label);
                                                 }
                                             }}

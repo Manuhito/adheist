@@ -164,8 +164,10 @@ function DiscoverContent() {
   const [selectedAdLibrary, setSelectedAdLibrary] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Function to fetch ad libraries from the API
-  const fetchFilteredResults = (page = 1, append = false) => {
+  // Function to fetch ad libraries from the API with explicit query parameter
+  const fetchFilteredResultsWithQuery = (page = 1, append = false, queryOverride = null) => {
+    const effectiveQuery = queryOverride !== null ? queryOverride : searchQuery;
+    console.log(`🔍 fetchFilteredResultsWithQuery called: page=${page}, append=${append}, effectiveQuery=${effectiveQuery}`);
     // Build URL with parameters
     const params = new URLSearchParams();
     
@@ -183,14 +185,25 @@ function DiscoverContent() {
     params.append('is_active', true); // Solo mostrar anuncios activos
     
     // Añadir parámetro de búsqueda si existe
-    if (searchQuery && searchQuery.trim() !== '') {
-      params.append('search', searchQuery.trim());
+    if (effectiveQuery !== null && effectiveQuery !== undefined && effectiveQuery !== '') {
+      // Convert to string to ensure we can work with it
+      const searchStr = String(effectiveQuery);
+      
+      // Check if effectiveQuery is a number (page_id) or string (company_name)
+      if (!isNaN(searchStr)) {
+        params.append('page_id', searchStr);
+      } else {
+        params.append('company_name', searchStr.trim());
+      }
     }
 
+    console.log(`📡 Making API call: /ads/adlibraries/?${params.toString()}`);
+    
     // Call the API
     fetch(`/ads/adlibraries/?${params.toString()}`)
       .then(response => response.json())
       .then(data => {
+        console.log(`📥 API response received:`, data);
         // Actualizar estado de paginación
         if (data && data.pagination) {
           setHasMorePages(data.pagination.has_next);
@@ -224,9 +237,11 @@ function DiscoverContent() {
         
         // Si estamos añadiendo más resultados (append), concatenar con los existentes
         if (append && page > 1) {
+          console.log(`📝 Appending ${newResults.length} results to existing ${filteredResults.length}`);
           setFilteredResults(prevResults => [...prevResults, ...newResults]);
         } else {
           // Si es la primera página o estamos reemplazando, establecer directamente
+          console.log(`📝 Setting ${newResults.length} results (replacing existing)`);
           setFilteredResults(newResults);
         }
 
@@ -304,9 +319,11 @@ function DiscoverContent() {
 
   // Función para manejar la búsqueda desde el componente de búsqueda
   const handleSearch = (query) => {
+    console.log(`🔎 handleSearch called with:`, query, typeof query);
     setSearchQuery(query);
     setCurrentPage(1); // Reiniciar la paginación
-    fetchFilteredResults(1, false); // Cargar resultados con la nueva búsqueda
+    // Pass query directly to fetchFilteredResults instead of relying on state
+    fetchFilteredResultsWithQuery(1, false, query);
   };
   
   // Renderizar el componente de búsqueda en el header cuando se monta el componente
@@ -331,16 +348,20 @@ function DiscoverContent() {
     };
   }, []);
   
-  // Fetch data when component mounts or search query changes
+  // Fetch data when component mounts (only once)
   useEffect(() => {
-    fetchFilteredResults(1, false);
-  }, [searchQuery]);
+    console.log(`🚀 Initial useEffect triggered, searchQuery:`, searchQuery);
+    if (!searchQuery) {
+      console.log(`🚀 Loading initial data (no search query)`);
+      fetchFilteredResultsWithQuery(1, false, null);
+    }
+  }, []);
   
   // Función para cargar más resultados
   const loadMoreResults = () => {
     if (!isLoading && !isLoadingMore && hasMorePages) {
       const nextPage = currentPage + 1;
-      fetchFilteredResults(nextPage, true);
+      fetchFilteredResultsWithQuery(nextPage, true, null);
     }
   };
 

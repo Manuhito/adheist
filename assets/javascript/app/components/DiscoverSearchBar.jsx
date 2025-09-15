@@ -29,6 +29,7 @@ function DiscoverSearchBar({ onSearch }) {
           return {
             id: `company-${index}`,
             label: company.page_name || company, // Soporte para ambos formatos
+            pageId: company.id, // Añadir el ID de la página de Facebook
             icon: logoUrl ? (
               <div className="w-6 h-6 rounded-sm overflow-hidden bg-muted flex-shrink-0">
                 <img 
@@ -65,12 +66,20 @@ function DiscoverSearchBar({ onSearch }) {
       onSearch(query);
     }
   };
+
+  const handleCompanySelect = (selectedAction) => {
+    // Cuando se selecciona una empresa, filtrar por su ID
+    if (onSearch && selectedAction.pageId) {
+      onSearch(selectedAction.pageId);
+    }
+  };
   
   return (
     <div className="w-full">
       <ActionSearchBar 
         actions={companyActions} 
-        onSearch={handleSearch} 
+        onSearch={handleSearch}
+        onActionSelect={handleCompanySelect}
       />
     </div>
   );

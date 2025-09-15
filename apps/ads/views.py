@@ -797,6 +797,7 @@ def get_adlibrary_filters(request):
     
     # Get filter parameters from request
     company_name = request.GET.get('company_name', '')
+    page_id = request.GET.get('page_id', '')  # New parameter for Facebook page ID
     industries = request.GET.getlist('industries', [])
     tags = request.GET.getlist('tags', [])
     
@@ -825,15 +826,27 @@ def get_adlibrary_filters(request):
         tags = [request.GET.get('tag')]
     
     # Check if any filter parameters are provided
-    has_filters = company_name or industries or tags
+    has_filters = company_name or page_id or industries or tags
     
     if has_filters:
-        # Comenzar con una consulta base sin filtros
-        adlibraries = AdLibrary.objects.filter(is_active=True)
+        # Comenzar con una consulta base con filtros básicos de estado
+        base_filters = Q(is_active=True)
+        if is_active:
+            base_filters &= Q(meta_status=AdLibrary.STATUS_ACTIVE)
         
-        # Aplicar filtros específicos primero
-        # Apply company name filter if provided (AND logic)
-        if company_name:
+        adlibraries = AdLibrary.objects.filter(base_filters)
+        
+        # Apply company filter if provided (AND logic)
+        # Priority: page_id over company_name for more precise filtering
+        if page_id:
+            try:
+                page_id_int = int(page_id)
+                adlibraries = adlibraries.filter(facebook_page_id=page_id_int)
+            except (ValueError, TypeError):
+                # If page_id is not a valid integer, fall back to company_name filter
+                if company_name:
+                    adlibraries = adlibraries.filter(facebook_page__page_name__icontains=company_name)
+        elif company_name:
             adlibraries = adlibraries.filter(facebook_page__page_name__icontains=company_name)
         
         # Create combined query for industries and tags (OR logic between them)
@@ -862,10 +875,6 @@ def get_adlibrary_filters(request):
         # Apply the combined filter if any conditions exist
         if combined_query:
             adlibraries = adlibraries.filter(combined_query).distinct()
-        
-        # Aplicar el filtro is_active al final
-        if is_active:
-            adlibraries = adlibraries.filter(meta_status=AdLibrary.STATUS_ACTIVE)
     else:
         # Si no hay filtros específicos, mostrar solo favoritos
         if is_active:
@@ -938,6 +947,7 @@ def get_adlibrary_filters(request):
         'Step 1 Filter query',
         properties={
             'company_name': company_name,
+            'page_id': page_id,
             'industries': industries,
             'tags': tags,
             'page': page,
@@ -987,7 +997,7 @@ def get_adlibrary_company_list(request):
             page_name=''
         ).annotate(
             ad_count=Count('adlibraries', filter=Q(adlibraries__is_active=True))
-        ).values('page_name', 'ad_count', 'page_url').distinct().order_by('page_name')
+        ).values('id', 'page_name', 'ad_count', 'page_url').distinct().order_by('page_name')
         
         # Convert to list of dictionaries and clean page_url
         company_data = []
