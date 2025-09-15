@@ -987,10 +987,17 @@ def get_adlibrary_company_list(request):
             page_name=''
         ).annotate(
             ad_count=Count('adlibraries', filter=Q(adlibraries__is_active=True))
-        ).values('page_name', 'ad_count').distinct().order_by('page_name')
+        ).values('page_name', 'ad_count', 'page_url').distinct().order_by('page_name')
         
-        # Convert to list of dictionaries
-        company_data = list(facebook_pages)
+        # Convert to list of dictionaries and clean page_url
+        company_data = []
+        for page in facebook_pages:
+            page_dict = dict(page)
+            # Remove https:// from page_url for twenty-icons.com compatibility
+            if page_dict.get('page_url'):
+                import re
+                page_dict['page_url'] = re.sub(r'^https?://', '', page_dict['page_url'])
+            company_data.append(page_dict)
         
         # Cache indefinitely - will be invalidated by signals
         cache.set(cache_key, company_data, None)

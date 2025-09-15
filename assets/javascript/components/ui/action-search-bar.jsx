@@ -165,7 +165,7 @@ function ActionSearchBar({ actions = allActions, onSearch }) {
                     <div className="relative">
                         <Input
                             type="text"
-                            placeholder="What's up?"
+                            placeholder="Search for a brand name or keywords...."
                             value={query}
                             onChange={handleInputChange}
                             onFocus={handleFocus}
@@ -206,14 +206,14 @@ function ActionSearchBar({ actions = allActions, onSearch }) {
                     <AnimatePresence>
                         {isFocused && result && !selectedAction && (
                             <motion.div
-                                className="absolute top-0 left-0 w-full border rounded-md shadow-lg overflow-hidden dark:border-gray-800 bg-white dark:bg-black mt-1 z-[9999]"
+                                className="absolute top-0 left-0 w-full border rounded-md shadow-lg overflow-hidden dark:border-gray-800 bg-white dark:bg-black mt-1 z-[9999] max-h-80"
                                 style={{ zIndex: 9999 }}
                                 variants={container}
                                 initial="hidden"
                                 animate="show"
                                 exit="exit"
                             >
-                                <motion.ul>
+                                <motion.ul className="overflow-y-auto max-h-80">
                                     {result.actions.map((action) => (
                                         <motion.li
                                             key={action.id}
