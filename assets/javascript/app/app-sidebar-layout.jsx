@@ -130,7 +130,7 @@ function ConditionalHeader({ content, customComponent }) {
   const headerContent = customComponent || content;
 
   return (
-    <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+    <header className="flex h-16 shrink-0 items-center gap-2 px-4">
       {!open && (
         <CustomSidebarTrigger className="-ml-1">
           <Menu className="h-6 w-6 text-muted-foreground" />

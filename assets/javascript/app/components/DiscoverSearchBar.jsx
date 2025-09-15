@@ -11,6 +11,7 @@ function DiscoverSearchBar({ onSearch }) {
   const [companies, setCompanies] = useState([]);
   const [companyActions, setCompanyActions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState(null);
 
   // Cargar la lista de empresas al montar el componente
   useEffect(() => {
@@ -69,17 +70,23 @@ function DiscoverSearchBar({ onSearch }) {
 
   const handleCompanySelect = (selectedAction) => {
     // Cuando se selecciona una empresa, filtrar por su ID
+    setSelectedCompany(selectedAction);
     if (onSearch && selectedAction.pageId) {
       onSearch(selectedAction.pageId);
     }
   };
   
+  const placeholder = selectedCompany 
+    ? `Filtering by: ${selectedCompany.label}`
+    : "Search for a brand name or keywords....";
+
   return (
     <div className="w-full">
       <ActionSearchBar 
         actions={companyActions} 
         onSearch={handleSearch}
         onActionSelect={handleCompanySelect}
+        placeholder={placeholder}
       />
     </div>
   );
