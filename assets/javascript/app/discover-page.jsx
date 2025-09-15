@@ -49,8 +49,8 @@ function CustomGallery({ mediaItems, onItemSelect, selectedItemId, userPermissio
       >
         {mediaItems.map((item, index) => (
           <motion.div
-            key={item.id}
-            layoutId={`media-${item.id}`}
+            key={`${item.id}-${index}`}
+            layoutId={`media-${item.id}-${index}`}
             className={`${selectedItemId === item.id ? 'ring-2 ring-primary ring-offset-2 rounded-xl' : ''}`}
             onClick={() => {
               setSelectedItem(item);
@@ -167,7 +167,6 @@ function DiscoverContent() {
   // Function to fetch ad libraries from the API with explicit query parameter
   const fetchFilteredResultsWithQuery = (page = 1, append = false, queryOverride = null) => {
     const effectiveQuery = queryOverride !== null ? queryOverride : searchQuery;
-    console.log(`🔍 fetchFilteredResultsWithQuery called: page=${page}, append=${append}, effectiveQuery=${effectiveQuery}`);
     // Build URL with parameters
     const params = new URLSearchParams();
     
@@ -197,15 +196,13 @@ function DiscoverContent() {
       }
     }
 
-    console.log(`📡 Making API call: /ads/adlibraries/?${params.toString()}`);
-    
     // Call the API
     fetch(`/ads/adlibraries/?${params.toString()}`)
       .then(response => response.json())
       .then(data => {
-        console.log(`📥 API response received:`, data);
         // Actualizar estado de paginación
         if (data && data.pagination) {
+          console.log(`📊 Page ${data.pagination.current_page} loaded - Has next: ${data.pagination.has_next}, Total: ${data.pagination.total_count}`);
           setHasMorePages(data.pagination.has_next);
           setCurrentPage(data.pagination.current_page);
         } else {
@@ -237,11 +234,12 @@ function DiscoverContent() {
         
         // Si estamos añadiendo más resultados (append), concatenar con los existentes
         if (append && page > 1) {
-          console.log(`📝 Appending ${newResults.length} results to existing ${filteredResults.length}`);
-          setFilteredResults(prevResults => [...prevResults, ...newResults]);
+          setFilteredResults(prevResults => {
+            const combined = [...prevResults, ...newResults];
+            console.log(`📈 Total results: ${combined.length}`);
+            return combined;
+          });
         } else {
-          // Si es la primera página o estamos reemplazando, establecer directamente
-          console.log(`📝 Setting ${newResults.length} results (replacing existing)`);
           setFilteredResults(newResults);
         }
 
@@ -322,7 +320,6 @@ function DiscoverContent() {
     console.log(`🔎 handleSearch called with:`, query, typeof query);
     setSearchQuery(query);
     setCurrentPage(1); // Reiniciar la paginación
-    // Pass query directly to fetchFilteredResults instead of relying on state
     fetchFilteredResultsWithQuery(1, false, query);
   };
   
@@ -350,9 +347,7 @@ function DiscoverContent() {
   
   // Fetch data when component mounts (only once)
   useEffect(() => {
-    console.log(`🚀 Initial useEffect triggered, searchQuery:`, searchQuery);
     if (!searchQuery) {
-      console.log(`🚀 Loading initial data (no search query)`);
       fetchFilteredResultsWithQuery(1, false, null);
     }
   }, []);
@@ -361,6 +356,7 @@ function DiscoverContent() {
   const loadMoreResults = () => {
     if (!isLoading && !isLoadingMore && hasMorePages) {
       const nextPage = currentPage + 1;
+      console.log(`📄 Loading page ${nextPage}`);
       fetchFilteredResultsWithQuery(nextPage, true, null);
     }
   };
@@ -374,8 +370,27 @@ function DiscoverContent() {
   // Prepare media items for the gallery
   const galleryItems = transformToMediaItems(filteredResults);
 
+  // Use window scroll instead of container scroll
+  useEffect(() => {
+    const handleWindowScroll = () => {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight;
+      const clientHeight = window.innerHeight;
+      const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+      
+      // Si estamos a 200px o menos del final, cargar más resultados
+      if (distanceFromBottom <= 200) {
+        console.log(`🎯 Loading more results...`);
+        loadMoreResults();
+      }
+    };
+
+    window.addEventListener('scroll', handleWindowScroll);
+    return () => window.removeEventListener('scroll', handleWindowScroll);
+  }, [isLoading, isLoadingMore, hasMorePages, currentPage]);
+
   return (
-    <div className="flex-1 overflow-y-auto">
+    <div className="flex-1">
       {isLoading ? (
         <div className="flex justify-center items-center h-full py-20">
           <div className="flex flex-col items-center">
@@ -384,17 +399,7 @@ function DiscoverContent() {
           </div>
         </div>
       ) : (
-        <div 
-          className="w-full h-full overflow-y-auto"
-          onScroll={(e) => {
-            // Detectar cuando el usuario ha llegado cerca del final del scroll
-            const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-            // Si estamos a 200px o menos del final, cargar más resultados
-            if (scrollHeight - scrollTop - clientHeight <= 200) {
-              loadMoreResults();
-            }
-          }}
-        >
+        <>
           <CustomGallery
             mediaItems={galleryItems}
             onItemSelect={handleGalleryItemSelect}
@@ -406,7 +411,7 @@ function DiscoverContent() {
               <div className="w-8 h-8 border-3 border-primary/30 border-t-primary rounded-full animate-spin"></div>
             </div>
           )}
-        </div>
+        </>
       )}
     </div>
   );
