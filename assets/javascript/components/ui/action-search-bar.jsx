@@ -95,7 +95,20 @@ function ActionSearchBar({ actions = allActions, onSearch, onActionSelect, place
             return searchableText.includes(normalizedQuery);
         });
 
-        setResult({ actions: filteredActions });
+        // Create keyword search item as first option
+        const keywordSearchItem = {
+            id: "keyword-search",
+            label: `"${debouncedQuery}" keyword search`,
+            icon: <Search className="h-4 w-4 text-gray-400 dark:text-gray-500" />,
+            description: "",
+            short: "",
+            end: "Search",
+            isKeywordSearch: true
+        };
+
+        // Combine keyword search with filtered actions
+        const allResults = [keywordSearchItem, ...filteredActions];
+        setResult({ actions: allResults });
         
         // Notify parent component about search
         if (onSearch) {
@@ -214,43 +227,54 @@ function ActionSearchBar({ actions = allActions, onSearch, onActionSelect, place
                                 exit="exit"
                             >
                                 <motion.ul className="overflow-y-auto max-h-80">
-                                    {result.actions.map((action) => (
-                                        <motion.li
-                                            key={action.id}
-                                            className="px-3 py-2 flex items-center justify-between hover:bg-gray-200 dark:hover:bg-zinc-900 cursor-pointer rounded-md"
-                                            variants={item}
-                                            layout
-                                            onClick={() => {
-                                                setSelectedAction(action);
-                                                if (onActionSelect) {
-                                                    onActionSelect(action);
-                                                } else if (onSearch) {
-                                                    onSearch(action.label);
-                                                }
-                                            }}
-                                        >
-                                            <div className="flex items-center gap-2 justify-between">
+                                    {result.actions.map((action, index) => (
+                                        <React.Fragment key={action.id}>
+                                            <motion.li
+                                                className="px-3 py-2 flex items-center justify-between hover:bg-gray-200 dark:hover:bg-zinc-900 cursor-pointer rounded-md"
+                                                variants={item}
+                                                layout
+                                                onClick={() => {
+                                                    setSelectedAction(action);
+                                                    if (onActionSelect) {
+                                                        onActionSelect(action);
+                                                    } else if (onSearch) {
+                                                        onSearch(action.label);
+                                                    }
+                                                }}
+                                            >
+                                                <div className="flex items-center gap-2 justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className={action.isKeywordSearch ? "text-gray-400 dark:text-gray-500" : "text-gray-500"}>
+                                                            {action.icon}
+                                                        </span>
+                                                        <span className={action.isKeywordSearch 
+                                                            ? "text-xs text-gray-500 dark:text-gray-400" 
+                                                            : "text-sm font-medium text-gray-900 dark:text-gray-100"
+                                                        }>
+                                                            {action.label}
+                                                        </span>
+                                                        <span className="text-xs text-gray-400">
+                                                            {action.description}
+                                                        </span>
+                                                    </div>
+                                                </div>
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-gray-500">
-                                                        {action.icon}
-                                                    </span>
-                                                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                        {action.label}
-                                                    </span>
                                                     <span className="text-xs text-gray-400">
-                                                        {action.description}
+                                                        {action.short}
+                                                    </span>
+                                                    <span className={action.isKeywordSearch 
+                                                        ? "text-xs text-gray-400 dark:text-gray-500 text-right" 
+                                                        : "text-xs text-gray-400 text-right"
+                                                    }>
+                                                        {action.end}
                                                     </span>
                                                 </div>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-xs text-gray-400">
-                                                    {action.short}
-                                                </span>
-                                                <span className="text-xs text-gray-400 text-right">
-                                                    {action.end}
-                                                </span>
-                                            </div>
-                                        </motion.li>
+                                            </motion.li>
+                                            {/* Add separator after keyword search item */}
+                                            {action.isKeywordSearch && result.actions.length > 1 && (
+                                                <div className="border-t border-gray-200 dark:border-gray-700 mx-2 my-1"></div>
+                                            )}
+                                        </React.Fragment>
                                     ))}
                                 </motion.ul>
                             </motion.div>
