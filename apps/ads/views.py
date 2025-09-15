@@ -963,33 +963,39 @@ def get_adlibrary_filters(request):
 
 def get_adlibrary_company_list(request):
     """
-    Get a simple list of all unique company names from FacebookPage in Apify app.
-    Uses Redis caching for improved performance.
+    Get a list of all unique company names from FacebookPage with their ad counts.
+    Uses Redis caching that updates when AdLibrary changes.
     
-    Returns: JSON with list of unique company names
+    Returns: JSON with list of companies and their ad counts
     """
     from django.core.cache import cache
+    from django.db.models import Count, Q
     from apps.apify.models import FacebookPage
+    from apps.ads.models import AdLibrary
     
     # Try to get from cache first
-    cache_key = 'adlibrary_company_names'
-    company_names = cache.get(cache_key)
+    cache_key = 'adlibrary_company_data_with_counts'
+    company_data = cache.get(cache_key)
     
     # If not in cache, get from database and cache it
-    if company_names is None:
-        # Consultar directamente las páginas de Facebook activas
-        # Esto es mucho más eficiente que consultar todos los AdLibrary
-        company_names = list(FacebookPage.objects.filter(
+    if company_data is None:
+        # Get FacebookPages with their ad counts
+        facebook_pages = FacebookPage.objects.filter(
             is_active=True,
             page_name__isnull=False
         ).exclude(
             page_name=''
-        ).values_list('page_name', flat=True).distinct().order_by('page_name'))
+        ).annotate(
+            ad_count=Count('adlibraries', filter=Q(adlibraries__is_active=True))
+        ).values('page_name', 'ad_count').distinct().order_by('page_name')
         
-        # Cache for 1 hour (3600 seconds)
-        cache.set(cache_key, company_names, 3600)
+        # Convert to list of dictionaries
+        company_data = list(facebook_pages)
+        
+        # Cache indefinitely - will be invalidated by signals
+        cache.set(cache_key, company_data, None)
     
-    return JsonResponse({'companies': company_names}, safe=True)
+    return JsonResponse({'companies': company_data}, safe=True)
 
 
 @login_required

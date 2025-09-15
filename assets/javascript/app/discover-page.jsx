@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import * as ReactDOM from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import InteractiveBentoGallery from '../components/ui/interactive-bento-gallery.jsx';
 import { useTranslation } from '../lib/useTranslation.ts';
 import { motion, AnimatePresence } from 'framer-motion';
+import DiscoverSearchBar from './components/DiscoverSearchBar.jsx';
 
 /**
  * CustomGallery component wraps InteractiveBentoGallery and modifies its grid structure
@@ -160,6 +162,7 @@ function DiscoverContent() {
   const [hasMorePages, setHasMorePages] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [selectedAdLibrary, setSelectedAdLibrary] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Function to fetch ad libraries from the API
   const fetchFilteredResults = (page = 1, append = false) => {
@@ -178,6 +181,11 @@ function DiscoverContent() {
     params.append('page', page);
     params.append('page_size', 30); // Tamaño de página mayor para mostrar más resultados
     params.append('is_active', true); // Solo mostrar anuncios activos
+    
+    // Añadir parámetro de búsqueda si existe
+    if (searchQuery && searchQuery.trim() !== '') {
+      params.append('search', searchQuery.trim());
+    }
 
     // Call the API
     fetch(`/ads/adlibraries/?${params.toString()}`)
@@ -294,10 +302,39 @@ function DiscoverContent() {
     });
   };
 
-  // Fetch data when component mounts
+  // Función para manejar la búsqueda desde el componente de búsqueda
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    setCurrentPage(1); // Reiniciar la paginación
+    fetchFilteredResults(1, false); // Cargar resultados con la nueva búsqueda
+  };
+  
+  // Renderizar el componente de búsqueda en el header cuando se monta el componente
+  useEffect(() => {
+    let searchRoot = null;
+    
+    // Buscar el contenedor en el header
+    const searchContainer = document.getElementById('header-search-container');
+    
+    // Si existe el contenedor, renderizar el componente de búsqueda
+    if (searchContainer) {
+      // Crear root y renderizar el componente
+      searchRoot = createRoot(searchContainer);
+      searchRoot.render(<DiscoverSearchBar onSearch={handleSearch} />);
+    }
+    
+    // Limpiar el componente cuando se desmonte
+    return () => {
+      if (searchRoot) {
+        searchRoot.unmount();
+      }
+    };
+  }, []);
+  
+  // Fetch data when component mounts or search query changes
   useEffect(() => {
     fetchFilteredResults(1, false);
-  }, []);
+  }, [searchQuery]);
   
   // Función para cargar más resultados
   const loadMoreResults = () => {

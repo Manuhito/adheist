@@ -19,7 +19,7 @@ import { CustomSidebarTrigger, CustomSidebar } from "@/components/ui/custom-side
 import { Button } from "@/components/ui/button"
 import { PanelLeftClose, Menu, Compass, Bookmark, Zap } from "lucide-react"
 
-function AppSidebar({ activeTab }) {
+function AppSidebar({ activeTab, sidebarComponent }) {
   const menuItems = [
     { id: 'discover', label: 'Discover', href: '/ads/discover/', icon: <Compass className="h-5 w-5" /> },
     { id: 'bookmark', label: 'Bookmark', href: '/ads/bookmark/', icon: <Bookmark className="h-5 w-5" /> },
@@ -75,6 +75,7 @@ function AppSidebar({ activeTab }) {
 
 function AppSidebarLayout() {
   const [headerComponent, setHeaderComponent] = React.useState(null);
+  const [sidebarComponent, setSidebarComponent] = React.useState(null);
 
   // Get data from window globals
   const sidebarData = window.__SIDEBAR_DATA__ || {};
@@ -82,21 +83,27 @@ function AppSidebarLayout() {
   const showHeader = sidebarData.showHeader !== false; // Default to true
   const headerContent = sidebarData.headerContent || null;
 
-  // Make header component setter available globally
+  // Make header and sidebar component setters available globally
   React.useEffect(() => {
     window.setAppHeader = setHeaderComponent;
     window.clearAppHeader = () => setHeaderComponent(null);
+    
+    // Añadir setters para el componente de sidebar
+    window.setSidebarComponent = setSidebarComponent;
+    window.clearSidebarComponent = () => setSidebarComponent(null);
 
     return () => {
       delete window.setAppHeader;
       delete window.clearAppHeader;
+      delete window.setSidebarComponent;
+      delete window.clearSidebarComponent;
     };
   }, []);
 
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
-        <AppSidebar activeTab={activeTab} />
+        <AppSidebar activeTab={activeTab} sidebarComponent={sidebarComponent} />
         <SidebarInset>
           {showHeader && (
             <ConditionalHeader
@@ -137,6 +144,11 @@ function ConditionalHeader({ content, customComponent }) {
           alt="AdHeist Logo"
           className="h-8 w-auto"
         />
+      </div>
+      
+      {/* Contenedor para el componente de búsqueda */}
+      <div className="flex-1 max-w-md mx-4">
+        <div id="header-search-container"></div>
       </div>
       
       {!open && headerContent && <div className="h-4 w-px bg-border mx-2" />}

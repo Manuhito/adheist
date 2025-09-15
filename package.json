@@ -70,7 +70,7 @@
     "color": "^5.0.0",
     "date-fns": "^4.1.0",
     "embla-carousel-react": "^8.6.0",
-    "framer-motion": "^12.7.4",
+    "framer-motion": "^12.23.12",
     "init": "^0.1.2",
     "js-cookie": "^3.0.5",
     "lucide-react": "^0.477.0",

@@ -19,6 +19,8 @@ def invalidate_adlibrary_cache(sender, instance, **kwargs):
     """
     # Delete the cache key to force regeneration on next request
     cache.delete('adlibrary_page_names')
+    # Also delete the new cache key with ad counts
+    cache.delete('adlibrary_company_data_with_counts')
 
 
 @receiver([post_save, post_delete], sender=IndustryList)
@@ -117,6 +119,8 @@ def invalidate_facebook_page_cache(sender, instance, **kwargs):
     # Delete the specific cache key for this FacebookPage
     cache_key = f'facebook_page_data_{instance.id}'
     cache.delete(cache_key)
+    # Also invalidate the company data cache since FacebookPage changes affect it
+    cache.delete('adlibrary_company_data_with_counts')
 
 
 @receiver(post_save, sender=FacebookPage)
