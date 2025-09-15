@@ -1,7 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import {
-  Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
@@ -14,41 +13,52 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarRail,
-  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { CustomSidebarTrigger, CustomSidebar } from "@/components/ui/custom-sidebar"
 import { Button } from "@/components/ui/button"
-import { X } from "lucide-react"
+import { PanelLeftClose, Menu, Compass, Bookmark, Zap } from "lucide-react"
 
 function AppSidebar({ activeTab }) {
   const menuItems = [
-    { id: 'discover', label: 'Discover', href: '/ads/discover/' },
-    { id: 'analytics', label: 'Analytics', href: '/ads/analytics/' },
-    { id: 'settings', label: 'Settings', href: '/ads/settings/' }
+    { id: 'discover', label: 'Discover', href: '/ads/discover/', icon: <Compass className="h-5 w-5" /> },
+    { id: 'bookmark', label: 'Bookmark', href: '/ads/bookmark/', icon: <Bookmark className="h-5 w-5" /> },
+    { id: 'my-ads', label: 'My Ads', href: '/ads/my-ads/', icon: <Zap className="h-5 w-5" /> }
   ];
 
   return (
-    <Sidebar collapsible="offcanvas">
+    <CustomSidebar collapsible="offcanvas">
       <SidebarHeader>
         <div className="flex items-center justify-between px-2 py-2">
-          <h2 className="text-lg font-semibold">App Menu</h2>
-          <SidebarTrigger className="ml-auto" />
+          <div className="flex items-center">
+            <img
+              src="/static/images/web/logo-brand-name.png"
+              alt="AdHeist Logo"
+              className="h-8 w-auto"
+            />
+          </div>
+          <CustomSidebarTrigger className="ml-auto">
+            <PanelLeftClose className="h-5 w-5 text-muted-foreground" />
+          </CustomSidebarTrigger>
         </div>
       </SidebarHeader>
-      
+
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.id}>
-                  <SidebarMenuButton 
-                    asChild 
+                  <SidebarMenuButton
+                    asChild
                     isActive={activeTab === item.id}
+                    className={activeTab === item.id ? "bg-primary/5 rounded-md" : ""}
                   >
-                    <a href={item.href}>
-                      <span>{item.label}</span>
+                    <a href={item.href} className="flex items-center gap-3 py-3">
+                      <span className={activeTab === item.id ? "text-primary" : ""}>
+                        {item.icon}
+                      </span>
+                      <span className={`text-base ${activeTab === item.id ? "text-primary font-medium" : ""}`}>{item.label}</span>
                     </a>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -57,23 +67,43 @@ function AppSidebar({ activeTab }) {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      
+
       <SidebarRail />
-    </Sidebar>
+    </CustomSidebar>
   );
 }
 
 function AppSidebarLayout() {
+  const [headerComponent, setHeaderComponent] = React.useState(null);
+
   // Get data from window globals
   const sidebarData = window.__SIDEBAR_DATA__ || {};
   const activeTab = sidebarData.activeTab || '';
+  const showHeader = sidebarData.showHeader !== false; // Default to true
+  const headerContent = sidebarData.headerContent || null;
+
+  // Make header component setter available globally
+  React.useEffect(() => {
+    window.setAppHeader = setHeaderComponent;
+    window.clearAppHeader = () => setHeaderComponent(null);
+
+    return () => {
+      delete window.setAppHeader;
+      delete window.clearAppHeader;
+    };
+  }, []);
 
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <AppSidebar activeTab={activeTab} />
         <SidebarInset>
-          <ConditionalHeader />
+          {showHeader && (
+            <ConditionalHeader
+              content={headerContent}
+              customComponent={headerComponent}
+            />
+          )}
           <main className="flex-1">
             {/* Content from Django template will be inserted here */}
             <div id="sidebar-page-content">
@@ -86,16 +116,31 @@ function AppSidebarLayout() {
   );
 }
 
-function ConditionalHeader() {
+function ConditionalHeader({ content, customComponent }) {
   const { open } = useSidebar();
-  
+
+  // Priority: customComponent > content > empty
+  const headerContent = customComponent || content;
+
   return (
     <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-      {!open && <SidebarTrigger className="-ml-1" />}
-      {!open && <div className="h-4 w-px bg-border mx-2" />}
-      <div className="flex items-center gap-2 text-sm">
-        <span className="font-medium">App</span>
-      </div>
+      {!open && (
+        <CustomSidebarTrigger className="-ml-1">
+          <Menu className="h-6 w-6 text-muted-foreground" />
+        </CustomSidebarTrigger>
+      )}
+      {!open && headerContent && <div className="h-4 w-px bg-border mx-2" />}
+      {headerContent && (
+        <div className="flex items-center gap-2 text-sm">
+          {React.isValidElement(headerContent) ? (
+            headerContent
+          ) : typeof headerContent === 'string' ? (
+            <span className="font-medium">{headerContent}</span>
+          ) : (
+            headerContent
+          )}
+        </div>
+      )}
     </header>
   );
 }
@@ -106,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (container) {
     const root = createRoot(container);
     root.render(<AppSidebarLayout />);
-    
+
     // Mark layout as ready for child components
     window.sidebarLayoutReady = true;
   }

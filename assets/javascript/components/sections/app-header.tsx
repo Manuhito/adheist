@@ -62,6 +62,15 @@ export default function AppHeader() {
           <div className="flex items-center">
             <div className="flex items-center gap-4">
               <a
+                href="/ads/discover/"
+                className={cn(
+                  buttonVariants({ variant: "ghost", size: "sm" }),
+                  "text-foreground"
+                )}
+              >
+                {t('app_header.discover', 'Discover')}
+              </a>
+              <a
                 href="/pricing"
                 className={cn(
                   buttonVariants({ variant: "outline", size: "sm" }),
