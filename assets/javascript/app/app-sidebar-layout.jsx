@@ -82,6 +82,7 @@ function AppSidebarLayout() {
   const activeTab = sidebarData.activeTab || '';
   const showHeader = sidebarData.showHeader !== false; // Default to true
   const headerContent = sidebarData.headerContent || null;
+  const hideLogo = sidebarData.hideLogo || false; // Default to false (show logo)
 
   // Make header and sidebar component setters available globally
   React.useEffect(() => {
@@ -109,6 +110,7 @@ function AppSidebarLayout() {
             <ConditionalHeader
               content={headerContent}
               customComponent={headerComponent}
+              hideLogo={hideLogo}
             />
           )}
           <main className="flex-1">
@@ -123,7 +125,7 @@ function AppSidebarLayout() {
   );
 }
 
-function ConditionalHeader({ content, customComponent }) {
+function ConditionalHeader({ content, customComponent, hideLogo = false }) {
   const { open } = useSidebar();
 
   // Priority: customComponent > content > empty
@@ -137,14 +139,16 @@ function ConditionalHeader({ content, customComponent }) {
         </CustomSidebarTrigger>
       )}
       
-      {/* Logo de la app */}
-      <div className="flex items-center mr-4">
-        <img
-          src="/static/images/web/logo-adheist.png"
-          alt="AdHeist Logo"
-          className="h-8 w-auto"
-        />
-      </div>
+      {/* Logo de la app - se oculta si hideLogo es true */}
+      {!hideLogo && (
+        <div className="flex items-center mr-4">
+          <img
+            src="/static/images/web/logo-adheist.png"
+            alt="AdHeist Logo"
+            className="h-8 w-auto"
+          />
+        </div>
+      )}
       
       {/* Custom header content takes full width */}
       {headerContent && React.isValidElement(headerContent) ? (
