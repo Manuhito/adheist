@@ -2869,3 +2869,25 @@ def deactivate_image(request):
         })
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def discover_clone_adrequest_page(request, pk):
+    """
+    Page for cloning an AdRequest from discover page.
+    Shows the selected ad reference and allows creating a new ad based on it.
+    """
+    try:
+        # Get the AdRequest and verify user permissions
+        ad_request = get_object_or_404(AdRequest, id=pk, user=request.user)
+        
+        context = {
+            'ad_request': ad_request,
+            'page_title': 'Clone Ad',
+            'page_description': 'New ads follow the style & composition of the ad reference on the left.',
+        }
+        
+        return render(request, 'ads/discover_clone.html', context)
+        
+    except AdRequest.DoesNotExist:
+        return redirect('ads:discover_page')

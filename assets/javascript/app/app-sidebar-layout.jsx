@@ -130,15 +130,15 @@ function ConditionalHeader({ content, customComponent }) {
   const headerContent = customComponent || content;
 
   return (
-    <header className="flex h-16 shrink-0 items-center gap-2 px-4">
+    <header className="flex h-16 shrink-0 items-center px-4">
       {!open && (
-        <CustomSidebarTrigger className="-ml-1">
+        <CustomSidebarTrigger className="-ml-1 mr-2">
           <Menu className="h-6 w-6 text-muted-foreground" />
         </CustomSidebarTrigger>
       )}
       
       {/* Logo de la app */}
-      <div className="flex items-center">
+      <div className="flex items-center mr-4">
         <img
           src="/static/images/web/logo-adheist.png"
           alt="AdHeist Logo"
@@ -146,22 +146,29 @@ function ConditionalHeader({ content, customComponent }) {
         />
       </div>
       
-      {/* Contenedor para el componente de búsqueda */}
-      <div className="flex-1 max-w-md mx-4">
-        <div id="header-search-container"></div>
-      </div>
-      
-      {!open && headerContent && <div className="h-4 w-px bg-border mx-2" />}
-      {headerContent && (
-        <div className="flex items-center gap-2 text-sm">
-          {React.isValidElement(headerContent) ? (
-            headerContent
-          ) : typeof headerContent === 'string' ? (
-            <span className="font-medium">{headerContent}</span>
-          ) : (
-            headerContent
-          )}
+      {/* Custom header content takes full width */}
+      {headerContent && React.isValidElement(headerContent) ? (
+        <div className="flex-1">
+          {headerContent}
         </div>
+      ) : (
+        <>
+          {/* Contenedor para el componente de búsqueda */}
+          <div className="flex-1 max-w-md mx-4">
+            <div id="header-search-container"></div>
+          </div>
+          
+          {!open && headerContent && <div className="h-4 w-px bg-border mx-2" />}
+          {headerContent && (
+            <div className="flex items-center gap-2 text-sm">
+              {typeof headerContent === 'string' ? (
+                <span className="font-medium">{headerContent}</span>
+              ) : (
+                headerContent
+              )}
+            </div>
+          )}
+        </>
       )}
     </header>
   );

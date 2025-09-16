@@ -324,10 +324,7 @@ function DiscoverContent() {
 
       const updateData = await updateResponse.json();
       console.log('AdRequest updated successfully:', updateData);
-
-      // Step 3: Redirect to the create page with the new AdRequest
-      window.location.href = `/ads/create/?id=${createData.id}`;
-
+      window.location.href = `/ads/discover/${createData.id}/create/`;
     } catch (error) {
       console.error('Error creating AdRequest:', error);
       // TODO: Show user-friendly error message
