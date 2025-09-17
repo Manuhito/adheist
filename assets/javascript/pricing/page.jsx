@@ -52,14 +52,27 @@ export default function PricingPage() {
 
   // Obtener datos de precios del objeto window o usar el fallback con traducciones
   const defaultData = createDefaultPricingData(t);
-  const backendData = window.__PRICING_DATA__;
+  
+  // Get pricing data from window object and parse if needed
+  let backendData;
+  try {
+    const rawData = window.__PRICING_DATA__;
+    console.log('Raw pricing data:', typeof rawData, rawData);
+    
+    // Parse the data if it's a string
+    backendData = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
+    console.log('Parsed backend data:', backendData);
+  } catch (error) {
+    console.error('Error parsing pricing data:', error);
+    backendData = null;
+  }
 
   // Si hay datos del backend, traducir sus textos
   let pricingData;
   if (backendData) {
-    // Filtrar los tiers para mantener solo Free, Starter y Pro
+    // Filtrar los tiers para mantener solo Free, Beta, Starter y Pro
     const filteredTiers = backendData.tiers.filter(tier =>
-      ['Free', 'Starter', 'Pro'].includes(tier.name)
+      ['Free', 'Beta', 'Starter', 'Pro'].includes(tier.name)
     );
 
     // Traducir los tiers del backend
