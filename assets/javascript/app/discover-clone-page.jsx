@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import BrandDropdown from './components/BrandDropdown.jsx';
 import { ImageLibrarySelect } from './components/ImageLibrarySelect.jsx';
 import { AppImageLibrarySelect } from './components/AppImageLibrarySelect.jsx';
 import ImageSelectionModal from './components/ImageSelectionModal.jsx';
+import { ArrowLeft, Check } from 'lucide-react';
 
 // Header component with back button, title and description
 const DiscoverCloneHeader = () => {
@@ -84,6 +84,7 @@ const DiscoverClonePageContent = () => {
   });
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [freshData, setFreshData] = useState(null);
+  const [selectedCanvasSize, setSelectedCanvasSize] = useState(null);
 
   // Function to fetch fresh data from the server - same as StepTwo
   const fetchFreshData = async (id) => {
@@ -100,6 +101,11 @@ const DiscoverClonePageContent = () => {
       // Update states with fresh data
       if (freshData.brand) {
         setSelectedBrand(freshData.brand);
+      }
+      
+      // Update canvas size
+      if (freshData.canvas_size) {
+        setSelectedCanvasSize(freshData.canvas_size);
       }
       
       // Update product images
@@ -122,10 +128,18 @@ const DiscoverClonePageContent = () => {
     return null;
   };
 
+  // Canvas size options - same as StepOneComponent (excluding auto)
+  const canvasSizes = [
+    { id: "1024x1024", label: "Instagram / LinkedIn", size: "1024 x 1024" },
+    { id: "1536x1024", label: "Facebook / Twitter", size: "1536 x 1024" },
+    { id: "1024x1536", label: "Instagram Story", size: "1024 x 1536" },
+  ];
+
   // initialData with actual ad request ID from URL and current brand
   const initialData = {
     id: adRequestId,
     brand: selectedBrand,
+    canvas_size: selectedCanvasSize,
     ...adRequestData, // Include all ad request data for reference
     ...(freshData || {}) // Include fresh data if available
   };
@@ -188,6 +202,41 @@ const DiscoverClonePageContent = () => {
     // Update brand in backend if we have an ID
     if (initialData.id && brand) {
       updateBrand(brand);
+    }
+  };
+
+  // Handle canvas size change - same as StepOneComponent
+  const handleCanvasSizeChange = async (sizeId) => {
+    setSelectedCanvasSize(sizeId);
+    
+    // Update canvas size in backend if we have an ID
+    if (initialData.id) {
+      try {
+        const csrfToken = getCsrfToken();
+        if (!csrfToken) {
+          console.error('CSRF token not found');
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append('canvas_size', sizeId);
+
+        const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrfToken
+          },
+          body: formData
+        });
+
+        if (!response.ok) {
+          throw new Error(`Error updating canvas size: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+      } catch (error) {
+        console.error('Error saving canvas size:', error);
+      }
     }
   };
 
@@ -480,15 +529,59 @@ const DiscoverClonePageContent = () => {
               </div>
             </div>
           </div>
+          <h2 className="text-lg text-primary">Context</h2>
+          <p className="text-sm text-gray-600">
+            Platform Presets
+          </p>
+          
+          {/* Canvas Size Selection - same as StepOneComponent */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+            {canvasSizes.map((item) => (
+              <div
+                key={item.id}
+                className={`relative cursor-pointer rounded-xl p-6 flex flex-col items-center justify-center transition-all ${
+                  selectedCanvasSize === item.id 
+                    ? "bg-primary/10 border-2 border-primary" 
+                    : "bg-gray-100 border-2 border-transparent hover:bg-gray-200"
+                }`}
+                onClick={() => handleCanvasSizeChange(item.id)}
+              >
+                {/* Check icon in top-right corner when selected */}
+                {selectedCanvasSize === item.id && (
+                  <div className="absolute top-2 right-2 w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                    <Check className="w-4 h-4 text-white" />
+                  </div>
+                )}
+                
+                {/* Shape preview that matches the aspect ratio */}
+                {item.id === "1024x1024" && (
+                  <div className="w-16 h-16 bg-primary rounded-lg mb-3"></div>
+                )}
+                {item.id === "1536x1024" && (
+                  <div className="w-20 h-12 bg-primary rounded-lg mb-3"></div>
+                )}
+                {item.id === "1024x1536" && (
+                  <div className="w-12 h-20 bg-primary rounded-lg mb-3"></div>
+                )}
+                
+                <div className="text-center">
+                  <div className="font-medium text-sm text-gray-900">{item.label}</div>
+                  <div className="text-xs text-gray-500 mt-1">{item.size}</div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
       
       {/* Image Selection Modal */}
+      {/* Temporarily commented out to debug
       <ImageSelectionModal
         isOpen={isImageModalOpen}
         onClose={toggleImageModal}
         onSelect={handleImageSelect}
       />
+      */}
     </div>
   );
 };
