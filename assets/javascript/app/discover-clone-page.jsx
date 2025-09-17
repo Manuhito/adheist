@@ -356,7 +356,7 @@ const DiscoverClonePageContent = () => {
                 <ImageLibrarySelect
                   onSelectImage={handleProductImageSelect}
                   onDeleteImage={handleProductImageDelete}
-                  selectedImages={{ primary: productImages.primary, secondary: null }}
+                  selectedImages={{ primary: productImages.primary, secondary: productImages.secondary }}
                   className="h-full"
                 />
               </div>
@@ -368,7 +368,7 @@ const DiscoverClonePageContent = () => {
                 <AppImageLibrarySelect
                   onSelectImage={handleAppImageSelect}
                   onDeleteImage={handleAppImageDelete}
-                  selectedImages={{ primary: appImages.primary, secondary: null }}
+                  selectedImages={{ primary: appImages.primary, secondary: appImages.secondary }}
                   className="h-full"
                 />
               </div>
