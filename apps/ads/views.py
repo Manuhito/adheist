@@ -2131,7 +2131,11 @@ def billing_page(request):
     Render the billing page with pricing information.
     """
     from apps.subscriptions.metadata import get_active_products_with_metadata, PlanInterval
+    from django.conf import settings
     logger = logging.getLogger(__name__)
+    
+    # Check if we're in BETA pricing mode
+    is_beta_pricing = settings.PRICING_MODEL == 'BETA'
     
     # Get products from the metadata system
     products_with_metadata = list(get_active_products_with_metadata())
@@ -2166,7 +2170,7 @@ def billing_page(request):
         else:
             subscription_products.append(product)
     
-    # Initialize pricing data without Free plan
+    # Initialize pricing data
     pricing_data = {
         "title": "Pricing Plans",
         "subtitle": "Choose the perfect plan for your needs",
@@ -2174,6 +2178,35 @@ def billing_page(request):
         "tiers": [],
         "usagePackages": []
     }
+    
+    # Initialize tiers with empty array if in BETA mode
+    if is_beta_pricing:
+        # Clear any existing tiers
+        pricing_data["tiers"] = []
+        
+        # Add Beta plan
+        beta_plan = {
+            "name": "Beta",
+            "description": "Basic features for individuals",
+            "price": {
+                "monthly": 0
+            },
+            "features": [
+                "Search 1M+ Ads Library",
+                "Unlimited Ads (With Feedback)",
+                "Unlimited Revisions (With Feedback)",
+                "20 BrandKits",
+                "5 GB of assets"
+            ],
+            "cta": "Current Plan",
+            "highlighted": False,
+            "popular": False,
+            "is_current_plan": True,
+            "is_disabled": False,
+            "cancel_at_period_end": False,
+            "current_period_end": None
+        }
+        pricing_data["tiers"].append(beta_plan)
     
     # Construir usagePackages con los package_products
     for product in package_products:
@@ -2249,76 +2282,86 @@ def billing_page(request):
             if highest_tier_sub:
                 current_plan_id = highest_tier_sub.plan.product.id
                 print(f"Highest tier subscription: {current_plan_name}")
-    # Add tiers from metadata
-    for product in subscription_products:
-        slug = product.metadata.slug
-        if slug in product_mapping:
-            # Get prices
-            monthly_price = product._get_price(PlanInterval.month, fail_hard=False)
-            # No more yearly prices
-            
-            # Check if this is the current plan
-            is_current_plan = current_plan_id == product.product.id
-            
-            # Get subscription details if this is the current plan
-            cancel_at_period_end = False
-            current_period_end = None
-            if is_current_plan and highest_tier_sub:
-                cancel_at_period_end = highest_tier_sub.cancel_at_period_end or False
-                current_period_end = highest_tier_sub.current_period_end.isoformat() if highest_tier_sub.current_period_end else None
-            
-            # Check if this plan should be disabled (user has a higher tier plan)
-            is_disabled = False
-            if current_plan_name:
-                current_tier_position = tier_order.index(current_plan_name) if current_plan_name in tier_order else -1
-                this_tier_position = tier_order.index(product_mapping[slug]['display_name']) if product_mapping[slug]['display_name'] in tier_order else -1
+    # Add tiers from metadata only if not in BETA pricing mode
+    if not is_beta_pricing:
+        for product in subscription_products:
+            slug = product.metadata.slug
+            if slug in product_mapping:
+                # Get prices
+                monthly_price = product._get_price(PlanInterval.month, fail_hard=False)
+                # No more yearly prices
                 
-                # Disable if this plan is lower tier than current plan
-                if this_tier_position < current_tier_position:
-                    is_disabled = True
-            
-            # Format price display
-            price_data = {}
-            if monthly_price:
-                try:
-                    price_data["monthly"] = int(monthly_price.unit_amount / 100)
-                except (TypeError, ValueError):
-                    price_data["monthly"] = product.get_price_display(monthly_price)
-            else:
-                price_data["monthly"] = "Custom"
+                # Check if this is the current plan
+                is_current_plan = current_plan_id == product.product.id
                 
-            # No more yearly prices
-            
-            # Add price IDs to price data
-            if monthly_price:
-                price_data["monthlyPriceId"] = monthly_price.id
-            # No more yearly price IDs
+                # Get subscription details if this is the current plan
+                cancel_at_period_end = False
+                current_period_end = None
+                if is_current_plan and highest_tier_sub:
+                    cancel_at_period_end = highest_tier_sub.cancel_at_period_end or False
+                    current_period_end = highest_tier_sub.current_period_end.isoformat() if highest_tier_sub.current_period_end else None
                 
-            # Create tier data
-            tier = {
-                "name": product_mapping[slug]['display_name'],
-                "description": product.metadata.description or f"For {product_mapping[slug]['display_name']} users",
-                "price": price_data,
-                "features": product.metadata.features,
-                "cta": product_mapping[slug]["cta"],
-                "highlighted": product_mapping[slug]["highlighted"],
-                "popular": product_mapping[slug]["popular"],
-                "is_current_plan": is_current_plan,
-                "is_disabled": is_disabled,
-                "cancel_at_period_end": cancel_at_period_end,
-                "current_period_end": current_period_end
-            }
-            
-            pricing_data["tiers"].append(tier)
+                # Check if this plan should be disabled (user has a higher tier plan)
+                is_disabled = False
+                if current_plan_name:
+                    try:
+                        current_tier_position = tier_order.index(current_plan_name) if current_plan_name in tier_order else -1
+                        this_tier_position = tier_order.index(product_mapping[slug]['display_name']) if product_mapping[slug]['display_name'] in tier_order else -1
+                        
+                        # Disable if this plan is lower tier than current plan
+                        if this_tier_position < current_tier_position:
+                            is_disabled = True
+                    except (ValueError, IndexError):
+                        # If there's an error with tier positions, don't disable the plan
+                        is_disabled = False
+                
+                # Format price display
+                price_data = {}
+                if monthly_price:
+                    try:
+                        price_data["monthly"] = int(monthly_price.unit_amount / 100)
+                    except (TypeError, ValueError):
+                        price_data["monthly"] = product.get_price_display(monthly_price)
+                else:
+                    price_data["monthly"] = "Custom"
+                    
+                # No more yearly prices
+                
+                # Add price IDs to price data
+                if monthly_price:
+                    price_data["monthlyPriceId"] = monthly_price.id
+                # No more yearly price IDs
+                
+                # Create tier data
+                tier = {
+                    "name": product_mapping[slug]['display_name'],
+                    "description": product.metadata.description or f"For {product_mapping[slug]['display_name']} users",
+                    "price": price_data,
+                    "features": product.metadata.features,
+                    "cta": product_mapping[slug]["cta"],
+                    "highlighted": product_mapping[slug]["highlighted"],
+                    "popular": product_mapping[slug]["popular"],
+                    "is_current_plan": is_current_plan,
+                    "is_disabled": is_disabled,
+                    "cancel_at_period_end": cancel_at_period_end,
+                    "current_period_end": current_period_end
+                }
+                
+                pricing_data["tiers"].append(tier)
     
     # Enterprise plan has been removed
     
-    # Sort tiers in the correct order: Starter, Pro
-    tier_order_without_free = ["Starter", "Pro"]
-    pricing_data["tiers"] = sorted(
-        pricing_data["tiers"], 
-        key=lambda x: tier_order_without_free.index(x["name"]) if x["name"] in tier_order_without_free else 999
-    )
+    # Sort tiers based on pricing mode
+    if is_beta_pricing:
+        # No need to sort with only one tier
+        pass
+    else:
+        # Sort tiers in the correct order: Starter, Pro
+        tier_order_without_free = ["Starter", "Pro"]
+        pricing_data["tiers"] = sorted(
+            pricing_data["tiers"], 
+            key=lambda x: tier_order_without_free.index(x["name"]) if x["name"] in tier_order_without_free else 999
+        )
         
     # Get payment method information if user has a subscription
     payment_method_data = {
