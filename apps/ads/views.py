@@ -2174,7 +2174,7 @@ def billing_page(request):
     pricing_data = {
         "title": "Pricing Plans",
         "subtitle": "Choose the perfect plan for your needs",
-        "frequencies": ["monthly", "usage"],
+        "frequencies": ["monthly"] if is_beta_pricing else ["monthly", "usage"],
         "tiers": [],
         "usagePackages": []
     }
@@ -2208,35 +2208,36 @@ def billing_page(request):
         }
         pricing_data["tiers"].append(beta_plan)
     
-    # Construir usagePackages con los package_products
-    for product in package_products:
-        # Obtener el precio para el paquete
-        # Intentamos obtener un precio activo para el producto
-        try:
-            # Primero intentamos obtener el precio usando el método _get_price
-            price = product._get_price(None, fail_hard=False)
-            
-            if not price:
-                # Si no hay precio con _get_price, intentamos obtener cualquier precio activo
-                from djstripe.models import Price
-                prices = Price.objects.filter(product=product.product.id, active=True)
-                if prices.exists():
-                    price = prices.first()
-            
-            if price:
-                package = {
-                    "name": product.metadata.name,
-                    "description": product.metadata.description,
-                    "price": int(price.unit_amount / 100),
-                    "priceId": price.id,  # ID dinámico desde Stripe
-                    "features": product.metadata.features,
-                    "cta": "Buy Package",
-                    "highlighted": product.metadata.slug == "package-1",
-                    "popular": product.metadata.slug == "package-2"
-                }
-                pricing_data["usagePackages"].append(package)
-        except Exception as e:
-            logger.error(f"Error obteniendo precio para paquete {product.metadata.slug}: {str(e)}")
+    # Construir usagePackages con los package_products solo si no estamos en modo BETA
+    if not is_beta_pricing:
+        for product in package_products:
+            # Obtener el precio para el paquete
+            # Intentamos obtener un precio activo para el producto
+            try:
+                # Primero intentamos obtener el precio usando el método _get_price
+                price = product._get_price(None, fail_hard=False)
+                
+                if not price:
+                    # Si no hay precio con _get_price, intentamos obtener cualquier precio activo
+                    from djstripe.models import Price
+                    prices = Price.objects.filter(product=product.product.id, active=True)
+                    if prices.exists():
+                        price = prices.first()
+                
+                if price:
+                    package = {
+                        "name": product.metadata.name,
+                        "description": product.metadata.description,
+                        "price": int(price.unit_amount / 100),
+                        "priceId": price.id,  # ID dinámico desde Stripe
+                        "features": product.metadata.features,
+                        "cta": "Buy Package",
+                        "highlighted": product.metadata.slug == "package-1",
+                        "popular": product.metadata.slug == "package-2"
+                    }
+                    pricing_data["usagePackages"].append(package)
+            except Exception as e:
+                logger.error(f"Error obteniendo precio para paquete {product.metadata.slug}: {str(e)}")
     # Get current user's subscription plan ID if available
     current_plan_id = None
     current_plan_name = None
