@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -68,6 +68,11 @@ const DiscoverCloneSidebar = () => {
 
 // Main page content
 const DiscoverClonePageContent = () => {
+  // Get ad request data from window
+  const adRequestData = window.__AD_REQUEST_DATA__ || {};
+  const adRequestId = adRequestData.id;
+
+  // Initialize states - will be updated by fetchFreshData
   const [selectedBrand, setSelectedBrand] = useState(null);
   const [productImages, setProductImages] = useState({
     primary: null,
@@ -78,20 +83,112 @@ const DiscoverClonePageContent = () => {
     secondary: null
   });
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [freshData, setFreshData] = useState(null);
 
-  // Get ad request ID from window data
-  const adRequestData = window.__AD_REQUEST_DATA__ || {};
-  const adRequestId = adRequestData.id;
+  // Function to fetch fresh data from the server - same as StepTwo
+  const fetchFreshData = async (id) => {
+    if (!id) return null;
 
-  // initialData with actual ad request ID from URL
+    try {
+      const response = await fetch(`/ads/adrequest/${id}/get/`);
+      if (!response.ok) {
+        throw new Error(`Error fetching ad request: ${response.statusText}`);
+      }
+
+      const freshData = await response.json();
+      
+      // Update states with fresh data
+      if (freshData.brand) {
+        setSelectedBrand(freshData.brand);
+      }
+      
+      // Update product images
+      setProductImages({
+        primary: freshData.product_image_1_override || null,
+        secondary: freshData.product_image_2_override || null
+      });
+      
+      // Update app images
+      setAppImages({
+        primary: freshData.app_image_1_override || null,
+        secondary: freshData.app_image_2_override || null
+      });
+      
+      setFreshData(freshData);
+      return freshData;
+    } catch (error) {
+      console.error('Error fetching fresh data:', error);
+    }
+    return null;
+  };
+
+  // initialData with actual ad request ID from URL and current brand
   const initialData = {
     id: adRequestId,
-    brand: selectedBrand
+    brand: selectedBrand,
+    ...adRequestData, // Include all ad request data for reference
+    ...(freshData || {}) // Include fresh data if available
+  };
+
+  // useEffect hooks for initial load functionality
+  
+  // Fetch fresh data when component mounts and scroll to top
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    
+    if (adRequestId) {
+      fetchFreshData(adRequestId);
+    }
+  }, [adRequestId]);
+
+  // Function to process refreshed data - uses fetchFreshData like StepTwo
+  const processRefreshedData = async () => {
+    if (adRequestId) {
+      return await fetchFreshData(adRequestId);
+    }
+    return null;
+  };
+
+  // Function to update brand in the database - similar to StepTwoComponent
+  const updateBrand = async (brand) => {
+    if (!initialData.id || !brand) return;
+
+    try {
+      const csrfToken = getCsrfToken();
+      if (!csrfToken) {
+        console.error('CSRF token not found');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('brand_id', brand.id);
+
+      const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrfToken
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error updating brand: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+    } catch (error) {
+      console.error('Error saving brand:', error);
+    }
   };
 
   const handleBrandChange = (brand) => {
     setSelectedBrand(brand);
-    console.log('Selected brand:', brand);
+    
+    // Update brand in backend if we have an ID
+    if (initialData.id && brand) {
+      updateBrand(brand);
+    }
   };
 
   // Function to get CSRF token from cookies
@@ -111,10 +208,8 @@ const DiscoverClonePageContent = () => {
     return cookieValue;
   };
 
-  // Handle product image library selection - same as StepTwo
+  // Handle product image library selection
   const handleProductImageSelect = (imageData) => {
-    console.log('Product library image selected:', imageData);
-
     // Open the image selection modal
     setIsImageModalOpen(true);
 
@@ -128,10 +223,8 @@ const DiscoverClonePageContent = () => {
     }
   };
 
-  // Handle app image library selection - same as StepTwo
+  // Handle app image library selection
   const handleAppImageSelect = (imageData) => {
-    console.log('App library image selected:', imageData);
-
     // Open the image selection modal
     setIsImageModalOpen(true);
 
@@ -145,13 +238,11 @@ const DiscoverClonePageContent = () => {
     }
   };
 
-  // Function to save product library image to backend - same as StepTwo
+  // Function to save product library image to backend
   const saveProductLibraryImage = async (fieldName, imageData) => {
     if (!initialData.id) return;
 
     try {
-      console.log(`Saving product library image for field ${fieldName}:`, imageData);
-      
       const csrfToken = getCsrfToken();
       if (!csrfToken) {
         console.error('CSRF token not found in cookies');
@@ -187,17 +278,14 @@ const DiscoverClonePageContent = () => {
       }
 
       const data = await response.json();
-      console.log('Product library image updated in database:', data);
 
     } catch (error) {
       console.error('Error saving product library image:', error);
     }
   };
 
-  // Handle app screenshot upload - same as StepTwo
+  // Handle app screenshot upload
   const handleAppScreenshotUpload = async (imageData) => {
-    console.log('App screenshot uploaded or deleted:', imageData);
-
     if (!initialData.id) return;
     if (imageData === undefined) return;
 
@@ -221,7 +309,6 @@ const DiscoverClonePageContent = () => {
         formData.append(`${fieldName}_asset_id`, imageData.id);
         // También enviamos el campo vacío para indicar que queremos actualizar este campo
         formData.append(fieldName, '');
-        console.log(`Added image reference to FormData: ${fieldName}_asset_id=${imageData.id}`);
       }
 
       // Make API call
@@ -238,17 +325,14 @@ const DiscoverClonePageContent = () => {
       }
 
       const data = await response.json();
-      console.log('App image updated successfully:', data);
 
     } catch (error) {
       console.error('Error saving app image:', error);
     }
   };
 
-  // Handle image selection from modal - same as StepTwo
+  // Handle image selection from modal
   const handleImageSelect = (image) => {
-    console.log('Image selected from modal:', image);
-    
     const selectionSource = window.currentImageSelectionSource;
     const fieldName = window.currentImageField;
     const imageUrl = image?.url || null;
@@ -305,23 +389,41 @@ const DiscoverClonePageContent = () => {
     }
   };
 
-  const handleProductImageDelete = (imageData) => {
-    console.log('Product image delete:', imageData);
+  // Handle product image deletion
+  const handleProductImageDelete = async (imageData) => {
+    // Update state to remove the image
     if (imageData.type === 'primary') {
       setProductImages(prev => ({ ...prev, primary: null }));
     } else if (imageData.type === 'secondary') {
       setProductImages(prev => ({ ...prev, secondary: null }));
     }
+
+    // Save to backend if we have an ID - pass null to indicate deletion
+    if (initialData.id) {
+      const fieldName = imageData.type === 'primary' ? 'product_image_1' : 'product_image_2';
+      saveProductLibraryImage(fieldName, null);
+    }
   };
 
-  const handleAppImageDelete = (imageData) => {
-    console.log('App image delete:', imageData);
+  // Handle app image deletion
+  const handleAppImageDelete = async (imageData) => {
+    // Update state to remove the image
     if (imageData.type === 'primary') {
       setAppImages(prev => ({ ...prev, primary: null }));
     } else if (imageData.type === 'secondary') {
       setAppImages(prev => ({ ...prev, secondary: null }));
     }
+
+    // Save to backend if we have an ID - pass null to indicate deletion
+    if (initialData.id) {
+      const stateKey = imageData.type;
+      handleAppScreenshotUpload({
+        type: stateKey,
+        url: null
+      });
+    }
   };
+
 
   return (
     <div className="p-8">
@@ -337,6 +439,9 @@ const DiscoverClonePageContent = () => {
               initialBrandId={selectedBrand?.id}
               onBrandChange={handleBrandChange}
             />
+            {!selectedBrand && (
+              <p className="text-xs text-amber-500 mt-1">Please select a brand to add assets</p>
+            )}
             <p className="text-xs text-gray-500">
               Brand changes not allowed after concept creation.
             </p>
@@ -347,29 +452,30 @@ const DiscoverClonePageContent = () => {
           <p className="text-xs text-gray-500">
             Pick an image for your ad — upload one or choose from suggestions. We'll clean up the background for you!
           </p>
-          
           {/* Image Upload Section - 4 images in a row using original components */}
-          <div className="grid grid-cols-2 gap-4 mt-4">
+          <div className="grid grid-cols-2 gap-4 mt-0">
             {/* Product Image 1 */}
-            <div className="space-y-2">
+            <div>
               <div className="h-48">
                 <ImageLibrarySelect
                   onSelectImage={handleProductImageSelect}
                   onDeleteImage={handleProductImageDelete}
                   selectedImages={{ primary: productImages.primary, secondary: productImages.secondary }}
                   className="h-full"
+                  disabled={!selectedBrand}
                 />
               </div>
             </div>
             
             {/* App Image 1 */}
-            <div className="space-y-2">
+            <div>
               <div className="h-48">
                 <AppImageLibrarySelect
                   onSelectImage={handleAppImageSelect}
                   onDeleteImage={handleAppImageDelete}
                   selectedImages={{ primary: appImages.primary, secondary: appImages.secondary }}
                   className="h-full"
+                  disabled={!selectedBrand}
                 />
               </div>
             </div>
