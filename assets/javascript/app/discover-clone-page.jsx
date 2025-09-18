@@ -99,29 +99,29 @@ const DiscoverClonePageContent = () => {
       }
 
       const freshData = await response.json();
-      
+
       // Update states with fresh data
       if (freshData.brand) {
         setSelectedBrand(freshData.brand);
       }
-      
+
       // Update canvas size
       if (freshData.canvas_size) {
         setSelectedCanvasSize(freshData.canvas_size);
       }
-      
+
       // Update product images
       setProductImages({
         primary: freshData.product_image_1_override || null,
         secondary: freshData.product_image_2_override || null
       });
-      
+
       // Update app images
       setAppImages({
         primary: freshData.app_image_1_override || null,
         secondary: freshData.app_image_2_override || null
       });
-      
+
       setFreshData(freshData);
       return freshData;
     } catch (error) {
@@ -147,11 +147,11 @@ const DiscoverClonePageContent = () => {
   };
 
   // useEffect hooks for initial load functionality
-  
+
   // Fetch fresh data when component mounts and scroll to top
   useEffect(() => {
     window.scrollTo(0, 0);
-    
+
     if (adRequestId) {
       fetchFreshData(adRequestId);
     }
@@ -160,7 +160,7 @@ const DiscoverClonePageContent = () => {
   // Fetch adlibrary info when we have the ID - same as StepTwoComponent
   useEffect(() => {
     const adLibraryId = freshData?.ad_library_id || adRequestData?.ad_library_id;
-    
+
     if (!adLibraryId) {
       setAdLibraryData(null);
       return;
@@ -233,7 +233,7 @@ const DiscoverClonePageContent = () => {
 
   const handleBrandChange = (brand) => {
     setSelectedBrand(brand);
-    
+
     // Update brand in backend if we have an ID
     if (initialData.id && brand) {
       updateBrand(brand);
@@ -243,7 +243,7 @@ const DiscoverClonePageContent = () => {
   // Handle canvas size change - same as StepOneComponent
   const handleCanvasSizeChange = async (sizeId) => {
     setSelectedCanvasSize(sizeId);
-    
+
     // Update canvas size in backend if we have an ID
     if (initialData.id) {
       try {
@@ -300,7 +300,7 @@ const DiscoverClonePageContent = () => {
     // Store the field name and source
     window.currentImageSelectionSource = 'product_library';
     window.currentImageField = imageData.field;
-    
+
     // Store the brand ID from selected brand
     if (selectedBrand && selectedBrand.id) {
       window.selectedBrandId = selectedBrand.id;
@@ -315,7 +315,7 @@ const DiscoverClonePageContent = () => {
     // Store the field name and source
     window.currentImageSelectionSource = 'app_library';
     window.currentImageField = imageData.field;
-    
+
     // Store the brand ID from selected brand
     if (selectedBrand && selectedBrand.id) {
       window.selectedBrandId = selectedBrand.id;
@@ -332,7 +332,7 @@ const DiscoverClonePageContent = () => {
         console.error('CSRF token not found in cookies');
         return;
       }
-      
+
       const formData = new FormData();
 
       // If we have image data with URL and ID (from image library)
@@ -341,7 +341,7 @@ const DiscoverClonePageContent = () => {
         formData.append(`${fieldName}_asset_id`, imageData.id);
         // Include the field name with empty value to indicate we want to update this field
         formData.append(fieldName, '');
-      } 
+      }
       // If we have a null value, we're deleting the image
       else if (imageData === null) {
         // Include the field name with empty value to indicate deletion
@@ -513,129 +513,128 @@ const DiscoverClonePageContent = () => {
     <div className="p-8">
       <div className="max-w-7xl mx-auto">
         {/* Two Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left Column - Current Content */}
-          <div className="space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+          {/* Left Column - Current Content (60%) */}
+          <div className="lg:col-span-3 space-y-4">
             {/* Brand Selection Section */}
-          <h2 className="text-lg text-primary">Brand</h2>
-          <p className="text-sm text-gray-600">
-            Which brand do you want to create ads for?
-          </p>
-          <div className="space-y-2">
-            <BrandDropdown 
-              initialBrandId={selectedBrand?.id}
-              onBrandChange={handleBrandChange}
-            />
-            {!selectedBrand && (
-              <p className="text-xs text-amber-500 mt-1">Please select a brand to add assets</p>
-            )}
-            <p className="text-xs text-gray-500">
-              Brand changes not allowed after concept creation.
+            <h2 className="text-lg text-primary">Brand</h2>
+            <p className="text-sm text-gray-600">
+              Which brand do you want to create ads for?
             </p>
-          </div>
-          <p className="text-sm text-gray-600">
-            Product image
-          </p>
-          <p className="text-xs text-gray-500">
-            Pick an image for your ad — upload one or choose from suggestions. We'll clean up the background for you!
-          </p>
-          {/* Image Upload Section - 4 images in a row using original components */}
-          <div className="grid grid-cols-2 gap-4 mt-0">
-            {/* Product Image 1 */}
-            <div>
-              <div className="h-48">
-                <ImageLibrarySelect
-                  onSelectImage={handleProductImageSelect}
-                  onDeleteImage={handleProductImageDelete}
-                  selectedImages={{ primary: productImages.primary, secondary: productImages.secondary }}
-                  className="h-full"
-                  disabled={!selectedBrand}
-                />
-              </div>
+            <div className="space-y-2">
+              <BrandDropdown
+                initialBrandId={selectedBrand?.id}
+                onBrandChange={handleBrandChange}
+              />
+              {!selectedBrand && (
+                <p className="text-xs text-amber-500 mt-1">Please select a brand to add assets</p>
+              )}
+              <p className="text-xs text-gray-500">
+                Brand changes not allowed after concept creation.
+              </p>
             </div>
-            
-            {/* App Image 1 */}
-            <div>
-              <div className="h-48">
-                <AppImageLibrarySelect
-                  onSelectImage={handleAppImageSelect}
-                  onDeleteImage={handleAppImageDelete}
-                  selectedImages={{ primary: appImages.primary, secondary: appImages.secondary }}
-                  className="h-full"
-                  disabled={!selectedBrand}
-                />
-              </div>
-            </div>
-          </div>
-          <h2 className="text-lg text-primary">Context</h2>
-          <p className="text-sm text-gray-600">
-            Platform Presets
-          </p>
-          
-          {/* Canvas Size Selection - same as StepOneComponent */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4">
-            {canvasSizes.map((item) => (
-              <div
-                key={item.id}
-                className={`relative cursor-pointer rounded-xl p-6 flex flex-col items-center justify-center transition-all ${
-                  selectedCanvasSize === item.id 
-                    ? "bg-primary/10 border-2 border-primary" 
-                    : "bg-gray-100 border-2 border-transparent hover:bg-gray-200"
-                }`}
-                onClick={() => handleCanvasSizeChange(item.id)}
-              >
-                {/* Check icon in top-right corner when selected */}
-                {selectedCanvasSize === item.id && (
-                  <div className="absolute top-2 right-2 w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-                    <Check className="w-4 h-4 text-white" />
-                  </div>
-                )}
-                
-                {/* Shape preview that matches the aspect ratio */}
-                {item.id === "1024x1024" && (
-                  <div className="w-16 h-16 bg-primary rounded-lg mb-3"></div>
-                )}
-                {item.id === "1536x1024" && (
-                  <div className="w-20 h-12 bg-primary rounded-lg mb-3"></div>
-                )}
-                {item.id === "1024x1536" && (
-                  <div className="w-12 h-20 bg-primary rounded-lg mb-3"></div>
-                )}
-                
-                <div className="text-center">
-                  <div className="font-medium text-sm text-gray-900">{item.label}</div>
-                  <div className="text-xs text-gray-500 mt-1">{item.size}</div>
+            <p className="text-sm text-gray-600">
+              Product image
+            </p>
+            <p className="text-xs text-gray-500">
+              Pick an image for your ad — upload one or choose from suggestions. We'll clean up the background for you!
+            </p>
+            {/* Image Upload Section - 4 images in a row using original components */}
+            <div className="grid grid-cols-2 gap-4 mt-0">
+              {/* Product Image 1 */}
+              <div>
+                <div className="h-48">
+                  <ImageLibrarySelect
+                    onSelectImage={handleProductImageSelect}
+                    onDeleteImage={handleProductImageDelete}
+                    selectedImages={{ primary: productImages.primary, secondary: productImages.secondary }}
+                    className="h-full"
+                    disabled={!selectedBrand}
+                  />
                 </div>
               </div>
-            ))}
+
+              {/* App Image 1 */}
+              <div>
+                <div className="h-48">
+                  <AppImageLibrarySelect
+                    onSelectImage={handleAppImageSelect}
+                    onDeleteImage={handleAppImageDelete}
+                    selectedImages={{ primary: appImages.primary, secondary: appImages.secondary }}
+                    className="h-full"
+                    disabled={!selectedBrand}
+                  />
+                </div>
+              </div>
+            </div>
+            <h2 className="text-lg text-primary">Context</h2>
+            <p className="text-sm text-gray-600">
+              Platform Presets
+            </p>
+
+            {/* Canvas Size Selection - same as StepOneComponent */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+              {canvasSizes.map((item) => (
+                <div
+                  key={item.id}
+                  className={`relative cursor-pointer rounded-xl p-6 flex flex-col items-center justify-center transition-all ${selectedCanvasSize === item.id
+                      ? "bg-primary/10 border-2 border-primary"
+                      : "bg-gray-100 border-2 border-transparent hover:bg-gray-200"
+                    }`}
+                  onClick={() => handleCanvasSizeChange(item.id)}
+                >
+                  {/* Check icon in top-right corner when selected */}
+                  {selectedCanvasSize === item.id && (
+                    <div className="absolute top-2 right-2 w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                      <Check className="w-4 h-4 text-white" />
+                    </div>
+                  )}
+
+                  {/* Shape preview that matches the aspect ratio */}
+                  {item.id === "1024x1024" && (
+                    <div className="w-16 h-16 bg-primary rounded-lg mb-3"></div>
+                  )}
+                  {item.id === "1536x1024" && (
+                    <div className="w-20 h-12 bg-primary rounded-lg mb-3"></div>
+                  )}
+                  {item.id === "1024x1536" && (
+                    <div className="w-12 h-20 bg-primary rounded-lg mb-3"></div>
+                  )}
+
+                  <div className="text-center">
+                    <div className="font-medium text-sm text-gray-900">{item.label}</div>
+                    <div className="text-xs text-gray-500 mt-1">{item.size}</div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-          
-          {/* Right Column - Ad Reference */}
-          <div className="space-y-4">
+
+          {/* Right Column - Ad Reference (40%) */}
+          <div className="lg:col-span-2 space-y-4">
             <h2 className="text-lg text-primary">Ad reference</h2>
             {/* Ad Library Image */}
             {isAdLibraryLoading ? (
-              <div className="w-full h-full min-h-[600px] bg-gray-100 rounded-lg flex items-center justify-center">
+              <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
                 <p className="text-gray-500 animate-pulse">Loading ad reference...</p>
               </div>
             ) : adLibraryData?.ad_image ? (
-              <div className="w-full h-full min-h-[600px] bg-gray-100 rounded-lg overflow-hidden">
+              <div className="w-full flex justify-center">
                 <img 
                   src={adLibraryData.ad_image}
                   alt={adLibraryData.company_name || 'Ad reference'}
-                  className="w-full h-full object-contain rounded-lg"
+                  className="w-5/6 h-auto object-contain rounded-lg"
                 />
               </div>
             ) : (
-              <div className="w-full h-full min-h-[600px] bg-gray-100 rounded-lg flex items-center justify-center">
+              <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
                 <p className="text-gray-500">No ad reference available</p>
               </div>
             )}
           </div>
         </div>
       </div>
-      
+
       {/* Image Selection Modal */}
       <ImageSelectionModal
         isOpen={isImageModalOpen}
