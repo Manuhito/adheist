@@ -85,6 +85,8 @@ const DiscoverClonePageContent = () => {
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [freshData, setFreshData] = useState(null);
   const [selectedCanvasSize, setSelectedCanvasSize] = useState(null);
+  const [adLibraryData, setAdLibraryData] = useState(null);
+  const [isAdLibraryLoading, setIsAdLibraryLoading] = useState(false);
 
   // Function to fetch fresh data from the server - same as StepTwo
   const fetchFreshData = async (id) => {
@@ -154,6 +156,39 @@ const DiscoverClonePageContent = () => {
       fetchFreshData(adRequestId);
     }
   }, [adRequestId]);
+
+  // Fetch adlibrary info when we have the ID - same as StepTwoComponent
+  useEffect(() => {
+    const adLibraryId = freshData?.ad_library_id || adRequestData?.ad_library_id;
+    
+    if (!adLibraryId) {
+      setAdLibraryData(null);
+      return;
+    }
+
+    setIsAdLibraryLoading(true);
+    fetch(`/ads/adlibraries/${adLibraryId}/`)
+      .then(res => res.json())
+      .then(data => {
+        // Si la respuesta es directamente el objeto adlibrary
+        if (data && data.id) {
+          setAdLibraryData(data);
+        }
+        // Si la respuesta viene en un formato diferente, intentamos encontrar el adlibrary
+        else {
+          let found = null;
+          if (Array.isArray(data) && data.length > 0) found = data[0];
+          else if (Array.isArray(data?.results) && data.results.length > 0) found = data.results[0];
+          else if (Array.isArray(data?.adlibraries) && data.adlibraries.length > 0) found = data.adlibraries[0];
+          setAdLibraryData(found);
+        }
+      })
+      .catch((error) => {
+        console.error('Error fetching adlibrary:', error);
+        setAdLibraryData(null);
+      })
+      .finally(() => setIsAdLibraryLoading(false));
+  }, [freshData?.ad_library_id, adRequestData?.ad_library_id]);
 
   // Function to process refreshed data - uses fetchFreshData like StepTwo
   const processRefreshedData = async () => {
@@ -476,9 +511,12 @@ const DiscoverClonePageContent = () => {
 
   return (
     <div className="p-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Brand Selection Section */}
-        <div className="space-y-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Two Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Left Column - Current Content */}
+          <div className="space-y-4">
+            {/* Brand Selection Section */}
           <h2 className="text-lg text-primary">Brand</h2>
           <p className="text-sm text-gray-600">
             Which brand do you want to create ads for?
@@ -570,18 +608,40 @@ const DiscoverClonePageContent = () => {
                 </div>
               </div>
             ))}
+            </div>
+          </div>
+          
+          {/* Right Column - Ad Reference */}
+          <div className="space-y-4">
+            <h2 className="text-lg text-primary">Ad reference</h2>
+            {/* Ad Library Image */}
+            {isAdLibraryLoading ? (
+              <div className="w-full h-full min-h-[600px] bg-gray-100 rounded-lg flex items-center justify-center">
+                <p className="text-gray-500 animate-pulse">Loading ad reference...</p>
+              </div>
+            ) : adLibraryData?.ad_image ? (
+              <div className="w-full h-full min-h-[600px] bg-gray-100 rounded-lg overflow-hidden">
+                <img 
+                  src={adLibraryData.ad_image}
+                  alt={adLibraryData.company_name || 'Ad reference'}
+                  className="w-full h-full object-contain rounded-lg"
+                />
+              </div>
+            ) : (
+              <div className="w-full h-full min-h-[600px] bg-gray-100 rounded-lg flex items-center justify-center">
+                <p className="text-gray-500">No ad reference available</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
       
       {/* Image Selection Modal */}
-      {/* Temporarily commented out to debug
       <ImageSelectionModal
         isOpen={isImageModalOpen}
         onClose={toggleImageModal}
         onSelect={handleImageSelect}
       />
-      */}
     </div>
   );
 };
