@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Button } from '@/components/ui/button';
 import BrandDropdown from './components/BrandDropdown.jsx';
@@ -87,6 +87,11 @@ const DiscoverClonePageContent = () => {
   const [selectedCanvasSize, setSelectedCanvasSize] = useState(null);
   const [adLibraryData, setAdLibraryData] = useState(null);
   const [isAdLibraryLoading, setIsAdLibraryLoading] = useState(false);
+  
+  // User prompt state and modification tracking
+  const [userPrompt, setUserPrompt] = useState('');
+  const [isPromptModified, setIsPromptModified] = useState(false);
+  const promptUpdateTimer = useRef(null);
 
   // Function to fetch fresh data from the server - same as StepTwo
   const fetchFreshData = async (id) => {
@@ -121,6 +126,11 @@ const DiscoverClonePageContent = () => {
         primary: freshData.app_image_1_override || null,
         secondary: freshData.app_image_2_override || null
       });
+
+      // Update user prompt from asset_overrides
+      if (freshData.asset_overrides?.user_prompt !== undefined) {
+        setUserPrompt(freshData.asset_overrides.user_prompt || '');
+      }
 
       setFreshData(freshData);
       return freshData;
@@ -189,6 +199,15 @@ const DiscoverClonePageContent = () => {
       })
       .finally(() => setIsAdLibraryLoading(false));
   }, [freshData?.ad_library_id, adRequestData?.ad_library_id]);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (promptUpdateTimer.current) {
+        clearTimeout(promptUpdateTimer.current);
+      }
+    };
+  }, []);
 
   // Function to process refreshed data - uses fetchFreshData like StepTwo
   const processRefreshedData = async () => {
@@ -508,6 +527,68 @@ const DiscoverClonePageContent = () => {
     }
   };
 
+  // Handle user prompt input change with debouncing - similar to StepTwo website URL
+  const handlePromptChange = (e) => {
+    const newValue = e.target.value;
+    setUserPrompt(newValue);
+    setIsPromptModified(true); // Mark as modified for future step navigation
+
+    // Clear any existing timer
+    if (promptUpdateTimer.current) {
+      clearTimeout(promptUpdateTimer.current);
+    }
+
+    // Set a new timer to update the database after 2 seconds of inactivity
+    promptUpdateTimer.current = setTimeout(() => {
+      updateUserPrompt(newValue);
+    }, 2000);
+  };
+
+  // Function to update user prompt in the database - similar to StepTwo updateWebsiteUrl
+  const updateUserPrompt = async (prompt) => {
+    // Only proceed if we have an ID
+    if (!initialData.id) return;
+
+    try {
+      // Get CSRF token
+      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+                       document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
+
+      if (!csrfToken) {
+        console.error('CSRF token not found in cookies');
+        return;
+      }
+
+      // Create a FormData object for the request
+      const formData = new FormData();
+      
+      // Add the user_prompt field directly
+      formData.append('user_prompt', prompt);
+
+      // Make the API call to update the user prompt
+      const response = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrfToken,
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error updating user prompt: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('User prompt updated in database:', data);
+      
+      // Reset modification flag since we successfully saved
+      setIsPromptModified(false);
+
+    } catch (error) {
+      console.error('Error updating user prompt:', error);
+    }
+  };
+
 
   return (
     <div className="p-8">
@@ -543,28 +624,22 @@ const DiscoverClonePageContent = () => {
             <div className="grid grid-cols-2 gap-4 mt-0">
               {/* Product Image 1 */}
               <div>
-                <div className="h-48">
-                  <ImageLibrarySelect
-                    onSelectImage={handleProductImageSelect}
-                    onDeleteImage={handleProductImageDelete}
-                    selectedImages={{ primary: productImages.primary, secondary: productImages.secondary }}
-                    className="h-full"
-                    disabled={!selectedBrand}
-                  />
-                </div>
+                <ImageLibrarySelect
+                  onSelectImage={handleProductImageSelect}
+                  onDeleteImage={handleProductImageDelete}
+                  selectedImages={{ primary: productImages.primary, secondary: productImages.secondary }}
+                  disabled={!selectedBrand}
+                />
               </div>
 
               {/* App Image 1 */}
               <div>
-                <div className="h-48">
-                  <AppImageLibrarySelect
-                    onSelectImage={handleAppImageSelect}
-                    onDeleteImage={handleAppImageDelete}
-                    selectedImages={{ primary: appImages.primary, secondary: appImages.secondary }}
-                    className="h-full"
-                    disabled={!selectedBrand}
-                  />
-                </div>
+                <AppImageLibrarySelect
+                  onSelectImage={handleAppImageSelect}
+                  onDeleteImage={handleAppImageDelete}
+                  selectedImages={{ primary: appImages.primary, secondary: appImages.secondary }}
+                  disabled={!selectedBrand}
+                />
               </div>
             </div>
             <h2 className="text-lg text-primary">Context</h2>
@@ -578,8 +653,8 @@ const DiscoverClonePageContent = () => {
                 <div
                   key={item.id}
                   className={`relative cursor-pointer rounded-xl p-6 flex flex-col items-center justify-center transition-all ${selectedCanvasSize === item.id
-                      ? "bg-primary/10 border-2 border-primary"
-                      : "bg-gray-100 border-2 border-transparent hover:bg-gray-200"
+                    ? "bg-primary/10 border-2 border-primary"
+                    : "bg-gray-100 border-2 border-transparent hover:bg-gray-200"
                     }`}
                   onClick={() => handleCanvasSizeChange(item.id)}
                 >
@@ -620,7 +695,7 @@ const DiscoverClonePageContent = () => {
               </div>
             ) : adLibraryData?.ad_image ? (
               <div className="w-full flex justify-center">
-                <img 
+                <img
                   src={adLibraryData.ad_image}
                   alt={adLibraryData.company_name || 'Ad reference'}
                   className="w-5/6 h-auto object-contain rounded-lg"
@@ -631,6 +706,17 @@ const DiscoverClonePageContent = () => {
                 <p className="text-gray-500">No ad reference available</p>
               </div>
             )}
+            <h2 className="text-lg text-primary">Advanced AI Copywriting</h2>
+            <p className="text-sm text-gray-600">
+              Additional context/instructions
+            </p>
+            <textarea
+              className="w-full p-3 bg-gray-50 border border-input rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent focus:bg-white"
+              placeholder="Outline the product range and services provided by the brand."
+              value={userPrompt}
+              onChange={handlePromptChange}
+              rows={4}
+            />
           </div>
         </div>
       </div>

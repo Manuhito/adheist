@@ -16,7 +16,7 @@ export function AppImageLibrarySelect({ onSelectImage, onDeleteImage, className,
       <div className="w-full">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* First image selection button */}
-          <div className="flex flex-col items-center justify-center rounded-md h-48 bg-background hover:bg-muted/20 transition-colors">
+          <div className="flex flex-col items-center justify-center rounded-md aspect-square bg-background hover:bg-muted/20 transition-colors">
             {selectedImages?.primary ? (
               <div className="relative w-full h-full group">
                 <img 
@@ -53,7 +53,7 @@ export function AppImageLibrarySelect({ onSelectImage, onDeleteImage, className,
           </div>
           
           {/* Second image selection button */}
-          <div className="flex flex-col items-center justify-center rounded-md h-48 bg-background hover:bg-muted/20 transition-colors">
+          <div className="flex flex-col items-center justify-center rounded-md aspect-square bg-background hover:bg-muted/20 transition-colors">
             {selectedImages?.secondary ? (
               <div className="relative w-full h-full group">
                 <img 

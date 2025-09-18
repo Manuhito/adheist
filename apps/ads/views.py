@@ -1349,7 +1349,9 @@ def adrequest_update(request, pk):
             'company_website', 'main_hex_color', 'key_benefits',
             # New text fields
             'target_audience', 'tone_of_voice', 'font_direction', 'core_features',
-            'emotional_lifestyle_benefits', 'proof_points', 'value_propositions'
+            'emotional_lifestyle_benefits', 'proof_points', 'value_propositions',
+            # User prompt field for discover clone page
+            'user_prompt'
         ]
         
         # Get current overrides or initialize if needed
