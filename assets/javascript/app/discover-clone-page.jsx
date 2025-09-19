@@ -693,7 +693,7 @@ const DiscoverClonePageContent = () => {
 
   // If generating, show loading page
   if (isGenerating) {
-    return <GeneratingLoadingPage />;
+    return <GeneratingLoadingPage adRequestId={initialData?.id} />;
   }
 
   return (
