@@ -8,6 +8,7 @@ import {
 } from '../../components/ui/dialog.tsx';
 import { Button } from '../../components/ui/button.tsx';
 import { Input } from '../../components/ui/input.tsx';
+import { Globe } from 'lucide-react';
 import { useTranslation } from '../../lib/useTranslation';
 
 /**
@@ -80,12 +81,42 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>{t('brand.create_new', 'Create New Brand')}</DialogTitle>
+      <DialogContent className="sm:max-w-[600px]">
+        <DialogHeader className="border-b border-gray-200 pb-4">
+          <DialogTitle>Create Brand</DialogTitle>
         </DialogHeader>
         <div className="py-4">
           <div className="space-y-4">
+            {/* Website Analysis Section */}
+            <div className="space-y-3">
+              <p className="text-sm text-gray-600">
+                Analyze your brand website to generate the fields below{' '}
+                <span className="text-primary">(4 Credits)</span>
+              </p>
+              
+              {/* Website URL Input with Generate Button */}
+              <div className="flex gap-2">
+                <div className="flex-1 relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Globe className="h-4 w-4 text-gray-400" />
+                  </div>
+                  <Input
+                    placeholder="Website URL"
+                    className="pl-9 bg-gray-50 border-gray-200"
+                    disabled={isSubmitting}
+                  />
+                </div>
+                <Button 
+                  variant="default"
+                  className="px-6"
+                  disabled={isSubmitting}
+                >
+                  Generate
+                </Button>
+              </div>
+            </div>
+
+            {/* Brand Name Field */}
             <div className="space-y-2">
               <label htmlFor="brandName" className="text-sm font-medium">
                 {t('brand.name', 'Brand Name')}

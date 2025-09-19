@@ -2878,10 +2878,16 @@ def discover_clone_adrequest_page(request, pk):
     """
     Page for cloning an AdRequest from discover page.
     Shows the selected ad reference and allows creating a new ad based on it.
+    Only accessible if the AdRequest is in DRAFT status.
     """
     try:
         # Get the AdRequest and verify user permissions
         ad_request = get_object_or_404(AdRequest, id=pk, user=request.user)
+        
+        # Validate that the AdRequest is in DRAFT status only
+        if ad_request.status != 'DRAFT':
+            # If not in DRAFT status, redirect to discover page
+            return redirect('ads:discover_page')
         
         context = {
             'ad_request': ad_request,
