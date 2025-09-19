@@ -376,9 +376,9 @@ class AdRequest(BaseModel):
                     from django.core.exceptions import ValidationError
                     raise ValidationError(f"Cannot transition from {current_status} to {self.status}. Only transition to DRAFT is allowed.")
                 
-                elif current_status == self.STATUS_DRAFT and self.status not in [self.STATUS_NEW, self.STATUS_FILLED, self.STATUS_DRAFT]:
+                elif current_status == self.STATUS_DRAFT and self.status not in [self.STATUS_NEW, self.STATUS_FILLED, self.STATUS_SUBMITTED, self.STATUS_DRAFT]:
                     from django.core.exceptions import ValidationError
-                    raise ValidationError(f"Cannot transition from {current_status} to {self.status}. Only transitions to NEW or FILLED are allowed.")
+                    raise ValidationError(f"Cannot transition from {current_status} to {self.status}. Only transitions to NEW, FILLED, or SUBMITTED are allowed.")
                 
                 elif current_status == self.STATUS_FILLED and self.status not in [self.STATUS_DRAFT, self.STATUS_SUBMITTED, self.STATUS_FILLED]:
                     from django.core.exceptions import ValidationError
@@ -459,6 +459,9 @@ class AdRequest(BaseModel):
     
     def get_key_benefits(self):
         return self.get_asset_value('key_benefits')
+    
+    def get_user_prompt(self):
+        return self.get_asset_value('user_prompt')
     
     def get_logo(self):
         return self.logo_override if self.logo_override else None

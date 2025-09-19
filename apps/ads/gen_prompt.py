@@ -827,7 +827,7 @@ def generate_prompt(version):
     marketing_image_2_override = ad_request.get_marketing_image_2()
     marketing_image_3_override = ad_request.get_marketing_image_3()
     
-    user_prompt = version.user_prompt
+    user_prompt = ad_request.get_user_prompt()
 
     # Prepare company information
     company_info_parts = []

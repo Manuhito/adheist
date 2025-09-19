@@ -5,7 +5,8 @@ import BrandDropdown from './components/BrandDropdown.jsx';
 import { ImageLibrarySelect } from './components/ImageLibrarySelect.jsx';
 import { AppImageLibrarySelect } from './components/AppImageLibrarySelect.jsx';
 import ImageSelectionModal from './components/ImageSelectionModal.jsx';
-import { ArrowLeft, Check } from 'lucide-react';
+import GeneratingLoadingPage from './components/GeneratingLoadingPage.jsx';
+import { ArrowLeft, Check, Sparkles } from 'lucide-react';
 
 // Header component with back button, title and description
 const DiscoverCloneHeader = () => {
@@ -15,25 +16,38 @@ const DiscoverCloneHeader = () => {
     window.location.href = pageConfig.backUrl || '/ads/discover/';
   };
 
+  const handleGenerateClick = () => {
+    // Call the global function if available
+    if (window.handleDiscoverCloneGenerate) {
+      window.handleDiscoverCloneGenerate();
+    }
+  };
+
   return (
     <div className="flex items-center gap-4">
       {/* Back Button - Circular gray background */}
       <button
         onClick={handleBackClick}
-        className="flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
+        className="flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-full transition-colors"
       >
-        <ArrowLeft className="w-5 h-5 text-gray-600" />
+        <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
       </button>
 
       {/* Title and Description */}
-      <div className="flex flex-col">
-        <h1 className="text-lg font-bold text-black">
-          {pageConfig.title || 'Clone Ad'}
-        </h1>
-        <p className="text-sm text-gray-500">
-          {pageConfig.description || 'New ads follow the style & composition of the ad reference on the left.'}
-        </p>
+      <div className="flex-1">
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Clone ad</h1>
+        <p className="text-sm text-gray-600 dark:text-gray-400">Select brand assets and configure your ad</p>
       </div>
+
+      {/* Generate Ad Button */}
+      <Button
+        onClick={handleGenerateClick}
+        disabled={window.isDiscoverClonePromptModified}
+        className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+      >
+        <Sparkles className="w-4 h-4" />
+        Generate Ad
+      </Button>
     </div>
   );
 };
@@ -92,6 +106,9 @@ const DiscoverClonePageContent = () => {
   const [userPrompt, setUserPrompt] = useState('');
   const [isPromptModified, setIsPromptModified] = useState(false);
   const promptUpdateTimer = useRef(null);
+  
+  // Generation state
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // Function to fetch fresh data from the server - same as StepTwo
   const fetchFreshData = async (id) => {
@@ -244,6 +261,11 @@ const DiscoverClonePageContent = () => {
       }
 
       const data = await response.json();
+      console.log('Brand updated in database:', data);
+
+      // Refresh data after brand update to preload new brand assets
+      console.log('Refreshing data after brand update...');
+      await processRefreshedData();
 
     } catch (error) {
       console.error('Error saving brand:', error);
@@ -589,6 +611,90 @@ const DiscoverClonePageContent = () => {
     }
   };
 
+  // Handle generate ad - similar to StepThree but without user_prompt in FormData
+  const handleGenerateAd = async () => {
+    if (!initialData.id) {
+      console.error('No ad request ID available');
+      return;
+    }
+
+    // Check if prompt is still being modified - wait for auto-save
+    if (isPromptModified) {
+      console.log('Waiting for prompt to be saved...');
+      return;
+    }
+
+    setIsGenerating(true);
+
+    try {
+      // Create version without user_prompt since it's already saved in database
+      const versionFormData = new FormData();
+      versionFormData.append('ad_request', initialData.id);
+
+      const response = await fetch('/ads/adrequest/version/create/', {
+        method: 'POST',
+        body: versionFormData,
+        headers: {
+          'X-CSRFToken': getCsrfToken(),
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Check if this is a credits error (status 403 with specific message)
+        if (response.status === 403) {
+          console.error('Credits error:', data.error);
+          setIsGenerating(false);
+          return;
+        }
+        throw new Error(data.error || 'Error generating ad');
+      }
+
+      // Update AdRequest status to SUBMITTED
+      try {
+        const statusFormData = new FormData();
+        statusFormData.append('status', 'SUBMITTED');
+
+        const statusResponse = await fetch(`/ads/adrequest/${initialData.id}/update/`, {
+          method: 'POST',
+          body: statusFormData,
+          headers: {
+            'X-CSRFToken': getCsrfToken(),
+          },
+        });
+
+        if (!statusResponse.ok) {
+          console.error('Error updating status');
+        }
+      } catch (statusError) {
+        console.error('Error updating AdRequest status:', statusError);
+      }
+
+      console.log('Ad generation started successfully:', data);
+      // Keep isGenerating true to show loading page
+
+    } catch (error) {
+      console.error('Error generating ad:', error);
+      setIsGenerating(false);
+    }
+  };
+
+  // Expose functions to window for header access
+  useEffect(() => {
+    window.handleDiscoverCloneGenerate = handleGenerateAd;
+    window.isDiscoverClonePromptModified = isPromptModified;
+    
+    return () => {
+      delete window.handleDiscoverCloneGenerate;
+      delete window.isDiscoverClonePromptModified;
+    };
+  }, [isPromptModified]); // Re-run when isPromptModified changes
+
+  // If generating, show loading page
+  if (isGenerating) {
+    return <GeneratingLoadingPage />;
+  }
 
   return (
     <div className="p-8">
