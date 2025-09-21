@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   Dialog, 
   DialogContent, 
@@ -10,19 +10,110 @@ import { Button } from '../../components/ui/button.tsx';
 import { Input } from '../../components/ui/input.tsx';
 import { Globe } from 'lucide-react';
 import { useTranslation } from '../../lib/useTranslation';
+import { LogoImageUploader } from './LogoImageUploader.jsx';
 
 /**
  * Modal component for creating a new brand
  */
 const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
   const { t } = useTranslation();
+  const fileInputRef = useRef(null);
   const [brandName, setBrandName] = useState('');
+  const [selectedLogo, setSelectedLogo] = useState(null);
+  const [selectedLogoData, setSelectedLogoData] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   const handleBrandNameChange = (e) => {
     setBrandName(e.target.value);
     if (error) setError('');
+  };
+
+  // Handle logo selection - opens file explorer directly
+  const handleLogoSelect = (logoData) => {
+    console.log('Logo selection triggered:', logoData);
+    
+    // Trigger the hidden file input to open file explorer
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  // Handle logo deletion
+  const handleLogoDelete = (logoData) => {
+    // Clean up the temporary URL to free memory
+    if (selectedLogo && selectedLogo.startsWith('blob:')) {
+      URL.revokeObjectURL(selectedLogo);
+    }
+    
+    setSelectedLogo(null);
+    setSelectedLogoData(null);
+    console.log('Logo deleted:', logoData);
+  };
+
+  // Function to get CSRF token from cookies
+  const getCsrfToken = () => {
+    const name = 'csrftoken';
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  };
+
+  // Handle file selection when user selects a logo file (store locally, don't upload yet)
+  const handleFileUpload = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    try {
+      // Create a temporary URL for preview
+      const previewUrl = URL.createObjectURL(file);
+      
+      // Extract file information
+      const fileInfo = {
+        file: file, // Store the actual file for later upload
+        original_filename: file.name,
+        file_size: file.size,
+        canvas_width: null,
+        canvas_height: null,
+        canvas_size: null,
+        url: previewUrl // Temporary URL for preview
+      };
+      
+      // Try to extract image dimensions
+      const img = new Image();
+      img.onload = function() {
+        fileInfo.canvas_width = this.width;
+        fileInfo.canvas_height = this.height;
+        fileInfo.canvas_size = `${this.width}x${this.height}`;
+        
+        // Update state with complete file info
+        setSelectedLogoData(fileInfo);
+        console.log('Logo file selected:', fileInfo);
+      };
+      img.onerror = function() {
+        // If can't load image, still store the file info without dimensions
+        console.warn('Could not extract logo dimensions');
+        setSelectedLogoData(fileInfo);
+      };
+      img.src = previewUrl;
+      
+      // Set the preview URL immediately
+      setSelectedLogo(previewUrl);
+      
+      console.log('Logo file prepared for upload:', file.name);
+    } catch (error) {
+      console.error('Error processing logo file:', error);
+      setError('Error processing logo file. Please try again.');
+    }
   };
 
   const handleSubmit = async () => {
@@ -51,8 +142,15 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
         throw new Error(data.error || t('brand.creation_failed', 'Failed to create brand'));
       }
 
+      // Clean up temporary URL
+      if (selectedLogo && selectedLogo.startsWith('blob:')) {
+        URL.revokeObjectURL(selectedLogo);
+      }
+      
       // Reset form and close modal
       setBrandName('');
+      setSelectedLogo(null);
+      setSelectedLogoData(null);
       onBrandCreated(data.brand);
       onClose();
     } catch (err) {
@@ -60,23 +158,6 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  // Function to get CSRF token from cookies
-  const getCsrfToken = () => {
-    const name = 'csrftoken';
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-      const cookies = document.cookie.split(';');
-      for (let i = 0; i < cookies.length; i++) {
-        const cookie = cookies[i].trim();
-        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-          break;
-        }
-      }
-    }
-    return cookieValue;
   };
 
   return (
@@ -116,11 +197,24 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
               </div>
             </div>
 
+            {/* Brand Logo Section */}
+            <div className="space-y-2">
+              <p className="text-sm text-gray-600">
+                Brand logo
+              </p>
+              <LogoImageUploader
+                onSelectImage={handleLogoSelect}
+                onDeleteImage={handleLogoDelete}
+                selectedImage={selectedLogo}
+                selectedImageData={selectedLogoData}
+              />
+            </div>
+
             {/* Brand Name Field */}
             <div className="space-y-2">
-              <label htmlFor="brandName" className="text-sm font-medium">
+              <p className="text-sm text-gray-600">
                 {t('brand.name', 'Brand Name')}
-              </label>
+              </p>
               <Input
                 id="brandName"
                 value={brandName}
@@ -149,6 +243,15 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {/* Hidden file input for logo upload */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        className="hidden"
+        accept="image/*"
+        onChange={handleFileUpload}
+      />
     </Dialog>
   );
 };

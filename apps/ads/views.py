@@ -1113,8 +1113,12 @@ def upload_brand_asset(request):
     """
     Upload an image to UserBrandAssets model.
     Expects 'image' file, 'category' (logo, product, app, marketing), and optional 'brand_id' in POST data.
+    Extracts and stores file metadata including filename, dimensions, and file size.
     """
     try:
+        from PIL import Image
+        import os
+        
         # Get the uploaded image
         image = request.FILES.get('image')
         if not image:
@@ -1141,15 +1145,38 @@ def upload_brand_asset(request):
                     brand_name=f"{request.user.username}'s Brand"
                 )
         
-        # Create the UserBrandAssets object
+        # Extract logo file metadata for storage
+        original_filename = image.name  # Original logo filename with extension (e.g., "company-logo.png")
+        file_size = image.size  # Logo file size in bytes
+        canvas_width = None
+        canvas_height = None
+        
+        # Extract logo dimensions using PIL (Python Imaging Library)
+        try:
+            # Open the uploaded logo to read its canvas dimensions
+            pil_image = Image.open(image)
+            canvas_width, canvas_height = pil_image.size  # Get logo width and height in pixels
+            pil_image.close()
+            
+            # Reset file pointer to beginning after PIL reading for Django file handling
+            image.seek(0)
+        except Exception as e:
+            # If we can't read the logo dimensions, log the error but continue with upload
+            print(f"Could not extract logo dimensions from {original_filename}: {e}")
+        
+        # Create the UserBrandAssets object with complete logo metadata
         asset = UserBrandAssets.objects.create(
             user=request.user,
             brand=brand,
             image=image,
-            category=category
+            category=category,
+            original_filename=original_filename,  # Store original logo filename
+            canvas_width=canvas_width,           # Store logo width in pixels
+            canvas_height=canvas_height,         # Store logo height in pixels
+            file_size=file_size                  # Store logo file size in bytes
         )
         
-        # Return success response with the new asset data
+        # Return success response with complete logo metadata for frontend display
         return JsonResponse({
             'success': True,
             'image': {
@@ -1157,7 +1184,12 @@ def upload_brand_asset(request):
                 'url': asset.image.url,
                 'category': asset.category,
                 'brand_id': asset.brand.id,
-                'brand_name': asset.brand.brand_name
+                'brand_name': asset.brand.brand_name,
+                'original_filename': asset.original_filename,  # Logo filename (e.g., "company-logo.png")
+                'canvas_width': asset.canvas_width,           # Logo width in pixels
+                'canvas_height': asset.canvas_height,         # Logo height in pixels
+                'file_size': asset.file_size,                 # Logo file size in bytes
+                'canvas_size': f"{asset.canvas_width}x{asset.canvas_height}" if asset.canvas_width and asset.canvas_height else None  # Formatted dimensions (e.g., "1024x768")
             }
         })
     except Exception as e:

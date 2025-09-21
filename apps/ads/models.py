@@ -844,6 +844,29 @@ class UserBrandAssets(BaseModel):
         help_text="Category of the uploaded image"
     )
     
+    # New fields for file information
+    original_filename = models.CharField(
+        max_length=255, 
+        blank=True, 
+        null=True,
+        help_text="Original filename with extension as uploaded by user"
+    )
+    canvas_width = models.PositiveIntegerField(
+        blank=True, 
+        null=True,
+        help_text="Width of the image in pixels"
+    )
+    canvas_height = models.PositiveIntegerField(
+        blank=True, 
+        null=True,
+        help_text="Height of the image in pixels"
+    )
+    file_size = models.PositiveIntegerField(
+        blank=True, 
+        null=True,
+        help_text="File size in bytes"
+    )
+    
     class Meta:
         verbose_name = "User Brand Asset"
         verbose_name_plural = "User Brand Assets"
