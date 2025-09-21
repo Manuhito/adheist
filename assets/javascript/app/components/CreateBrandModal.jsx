@@ -1,16 +1,17 @@
 import React, { useState, useRef } from 'react';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogFooter 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
 } from '../../components/ui/dialog.tsx';
 import { Button } from '../../components/ui/button.tsx';
 import { Input } from '../../components/ui/input.tsx';
-import { Globe } from 'lucide-react';
+import { Globe, Plus, X } from 'lucide-react';
 import { useTranslation } from '../../lib/useTranslation';
 import { LogoImageUploader } from './LogoImageUploader.jsx';
+import ColorPickerModal from './ColorPickerModal.jsx';
 
 /**
  * Modal component for creating a new brand
@@ -19,6 +20,12 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
   const { t } = useTranslation();
   const fileInputRef = useRef(null);
   const [brandName, setBrandName] = useState('');
+  const [industry, setIndustry] = useState('');
+  const [website, setWebsite] = useState('');
+  const [productDescription, setProductDescription] = useState('');
+  const [targetAudience, setTargetAudience] = useState('');
+  const [brandColors, setBrandColors] = useState([]);
+  const [isColorModalOpen, setIsColorModalOpen] = useState(false);
   const [selectedLogo, setSelectedLogo] = useState(null);
   const [selectedLogoData, setSelectedLogoData] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -29,10 +36,52 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
     if (error) setError('');
   };
 
+  const handleIndustryChange = (e) => {
+    setIndustry(e.target.value);
+    if (error) setError('');
+  };
+
+  const handleWebsiteChange = (e) => {
+    setWebsite(e.target.value);
+    if (error) setError('');
+  };
+
+  const handleProductDescriptionChange = (e) => {
+    setProductDescription(e.target.value);
+    if (error) setError('');
+  };
+
+  const handleTargetAudienceChange = (e) => {
+    setTargetAudience(e.target.value);
+    if (error) setError('');
+  };
+
+  // Handle adding a new color
+  const handleAddColor = (color) => {
+    if (color && !brandColors.includes(color)) {
+      setBrandColors([...brandColors, color]);
+    }
+  };
+
+  // Handle removing a color
+  const handleRemoveColor = (colorToRemove) => {
+    setBrandColors(brandColors.filter(color => color !== colorToRemove));
+  };
+
+  // Handle opening color modal
+  const handleOpenColorModal = () => {
+    setIsColorModalOpen(true);
+  };
+
+  // Handle closing color modal
+  const handleCloseColorModal = () => {
+    setIsColorModalOpen(false);
+  };
+
   // Handle logo selection - opens file explorer directly
   const handleLogoSelect = (logoData) => {
     console.log('Logo selection triggered:', logoData);
-    
+
     // Trigger the hidden file input to open file explorer
     if (fileInputRef.current) {
       fileInputRef.current.click();
@@ -45,7 +94,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
     if (selectedLogo && selectedLogo.startsWith('blob:')) {
       URL.revokeObjectURL(selectedLogo);
     }
-    
+
     setSelectedLogo(null);
     setSelectedLogoData(null);
     console.log('Logo deleted:', logoData);
@@ -72,11 +121,11 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
   const handleFileUpload = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    
+
     try {
       // Create a temporary URL for preview
       const previewUrl = URL.createObjectURL(file);
-      
+
       // Extract file information
       const fileInfo = {
         file: file, // Store the actual file for later upload
@@ -87,28 +136,28 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
         canvas_size: null,
         url: previewUrl // Temporary URL for preview
       };
-      
+
       // Try to extract image dimensions
       const img = new Image();
-      img.onload = function() {
+      img.onload = function () {
         fileInfo.canvas_width = this.width;
         fileInfo.canvas_height = this.height;
         fileInfo.canvas_size = `${this.width}x${this.height}`;
-        
+
         // Update state with complete file info
         setSelectedLogoData(fileInfo);
         console.log('Logo file selected:', fileInfo);
       };
-      img.onerror = function() {
+      img.onerror = function () {
         // If can't load image, still store the file info without dimensions
         console.warn('Could not extract logo dimensions');
         setSelectedLogoData(fileInfo);
       };
       img.src = previewUrl;
-      
+
       // Set the preview URL immediately
       setSelectedLogo(previewUrl);
-      
+
       console.log('Logo file prepared for upload:', file.name);
     } catch (error) {
       console.error('Error processing logo file:', error);
@@ -146,9 +195,14 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
       if (selectedLogo && selectedLogo.startsWith('blob:')) {
         URL.revokeObjectURL(selectedLogo);
       }
-      
+
       // Reset form and close modal
       setBrandName('');
+      setIndustry('');
+      setWebsite('');
+      setProductDescription('');
+      setTargetAudience('');
+      setBrandColors([]);
       setSelectedLogo(null);
       setSelectedLogoData(null);
       onBrandCreated(data.brand);
@@ -162,40 +216,44 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
         <DialogHeader className="border-b border-gray-200 pb-4">
           <DialogTitle>Create Brand</DialogTitle>
         </DialogHeader>
         <div className="py-4">
-          <div className="space-y-4">
-            {/* Website Analysis Section */}
-            <div className="space-y-3">
-              <p className="text-sm text-gray-600">
-                Analyze your brand website to generate the fields below{' '}
-                <span className="text-primary">(4 Credits)</span>
-              </p>
-              
-              {/* Website URL Input with Generate Button */}
-              <div className="flex gap-2">
-                <div className="flex-1 relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Globe className="h-4 w-4 text-gray-400" />
-                  </div>
-                  <Input
-                    placeholder="Website URL"
-                    className="pl-9 bg-gray-50 border-gray-200"
-                    disabled={isSubmitting}
-                  />
+          {/* Website Analysis Section - Full Width */}
+          <div className="space-y-3 mb-6">
+            <p className="text-sm text-gray-600">
+              Analyze your brand website to generate the fields below{' '}
+              <span className="text-primary">(4 Credits)</span>
+            </p>
+
+            {/* Website URL Input with Generate Button */}
+            <div className="flex gap-2">
+              <div className="flex-1 relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Globe className="h-4 w-4 text-gray-400" />
                 </div>
-                <Button 
-                  variant="default"
-                  className="px-6"
+                <Input
+                  placeholder="Website URL"
+                  className="pl-9 bg-gray-50 border-gray-200"
                   disabled={isSubmitting}
-                >
-                  Generate
-                </Button>
+                />
               </div>
+              <Button
+                variant="default"
+                className="px-6"
+                disabled={isSubmitting}
+              >
+                Generate
+              </Button>
             </div>
+          </div>
+
+          {/* Two Column Layout */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Left Column */}
+            <div className="space-y-4">
 
             {/* Brand Logo Section */}
             <div className="space-y-2">
@@ -220,24 +278,132 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
                 id="brandName"
                 value={brandName}
                 onChange={handleBrandNameChange}
-                placeholder={t('brand.name_placeholder', 'Enter brand name')}
+                placeholder={t('brand.name_placeholder', 'Brand name')}
                 disabled={isSubmitting}
               />
               {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
             </div>
+
+            {/* Industry/Vertical Field */}
+            <div className="space-y-2">
+              <p className="text-sm text-gray-600">
+                Industry/Vertical
+              </p>
+              <Input
+                id="industry"
+                value={industry}
+                onChange={handleIndustryChange}
+                placeholder="Industry/Vertical"
+                disabled={isSubmitting}
+              />
+            </div>
+
+            {/* Website Field */}
+            <div className="space-y-2">
+              <p className="text-sm text-gray-600">
+                Website
+              </p>
+              <Input
+                id="website"
+                value={website}
+                onChange={handleWebsiteChange}
+                placeholder="Website"
+                disabled={isSubmitting}
+              />
+            </div>
+
+            {/* Product/Service Description Field */}
+            <div className="space-y-2">
+              <p className="text-sm text-gray-600">
+                Product/Service description
+              </p>
+              <textarea
+                id="productDescription"
+                value={productDescription}
+                onChange={handleProductDescriptionChange}
+                placeholder="Outline the product range and services provided by the brand."
+                disabled={isSubmitting}
+                rows={3}
+                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+              />
+            </div>
+
+            {/* Target Audience Field */}
+            <div className="space-y-2">
+              <p className="text-sm text-gray-600">
+                Target audience (optional)
+              </p>
+              <textarea
+                id="targetAudience"
+                value={targetAudience}
+                onChange={handleTargetAudienceChange}
+                placeholder="Description of the target audience"
+                disabled={isSubmitting}
+                rows={2}
+                className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+              />
+            </div>
+            </div>
+
+            {/* Right Column */}
+            <div className="space-y-4">
+              {/* Brand Colors Section */}
+              <div className="space-y-3">
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  Brand colors
+                </p>
+                
+                {/* Add Color Button */}
+                <div 
+                  className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  onClick={handleOpenColorModal}
+                >
+                  <div className="flex items-center justify-center w-8 h-8 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-md">
+                    <Plus className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                  </div>
+                  <span className="text-sm text-gray-600 dark:text-gray-300">Add brand color</span>
+                </div>
+                
+                {/* Color Cards */}
+                {brandColors.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {brandColors.map((color, index) => (
+                      <div key={index} className="flex items-center gap-2 p-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-md w-fit">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="h-6 w-6 rounded-md border border-gray-300 dark:border-gray-600"
+                            style={{ backgroundColor: color }}
+                          />
+                          <span className="text-xs text-gray-700 dark:text-gray-300">{color}</span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveColor(color)}
+                          disabled={isSubmitting}
+                          className="h-6 w-6 p-0 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400"
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
         <DialogFooter>
-          <Button 
-            variant="outline" 
-            onClick={onClose} 
+          <Button
+            variant="outline"
+            onClick={onClose}
             disabled={isSubmitting}
             className="hover:bg-red-50 hover:border-red-200 hover:text-red-600"
           >
             {t('common.cancel', 'Cancel')}
           </Button>
-          <Button 
-            onClick={handleSubmit} 
+          <Button
+            onClick={handleSubmit}
             disabled={isSubmitting}
           >
             {isSubmitting ? t('common.saving', 'Saving...') : t('common.save', 'Save')}
@@ -252,6 +418,13 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
         className="hidden"
         accept="image/*"
         onChange={handleFileUpload}
+      />
+
+      {/* Color Picker Modal */}
+      <ColorPickerModal
+        isOpen={isColorModalOpen}
+        onClose={handleCloseColorModal}
+        onAddColor={handleAddColor}
       />
     </Dialog>
   );
