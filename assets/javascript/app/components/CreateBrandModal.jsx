@@ -207,6 +207,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
                 onDeleteImage={handleLogoDelete}
                 selectedImage={selectedLogo}
                 selectedImageData={selectedLogoData}
+                onFileSelect={handleFileUpload}
               />
             </div>
 

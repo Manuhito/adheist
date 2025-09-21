@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useCallback } from "react";
 import { Plus, Trash2, Upload } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { cn } from "../../lib/utils";
@@ -9,8 +9,50 @@ import { useTranslation } from "../../lib/useTranslation";
  * Used by the discover-clone-page for brand logo upload
  * Based on LogoImageLibrarySelect but with different visual appearance
  */
-export function LogoImageUploader({ onSelectImage, onDeleteImage, className, selectedImage, selectedImageData, ...props }) {
+export function LogoImageUploader({ onSelectImage, onDeleteImage, className, selectedImage, selectedImageData, onFileSelect, ...props }) {
   const { t } = useTranslation();
+  const [isDragging, setIsDragging] = useState(false);
+
+  // Drag & Drop handlers (same pattern as image-upload.jsx)
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = useCallback(
+    (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+
+      const file = e.dataTransfer.files?.[0];
+      if (file && file.type.startsWith("image/")) {
+        // Create a fake event to simulate file input change
+        const fakeEvent = {
+          target: {
+            files: [file],
+          },
+        };
+        // Call the file select handler if provided
+        if (onFileSelect) {
+          onFileSelect(fakeEvent);
+        }
+      }
+    },
+    [onFileSelect],
+  );
 
   return (
     <div className={cn("w-full", className)}>
@@ -67,9 +109,18 @@ export function LogoImageUploader({ onSelectImage, onDeleteImage, className, sel
             </div>
           </div>
         ) : (
-          <button 
-            className="w-full h-20 border border-dashed border-gray-300 rounded-lg flex items-start justify-start p-4 cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-colors"
+          <div 
+            className={cn(
+              "w-full h-20 border border-dashed rounded-lg flex items-start justify-start p-4 cursor-pointer transition-colors",
+              isDragging 
+                ? "border-primary/50 bg-primary/5 border-gray-400" 
+                : "border-gray-300 hover:border-gray-400 hover:bg-gray-50"
+            )}
             onClick={() => onSelectImage?.({ field: 'logo' })}
+            onDragOver={handleDragOver}
+            onDragEnter={handleDragEnter}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
           >
             <div className="flex items-center gap-3 text-gray-500">
               <div className="w-12 h-12 border border-dashed border-gray-300 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -80,7 +131,7 @@ export function LogoImageUploader({ onSelectImage, onDeleteImage, className, sel
                 <p className="text-xs text-gray-500">JPG, JPEG, PNG and WEBP. Max 20 MB.</p>
               </div>
             </div>
-          </button>
+          </div>
         )}
       </div>
     </div>
