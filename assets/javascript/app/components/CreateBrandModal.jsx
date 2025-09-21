@@ -26,6 +26,13 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
   const [targetAudience, setTargetAudience] = useState('');
   const [brandColors, setBrandColors] = useState([]);
   const [isColorModalOpen, setIsColorModalOpen] = useState(false);
+  const [toneOfVoice, setToneOfVoice] = useState('');
+  const [fontDirection, setFontDirection] = useState('');
+  const [coreFeatures, setCoreFeatures] = useState('');
+  const [functionalBenefits, setFunctionalBenefits] = useState('');
+  const [emotionalBenefits, setEmotionalBenefits] = useState('');
+  const [proofPoints, setProofPoints] = useState('');
+  const [valuePropositions, setValuePropositions] = useState('');
   const [selectedLogo, setSelectedLogo] = useState(null);
   const [selectedLogoData, setSelectedLogoData] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -53,6 +60,41 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
 
   const handleTargetAudienceChange = (e) => {
     setTargetAudience(e.target.value);
+    if (error) setError('');
+  };
+
+  const handleToneOfVoiceChange = (e) => {
+    setToneOfVoice(e.target.value);
+    if (error) setError('');
+  };
+
+  const handleFontDirectionChange = (e) => {
+    setFontDirection(e.target.value);
+    if (error) setError('');
+  };
+
+  const handleCoreFeaturesChange = (e) => {
+    setCoreFeatures(e.target.value);
+    if (error) setError('');
+  };
+
+  const handleFunctionalBenefitsChange = (e) => {
+    setFunctionalBenefits(e.target.value);
+    if (error) setError('');
+  };
+
+  const handleEmotionalBenefitsChange = (e) => {
+    setEmotionalBenefits(e.target.value);
+    if (error) setError('');
+  };
+
+  const handleProofPointsChange = (e) => {
+    setProofPoints(e.target.value);
+    if (error) setError('');
+  };
+
+  const handleValuePropositionsChange = (e) => {
+    setValuePropositions(e.target.value);
     if (error) setError('');
   };
 
@@ -203,6 +245,13 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
       setProductDescription('');
       setTargetAudience('');
       setBrandColors([]);
+      setToneOfVoice('');
+      setFontDirection('');
+      setCoreFeatures('');
+      setFunctionalBenefits('');
+      setEmotionalBenefits('');
+      setProofPoints('');
+      setValuePropositions('');
       setSelectedLogo(null);
       setSelectedLogoData(null);
       onBrandCreated(data.brand);
@@ -343,6 +392,22 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
                 className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
               />
             </div>
+
+            {/* Functional Benefits Field */}
+            <div className="space-y-2">
+              <p className="text-sm text-gray-600">
+                Functional Benefits
+              </p>
+              <textarea
+                id="functionalBenefits"
+                value={functionalBenefits}
+                onChange={handleFunctionalBenefitsChange}
+                placeholder="Functional Benefits"
+                disabled={isSubmitting}
+                rows={2}
+                className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+              />
+            </div>
             </div>
 
             {/* Right Column */}
@@ -389,6 +454,99 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
                     ))}
                   </div>
                 )}
+              </div>
+
+              {/* Tone of Voice Field */}
+              <div className="space-y-2">
+                <p className="text-sm text-gray-600">
+                  Tone of Voice
+                </p>
+                <Input
+                  id="toneOfVoice"
+                  value={toneOfVoice}
+                  onChange={handleToneOfVoiceChange}
+                  placeholder="Tone of Voice"
+                  disabled={isSubmitting}
+                />
+              </div>
+
+              {/* Font Direction Field */}
+              <div className="space-y-2">
+                <p className="text-sm text-gray-600">
+                  Font Direction
+                </p>
+                <Input
+                  id="fontDirection"
+                  value={fontDirection}
+                  onChange={handleFontDirectionChange}
+                  placeholder="Font Direction"
+                  disabled={isSubmitting}
+                />
+              </div>
+
+              {/* Core Features Field */}
+              <div className="space-y-2">
+                <p className="text-sm text-gray-600">
+                  Core Features
+                </p>
+                <textarea
+                  id="coreFeatures"
+                  value={coreFeatures}
+                  onChange={handleCoreFeaturesChange}
+                  placeholder="Core Features"
+                  disabled={isSubmitting}
+                  rows={2}
+                  className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+                />
+              </div>
+
+
+              {/* Emotional/Lifestyle Benefits Field */}
+              <div className="space-y-2">
+                <p className="text-sm text-gray-600">
+                  Emotional/Lifestyle Benefits
+                </p>
+                <textarea
+                  id="emotionalBenefits"
+                  value={emotionalBenefits}
+                  onChange={handleEmotionalBenefitsChange}
+                  placeholder="Emotional/Lifestyle Benefits"
+                  disabled={isSubmitting}
+                  rows={2}
+                  className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+                />
+              </div>
+
+              {/* Proof Points Field */}
+              <div className="space-y-2">
+                <p className="text-sm text-gray-600">
+                  Proof Points
+                </p>
+                <textarea
+                  id="proofPoints"
+                  value={proofPoints}
+                  onChange={handleProofPointsChange}
+                  placeholder="Proof Points"
+                  disabled={isSubmitting}
+                  rows={2}
+                  className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+                />
+              </div>
+
+              {/* Value Propositions Field */}
+              <div className="space-y-2">
+                <p className="text-sm text-gray-600">
+                  Value Propositions
+                </p>
+                <textarea
+                  id="valuePropositions"
+                  value={valuePropositions}
+                  onChange={handleValuePropositionsChange}
+                  placeholder="Value Propositions"
+                  disabled={isSubmitting}
+                  rows={2}
+                  className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+                />
               </div>
             </div>
           </div>
