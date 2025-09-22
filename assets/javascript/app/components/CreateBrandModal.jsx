@@ -218,14 +218,59 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
     setError('');
 
     try {
-      const response = await fetch('/ads/api/create-user-brand/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': getCsrfToken(),
-        },
-        body: JSON.stringify({ brand_name: brandName.trim() }),
-      });
+      // Prepare form data for submission
+      const formData = {
+        brand_name: brandName.trim(),
+        industry: industry.trim(),
+        website: website.trim(),
+        product_description: productDescription.trim(),
+        target_audience: targetAudience.trim(),
+        functional_benefits: functionalBenefits.trim(),
+        brand_colors: brandColors,
+        tone_of_voice: toneOfVoice.trim(),
+        font_direction: fontDirection.trim(),
+        core_features: coreFeatures.trim(),
+        emotional_lifestyle_benefits: emotionalBenefits.trim(),
+        proof_points: proofPoints.trim(),
+        value_propositions: valuePropositions.trim()
+      };
+
+      let response;
+      
+      // If there's a logo file, use FormData for multipart upload
+      if (selectedLogoData && selectedLogoData.file) {
+        const formDataMultipart = new FormData();
+        
+        // Add all text fields
+        Object.keys(formData).forEach(key => {
+          if (key === 'brand_colors') {
+            formDataMultipart.append(key, JSON.stringify(formData[key]));
+          } else {
+            formDataMultipart.append(key, formData[key]);
+          }
+        });
+        
+        // Add logo file
+        formDataMultipart.append('logo_file', selectedLogoData.file);
+
+        response = await fetch('/ads/api/create-user-brand/', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCsrfToken(),
+          },
+          body: formDataMultipart,
+        });
+      } else {
+        // No logo file, use JSON
+        response = await fetch('/ads/api/create-user-brand/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken(),
+          },
+          body: JSON.stringify(formData),
+        });
+      }
 
       const data = await response.json();
 

@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Card, CardContent } from '@/components/ui/card.tsx';
 import { Building2, Plus } from 'lucide-react';
+import CreateBrandModal from './components/CreateBrandModal.jsx';
 
 function BrandCard({ brand }) {
   return (
@@ -33,9 +34,9 @@ function BrandCard({ brand }) {
   );
 }
 
-function CreateBrandCard() {
+function CreateBrandCard({ onClick }) {
   return (
-    <Card className="hover:shadow-md transition-shadow cursor-pointer rounded-xl">
+    <Card className="hover:shadow-md transition-shadow cursor-pointer rounded-xl" onClick={onClick}>
       <CardContent className="p-6">
         <div className="flex flex-col items-center text-center space-y-4">
           {/* Plus Icon */}
@@ -60,22 +61,42 @@ function BrandsPage() {
   const brandsData = window.__BRANDS_DATA__ || {};
   const user = brandsData.user || {};
   const brands = brandsData.brands || [];
+  
+  // Modal state
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [brandsList, setBrandsList] = useState(brands);
+
+  // Handle opening create brand modal
+  const handleOpenCreateModal = () => {
+    setIsCreateModalOpen(true);
+  };
+
+  // Handle closing create brand modal
+  const handleCloseCreateModal = () => {
+    setIsCreateModalOpen(false);
+  };
+
+  // Handle brand creation success
+  const handleBrandCreated = (newBrand) => {
+    // Add the new brand to the list
+    setBrandsList(prevBrands => [...prevBrands, newBrand]);
+  };
 
   return (
     <div className="max-w-7xl mx-auto p-6">
       {/* Brands Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {/* Create New Brand Card */}
-        <CreateBrandCard />
+        <CreateBrandCard onClick={handleOpenCreateModal} />
         
         {/* Existing Brands */}
-        {brands.map((brand) => (
+        {brandsList.map((brand) => (
           <BrandCard key={brand.id} brand={brand} />
         ))}
       </div>
 
       {/* Empty State */}
-      {brands.length === 0 && (
+      {brandsList.length === 0 && (
         <div className="mt-12 text-center">
           <Building2 className="mx-auto h-12 w-12 text-gray-400 mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -86,6 +107,13 @@ function BrandsPage() {
           </p>
         </div>
       )}
+
+      {/* Create Brand Modal */}
+      <CreateBrandModal
+        isOpen={isCreateModalOpen}
+        onClose={handleCloseCreateModal}
+        onBrandCreated={handleBrandCreated}
+      />
     </div>
   );
 }
