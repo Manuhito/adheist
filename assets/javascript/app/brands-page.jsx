@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Card, CardContent } from '@/components/ui/card.tsx';
-import { Building2, Plus } from 'lucide-react';
+import { Input } from '@/components/ui/input.tsx';
+import { Building2, Plus, Search } from 'lucide-react';
 import CreateBrandModal from './components/CreateBrandModal.jsx';
 
 function BrandCard({ brand }) {
@@ -65,6 +66,9 @@ function BrandsPage() {
   // Modal state
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [brandsList, setBrandsList] = useState(brands);
+  
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Handle opening create brand modal
   const handleOpenCreateModal = () => {
@@ -82,20 +86,52 @@ function BrandsPage() {
     setBrandsList(prevBrands => [...prevBrands, newBrand]);
   };
 
+  // Handle search input change
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  // Filter brands based on search query
+  const filteredBrands = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return brandsList;
+    }
+    
+    return brandsList.filter(brand =>
+      brand.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
+    );
+  }, [brandsList, searchQuery]);
+
   return (
     <div className="max-w-7xl mx-auto p-6">
+      {/* Search Bar */}
+      <div className="mb-6">
+        <div className="relative max-w-md">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-4 w-4 text-gray-400" />
+          </div>
+          <Input
+            type="text"
+            placeholder="Search brands..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+            className="pl-10 bg-white border-gray-200 focus:border-gray-300 focus:ring-gray-200"
+          />
+        </div>
+      </div>
+
       {/* Brands Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {/* Create New Brand Card */}
         <CreateBrandCard onClick={handleOpenCreateModal} />
         
         {/* Existing Brands */}
-        {brandsList.map((brand) => (
+        {filteredBrands.map((brand) => (
           <BrandCard key={brand.id} brand={brand} />
         ))}
       </div>
 
-      {/* Empty State */}
+      {/* Empty State - No brands at all */}
       {brandsList.length === 0 && (
         <div className="mt-12 text-center">
           <Building2 className="mx-auto h-12 w-12 text-gray-400 mb-4" />
@@ -104,6 +140,19 @@ function BrandsPage() {
           </h3>
           <p className="text-gray-500">
             Create your first brand to get started with your ad campaigns.
+          </p>
+        </div>
+      )}
+
+      {/* No search results */}
+      {brandsList.length > 0 && filteredBrands.length === 0 && searchQuery.trim() && (
+        <div className="mt-12 text-center">
+          <Search className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No brands found
+          </h3>
+          <p className="text-gray-500">
+            No brands match your search for "{searchQuery}". Try a different search term.
           </p>
         </div>
       )}
