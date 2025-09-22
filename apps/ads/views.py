@@ -18,6 +18,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST, require_http_methods
 import json
 import requests
+from django.core.serializers.json import DjangoJSONEncoder
 import urllib.parse
 import os
 from django.conf import settings
@@ -518,6 +519,44 @@ def discover_page(request):
     template = "ads/discover.html"
     context = {
         "active_tab": "discover",
+    }
+    
+    return TemplateResponse(request, template, context)
+
+
+@login_required
+def brands_page(request):
+    """
+    Render the brands library page with React components.
+    """
+    # Get all AdRequestAssets for the current user that have an associated brand
+    user_assets = AdRequestAssets.objects.filter(
+        user=request.user,
+        brand__isnull=False
+    ).select_related('brand').distinct('brand')
+    
+    # Prepare brands data for frontend
+    brands_data = []
+    for asset in user_assets:
+        brand_info = {
+            'id': asset.brand.id,
+            'name': asset.brand.brand_name,
+            'logo_url': asset.logo.url if asset.logo else None,
+            'company_website': asset.company_website,
+            'industry': asset.industry,
+            'product_description': asset.product_description,
+            'main_hex_color': asset.main_hex_color,
+            'created_at': asset.created_at.isoformat() if asset.created_at else None,
+        }
+        brands_data.append(brand_info)
+    
+    # Convert to JSON for frontend
+    brands_json = json.dumps(brands_data, cls=DjangoJSONEncoder)
+    
+    template = "ads/brands.html"
+    context = {
+        "active_tab": "brands-library",
+        "brands_data": brands_json,
     }
     
     return TemplateResponse(request, template, context)

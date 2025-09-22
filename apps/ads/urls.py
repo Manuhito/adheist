@@ -39,4 +39,5 @@ urlpatterns = [
     path("user-images/", views.user_images, name="user_images"),
     path("upload-brand-asset/", views.upload_brand_asset),
     path("discover/", views.discover_page, name="discover_page"),
+    path("brands/", views.brands_page, name="brands_page"),
 ]

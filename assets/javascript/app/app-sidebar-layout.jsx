@@ -17,11 +17,12 @@ import {
 } from "@/components/ui/sidebar"
 import { CustomSidebarTrigger, CustomSidebar } from "@/components/ui/custom-sidebar"
 import { Button } from "@/components/ui/button"
-import { PanelLeftClose, Menu, Compass, Bookmark, Zap } from "lucide-react"
+import { PanelLeftClose, Menu, Compass, Bookmark, Zap, Library } from "lucide-react"
 
 function AppSidebar({ activeTab, sidebarComponent }) {
   const menuItems = [
     { id: 'discover', label: 'Discover', href: '/ads/discover/', icon: <Compass className="h-5 w-5" /> },
+    { id: 'brands-library', label: 'Brands Library', href: '/ads/brands/', icon: <Library className="h-5 w-5" /> },
     { id: 'bookmark', label: 'Bookmark', href: '/ads/bookmark/', icon: <Bookmark className="h-5 w-5" /> },
     { id: 'my-ads', label: 'My Ads', href: '/ads/my-ads/', icon: <Zap className="h-5 w-5" /> }
   ];
