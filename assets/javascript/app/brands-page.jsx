@@ -14,8 +14,8 @@ function BrandCard({ brand }) {
           {/* Logo */}
           <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
             {brand.logo_url ? (
-              <img 
-                src={brand.logo_url} 
+              <img
+                src={brand.logo_url}
                 alt={`${brand.name} logo`}
                 className="w-full h-full object-cover"
               />
@@ -23,7 +23,7 @@ function BrandCard({ brand }) {
               <Building2 className="w-8 h-8 text-gray-400" />
             )}
           </div>
-          
+
           {/* Brand Name */}
           <div>
             <p className="text-sm text-gray-500 mt-1">
@@ -44,8 +44,8 @@ function BrandListItem({ brand }) {
           {/* Logo */}
           <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
             {brand.logo_url ? (
-              <img 
-                src={brand.logo_url} 
+              <img
+                src={brand.logo_url}
                 alt={`${brand.name} logo`}
                 className="w-full h-full object-cover"
               />
@@ -53,7 +53,7 @@ function BrandListItem({ brand }) {
               <Building2 className="w-6 h-6 text-gray-400" />
             )}
           </div>
-          
+
           {/* Brand Info */}
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-gray-900 truncate">
@@ -80,7 +80,7 @@ function CreateBrandCard({ onClick }) {
           <div className="w-16 h-16 rounded-lg flex items-center justify-center">
             <Plus className="w-8 h-8 text-gray-400" />
           </div>
-          
+
           {/* Text */}
           <div>
             <p className="text-sm text-gray-500 mt-1">
@@ -102,7 +102,7 @@ function CreateBrandListItem({ onClick }) {
           <div className="w-12 h-12 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0">
             <Plus className="w-6 h-6 text-gray-400" />
           </div>
-          
+
           {/* Text */}
           <div className="flex-1">
             <p className="text-sm text-gray-500">
@@ -120,14 +120,14 @@ function BrandsPage() {
   const brandsData = window.__BRANDS_DATA__ || {};
   const user = brandsData.user || {};
   const brands = brandsData.brands || [];
-  
+
   // Modal state
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [brandsList, setBrandsList] = useState(brands);
-  
+
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // View mode state
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
 
@@ -144,7 +144,7 @@ function BrandsPage() {
               All your Brands will show here
             </p>
           </div>
-          <Button 
+          <Button
             onClick={() => window.location.href = '/ads/discover/'}
             className="bg-primary hover:bg-primary/90 text-white"
           >
@@ -189,7 +189,7 @@ function BrandsPage() {
     if (!searchQuery.trim()) {
       return brandsList;
     }
-    
+
     return brandsList.filter(brand =>
       brand.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
     );
@@ -202,25 +202,25 @@ function BrandsPage() {
         {/* Search Bar */}
         <div className="relative flex-1 max-w-lg">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 text-gray-400" />
+            <Search className="h-4 w-4 text-muted-foreground" />
           </div>
           <Input
             type="text"
             placeholder="Search brands..."
             value={searchQuery}
             onChange={handleSearchChange}
-            className="pl-10 bg-white border-gray-200 focus:border-gray-300 focus:ring-gray-200"
+            className="pl-10"
           />
         </div>
 
         {/* View Mode Toggle */}
-        <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1 flex-shrink-0">
+        <div className="flex items-center space-x-1 bg-muted rounded-lg p-1 flex-shrink-0">
           <button
             onClick={() => setViewMode('grid')}
             className={`p-2 rounded-md transition-colors ${
               viewMode === 'grid'
-                ? 'bg-white text-primary shadow-sm'
-                : 'text-gray-500 hover:text-primary'
+                ? 'bg-background text-primary shadow-sm'
+                : 'text-muted-foreground hover:text-primary'
             }`}
             title="Grid view"
           >
@@ -230,8 +230,8 @@ function BrandsPage() {
             onClick={() => setViewMode('list')}
             className={`p-2 rounded-md transition-colors ${
               viewMode === 'list'
-                ? 'bg-white text-primary shadow-sm'
-                : 'text-gray-500 hover:text-primary'
+                ? 'bg-background text-primary shadow-sm'
+                : 'text-muted-foreground hover:text-primary'
             }`}
             title="List view"
           >
@@ -245,7 +245,7 @@ function BrandsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {/* Create New Brand Card */}
           <CreateBrandCard onClick={handleOpenCreateModal} />
-          
+
           {/* Existing Brands */}
           {filteredBrands.map((brand) => (
             <BrandCard key={brand.id} brand={brand} />
@@ -255,7 +255,7 @@ function BrandsPage() {
         <div className="space-y-3">
           {/* Create New Brand List Item */}
           <CreateBrandListItem onClick={handleOpenCreateModal} />
-          
+
           {/* Existing Brands */}
           {filteredBrands.map((brand) => (
             <BrandListItem key={brand.id} brand={brand} />
@@ -313,7 +313,7 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(checkAndMount, 50);
     }
   }
-  
+
   checkAndMount();
 });
 
