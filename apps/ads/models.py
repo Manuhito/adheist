@@ -316,7 +316,6 @@ class AdRequestAssets(BaseModel):
             # Removed 'brand' field to prevent assignment issues
             'company_website': self.company_website,
             'main_hex_color': self.main_hex_color,
-            'key_benefits': self.key_benefits,
             # Brand information fields
             'industry': self.industry,
             'product_description': self.product_description,
@@ -463,9 +462,6 @@ class AdRequest(BaseModel):
     def get_main_hex_color(self):
         return self.get_asset_value('main_hex_color')
     
-    def get_key_benefits(self):
-        return self.get_asset_value('key_benefits')
-    
     def get_user_prompt(self):
         return self.get_asset_value('user_prompt')
     
@@ -492,6 +488,37 @@ class AdRequest(BaseModel):
     
     def get_marketing_image_3(self):
         return self.marketing_image_3_override if self.marketing_image_3_override else None
+    
+    # New getter methods for brand information fields
+    def get_industry(self):
+        return self.get_asset_value('industry')
+    
+    def get_product_description(self):
+        return self.get_asset_value('product_description')
+    
+    def get_target_audience(self):
+        return self.get_asset_value('target_audience')
+    
+    def get_functional_benefits(self):
+        return self.get_asset_value('functional_benefits')
+    
+    def get_tone_of_voice(self):
+        return self.get_asset_value('tone_of_voice')
+    
+    def get_font_direction(self):
+        return self.get_asset_value('font_direction')
+    
+    def get_core_features(self):
+        return self.get_asset_value('core_features')
+    
+    def get_emotional_lifestyle_benefits(self):
+        return self.get_asset_value('emotional_lifestyle_benefits')
+    
+    def get_proof_points(self):
+        return self.get_asset_value('proof_points')
+    
+    def get_value_propositions(self):
+        return self.get_asset_value('value_propositions')
 
 
 class AdRequestVersion(BaseModel):

@@ -121,6 +121,10 @@ The Workflow below will guide you to identify all aspects on the ad and how to r
 ##  Product Information 
 **Brand Name:** 
 * {{brand_name}}
+**Industry/Vertical:** 
+* {{industry}}
+**Product/Service Description:** 
+* {{product_description}}
 **Target Audience:** 
 * {{target_audience}}
 **Tone of Voice:** 
@@ -165,16 +169,27 @@ The output must be in the form of a highly detailed image generation prompt for 
         tone_of_voice = version_data.get('tone_of_voice', '')
         font_direction = version_data.get('font_direction', '')
         core_features = version_data.get('core_features', '')
-        functional_benefits = version_data.get('key_benefits', '')
+        functional_benefits = version_data.get('functional_benefits', '')
         emotional_benefits = version_data.get('emotional_lifestyle_benefits', '')
         proof_points = version_data.get('proof_points', '')
         value_propositions = version_data.get('value_propositions', '')
-        brand_color_hex = version_data.get('main_hex_color', '')
+        # Handle brand_color_hex - can be string or list
+        brand_color_hex_raw = version_data.get('main_hex_color', '')
+        # Convert list to string if needed
+        if isinstance(brand_color_hex_raw, list) and brand_color_hex_raw:
+            brand_color_hex = ', '.join(str(color) for color in brand_color_hex_raw)
+        else:
+            brand_color_hex = str(brand_color_hex_raw) if brand_color_hex_raw else ''
+        
         user_feedback = version_data.get('user_prompt', '')
+        industry = version_data.get('industry', '')
+        product_description = version_data.get('product_description', '')
         
         # Formatear el system_prompt reemplazando las variables {{}}
         formatted_system_prompt = system_prompt.replace('{{brand_name}}', brand_name or '[Brand Name]')
         formatted_system_prompt = formatted_system_prompt.replace('{{user_prompt}}', user_feedback or '[No user feedback provided]')
+        formatted_system_prompt = formatted_system_prompt.replace('{{industry}}', industry or '[Not specified]')
+        formatted_system_prompt = formatted_system_prompt.replace('{{product_description}}', product_description or '[Not specified]')
         formatted_system_prompt = formatted_system_prompt.replace('{{target_audience}}', target_audience or '[Not specified]')
         formatted_system_prompt = formatted_system_prompt.replace('{{tone_of_voice}}', tone_of_voice or '[Not specified]')
         formatted_system_prompt = formatted_system_prompt.replace('{{font_direction}}', font_direction or '[Not specified]')
@@ -361,8 +376,7 @@ The output must be in the form of a highly detailed image generation prompt for 
         
     except Exception as e:
         logger.exception(f"Error generating prompt with {model_name}: {str(e)}")
-        # Fall back to the original prompt generation method
-        return generate_prompt_fallback(version_data), None
+        raise
 
 def generate_revision_prompt(version_data, image_urls=None, called_from=None):
     """
@@ -485,7 +499,7 @@ If the customer requests a logo but does not specify placement, → default plac
 * Do not switch formats unless feedback explicitly requests it.
 ---
 ## Product Information
-{brand_name_section}{target_audience_section}{tone_of_voice_section}{font_direction_section}{core_features_section}{emotional_lifestyle_benefits_section}{proof_points_section}{value_propositions_section}{functional_benefits_section}{brand_color_section}
+{brand_name_section}{industry_section}{product_description_section}{target_audience_section}{tone_of_voice_section}{font_direction_section}{core_features_section}{emotional_lifestyle_benefits_section}{proof_points_section}{value_propositions_section}{functional_benefits_section}{brand_color_section}
 ---
 ##  Key Requirement
 The revised ad must:
@@ -519,8 +533,15 @@ Generate a **highly detailed image generation prompt for the OpenAI Image API** 
         brand_color_section = f"**Brand Colour Hex:** {main_hex_color}" if main_hex_color else ""
         
         # Preparar la sección de Functional Benefits solo si existe
-        key_benefits = version_data.get('key_benefits', '')
-        functional_benefits_section = f"**Functional Benefits:** {key_benefits}" if key_benefits else ""
+        functional_benefits = version_data.get('functional_benefits', '')
+        functional_benefits_section = f"**Functional Benefits:** {functional_benefits}" if functional_benefits else ""
+        
+        # Preparar las nuevas secciones
+        industry = version_data.get('industry', '')
+        industry_section = f"**Industry/Vertical:** {industry}\n" if industry else ""
+        
+        product_description = version_data.get('product_description', '')
+        product_description_section = f"**Product/Service Description:** {product_description}\n" if product_description else ""
         
         # Preparar las secciones adicionales solicitadas
         target_audience = version_data.get('target_audience', '')
@@ -549,6 +570,8 @@ Generate a **highly detailed image generation prompt for the OpenAI Image API** 
             user_prompt=version_data.get('user_prompt', ''),
             brand_name=brand_name,
             brand_name_section=brand_name_section,
+            industry_section=industry_section,
+            product_description_section=product_description_section,
             main_hex_color=main_hex_color,
             brand_color_section=brand_color_section,
             functional_benefits_section=functional_benefits_section,
@@ -732,62 +755,7 @@ Generate a **highly detailed image generation prompt for the OpenAI Image API** 
         
     except Exception as e:
         logger.exception(f"Error generating prompt with {model_name}: {str(e)}")
-        # Fall back to the original prompt generation method
-        return generate_prompt_fallback(version_data), None
-def generate_prompt_fallback(version_data):
-    """
-    Fallback method to generate a prompt without GPT-5.
-    Used when the GPT-5 API call fails.
-    
-    Args:
-        version_data: Dictionary containing the AdRequestVersion data
-        
-    Returns:
-        str: The generated prompt using the original method
-    """
-    prompt_parts = []
-    
-    # Add original ad information
-    prompt_parts.append(f"[ORIGINAL AD]: {version_data.get('company_name', 'Brand')}\n")
-
-    # Add company information section
-    if version_data.get('company_info'):
-        prompt_parts.append("[COMPANY INFO]:")
-        prompt_parts.append(version_data.get('company_info'))
-        prompt_parts.append("")  # Add empty line
-    
-    # Add concepts to convey
-    if version_data.get('concepts_info'):
-        prompt_parts.append("[CONCEPTS TO CONVEY]:")
-        prompt_parts.append(version_data.get('concepts_info'))
-        prompt_parts.append("")  # Add empty line
-    
-    # Add visual requirements section
-    if version_data.get('visual_requirements'):
-        prompt_parts.append("[VISUAL REQUIREMENTS]:")
-        prompt_parts.append(version_data.get('visual_requirements'))
-        prompt_parts.append("")  # Add empty line
-    
-    # Add key benefits if available
-    if version_data.get('key_benefits'):
-        prompt_parts.append("[KEY BENEFITS TO HIGHLIGHT]:")
-        prompt_parts.append(version_data.get('key_benefits'))
-        prompt_parts.append("")  # Add empty line
-    
-    # Add user prompt if available
-    if version_data.get('user_prompt'):
-        prompt_parts.append("[ADDITIONAL INSTRUCTIONS]:")
-        prompt_parts.append(version_data.get('user_prompt'))
-        prompt_parts.append("")  # Add empty line
-    
-    # Add goal section
-    prompt_parts.append("[GOAL]:")
-    prompt_parts.append("Create a single cohesive advertisement scene that integrates all of the above, written as a DALL·E 3 prompt.")
-    
-    # Combine all parts into a single prompt with line breaks
-    prompt = "\n".join(prompt_parts)
-    
-    return prompt
+        raise
 
 def generate_prompt(version):
     """
@@ -818,7 +786,6 @@ def generate_prompt(version):
     # Get text fields from base_assets or overrides
     company_website = ad_request.get_company_website()
     main_hex_color = ad_request.get_main_hex_color()
-    key_benefits = ad_request.get_key_benefits()
     product_image_1_override = ad_request.get_product_image_1()
     product_image_2_override = ad_request.get_product_image_2()
     app_image_1_override = ad_request.get_app_image_1()
@@ -875,12 +842,6 @@ def generate_prompt(version):
     
     visual_requirements = "\n".join(visual_reqs)
     
-    # Prepare key benefits
-    benefits_list = []
-    if key_benefits:
-        benefits_list = [f"- {benefit.strip()}" for benefit in key_benefits.split('\n') if benefit.strip()]
-    key_benefits_text = "\n".join(benefits_list)
-    
     # Prepare data for GPT-5
     version_data = {
         'company_name': company_name,
@@ -889,9 +850,12 @@ def generate_prompt(version):
         'company_info': company_info,
         'concepts_info': concepts_info,
         'visual_requirements': visual_requirements,
-        'key_benefits': key_benefits_text,
         'user_prompt': user_prompt or '',
+        # Brand information fields from AdRequestAssets
+        'industry': ad_request.get_asset_value('industry') or '',
+        'product_description': ad_request.get_asset_value('product_description') or '',
         'target_audience': ad_request.get_asset_value('target_audience') or '',
+        'functional_benefits': ad_request.get_asset_value('functional_benefits') or '',
         'tone_of_voice': ad_request.get_asset_value('tone_of_voice') or '',
         'font_direction': ad_request.get_asset_value('font_direction') or '',
         'core_features': ad_request.get_asset_value('core_features') or '',
@@ -927,26 +891,19 @@ def generate_prompt(version):
     if image_urls:
         logger.info(f"Collected {len(image_urls)} images for context")
     
-    # Generate the prompt (use GPT-5 when version_type == 'initial' or 'revision')
+    # Generate the prompt using GPT-5
     start_time = time.time()
     cost_metadata = None
-    try:
-        # The version_type will be injected by the caller when needed
-        version_type = getattr(version, "_version_type", None)
-        if version_type == 'initial':
-            prompt, cost_metadata = generate_version_prompt(version_data, image_urls)
-            logger.info(f"GPT-5 prompt generated in {time.time() - start_time:.2f} seconds")
-        elif version_type == 'revision':
-            prompt, cost_metadata = generate_revision_prompt(version_data, image_urls)
-            logger.info(f"GPT-5 revision prompt generated in {time.time() - start_time:.2f} seconds")
-        else:
-            prompt = generate_prompt_fallback(version_data)
-            logger.info(f"Fallback prompt generated in {time.time() - start_time:.2f} seconds")
-    except Exception as e:
-        logger.exception(f"Failed to generate prompt, falling back to original method: {str(e)}")
-        # Fall back to original method if GPT-5 fails
-        prompt = generate_prompt_fallback(version_data)
-        logger.info(f"Fallback prompt generated in {time.time() - start_time:.2f} seconds")
+    
+    # The version_type will be injected by the caller when needed
+    version_type = getattr(version, "_version_type", None)
+    if version_type == 'revision':
+        prompt, cost_metadata = generate_revision_prompt(version_data, image_urls)
+        logger.info(f"GPT-5 revision prompt generated in {time.time() - start_time:.2f} seconds")
+    else:
+        # Default to initial prompt generation
+        prompt, cost_metadata = generate_version_prompt(version_data, image_urls)
+        logger.info(f"GPT-5 prompt generated in {time.time() - start_time:.2f} seconds")
     
     # Save cost metadata to the version if available
     if cost_metadata and hasattr(version, 'openai_prompt_response_metadata'):
