@@ -4,6 +4,14 @@
 {% block extra_js %}
 {{ block.super }}
 <script>
+  // Configure sidebar for this page
+  window.__SIDEBAR_DATA__ = {
+    activeTab: "brands-library",
+    showHeader: true,
+    hideLogo: true
+  };
+</script>
+<script>
   // Pass data to React component
   window.__BRANDS_DATA__ = {
     user: {

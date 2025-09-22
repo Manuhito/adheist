@@ -2,7 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Card, CardContent } from '@/components/ui/card.tsx';
 import { Input } from '@/components/ui/input.tsx';
-import { Building2, Plus, Search } from 'lucide-react';
+import { Building2, Plus, Search, Grid3x3, List } from 'lucide-react';
+import { Button } from '@/components/ui/button.tsx';
 import CreateBrandModal from './components/CreateBrandModal.jsx';
 
 function BrandCard({ brand }) {
@@ -35,6 +36,41 @@ function BrandCard({ brand }) {
   );
 }
 
+function BrandListItem({ brand }) {
+  return (
+    <Card className="hover:shadow-md transition-shadow cursor-pointer rounded-xl">
+      <CardContent className="p-4">
+        <div className="flex items-center space-x-4">
+          {/* Logo */}
+          <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+            {brand.logo_url ? (
+              <img 
+                src={brand.logo_url} 
+                alt={`${brand.name} logo`}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <Building2 className="w-6 h-6 text-gray-400" />
+            )}
+          </div>
+          
+          {/* Brand Info */}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-900 truncate">
+              {brand.name}
+            </p>
+            {brand.industry && (
+              <p className="text-xs text-gray-500 truncate">
+                {brand.industry}
+              </p>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function CreateBrandCard({ onClick }) {
   return (
     <Card className="hover:shadow-md transition-shadow cursor-pointer rounded-xl" onClick={onClick}>
@@ -57,6 +93,28 @@ function CreateBrandCard({ onClick }) {
   );
 }
 
+function CreateBrandListItem({ onClick }) {
+  return (
+    <Card className="hover:shadow-md transition-shadow cursor-pointer rounded-xl" onClick={onClick}>
+      <CardContent className="p-4">
+        <div className="flex items-center space-x-4">
+          {/* Plus Icon */}
+          <div className="w-12 h-12 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0">
+            <Plus className="w-6 h-6 text-gray-400" />
+          </div>
+          
+          {/* Text */}
+          <div className="flex-1">
+            <p className="text-sm text-gray-500">
+              Create a brand
+            </p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function BrandsPage() {
   // Get data from window globals
   const brandsData = window.__BRANDS_DATA__ || {};
@@ -69,6 +127,41 @@ function BrandsPage() {
   
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // View mode state
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+
+  // Set header content when component mounts
+  React.useEffect(() => {
+    if (window.setAppHeader) {
+      const headerComponent = (
+        <div className="flex items-center justify-between w-full">
+          <div>
+            <h1 className="text-xl font-bold text-primary">
+              Brands
+            </h1>
+            <p className="text-sm text-gray-600">
+              All your Brands will show here
+            </p>
+          </div>
+          <Button 
+            onClick={() => window.location.href = '/ads/discover/'}
+            className="bg-primary hover:bg-primary/90 text-white"
+          >
+            Generate Ad
+          </Button>
+        </div>
+      );
+      window.setAppHeader(headerComponent);
+    }
+
+    // Cleanup header when component unmounts
+    return () => {
+      if (window.clearAppHeader) {
+        window.clearAppHeader();
+      }
+    };
+  }, []);
 
   // Handle opening create brand modal
   const handleOpenCreateModal = () => {
@@ -104,9 +197,10 @@ function BrandsPage() {
 
   return (
     <div className="max-w-7xl mx-auto p-6">
-      {/* Search Bar */}
-      <div className="mb-6">
-        <div className="relative max-w-md">
+      {/* Search Bar and View Toggle */}
+      <div className="mb-6 flex items-center justify-between gap-4">
+        {/* Search Bar */}
+        <div className="relative flex-1 max-w-lg">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Search className="h-4 w-4 text-gray-400" />
           </div>
@@ -118,18 +212,56 @@ function BrandsPage() {
             className="pl-10 bg-white border-gray-200 focus:border-gray-300 focus:ring-gray-200"
           />
         </div>
+
+        {/* View Mode Toggle */}
+        <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1 flex-shrink-0">
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`p-2 rounded-md transition-colors ${
+              viewMode === 'grid'
+                ? 'bg-white text-primary shadow-sm'
+                : 'text-gray-500 hover:text-primary'
+            }`}
+            title="Grid view"
+          >
+            <Grid3x3 className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            className={`p-2 rounded-md transition-colors ${
+              viewMode === 'list'
+                ? 'bg-white text-primary shadow-sm'
+                : 'text-gray-500 hover:text-primary'
+            }`}
+            title="List view"
+          >
+            <List className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
-      {/* Brands Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {/* Create New Brand Card */}
-        <CreateBrandCard onClick={handleOpenCreateModal} />
-        
-        {/* Existing Brands */}
-        {filteredBrands.map((brand) => (
-          <BrandCard key={brand.id} brand={brand} />
-        ))}
-      </div>
+      {/* Brands Container */}
+      {viewMode === 'grid' ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {/* Create New Brand Card */}
+          <CreateBrandCard onClick={handleOpenCreateModal} />
+          
+          {/* Existing Brands */}
+          {filteredBrands.map((brand) => (
+            <BrandCard key={brand.id} brand={brand} />
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {/* Create New Brand List Item */}
+          <CreateBrandListItem onClick={handleOpenCreateModal} />
+          
+          {/* Existing Brands */}
+          {filteredBrands.map((brand) => (
+            <BrandListItem key={brand.id} brand={brand} />
+          ))}
+        </div>
+      )}
 
       {/* Empty State - No brands at all */}
       {brandsList.length === 0 && (
