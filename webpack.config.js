@@ -28,6 +28,7 @@ module.exports = {
     'discover-page': './assets/javascript/app/discover-page.jsx',  // entry point for the discover page
     'discover-clone': './assets/javascript/app/discover-clone-page.jsx',  // entry point for the discover clone page
     'brands-page': './assets/javascript/app/brands-page.jsx',  // entry point for the brands page
+    'my-ads-page': './assets/javascript/app/my-ads-page.jsx',  // entry point for the my ads page
     'app-sidebar-layout': './assets/javascript/app/app-sidebar-layout.jsx',  // entry point for the sidebar layout
   },
   output: {

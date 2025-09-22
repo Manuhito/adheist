@@ -3042,3 +3042,61 @@ def discover_clone_adrequest_page(request, pk):
         
     except AdRequest.DoesNotExist:
         return redirect('ads:discover_page')
+
+
+@login_required
+def my_ads_page(request):
+    """
+    Render the My Ads page with React components.
+    Shows all AdRequests created by the current user with their versions.
+    """
+    # Get all AdRequests for the current user with their versions
+    ad_requests = AdRequest.objects.filter(user=request.user).prefetch_related(
+        'versions'
+    ).order_by('-updated_at')
+    
+    # Prepare data for frontend
+    my_ads_data = []
+    for ad_request in ad_requests:
+        # Get all versions for this ad request
+        versions = []
+        for version in ad_request.versions.all():
+            version_data = {
+                'id': version.id,
+                'status': version.status,
+                'image_url': version.generated_image.url if version.generated_image else None,
+                'created_at': version.created_at.isoformat() if version.created_at else None,
+                'user_prompt': version.user_prompt,
+                'rating': version.rating,
+                'review': version.review,
+            }
+            versions.append(version_data)
+        
+        # Get brand information
+        brand_name = None
+        if hasattr(ad_request, 'base_assets') and ad_request.base_assets and ad_request.base_assets.brand:
+            brand_name = ad_request.base_assets.brand.brand_name
+        
+        ad_request_data = {
+            'id': ad_request.id,
+            'status': ad_request.status,
+            'canvas_size': ad_request.canvas_size,
+            'created_at': ad_request.created_at.isoformat() if ad_request.created_at else None,
+            'updated_at': ad_request.updated_at.isoformat() if ad_request.updated_at else None,
+            'brand_name': brand_name,
+            'ad_library_name': ad_request.ad_library.facebook_page.page_name if ad_request.ad_library else None,
+            'versions': versions,
+            'versions_count': len(versions),
+        }
+        my_ads_data.append(ad_request_data)
+    
+    # Convert to JSON for frontend
+    my_ads_json = json.dumps(my_ads_data, cls=DjangoJSONEncoder)
+    
+    template = "ads/my-ads.html"
+    context = {
+        "active_tab": "my-ads",
+        "my_ads_data": my_ads_json,
+    }
+    
+    return TemplateResponse(request, template, context)
