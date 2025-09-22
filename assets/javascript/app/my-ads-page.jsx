@@ -51,14 +51,14 @@ function AdRequestCard({ adRequest }) {
 
   return (
     <Card 
-      className="hover:shadow-md transition-shadow cursor-pointer rounded-xl"
+      className="hover:bg-gray-50 transition-colors cursor-pointer rounded-xl"
       onClick={() => window.location.href = `/ads/${adRequest.id}/details/`}
     >
       <CardContent className="p-4">
         <div className="space-y-3">
           {/* Header - Brand name + Status */}
           <div className="flex items-center justify-between">
-            <h3 className="font-medium text-gray-900 truncate">
+            <h3 className="text-gray-900 truncate">
               {adRequest.brand_name || adRequest.ad_library_name || `Ad Request #${adRequest.id}`}
             </h3>
             <Badge className={getStatusColor(adRequest.status)}>
@@ -80,9 +80,9 @@ function AdRequestCard({ adRequest }) {
           </div>
 
           {/* Footer - Creation date */}
-          <div className="text-center">
+          <div className="text-left">
             <p className="text-sm text-gray-500">
-              Created {formatDate(adRequest.created_at)}
+              {formatDate(adRequest.created_at)}
             </p>
           </div>
         </div>
@@ -199,8 +199,7 @@ function MyAdsPage() {
             onClick={() => window.location.href = '/ads/discover/'}
             className="bg-primary hover:bg-primary/90 text-white"
           >
-            <Plus className="w-4 h-4 mr-2" />
-            Create New Ad
+            Generate Ad
           </Button>
         </div>
       );
@@ -245,25 +244,25 @@ function MyAdsPage() {
         {/* Search Bar */}
         <div className="relative flex-1 max-w-lg">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 text-gray-400" />
+            <Search className="h-4 w-4 text-muted-foreground" />
           </div>
           <Input
             type="text"
             placeholder="Search ads..."
             value={searchQuery}
             onChange={handleSearchChange}
-            className="pl-10 bg-white border-gray-200 focus:border-gray-300 focus:ring-gray-200"
+            className="pl-10"
           />
         </div>
 
         {/* View Mode Toggle */}
-        <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1 flex-shrink-0">
+        <div className="flex items-center space-x-1 bg-muted rounded-lg p-1 flex-shrink-0">
           <button
             onClick={() => setViewMode('grid')}
             className={`p-2 rounded-md transition-colors ${
               viewMode === 'grid'
-                ? 'bg-white text-primary shadow-sm'
-                : 'text-gray-500 hover:text-primary'
+                ? 'bg-background text-primary shadow-sm'
+                : 'text-muted-foreground hover:text-primary'
             }`}
             title="Grid view"
           >
@@ -273,8 +272,8 @@ function MyAdsPage() {
             onClick={() => setViewMode('list')}
             className={`p-2 rounded-md transition-colors ${
               viewMode === 'list'
-                ? 'bg-white text-primary shadow-sm'
-                : 'text-gray-500 hover:text-primary'
+                ? 'bg-background text-primary shadow-sm'
+                : 'text-muted-foreground hover:text-primary'
             }`}
             title="List view"
           >
