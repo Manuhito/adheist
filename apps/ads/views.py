@@ -2816,16 +2816,43 @@ def get_user_brands(request):
 @require_http_methods(["POST"])
 def create_user_brand(request):
     """
-    Create a new brand for the current user.
+    Create a new brand for the current user and associated AdRequestAssets.
     
     Expected POST data:
     - brand_name: Name of the brand to create
+    - industry: Industry/Vertical (optional)
+    - website: Brand website (optional)
+    - product_description: Product/Service description (optional)
+    - target_audience: Target audience description (optional)
+    - functional_benefits: Functional benefits (optional)
+    - brand_colors: Array of brand colors in hex format (optional)
+    - tone_of_voice: Tone of voice (optional)
+    - font_direction: Font direction (optional)
+    - core_features: Core features (optional)
+    - emotional_lifestyle_benefits: Emotional/Lifestyle benefits (optional)
+    - proof_points: Proof points (optional)
+    - value_propositions: Value propositions (optional)
+    - logo_file: Logo image file (optional)
     
     Returns: JSON with the created brand data
     """
     try:
-        # Get the brand name from the request
-        data = json.loads(request.body)
+        # Handle multipart form data for file upload
+        if request.content_type.startswith('multipart/form-data'):
+            data = request.POST.dict()
+            logo_file = request.FILES.get('logo_file')
+            # Parse brand_colors if it's a JSON string
+            brand_colors_str = data.get('brand_colors')
+            if brand_colors_str:
+                try:
+                    data['brand_colors'] = json.loads(brand_colors_str)
+                except json.JSONDecodeError:
+                    data['brand_colors'] = []
+        else:
+            # Handle JSON data
+            data = json.loads(request.body)
+            logo_file = None
+        
         brand_name = data.get('brand_name')
         
         if not brand_name:
@@ -2841,17 +2868,62 @@ def create_user_brand(request):
                 'error': 'A brand with this name already exists'
             }, status=400)
         
-        # Create the new brand
+        # Create the new brand (simple, just name)
         brand = UserBrand.objects.create(
             user=request.user,
             brand_name=brand_name
+        )
+        
+        # Handle logo upload if provided
+        logo_asset = None
+        if logo_file:
+            logo_asset = UserBrandAssets.objects.create(
+                user=request.user,
+                brand=brand,
+                image=logo_file,
+                category='logo',
+                original_filename=logo_file.name,
+                file_size=logo_file.size
+            )
+        
+        # Create associated AdRequestAssets with all brand data
+        ad_request_assets = AdRequestAssets.objects.create(
+            user=request.user,
+            brand=brand,
+            company_website=data.get('website'),
+            logo=logo_asset.image if logo_asset else None,
+            main_hex_color=data.get('brand_colors', []),
+            industry=data.get('industry'),
+            product_description=data.get('product_description'),
+            target_audience=data.get('target_audience'),
+            functional_benefits=data.get('functional_benefits'),
+            tone_of_voice=data.get('tone_of_voice'),
+            font_direction=data.get('font_direction'),
+            core_features=data.get('core_features'),
+            emotional_lifestyle_benefits=data.get('emotional_lifestyle_benefits'),
+            proof_points=data.get('proof_points'),
+            value_propositions=data.get('value_propositions')
         )
         
         return JsonResponse({
             'success': True,
             'brand': {
                 'id': brand.id,
-                'name': brand.brand_name
+                'name': brand.brand_name,
+                'industry': ad_request_assets.industry,
+                'website': ad_request_assets.company_website,
+                'product_description': ad_request_assets.product_description,
+                'target_audience': ad_request_assets.target_audience,
+                'functional_benefits': ad_request_assets.functional_benefits,
+                'brand_colors': ad_request_assets.main_hex_color,
+                'tone_of_voice': ad_request_assets.tone_of_voice,
+                'font_direction': ad_request_assets.font_direction,
+                'core_features': ad_request_assets.core_features,
+                'emotional_lifestyle_benefits': ad_request_assets.emotional_lifestyle_benefits,
+                'proof_points': ad_request_assets.proof_points,
+                'value_propositions': ad_request_assets.value_propositions,
+                'logo_url': logo_asset.image.url if logo_asset else None,
+                'ad_request_assets_id': ad_request_assets.id
             }
         })
     except Exception as e:

@@ -304,110 +304,110 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
             {/* Left Column */}
             <div className="space-y-4">
 
-            {/* Brand Logo Section */}
-            <div className="space-y-2">
-              <p className="text-sm text-gray-600">
-                Brand logo
-              </p>
-              <LogoImageUploader
-                onSelectImage={handleLogoSelect}
-                onDeleteImage={handleLogoDelete}
-                selectedImage={selectedLogo}
-                selectedImageData={selectedLogoData}
-                onFileSelect={handleFileUpload}
-              />
-            </div>
+              {/* Brand Logo Section */}
+              <div className="space-y-2">
+                <p className="text-sm text-gray-600">
+                  Brand logo
+                </p>
+                <LogoImageUploader
+                  onSelectImage={handleLogoSelect}
+                  onDeleteImage={handleLogoDelete}
+                  selectedImage={selectedLogo}
+                  selectedImageData={selectedLogoData}
+                  onFileSelect={handleFileUpload}
+                />
+              </div>
 
-            {/* Brand Name Field */}
-            <div className="space-y-2">
-              <p className="text-sm text-gray-600">
-                {t('brand.name', 'Brand Name')}
-              </p>
-              <Input
-                id="brandName"
-                value={brandName}
-                onChange={handleBrandNameChange}
-                placeholder={t('brand.name_placeholder', 'Brand name')}
-                disabled={isSubmitting}
-              />
-              {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
-            </div>
+              {/* Brand Name Field */}
+              <div className="space-y-2">
+                <p className="text-sm text-gray-600">
+                  {t('brand.name', 'Brand Name')}
+                </p>
+                <Input
+                  id="brandName"
+                  value={brandName}
+                  onChange={handleBrandNameChange}
+                  placeholder={t('brand.name_placeholder', 'Brand name')}
+                  disabled={isSubmitting}
+                />
+                {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+              </div>
 
-            {/* Industry/Vertical Field */}
-            <div className="space-y-2">
-              <p className="text-sm text-gray-600">
-                Industry/Vertical
-              </p>
-              <Input
-                id="industry"
-                value={industry}
-                onChange={handleIndustryChange}
-                placeholder="Industry/Vertical"
-                disabled={isSubmitting}
-              />
-            </div>
+              {/* Industry/Vertical Field */}
+              <div className="space-y-2">
+                <p className="text-sm text-gray-600">
+                  Industry/Vertical
+                </p>
+                <Input
+                  id="industry"
+                  value={industry}
+                  onChange={handleIndustryChange}
+                  placeholder="Industry/Vertical"
+                  disabled={isSubmitting}
+                />
+              </div>
 
-            {/* Website Field */}
-            <div className="space-y-2">
-              <p className="text-sm text-gray-600">
-                Website
-              </p>
-              <Input
-                id="website"
-                value={website}
-                onChange={handleWebsiteChange}
-                placeholder="Website"
-                disabled={isSubmitting}
-              />
-            </div>
+              {/* Website Field */}
+              <div className="space-y-2">
+                <p className="text-sm text-gray-600">
+                  Website
+                </p>
+                <Input
+                  id="website"
+                  value={website}
+                  onChange={handleWebsiteChange}
+                  placeholder="Website"
+                  disabled={isSubmitting}
+                />
+              </div>
 
-            {/* Product/Service Description Field */}
-            <div className="space-y-2">
-              <p className="text-sm text-gray-600">
-                Product/Service description
-              </p>
-              <textarea
-                id="productDescription"
-                value={productDescription}
-                onChange={handleProductDescriptionChange}
-                placeholder="Outline the product range and services provided by the brand."
-                disabled={isSubmitting}
-                rows={3}
-                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
-              />
-            </div>
+              {/* Product/Service Description Field */}
+              <div className="space-y-2">
+                <p className="text-sm text-gray-600">
+                  Product/Service description
+                </p>
+                <textarea
+                  id="productDescription"
+                  value={productDescription}
+                  onChange={handleProductDescriptionChange}
+                  placeholder="Outline the product range and services provided by the brand."
+                  disabled={isSubmitting}
+                  rows={3}
+                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+                />
+              </div>
 
-            {/* Target Audience Field */}
-            <div className="space-y-2">
-              <p className="text-sm text-gray-600">
-                Target audience (optional)
-              </p>
-              <textarea
-                id="targetAudience"
-                value={targetAudience}
-                onChange={handleTargetAudienceChange}
-                placeholder="Description of the target audience"
-                disabled={isSubmitting}
-                rows={2}
-                className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
-              />
-            </div>
+              {/* Target Audience Field */}
+              <div className="space-y-2">
+                <p className="text-sm text-gray-600">
+                  Target audience (optional)
+                </p>
+                <textarea
+                  id="targetAudience"
+                  value={targetAudience}
+                  onChange={handleTargetAudienceChange}
+                  placeholder="Description of the target audience"
+                  disabled={isSubmitting}
+                  rows={2}
+                  className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+                />
+              </div>
 
-            {/* Functional Benefits Field */}
-            <div className="space-y-2">
-              <p className="text-sm text-gray-600">
-                Functional Benefits
-              </p>
-              <textarea
-                id="functionalBenefits"
-                value={functionalBenefits}
-                onChange={handleFunctionalBenefitsChange}
-                placeholder="Functional Benefits"
-                disabled={isSubmitting}
-                rows={2}
-                className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
-              />
-            </div>
+              {/* Functional Benefits Field */}
+              <div className="space-y-2">
+                <p className="text-sm text-gray-600">
+                  Functional Benefits
+                </p>
+                <textarea
+                  id="functionalBenefits"
+                  value={functionalBenefits}
+                  onChange={handleFunctionalBenefitsChange}
+                  placeholder="Functional Benefits"
+                  disabled={isSubmitting}
+                  rows={2}
+                  className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+                />
+              </div>
             </div>
 
             {/* Right Column */}
@@ -417,9 +417,9 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
                 <p className="text-sm text-gray-600 dark:text-gray-300">
                   Brand colors
                 </p>
-                
+
                 {/* Add Color Button */}
-                <div 
+                <div
                   className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                   onClick={handleOpenColorModal}
                 >
@@ -428,7 +428,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
                   </div>
                   <span className="text-sm text-gray-600 dark:text-gray-300">Add brand color</span>
                 </div>
-                
+
                 {/* Color Cards */}
                 {brandColors.length > 0 && (
                   <div className="flex flex-wrap gap-2">

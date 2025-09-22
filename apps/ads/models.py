@@ -285,10 +285,13 @@ class AdRequestAssets(BaseModel):
     brand = models.ForeignKey('UserBrand', on_delete=models.CASCADE, related_name="assets", null=True, blank=True, help_text="Brand associated with these assets")
     company_website = models.URLField(null=True, blank=True)
     logo = models.ImageField(upload_to="adrequest_assets/", null=True, blank=True)
-    main_hex_color = models.CharField(max_length=7, null=True, blank=True)
+    main_hex_color = models.JSONField(null=True, blank=True, help_text="Array of brand colors in hex format")
     key_benefits = models.TextField(null=True, blank=True)
-    # New text fields
+    # Brand information fields
+    industry = models.CharField(max_length=255, null=True, blank=True, help_text="Industry/Vertical")
+    product_description = models.TextField(null=True, blank=True, help_text="Product/Service description")
     target_audience = models.TextField(null=True, blank=True)
+    functional_benefits = models.TextField(null=True, blank=True, help_text="Functional benefits")
     tone_of_voice = models.TextField(null=True, blank=True)
     font_direction = models.TextField(null=True, blank=True)
     core_features = models.TextField(null=True, blank=True)
@@ -314,8 +317,11 @@ class AdRequestAssets(BaseModel):
             'company_website': self.company_website,
             'main_hex_color': self.main_hex_color,
             'key_benefits': self.key_benefits,
-            # New text fields
+            # Brand information fields
+            'industry': self.industry,
+            'product_description': self.product_description,
             'target_audience': self.target_audience,
+            'functional_benefits': self.functional_benefits,
             'tone_of_voice': self.tone_of_voice,
             'font_direction': self.font_direction,
             'core_features': self.core_features,
