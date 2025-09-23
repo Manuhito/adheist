@@ -7,9 +7,45 @@ import { useTranslation } from '../lib/useTranslation';
 import { WandSparkles, ThumbsUp, ThumbsDown, Download, Expand, Star } from 'lucide-react';
 import * as ReactDOM from "react-dom";
 
+// Custom header component for Generated Ad page
+const GeneratedAdHeader = ({ brandName }) => {
+  const handleContinueToLibrary = () => {
+    window.location.href = '/ads/discover/';
+  };
+
+  return (
+    <div className="flex items-center justify-between w-full">
+      <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+        {brandName}
+      </h1>
+      <Button 
+        onClick={handleContinueToLibrary}
+        className="text-sm"
+      >
+        Continue to library
+      </Button>
+    </div>
+  );
+};
+
 const GeneratedAdPage = () => {
   const { t } = useTranslation();
   const generatedAdData = window.__GENERATED_AD_DATA__ || {};
+  
+  // Set custom header when component mounts
+  useEffect(() => {
+    if (window.setAppHeader) {
+      const brandName = generatedAdData.brand_name || 'Generated Ad';
+      window.setAppHeader(<GeneratedAdHeader brandName={brandName} />);
+    }
+    
+    // Cleanup header when component unmounts
+    return () => {
+      if (window.clearAppHeader) {
+        window.clearAppHeader();
+      }
+    };
+  }, [generatedAdData.brand_name]);
   
   // Rating states
   const [ratingOpen, setRatingOpen] = useState(false);
@@ -158,7 +194,7 @@ const GeneratedAdPage = () => {
   };
 
   return (
-    <div className="h-full flex items-center justify-center p-8">
+    <div className="h-full flex items-center justify-center p-2">
       <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 max-w-4xl w-full">
         {/* Image container */}
         <div className="flex items-center justify-center mb-6">

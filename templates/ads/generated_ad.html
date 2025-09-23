@@ -4,12 +4,19 @@
 {% block extra_js %}
 {{ block.super }}
 <script>
+  // Override sidebar data to hide logo
+  window.__SIDEBAR_DATA__ = {
+    ...window.__SIDEBAR_DATA__,
+    hideLogo: true
+  };
+  
   window.__GENERATED_AD_DATA__ = {
     version_id: {{ version.id }},
     generated_image: {% if version.generated_image %}"{{ version.generated_image.url|escapejs }}"{% else %}null{% endif %},
     ad_request_id: {{ version.ad_request.id }},
     version_index: {% if version.version_index %}{{ version.version_index }}{% else %}1{% endif %},
-    created_at: "{{ version.created_at|date:'c' }}"
+    created_at: "{{ version.created_at|date:'c' }}",
+    brand_name: {% if version.ad_request.base_assets and version.ad_request.base_assets.brand %}"{{ version.ad_request.base_assets.brand.brand_name|escapejs }}"{% else %}"Generated Ad"{% endif %}
   };
 </script>
 <script src="{% static 'js/generated-ad-bundle.js' %}"></script>
