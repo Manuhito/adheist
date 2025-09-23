@@ -3,14 +3,171 @@ import { createRoot } from 'react-dom/client';
 import { Card, CardContent } from '@/components/ui/card.tsx';
 import { Input } from '@/components/ui/input.tsx';
 import { Button } from '@/components/ui/button.tsx';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog.tsx';
 import { 
   ArrowLeft,
   Search, 
   Grid3x3, 
   List,
   Image as ImageIcon,
-  Download
+  Download,
+  Upload,
+  X,
+  Plus,
+  Trash2
 } from 'lucide-react';
+
+// Helper function to get CSRF token from cookies
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+function FileUploadArea({ selectedFiles, setSelectedFiles }) {
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    
+    const files = Array.from(e.dataTransfer.files).filter(file => 
+      file.type.startsWith('image/')
+    );
+    
+    setSelectedFiles(prev => [...prev, ...files]);
+  };
+
+  const handleFileSelect = (e) => {
+    const files = Array.from(e.target.files).filter(file => 
+      file.type.startsWith('image/')
+    );
+    
+    setSelectedFiles(prev => [...prev, ...files]);
+  };
+
+  const removeFile = (index) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Drop Zone */}
+      <div
+        className={`border border-dashed rounded-lg p-6 transition-colors ${
+          isDragOver 
+            ? 'border-primary bg-primary/5 dark:bg-primary/10' 
+            : 'border-gray-200 hover:border-gray-300 bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:hover:border-gray-600'
+        } ${selectedFiles.length > 0 ? '' : 'text-center'}`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        {selectedFiles.length === 0 ? (
+          // Vertical layout when no files selected
+          <>
+            {/* Plus Icon in Container */}
+            <div 
+              className="mx-auto w-16 h-16 bg-gray-100 dark:bg-gray-600 border border-dashed border-gray-300 dark:border-gray-500 rounded-lg flex items-center justify-center mb-4 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors"
+              onClick={() => document.getElementById('file-upload').click()}
+            >
+              <Plus className="w-8 h-8 text-gray-500 dark:text-gray-400" />
+            </div>
+            
+            <p className="text-lg text-gray-900 dark:text-gray-100 mb-2">
+              Choose images or drag & drop it here.
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              JPG, JPEG, PNG and WEBP. Max 20 MB.
+            </p>
+          </>
+        ) : (
+          // Horizontal layout when files are selected
+          <div className="flex items-center gap-4">
+            {/* Plus Icon in Container */}
+            <div 
+              className="w-12 h-12 bg-gray-100 dark:bg-gray-600 border border-dashed border-gray-300 dark:border-gray-500 rounded-lg flex items-center justify-center cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors flex-shrink-0"
+              onClick={() => document.getElementById('file-upload').click()}
+            >
+              <Plus className="w-6 h-6 text-gray-500 dark:text-gray-400" />
+            </div>
+            
+            <div className="flex-1">
+              <p className="text-base text-gray-900 dark:text-gray-100 mb-1">
+                Choose images or drag & drop it here.
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                JPG, JPEG, PNG and WEBP. Max 20 MB.
+              </p>
+            </div>
+          </div>
+        )}
+        
+        <input
+          type="file"
+          multiple
+          accept="image/*"
+          onChange={handleFileSelect}
+          className="hidden"
+          id="file-upload"
+        />
+      </div>
+
+      {/* File Previews */}
+      {selectedFiles.length > 0 && (
+        <div className="space-y-3">
+          <h4 className="font-medium text-gray-900 dark:text-gray-100">
+            Selected Files ({selectedFiles.length})
+          </h4>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+            {selectedFiles.map((file, index) => (
+              <div key={index} className="relative group">
+                <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
+                  <img
+                    src={URL.createObjectURL(file)}
+                    alt={file.name}
+                    className="w-full h-full object-cover"
+                  />
+                  {/* Overlay with trash icon */}
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <button
+                      onClick={() => removeFile(index)}
+                      className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">
+                  {file.name}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function AssetCard({ asset, onDownload }) {
   const imageUrl = asset.image_url;
@@ -122,6 +279,9 @@ function BrandAssetsDetailPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('grid');
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [uploading, setUploading] = useState(false);
 
   // Load assets data
   useEffect(() => {
@@ -175,10 +335,10 @@ function BrandAssetsDetailPage() {
             </div>
           </div>
           <Button 
-            onClick={() => window.location.href = '/ads/brands/'}
+            onClick={() => setShowUploadModal(true)}
             className="bg-primary hover:bg-primary/90 text-white"
           >
-            Manage Brands
+            Upload Assets
           </Button>
         </div>
       );
@@ -208,6 +368,75 @@ function BrandAssetsDetailPage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  // Handle file upload
+  const handleUpload = async () => {
+    if (selectedFiles.length === 0) return;
+    
+    setUploading(true);
+    
+    try {
+      const formData = new FormData();
+      
+      selectedFiles.forEach((file, index) => {
+        formData.append(`asset_${index}`, file);
+      });
+      
+      // Get CSRF token from multiple possible sources
+      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                       document.querySelector('meta[name=csrf-token]')?.getAttribute('content') ||
+                       getCookie('csrftoken');
+      
+      console.log('CSRF Token found:', csrfToken ? 'Yes' : 'No');
+      
+      const response = await fetch(`/ads/assets/${brandId}/upload/`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-CSRFToken': csrfToken,
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Add new assets to the current list
+        setAssets(prev => [...data.assets, ...prev]);
+        
+        // Reset modal state
+        setSelectedFiles([]);
+        setShowUploadModal(false);
+        
+        // Show success message (you can implement a toast here)
+        alert(data.message);
+      } else {
+        console.error('Upload failed with status:', response.status);
+        
+        // Try to parse error response
+        let errorMessage = 'Upload failed';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (parseError) {
+          // If response is not JSON (like HTML error page), show generic message
+          if (response.status === 403) {
+            errorMessage = 'Permission denied. Please refresh the page and try again.';
+          } else if (response.status === 404) {
+            errorMessage = 'Brand not found.';
+          } else {
+            errorMessage = `Upload failed (${response.status}). Please try again.`;
+          }
+        }
+        
+        alert(errorMessage);
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('Network error. Please check your connection and try again.');
+    } finally {
+      setUploading(false);
+    }
   };
 
   // Filter assets based on search query
@@ -318,6 +547,43 @@ function BrandAssetsDetailPage() {
           </p>
         </div>
       )}
+
+      {/* Upload Modal */}
+      <Dialog open={showUploadModal} onOpenChange={setShowUploadModal}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Upload Assets</DialogTitle>
+            <div className="border-b border-gray-200 mt-2"></div>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <FileUploadArea 
+              selectedFiles={selectedFiles} 
+              setSelectedFiles={setSelectedFiles} 
+            />
+          </div>
+          
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowUploadModal(false);
+                setSelectedFiles([]);
+              }}
+              disabled={uploading}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpload}
+              disabled={selectedFiles.length === 0 || uploading}
+              className="bg-primary hover:bg-primary/90 text-white"
+            >
+              {uploading ? 'Uploading...' : `Upload Files (${selectedFiles.length})`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

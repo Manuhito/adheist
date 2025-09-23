@@ -3,6 +3,7 @@
 
 {% block extra_js %}
 {{ block.super }}
+{% csrf_token %}
 <script>
   // Configure sidebar for this page
   window.__SIDEBAR_DATA__ = {

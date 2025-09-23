@@ -872,7 +872,8 @@ class UserBrandAssets(BaseModel):
             ('logo', 'Logo'),
             ('product', 'Product'),
             ('app', 'App'),
-            ('marketing', 'Marketing')
+            ('marketing', 'Marketing'),
+            ('assets', 'Assets')
         ],
         help_text="Category of the uploaded image"
     )

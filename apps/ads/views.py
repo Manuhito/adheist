@@ -3203,3 +3203,46 @@ def brand_assets_detail_page(request, brand_id):
         
     except UserBrand.DoesNotExist:
         return redirect('ads:assets_page')
+
+
+@login_required
+@require_http_methods(["POST"])
+def upload_brand_assets(request, brand_id):
+    """
+    Upload multiple assets for a specific brand.
+    """
+    try:
+        # Verify the brand belongs to the user
+        brand = get_object_or_404(UserBrand, id=brand_id)
+        
+        uploaded_assets = []
+        
+        # Process each uploaded file
+        for key, file in request.FILES.items():
+            if key.startswith('asset_'):
+                # Create new UserBrandAssets instance
+                asset = UserBrandAssets.objects.create(
+                    user=request.user,
+                    brand=brand,
+                    image=file,
+                    category='assets',
+                    original_filename=file.name
+                )
+                
+                uploaded_assets.append({
+                    'id': asset.id,
+                    'image_url': asset.image.url,
+                    'original_filename': asset.original_filename,
+                    'created_at': asset.created_at.isoformat(),
+                })
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'{len(uploaded_assets)} assets uploaded successfully',
+            'assets': uploaded_assets
+        })
+        
+    except UserBrand.DoesNotExist:
+        return JsonResponse({'error': 'Brand not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
