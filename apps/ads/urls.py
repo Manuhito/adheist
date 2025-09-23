@@ -41,4 +41,7 @@ urlpatterns = [
     path("discover/", views.discover_page, name="discover_page"),
     path("brands/", views.brands_page, name="brands_page"),
     path("my-ads/", views.my_ads_page, name="my_ads_page"),
+    path("assets/", views.assets_page, name="assets_page"),
+    path("assets/<int:brand_id>/", views.brand_assets_detail, name="brand_assets_detail"),
+    path("assets/<int:brand_id>/detail/", views.brand_assets_detail_page, name="brand_assets_detail_page"),
 ]

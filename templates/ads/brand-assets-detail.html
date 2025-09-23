@@ -1,0 +1,30 @@
+{% extends "web/app/app_base_sidebar.html" %}
+{% load static %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+  // Configure sidebar for this page
+  window.__SIDEBAR_DATA__ = {
+    activeTab: "assets",
+    showHeader: true,
+    hideLogo: true
+  };
+</script>
+<script>
+  // Pass data to React component
+  window.__BRAND_ASSETS_DATA__ = {
+    user: {
+      name: "{{ request.user.get_full_name|default:'' }}",
+      email: "{{ request.user.email|default:'' }}"
+    },
+    brandId: {{ brand_id }},
+    brandName: "{{ brand_name }}"
+  };
+</script>
+<script src="{% static 'js/brand-assets-detail-bundle.js' %}"></script>
+{% endblock %}
+
+{% block app %}
+<!-- Content will be mounted by React in sidebar-page-content -->
+{% endblock %}

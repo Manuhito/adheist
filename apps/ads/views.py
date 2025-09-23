@@ -3100,3 +3100,106 @@ def my_ads_page(request):
     }
     
     return TemplateResponse(request, template, context)
+
+
+@login_required
+def assets_page(request):
+    """
+    Render the Assets page with React components.
+    Shows all UserBrands for the current user as folders.
+    """
+    # Get all unique brands that have assets for the current user
+    user_brands = UserBrand.objects.filter(
+        brand_assets__user=request.user
+    ).distinct().order_by('brand_name')
+    
+    # Prepare brands data for frontend
+    brands_data = []
+    for brand in user_brands:
+        # Count assets for this brand
+        assets_count = UserBrandAssets.objects.filter(
+            user=request.user,
+            brand=brand
+        ).count()
+        
+        brand_info = {
+            'id': brand.id,
+            'name': brand.brand_name,
+            'assets_count': assets_count,
+            'created_at': brand.created_at.isoformat() if brand.created_at else None,
+        }
+        brands_data.append(brand_info)
+    
+    # Convert to JSON for frontend
+    brands_json = json.dumps(brands_data, cls=DjangoJSONEncoder)
+    
+    template = "ads/assets.html"
+    context = {
+        "active_tab": "assets",
+        "brands_data": brands_json,
+    }
+    
+    return TemplateResponse(request, template, context)
+
+
+@login_required
+def brand_assets_detail(request, brand_id):
+    """
+    Get all UserBrandAssets for a specific brand and return as JSON.
+    """
+    try:
+        # Verify the brand belongs to the user
+        brand = get_object_or_404(UserBrand, id=brand_id)
+        
+        # Get all assets for this brand and user
+        assets = UserBrandAssets.objects.filter(
+            user=request.user,
+            brand=brand
+        ).order_by('-created_at')
+        
+        # Prepare assets data
+        assets_data = []
+        for asset in assets:
+            asset_info = {
+                'id': asset.id,
+                'brand_name': brand.brand_name,
+                'image_url': asset.image.url if asset.image else None,
+                'category': asset.category,
+                'original_filename': asset.original_filename,
+                'created_at': asset.created_at.isoformat() if asset.created_at else None,
+            }
+            assets_data.append(asset_info)
+        
+        return JsonResponse({
+            'brand': {
+                'id': brand.id,
+                'name': brand.brand_name,
+            },
+            'assets': assets_data
+        })
+        
+    except UserBrand.DoesNotExist:
+        return JsonResponse({'error': 'Brand not found'}, status=404)
+
+
+@login_required
+def brand_assets_detail_page(request, brand_id):
+    """
+    Render the Brand Assets Detail page with React components.
+    Shows all assets for a specific brand.
+    """
+    try:
+        # Verify the brand belongs to the user
+        brand = get_object_or_404(UserBrand, id=brand_id)
+        
+        template = "ads/brand-assets-detail.html"
+        context = {
+            "active_tab": "assets",
+            "brand_id": brand_id,
+            "brand_name": brand.brand_name,
+        }
+        
+        return TemplateResponse(request, template, context)
+        
+    except UserBrand.DoesNotExist:
+        return redirect('ads:assets_page')
