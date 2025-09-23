@@ -588,6 +588,22 @@ class AdRequestVersion(BaseModel):
             # Send email notification
             self.send_completion_email()
     
+    @property
+    def version_index(self):
+        """Calculate the version index based on creation order"""
+        if not self.ad_request:
+            return 1
+        
+        # Get all versions for this ad_request ordered by creation date
+        versions = self.ad_request.versions.order_by('created_at')
+        
+        # Find the index of this version (1-based)
+        for index, version in enumerate(versions, 1):
+            if version.id == self.id:
+                return index
+        
+        return 1  # Fallback
+    
     def regenerate_prompt(self):
         """Regenerate the prompt for this version"""
         self.save(regenerate_prompt=True)

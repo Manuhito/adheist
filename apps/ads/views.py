@@ -3246,3 +3246,27 @@ def upload_brand_assets(request, brand_id):
         return JsonResponse({'error': 'Brand not found'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def generated_ad_page(request, version_id):
+    """
+    Display the generated ad page for a specific AdRequestVersion.
+    Shows the generated image with action buttons.
+    """
+    try:
+        # Get the AdRequestVersion and verify user permissions
+        version = get_object_or_404(AdRequestVersion, id=version_id, ad_request__user=request.user)
+        
+        # Verify that the version has a generated image
+        if not version.generated_image:
+            return redirect('ads:my_ads_page')
+        
+        context = {
+            'version': version,
+        }
+        
+        return render(request, 'ads/generated_ad.html', context)
+        
+    except AdRequestVersion.DoesNotExist:
+        return redirect('ads:my_ads_page')

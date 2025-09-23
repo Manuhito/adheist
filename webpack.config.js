@@ -32,6 +32,7 @@ module.exports = {
     'assets-page': './assets/javascript/app/assets-page.jsx',  // entry point for the assets page
     'brand-assets-detail': './assets/javascript/app/brand-assets-detail.jsx',  // entry point for the brand assets detail page
     'app-sidebar-layout': './assets/javascript/app/app-sidebar-layout.jsx',  // entry point for the sidebar layout
+    'generated-ad': './assets/javascript/app/generated-ad-page.jsx',  // entry point for the generated ad page
   },
   output: {
     path: path.resolve(__dirname, './static'),

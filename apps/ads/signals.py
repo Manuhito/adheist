@@ -67,10 +67,15 @@ def track_adrequest_status_changes(sender, instance, **kwargs):
                     'REOPENED': 'Generating...'
                 }
                 
+                # Get the latest version ID if available
+                latest_version = instance.versions.order_by('-created_at').first()
+                version_id = latest_version.id if latest_version else None
+                
                 # Prepare notification data
                 notification_data = {
                     'type': 'status_change',
                     'ad_request_id': instance.pk,
+                    'version_id': version_id,
                     'previous_status': previous.status,
                     'new_status': instance.status,
                     'display_status': status_mapping.get(instance.status, instance.status),
@@ -98,9 +103,14 @@ def track_adrequest_status_changes(sender, instance, **kwargs):
                 
                 # If status changed to COMPLETED, send a special notification
                 if instance.status == 'COMPLETED':
+                    # Get the latest version ID for redirection
+                    latest_version = instance.versions.order_by('-created_at').first()
+                    version_id = latest_version.id if latest_version else None
+                    
                     completion_notification = {
                         'type': 'completion',
                         'ad_request_id': instance.pk,
+                        'version_id': version_id,
                         'message': 'Your ad request has been completed!',
                         'timestamp': instance.updated_at.isoformat() if instance.updated_at else None,
                     }

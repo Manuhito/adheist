@@ -1,0 +1,20 @@
+{% extends "web/app/app_base_sidebar.html" %}
+{% load static %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+  window.__GENERATED_AD_DATA__ = {
+    version_id: {{ version.id }},
+    generated_image: {% if version.generated_image %}"{{ version.generated_image.url|escapejs }}"{% else %}null{% endif %},
+    ad_request_id: {{ version.ad_request.id }},
+    version_index: {% if version.version_index %}{{ version.version_index }}{% else %}1{% endif %},
+    created_at: "{{ version.created_at|date:'c' }}"
+  };
+</script>
+<script src="{% static 'js/generated-ad-bundle.js' %}"></script>
+{% endblock %}
+
+{% block app %}
+<!-- Content will be mounted by React in sidebar-page-content -->
+{% endblock %}

@@ -45,4 +45,5 @@ urlpatterns = [
     path("assets/<int:brand_id>/", views.brand_assets_detail, name="brand_assets_detail"),
     path("assets/<int:brand_id>/detail/", views.brand_assets_detail_page, name="brand_assets_detail_page"),
     path("assets/<int:brand_id>/upload/", views.upload_brand_assets, name="upload_brand_assets"),
+    path("generated/<int:version_id>/", views.generated_ad_page, name="generated_ad_page"),
 ]

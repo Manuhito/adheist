@@ -66,19 +66,31 @@ const GeneratingLoadingPage = ({ adRequestId }) => {
       if (eventType === 'status_change') {
         console.log('Status changed to:', data.new_status);
         
-        // If status changed to COMPLETED, redirect to home
+        // If status changed to COMPLETED, redirect to generated ad page
         if (data.new_status === 'COMPLETED') {
-          console.log('AdRequest completed! Redirecting to home...');
+          console.log('AdRequest completed! Redirecting to generated ad page...');
           // Small delay to let user see the completion
           setTimeout(() => {
-            window.location.href = '/ads/';
+            // Get the latest version ID from the data if available, otherwise construct URL with adRequestId
+            if (data.version_id) {
+              window.location.href = `/ads/generated/${data.version_id}/`;
+            } else {
+              // Fallback: redirect to my ads page if we don't have version_id
+              window.location.href = '/ads/my-ads/';
+            }
           }, 1500);
         }
       } else if (eventType === 'completion') {
-        console.log('Completion event received! Redirecting to home...');
+        console.log('Completion event received! Redirecting to generated ad page...');
         // Small delay to let user see the completion
         setTimeout(() => {
-          window.location.href = '/ads/';
+          // Get the latest version ID from the data if available, otherwise fallback
+          if (data.version_id) {
+            window.location.href = `/ads/generated/${data.version_id}/`;
+          } else {
+            // Fallback: redirect to my ads page if we don't have version_id
+            window.location.href = '/ads/my-ads/';
+          }
         }, 1500);
       }
     }
