@@ -16,7 +16,8 @@
     ad_request_id: {{ version.ad_request.id }},
     version_index: {% if version.version_index %}{{ version.version_index }}{% else %}1{% endif %},
     created_at: "{{ version.created_at|date:'c' }}",
-    brand_name: {% if version.ad_request.base_assets and version.ad_request.base_assets.brand %}"{{ version.ad_request.base_assets.brand.brand_name|escapejs }}"{% else %}"Generated Ad"{% endif %}
+    brand_name: {% if version.ad_request.base_assets and version.ad_request.base_assets.brand %}"{{ version.ad_request.base_assets.brand.brand_name|escapejs }}"{% else %}"Generated Ad"{% endif %},
+    canvas_size: "{{ version.ad_request.canvas_size|default:'1024x1024' }}"
   };
 </script>
 <script src="{% static 'js/generated-ad-bundle.js' %}"></script>

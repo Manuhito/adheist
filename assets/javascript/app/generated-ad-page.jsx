@@ -6,6 +6,7 @@ import { AlertNotification } from '../components/ui/alert-notification';
 import { useTranslation } from '../lib/useTranslation';
 import { WandSparkles, ThumbsUp, ThumbsDown, Download, Expand, Star } from 'lucide-react';
 import * as ReactDOM from "react-dom";
+import RevisionModal from './components/RevisionModal';
 
 // Custom header component for Generated Ad page
 const GeneratedAdHeader = ({ brandName }) => {
@@ -53,6 +54,9 @@ const GeneratedAdPage = () => {
   const [hoveredRating, setHoveredRating] = useState(0);
   const [ratingComment, setRatingComment] = useState('');
   const [ratingType, setRatingType] = useState('positive'); // 'positive' or 'negative'
+  
+  // Revision modal state
+  const [revisionModalOpen, setRevisionModalOpen] = useState(false);
 
   const handleDownload = async () => {
     if (!generatedAdData.generated_image) return;
@@ -127,7 +131,7 @@ const GeneratedAdPage = () => {
           document.body.appendChild(notificationContainer);
 
           // Renderizar la notificación
-          const notificationRoot = ReactDOM.createRoot(notificationContainer);
+          const notificationRoot = createRoot(notificationContainer);
           notificationRoot.render(
             <AlertNotification
               message={t("revision.rating_success_message", "Thank you for your feedback!")}
@@ -148,7 +152,7 @@ const GeneratedAdPage = () => {
           document.body.appendChild(errorContainer);
 
           // Renderizar la notificación de error
-          const errorRoot = ReactDOM.createRoot(errorContainer);
+          const errorRoot = createRoot(errorContainer);
           errorRoot.render(
             <AlertNotification
               message={data.error || t("revision.rating_error_message", "Failed to submit rating. Please try again.")}
@@ -173,7 +177,7 @@ const GeneratedAdPage = () => {
         document.body.appendChild(errorContainer);
 
         // Renderizar la notificación de error
-        const errorRoot = ReactDOM.createRoot(errorContainer);
+        const errorRoot = createRoot(errorContainer);
         errorRoot.render(
           <AlertNotification
             message={t("revision.rating_error_message", "Failed to submit rating. Please try again.")}
@@ -214,10 +218,11 @@ const GeneratedAdPage = () => {
         {/* Action buttons */}
         <div className="flex items-center justify-center gap-6">
           <button
-            className="p-3 rounded-full transition-colors hover:text-primary cursor-not-allowed opacity-50"
-            disabled
+            className="flex items-center gap-2 px-4 py-3 rounded-full transition-colors hover:text-primary"
+            onClick={() => setRevisionModalOpen(true)}
           >
             <WandSparkles className="h-6 w-6" />
+            <span className="text-sm font-medium">Open AI Editor</span>
           </button>
 
           <button
@@ -306,6 +311,14 @@ const GeneratedAdPage = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Revision Modal */}
+      <RevisionModal
+        open={revisionModalOpen}
+        onOpenChange={setRevisionModalOpen}
+        imageUrl={generatedAdData.generated_image}
+        canvasSize={generatedAdData.canvas_size}
+      />
     </div>
   );
 };
