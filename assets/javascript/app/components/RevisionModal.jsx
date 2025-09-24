@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent } from '../../components/ui/dialog.tsx';
 import { Button } from '../../components/ui/button.tsx';
-import { WandSparkles, ArrowUp } from 'lucide-react';
+import { WandSparkles, ArrowUp, Zap } from 'lucide-react';
 
 /**
  * RevisionModal - Modal minimalista para mostrar la imagen generada
@@ -75,6 +75,29 @@ const RevisionModal = ({ open, onOpenChange, imageUrl, canvasSize }) => {
                 <ArrowUp className="h-3 w-3 mr-1" />
                 Generate
               </Button>
+            </div>
+          </div>
+
+          {/* Tips cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-4">
+            <div className="flex items-center gap-2 px-3 py-2 border border-primary/20 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+              <Zap className="h-3 w-3 text-primary flex-shrink-0" />
+              <span className="text-xs text-gray-700 dark:text-gray-300 truncate">Make it more vibrant and colorful</span>
+            </div>
+            
+            <div className="flex items-center gap-2 px-3 py-2 border border-primary/20 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+              <Zap className="h-3 w-3 text-primary flex-shrink-0" />
+              <span className="text-xs text-gray-700 dark:text-gray-300 truncate">Add a modern minimalist style</span>
+            </div>
+            
+            <div className="flex items-center gap-2 px-3 py-2 border border-primary/20 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+              <Zap className="h-3 w-3 text-primary flex-shrink-0" />
+              <span className="text-xs text-gray-700 dark:text-gray-300 truncate">Enhance the overall quality</span>
+            </div>
+            
+            <div className="flex items-center gap-2 px-3 py-2 border border-primary/20 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+              <Zap className="h-3 w-3 text-primary flex-shrink-0" />
+              <span className="text-xs text-gray-700 dark:text-gray-300 truncate">Apply a professional business look</span>
             </div>
           </div>
         </div>
