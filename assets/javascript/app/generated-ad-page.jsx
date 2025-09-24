@@ -318,6 +318,8 @@ const GeneratedAdPage = () => {
         onOpenChange={setRevisionModalOpen}
         imageUrl={generatedAdData.generated_image}
         canvasSize={generatedAdData.canvas_size}
+        versions={generatedAdData.versions || []}
+        currentVersionId={generatedAdData.version_id}
       />
     </div>
   );
