@@ -11,6 +11,11 @@
       email: "{{ request.user.email|default:'' }}"
     }
   };
+  
+  // Pass user permissions to JavaScript
+  window.__USER_PERMISSIONS__ = {
+    isStaff: {% if request.user.is_staff %}true{% else %}false{% endif %}
+  };
 </script>
 <script src="{% static 'js/discover-page-bundle.js' %}"></script>
 {% endblock %}

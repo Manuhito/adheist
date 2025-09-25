@@ -35,6 +35,11 @@
     description: "{{ page_description|escapejs }}",
     backUrl: "/ads/discover/"
   };
+  
+  // Pass user permissions to JavaScript
+  window.__USER_PERMISSIONS__ = {
+    isStaff: {% if request.user.is_staff %}true{% else %}false{% endif %}
+  };
 </script>
 <script src="{% static 'js/discover-clone-bundle.js' %}"></script>
 {% endblock %}

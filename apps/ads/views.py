@@ -2719,6 +2719,7 @@ def get_user_invoices(request):
 def toggle_favorite(request):
     """
     Toggle the is_fav status of an AdLibrary item.
+    Only staff users can toggle favorite status.
     
     POST Parameters:
     - id: The ID of the AdLibrary item to toggle favorite status
@@ -2726,6 +2727,9 @@ def toggle_favorite(request):
     Returns: JSON with success status and updated is_fav value
     """
     try:
+        if not request.user.is_staff:
+            return JsonResponse({'error': 'Permission denied'}, status=403)
+        
         data = json.loads(request.body)
         item_id = data.get('adlibrary_id')
         
