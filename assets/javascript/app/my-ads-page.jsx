@@ -42,10 +42,25 @@ function VersionCard({ versionData }) {
     });
   };
 
+  const handleCardClick = () => {
+    if (versionData.version_status === 'COMPLETED') {
+      window.location.href = `/ads/generated/${versionData.version_id}/`;
+    } else if (versionData.version_status === 'DRAFT') {
+      window.location.href = `/ads/discover/${versionData.ad_request_id}/create/`;
+    }
+    // No action for other states
+  };
+
+  const isClickable = versionData.version_status === 'COMPLETED' || versionData.version_status === 'DRAFT';
+
   return (
     <Card 
-      className="hover:bg-gray-50 transition-colors cursor-pointer rounded-xl"
-      onClick={() => window.location.href = `/ads/${versionData.ad_request_id}/details/`}
+      className={`transition-colors rounded-xl ${
+        isClickable 
+          ? 'hover:bg-gray-50 cursor-pointer' 
+          : 'cursor-default'
+      }`}
+      onClick={isClickable ? handleCardClick : undefined}
     >
       <CardContent className="p-4">
         <div className="space-y-3">
@@ -110,8 +125,37 @@ function VersionListItem({ versionData }) {
     });
   };
 
+  const handleCardClick = () => {
+    if (versionData.version_status === 'COMPLETED') {
+      window.location.href = `/ads/generated/${versionData.version_id}/`;
+    } else if (versionData.version_status === 'DRAFT') {
+      window.location.href = `/ads/discover/${versionData.ad_request_id}/create/`;
+    }
+    // No action for other states
+  };
+
+  const handleViewDetailsClick = (e) => {
+    e.stopPropagation(); // Prevent card click
+    if (versionData.version_status === 'COMPLETED') {
+      window.location.href = `/ads/generated/${versionData.version_id}/`;
+    } else if (versionData.version_status === 'DRAFT') {
+      window.location.href = `/ads/discover/${versionData.ad_request_id}/create/`;
+    } else {
+      window.location.href = `/ads/${versionData.ad_request_id}/details/`;
+    }
+  };
+
+  const isClickable = versionData.version_status === 'COMPLETED' || versionData.version_status === 'DRAFT';
+
   return (
-    <Card className="hover:shadow-md transition-shadow cursor-pointer rounded-xl">
+    <Card 
+      className={`transition-shadow rounded-xl ${
+        isClickable 
+          ? 'hover:shadow-md cursor-pointer' 
+          : 'cursor-default'
+      }`}
+      onClick={isClickable ? handleCardClick : undefined}
+    >
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4 flex-1">
@@ -146,14 +190,22 @@ function VersionListItem({ versionData }) {
 
           {/* Actions */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => window.location.href = `/ads/${versionData.ad_request_id}/details/`}
-              className="text-primary hover:text-primary/80"
-            >
-              View Details
-            </Button>
+            {(versionData.version_status === 'COMPLETED' || 
+              versionData.version_status === 'DRAFT' || 
+              (!isClickable && versionData.version_status !== 'COMPLETED' && versionData.version_status !== 'DRAFT')) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleViewDetailsClick}
+                className="text-primary hover:text-primary/80"
+              >
+                {versionData.version_status === 'COMPLETED' 
+                  ? 'View Generated' 
+                  : versionData.version_status === 'DRAFT' 
+                  ? 'Edit Draft' 
+                  : 'View Details'}
+              </Button>
+            )}
           </div>
         </div>
       </CardContent>
