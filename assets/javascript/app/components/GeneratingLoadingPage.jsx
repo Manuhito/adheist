@@ -105,7 +105,7 @@ const GeneratingLoadingPage = ({ adRequestId }) => {
       <div className="relative">
         <div className="flex items-center justify-center w-24 h-16">
           {/* Main sparkle - center-left */}
-          <Sparkles className="w-20 h-20 text-blue-500 animate-pulse" />
+          <Sparkles className="w-20 h-20 text-primary animate-pulse" />
         </div>
       </div>
 
@@ -123,7 +123,7 @@ const GeneratingLoadingPage = ({ adRequestId }) => {
       </div>
 
       {/* Loading spinner */}
-      <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin"></div>
+      <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
     </div>
   );
 };
