@@ -1,91 +1,15 @@
 import React, { useState, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Card, CardContent } from '@/components/ui/card.tsx';
 import { Input } from '@/components/ui/input.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { 
   FolderClosed, 
   Search, 
-  Grid3x3, 
-  List,
   Plus
 } from 'lucide-react';
+import { BrandsContainer } from './components/BrandFolderComponents.jsx';
+import { ViewModeToggle } from './components/ViewModeToggle.jsx';
 
-function BrandFolderCard({ brand, onClick }) {
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
-
-  return (
-    <Card 
-      className="hover:bg-gray-50 transition-colors cursor-pointer rounded-xl"
-      onClick={() => onClick(brand)}
-    >
-      <CardContent className="p-4">
-        <div className="flex items-start space-x-3">
-          {/* Folder Icon */}
-          <div className="flex-shrink-0">
-            <FolderClosed className="w-12 h-12 text-primary" />
-          </div>
-
-          {/* Brand Info */}
-          <div className="flex-1 min-w-0">
-            <p className="text-xs text-gray-500 mb-1">
-              {formatDate(brand.created_at)}
-            </p>
-            <h3 className="text-gray-900 truncate">
-              {brand.name}
-            </h3>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function BrandFolderListItem({ brand, onClick }) {
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
-
-  return (
-    <Card 
-      className="hover:bg-gray-50 transition-colors cursor-pointer rounded-xl"
-      onClick={() => onClick(brand)}
-    >
-      <CardContent className="p-4">
-        <div className="flex items-center space-x-3">
-          {/* Folder Icon */}
-          <div className="flex-shrink-0">
-            <FolderClosed className="w-8 h-8 text-primary" />
-          </div>
-          
-          {/* Brand Info */}
-          <div className="flex-1 min-w-0">
-            <p className="text-xs text-gray-500 mb-1">
-              {formatDate(brand.created_at)}
-            </p>
-            <p className="text-gray-900 truncate">
-              {brand.name}
-            </p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 function AssetsPage() {
   // Get data from window globals
@@ -184,54 +108,15 @@ function AssetsPage() {
         </div>
 
         {/* View Mode Toggle */}
-        <div className="flex items-center space-x-1 bg-muted rounded-lg p-1 flex-shrink-0">
-          <button
-            onClick={() => setViewMode('grid')}
-            className={`p-2 rounded-md transition-colors ${
-              viewMode === 'grid'
-                ? 'bg-background text-primary shadow-sm'
-                : 'text-muted-foreground hover:text-primary'
-            }`}
-            title="Grid view"
-          >
-            <Grid3x3 className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => setViewMode('list')}
-            className={`p-2 rounded-md transition-colors ${
-              viewMode === 'list'
-                ? 'bg-background text-primary shadow-sm'
-                : 'text-muted-foreground hover:text-primary'
-            }`}
-            title="List view"
-          >
-            <List className="h-4 w-4" />
-          </button>
-        </div>
+        <ViewModeToggle viewMode={viewMode} setViewMode={setViewMode} />
       </div>
 
       {/* Brands Container */}
-      {viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {filteredBrands.map((brand) => (
-            <BrandFolderCard 
-              key={brand.id} 
-              brand={brand} 
-              onClick={handleFolderClick}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {filteredBrands.map((brand) => (
-            <BrandFolderListItem 
-              key={brand.id} 
-              brand={brand} 
-              onClick={handleFolderClick}
-            />
-          ))}
-        </div>
-      )}
+      <BrandsContainer 
+        brands={filteredBrands}
+        viewMode={viewMode}
+        onBrandClick={handleFolderClick}
+      />
 
       {/* Empty State - No brands at all */}
       {brands.length === 0 && (

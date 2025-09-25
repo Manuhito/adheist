@@ -1,14 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Card, CardContent } from '@/components/ui/card.tsx';
 import { Input } from '@/components/ui/input.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog.tsx';
 import { 
   ArrowLeft,
   Search, 
-  Grid3x3, 
-  List,
   Image as ImageIcon,
   Download,
   Upload,
@@ -16,6 +13,8 @@ import {
   Plus,
   Trash2
 } from 'lucide-react';
+import { AssetsContainer } from './components/AssetComponents.jsx';
+import { ViewModeToggle } from './components/ViewModeToggle.jsx';
 
 // Helper function to get CSRF token from cookies
 function getCookie(name) {
@@ -169,103 +168,6 @@ function FileUploadArea({ selectedFiles, setSelectedFiles }) {
   );
 }
 
-function AssetCard({ asset, onDownload }) {
-  const imageUrl = asset.image_url;
-  const filename = asset.original_filename || 'asset.jpg';
-
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
-
-  return (
-    <Card 
-      className="hover:bg-gray-50 transition-colors rounded-xl cursor-pointer"
-      onClick={() => onDownload(imageUrl, filename)}
-    >
-      <CardContent className="p-2">
-        <div className="space-y-2">
-          {/* Image - Maximum space */}
-          <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
-            {imageUrl ? (
-              <img
-                src={imageUrl}
-                alt="Asset"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <ImageIcon className="w-12 h-12 text-gray-400" />
-            )}
-          </div>
-
-          {/* Asset Info - Minimal */}
-          <div className="px-1">
-            <p className="text-xs text-gray-900 truncate">
-              {filename}
-            </p>
-            <p className="text-xs text-gray-500">
-              {formatDate(asset.created_at)}
-            </p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function AssetListItem({ asset, onDownload }) {
-  const imageUrl = asset.image_url;
-  const filename = asset.original_filename || 'asset.jpg';
-
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
-
-  return (
-    <Card 
-      className="hover:bg-gray-50 transition-colors rounded-xl cursor-pointer"
-      onClick={() => onDownload(imageUrl, filename)}
-    >
-      <CardContent className="p-4">
-        <div className="flex items-center space-x-4">
-          {/* Thumbnail */}
-          <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
-            {imageUrl ? (
-              <img 
-                src={imageUrl} 
-                alt="Asset"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <ImageIcon className="w-6 h-6 text-gray-400" />
-            )}
-          </div>
-          
-          {/* Asset Info */}
-          <div className="flex-1 min-w-0">
-            <p className="text-sm text-gray-900 truncate">
-              {filename}
-            </p>
-            <p className="text-xs text-gray-500">
-              {formatDate(asset.created_at)}
-            </p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 function BrandAssetsDetailPage() {
   // Get data from window globals
@@ -483,54 +385,15 @@ function BrandAssetsDetailPage() {
         </div>
 
         {/* View Mode Toggle */}
-        <div className="flex items-center space-x-1 bg-muted rounded-lg p-1 flex-shrink-0">
-          <button
-            onClick={() => setViewMode('grid')}
-            className={`p-2 rounded-md transition-colors ${
-              viewMode === 'grid'
-                ? 'bg-background text-primary shadow-sm'
-                : 'text-muted-foreground hover:text-primary'
-            }`}
-            title="Grid view"
-          >
-            <Grid3x3 className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => setViewMode('list')}
-            className={`p-2 rounded-md transition-colors ${
-              viewMode === 'list'
-                ? 'bg-background text-primary shadow-sm'
-                : 'text-muted-foreground hover:text-primary'
-            }`}
-            title="List view"
-          >
-            <List className="h-4 w-4" />
-          </button>
-        </div>
+        <ViewModeToggle viewMode={viewMode} setViewMode={setViewMode} />
       </div>
 
       {/* Assets Container */}
-      {viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {filteredAssets.map((asset) => (
-            <AssetCard 
-              key={asset.id} 
-              asset={asset} 
-              onDownload={handleDownload}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {filteredAssets.map((asset) => (
-            <AssetListItem 
-              key={asset.id} 
-              asset={asset} 
-              onDownload={handleDownload}
-            />
-          ))}
-        </div>
-      )}
+      <AssetsContainer 
+        assets={filteredAssets}
+        viewMode={viewMode}
+        onAssetClick={handleDownload}
+      />
 
       {/* Empty State */}
       {filteredAssets.length === 0 && !loading && (

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import BrandDropdown from './components/BrandDropdown.jsx';
 import { ImageLibrarySelect } from './components/ImageLibrarySelect.jsx';
 import { AppImageLibrarySelect } from './components/AppImageLibrarySelect.jsx';
-import ImageSelectionModal from './components/ImageSelectionModal.jsx';
+import ImageLibraryModal from './components/ImageLibraryModal.jsx';
 import GeneratingLoadingPage from './components/GeneratingLoadingPage.jsx';
 import { ArrowLeft, Check, Sparkles } from 'lucide-react';
 
@@ -828,7 +828,7 @@ const DiscoverClonePageContent = () => {
       </div>
 
       {/* Image Selection Modal */}
-      <ImageSelectionModal
+      <ImageLibraryModal
         isOpen={isImageModalOpen}
         onClose={toggleImageModal}
         onSelect={handleImageSelect}
