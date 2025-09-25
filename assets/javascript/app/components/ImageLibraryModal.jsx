@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../components/ui/dialog.tsx';
 import { Button } from '../../components/ui/button.tsx';
 import { Input } from '../../components/ui/input.tsx';
@@ -14,6 +14,7 @@ import { ViewModeToggle } from './ViewModeToggle.jsx';
  */
 const ImageLibraryModal = ({ isOpen, onClose, onSelect }) => {
   const { t } = useTranslation();
+  const fileInputRef = useRef(null);
   
   // Navigation state
   const [currentView, setCurrentView] = useState('brands'); // 'brands' | 'assets'
@@ -150,6 +151,77 @@ const ImageLibraryModal = ({ isOpen, onClose, onSelect }) => {
   // Handle search input change
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
+  };
+
+  // Handle file upload
+  const handleFileUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Create FormData
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      // Get the source and category from window variables
+      const source = window.currentImageSelectionSource;
+      let category = 'product'; // Default
+      
+      if (source === 'logo_library') {
+        category = 'logo';
+      } else if (source === 'app_library') {
+        category = 'app';
+      } else if (source === 'product_library') {
+        category = 'product';
+      }
+      
+      formData.append('category', category);
+      
+      // Use the selected brand from the modal
+      if (selectedBrand && selectedBrand.id) {
+        formData.append('brand_id', selectedBrand.id);
+      } else {
+        console.warn('No brand selected for image upload');
+        setError(t('image_selection.no_brand_selected', 'Please select a brand first.'));
+        return;
+      }
+      
+      // Upload the image
+      const response = await fetch('/ads/upload-brand-asset/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCsrfToken(),
+        },
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Refresh the assets list for the current brand
+        await fetchBrandAssets(selectedBrand.id);
+        // Show success message
+        console.log('Image uploaded successfully');
+      } else {
+        throw new Error(data.error || 'Unknown error');
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      setError(t('image_selection.upload_error', 'Error uploading image. Please try again.'));
+    } finally {
+      setLoading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
   };
 
   // Filter data based on search query
@@ -328,14 +400,23 @@ const ImageLibraryModal = ({ isOpen, onClose, onSelect }) => {
           <div className="mr-auto">
             {/* Upload button - only show when in assets view (inside a brand folder) */}
             {currentView === 'assets' && (
-              <Button 
-                variant="outline" 
-                disabled={true}
-                className="opacity-50"
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                {t('image_selection.upload', 'Upload')}
-              </Button>
+              <>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                />
+                <Button 
+                  variant="outline" 
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={loading}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  {t('image_selection.upload', 'Upload')}
+                </Button>
+              </>
             )}
           </div>
           <div className="flex gap-2">

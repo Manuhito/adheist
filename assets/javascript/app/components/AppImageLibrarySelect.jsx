@@ -8,7 +8,7 @@ import { useTranslation } from "../../lib/useTranslation";
  * Component for selecting app images from the image library
  * Based on ImageLibrarySelect but configured for app_image fields
  */
-export function AppImageLibrarySelect({ onSelectImage, onDeleteImage, className, selectedImages, ...props }) {
+export function AppImageLibrarySelect({ onSelectImage, onDeleteImage, className, selectedImages, disabled = false, ...props }) {
   const { t } = useTranslation();
 
   return (
@@ -28,14 +28,16 @@ export function AppImageLibrarySelect({ onSelectImage, onDeleteImage, className,
                   <Button 
                     variant="destructive" 
                     size="icon"
-                    onClick={() => onDeleteImage?.({ type: 'primary', field: 'app_image_1' })}
+                    onClick={() => !disabled && onDeleteImage?.({ type: 'primary', field: 'app_image_1' })}
+                    disabled={disabled}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                   <Button 
                     variant="secondary" 
                     size="icon"
-                    onClick={() => onSelectImage?.({ type: 'primary', field: 'app_image_1' })}
+                    onClick={() => !disabled && onSelectImage?.({ type: 'primary', field: 'app_image_1' })}
+                    disabled={disabled}
                   >
                     <Upload className="h-4 w-4" />
                   </Button>
@@ -45,7 +47,8 @@ export function AppImageLibrarySelect({ onSelectImage, onDeleteImage, className,
               <Button 
                 variant="outline" 
                 className="w-full h-full flex flex-col gap-2 hover:bg-muted/40 dark:hover:bg-muted/20"
-                onClick={() => onSelectImage?.({ type: 'primary', field: 'app_image_1' })}
+                onClick={() => !disabled && onSelectImage?.({ type: 'primary', field: 'app_image_1' })}
+                disabled={disabled}
               >
                 <ImagePlus className="h-8 w-8 text-muted-foreground" />
               </Button>
@@ -65,14 +68,16 @@ export function AppImageLibrarySelect({ onSelectImage, onDeleteImage, className,
                   <Button 
                     variant="destructive" 
                     size="icon"
-                    onClick={() => onDeleteImage?.({ type: 'secondary', field: 'app_image_2' })}
+                    onClick={() => !disabled && onDeleteImage?.({ type: 'secondary', field: 'app_image_2' })}
+                    disabled={disabled}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                   <Button 
                     variant="secondary" 
                     size="icon"
-                    onClick={() => onSelectImage?.({ type: 'secondary', field: 'app_image_2' })}
+                    onClick={() => !disabled && onSelectImage?.({ type: 'secondary', field: 'app_image_2' })}
+                    disabled={disabled}
                   >
                     <Upload className="h-4 w-4" />
                   </Button>
@@ -82,11 +87,11 @@ export function AppImageLibrarySelect({ onSelectImage, onDeleteImage, className,
               <Button 
                 variant="outline" 
                 className="w-full h-full flex flex-col gap-2 hover:bg-muted/40 dark:hover:bg-muted/20"
-                onClick={() => onSelectImage?.({ type: 'secondary', field: 'app_image_2' })}
+                onClick={() => !disabled && onSelectImage?.({ type: 'secondary', field: 'app_image_2' })}
+                disabled={disabled}
               >
                 <ImagePlus className="h-8 w-8 text-muted-foreground" />
-
-                </Button>
+              </Button>
             )}
           </div>
         </div>

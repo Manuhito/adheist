@@ -377,7 +377,7 @@ const DiscoverClonePageContent = () => {
       const formData = new FormData();
 
       // If we have image data with URL and ID (from image library)
-      if (imageData && imageData.url && imageData.id) {
+      if (imageData && (imageData.url || imageData.image_url) && imageData.id) {
         // Send the asset_id to avoid re-uploading
         formData.append(`${fieldName}_asset_id`, imageData.id);
         // Include the field name with empty value to indicate we want to update this field
@@ -425,7 +425,7 @@ const DiscoverClonePageContent = () => {
       const fieldName = imageData.type === 'primary' ? 'app_image_1' : 'app_image_2';
 
       // If imageData is null or url is null, it means we want to delete the image
-      if (imageData === null || imageData.url === null) {
+      if (imageData === null || imageData.url === null || imageData.image_url === null) {
         formData.append(fieldName, '');
       }
       // Es una imagen existente de UserBrandAssets
@@ -460,7 +460,7 @@ const DiscoverClonePageContent = () => {
   const handleImageSelect = (image) => {
     const selectionSource = window.currentImageSelectionSource;
     const fieldName = window.currentImageField;
-    const imageUrl = image?.url || null;
+    const imageUrl = image?.image_url || image?.url || null;
 
     if (selectionSource === 'product_library' && imageUrl && fieldName) {
       // Update product library images state using the field name
