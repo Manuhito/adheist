@@ -39,7 +39,7 @@ class OpenAIConfiguration(models.Model):
     # OpenAI Prompt Generation Configuration
     openai_prompt_model = models.CharField(
         max_length=50,
-        default="gpt-5",
+        default="gpt-4o",
         help_text="OpenAI model to use for prompt generation"
     )
     

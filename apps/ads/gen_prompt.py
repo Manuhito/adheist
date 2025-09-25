@@ -223,7 +223,7 @@ The output must be in the form of a highly detailed image generation prompt for 
         
         # Get OpenAI configuration
         openai_config = OpenAIConfiguration.get_openai_config()
-        model_name = openai_config.get('openai_prompt_model', 'gpt-5')
+        model_name = openai_config.get('openai_prompt_model', 'gpt-4o')
         input_price = float(openai_config.get('text_input_price_prompt', 1.25))
         output_price = float(openai_config.get('text_output_price_prompt', 10.00))
         
@@ -602,7 +602,7 @@ Generate a **highly detailed image generation prompt for the OpenAI Image API** 
         
         # Get OpenAI configuration
         openai_config = OpenAIConfiguration.get_openai_config()
-        model_name = openai_config.get('openai_prompt_model', 'gpt-5')
+        model_name = openai_config.get('openai_prompt_model', 'gpt-4o')
         input_price = float(openai_config.get('text_input_price_prompt', 1.25))
         output_price = float(openai_config.get('text_output_price_prompt', 10.00))
         
@@ -794,7 +794,14 @@ def generate_prompt(version):
     marketing_image_2_override = ad_request.get_marketing_image_2()
     marketing_image_3_override = ad_request.get_marketing_image_3()
     
-    user_prompt = ad_request.get_user_prompt()
+    # Get user_prompt from the correct source based on version type
+    version_type = getattr(version, "_version_type", None)
+    if version_type == 'revision':
+        # For revisions, get user_prompt from the AdRequestVersion itself
+        user_prompt = version.user_prompt or ''
+    else:
+        # For initial versions, get user_prompt from the AdRequest
+        user_prompt = ad_request.get_user_prompt()
 
     # Prepare company information
     company_info_parts = []

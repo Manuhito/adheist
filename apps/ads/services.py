@@ -103,20 +103,18 @@ def use_credit(user):
 
 # Funciones para el control de versiones de AdRequest
 
-def get_ad_request_version_limit(ad_request):
+# Utility function to get user's total version credits (regular + extra)
+def get_user_version_credits(user):
     """
     Get the available version credits for a user (regular + extra credits).
     
     Args:
-        ad_request: The AdRequest instance
+        user: The User instance
         
     Returns:
         int: The total available version credits for the user
     """
     from apps.ads.models import AdRequestUsage, ExtraCredit
-    
-    # Get the user who owns the AdRequest
-    user = ad_request.user
     
     # Get current usage record for regular credits
     usage = AdRequestUsage.get_current_usage(user)
@@ -131,23 +129,11 @@ def get_ad_request_version_limit(ad_request):
     
     return total_credits
 
+# Backward compatibility functions (deprecated - use can_create_ad_version directly)
+def get_ad_request_version_limit(ad_request):
+    """DEPRECATED: Use get_user_version_credits(user) instead"""
+    return get_user_version_credits(ad_request.user)
+
 def can_create_ad_request_version(ad_request):
-    """
-    Check if a new version can be created for the given AdRequest.
-    
-    Args:
-        ad_request: The AdRequest instance
-        
-    Returns:
-        bool: True if a new version can be created, False otherwise
-    """
-    from apps.ads.models import AdRequestVersion
-    
-    # Get current number of versions
-    current_versions_count = AdRequestVersion.objects.filter(ad_request=ad_request).count()
-    
-    # Get limit based on subscription
-    limit = get_ad_request_version_limit(ad_request)
-    
-    # Check if AdRequest has reached its version limit
-    return current_versions_count < limit
+    """DEPRECATED: Use can_create_ad_version(user) directly instead"""
+    return can_create_ad_version(ad_request.user)

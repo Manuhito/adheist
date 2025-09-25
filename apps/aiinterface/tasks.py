@@ -137,6 +137,9 @@ def generate_image_task(
     # Import AdRequestVersion inside the function to ensure it's available in this scope
     from apps.ads.models import AdRequestVersion
     
+    # Initialize text_prompt to avoid UnboundLocalError
+    text_prompt = None
+    
     try:
         # Generate the prompt from version_id
         if not version_id:
@@ -165,7 +168,7 @@ def generate_image_task(
             raise
             
         # Ensure text_prompt is a string to avoid NoneType errors
-        text_prompt = str(text_prompt)
+        text_prompt = str(text_prompt) if text_prompt else "Failed to generate prompt"
             
         logger.info(f"Starting image generation task with prompt: {text_prompt[:50]}...")
         

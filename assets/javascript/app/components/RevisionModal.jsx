@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '../../components/ui/dialog.tsx';
 import { Button } from '../../components/ui/button.tsx';
 import { WandSparkles, ArrowUp, Zap } from 'lucide-react';
+import GeneratingLoadingPage from './GeneratingLoadingPage';
 
 /**
  * RevisionModal - Modal minimalista para mostrar la imagen generada
@@ -12,21 +13,22 @@ import { WandSparkles, ArrowUp, Zap } from 'lucide-react';
  * @param {string} props.canvasSize - Tamaño del canvas (ej: "1024x1024")
  * @param {Array} props.versions - Array de todas las versiones del AdRequest
  * @param {number} props.currentVersionId - ID de la versión actualmente seleccionada
+ * @param {number} props.adRequestId - ID del AdRequest para la generación
  */
-const RevisionModal = ({ open, onOpenChange, imageUrl, canvasSize, versions = [], currentVersionId }) => {
+const RevisionModal = ({ open, onOpenChange, imageUrl, canvasSize, versions = [], currentVersionId, adRequestId }) => {
   // State for the edit description textarea
   const [editDescription, setEditDescription] = useState('');
   
   // State for the currently selected version
   const [selectedVersion, setSelectedVersion] = useState(null);
   
+  // State for generation process
+  const [isGenerating, setIsGenerating] = useState(false);
+  
   // Initialize selected version when modal opens
   React.useEffect(() => {
     if (open && versions.length > 0) {
-      console.log('Versions available:', versions);
-      console.log('Current version ID:', currentVersionId);
       const current = versions.find(v => v.id === currentVersionId) || versions[0];
-      console.log('Selected version:', current);
       setSelectedVersion(current);
     }
   }, [open, versions, currentVersionId]);
@@ -39,6 +41,109 @@ const RevisionModal = ({ open, onOpenChange, imageUrl, canvasSize, versions = []
   const formatCanvasSize = (size) => {
     if (!size) return '1024 x 1024';
     return size.replace('x', ' x ');
+  };
+
+  // Function to get CSRF token from cookies
+  const getCsrfToken = () => {
+    const name = 'csrftoken';
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  };
+
+  // Function to show the generating page by replacing the entire page content
+  const showGeneratingPage = (adRequestId) => {
+    // Import createRoot
+    import('react-dom/client').then(({ createRoot }) => {
+      // Clear the current page content
+      const container = document.getElementById('sidebar-page-content') || document.body;
+      
+      // Create a new container for the generating page
+      container.innerHTML = '<div id="generating-page-root"></div>';
+      
+      // Mount the GeneratingLoadingPage
+      const generatingContainer = document.getElementById('generating-page-root');
+      const root = createRoot(generatingContainer);
+      root.render(<GeneratingLoadingPage adRequestId={adRequestId} />);
+    });
+  };
+
+  // Generate version handler
+  const handleGenerateVersion = async () => {
+    // Validate that prompt is not empty
+    if (!editDescription.trim()) {
+      console.error('Please enter a prompt before generating');
+      return;
+    }
+
+    if (!adRequestId) {
+      console.error('No ad request ID available');
+      return;
+    }
+
+    // Check if we have a selected version with an image
+    if (!selectedVersion || !selectedVersion.generated_image) {
+      console.error('No image available for revision');
+      return;
+    }
+
+    setIsGenerating(true);
+
+    try {
+      // First, update status to REOPENED in the backend
+      const statusFormData = new FormData();
+      statusFormData.append('status', 'REOPENED');
+
+      const statusResponse = await fetch(`/ads/adrequest/${adRequestId}/update/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCsrfToken() },
+        body: statusFormData
+      });
+
+      if (!statusResponse.ok) {
+        const errorData = await statusResponse.json();
+        throw new Error(errorData.error || 'Failed to update status to REOPENED');
+      }
+
+      // Then create a new revision using the selected image
+      const revisionFormData = new FormData();
+      revisionFormData.append('ad_request', adRequestId);
+      revisionFormData.append('user_prompt', editDescription);
+      revisionFormData.append('url_image_revision', selectedVersion.generated_image);
+
+      const response = await fetch('/ads/adrequest/revision/create/', {
+        method: 'POST',
+        body: revisionFormData,
+        headers: {
+          'X-CSRFToken': getCsrfToken(),
+        },
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Error generating version');
+      }
+
+      // Close the modal
+      onOpenChange(false);
+      
+      // Show the generating page by replacing the entire page content
+      showGeneratingPage(adRequestId);
+      console.log('Generation started successfully - showing generating page');
+      
+    } catch (error) {
+      console.error('Error generating version:', error);
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -117,38 +222,51 @@ const RevisionModal = ({ open, onOpenChange, imageUrl, canvasSize, versions = []
                     className="w-full pl-10 pr-20 min-h-[80px] resize-none rounded-2xl border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   />
                   <Button
-                    disabled={!editDescription.trim()}
+                    disabled={!editDescription.trim() || isGenerating}
+                    onClick={handleGenerateVersion}
                     className={`absolute bottom-3 right-3 h-8 px-3 text-xs rounded-full ${
-                      !editDescription.trim() 
+                      !editDescription.trim() || isGenerating
                         ? 'bg-gray-400 hover:bg-gray-400 text-white cursor-not-allowed' 
                         : ''
                     }`}
                     size="sm"
                   >
-                    <ArrowUp className="h-3 w-3 mr-1" />
-                    Generate
+                    <ArrowUp className={`h-3 w-3 mr-1 ${isGenerating ? 'animate-spin' : ''}`} />
+                    {isGenerating ? 'Generating...' : 'Generate'}
                   </Button>
                 </div>
               </div>
 
               {/* Tips cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-4">
-                <div className="flex items-center gap-2 px-3 py-2 border border-primary/20 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                <div 
+                  onClick={() => setEditDescription('Make it more vibrant and colorful')}
+                  className="flex items-center gap-2 px-3 py-2 border border-primary/20 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                >
                   <Zap className="h-3 w-3 text-primary flex-shrink-0" />
                   <span className="text-xs text-gray-700 dark:text-gray-300 truncate">Make it more vibrant and colorful</span>
                 </div>
                 
-                <div className="flex items-center gap-2 px-3 py-2 border border-primary/20 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                <div 
+                  onClick={() => setEditDescription('Add a modern minimalist style')}
+                  className="flex items-center gap-2 px-3 py-2 border border-primary/20 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                >
                   <Zap className="h-3 w-3 text-primary flex-shrink-0" />
                   <span className="text-xs text-gray-700 dark:text-gray-300 truncate">Add a modern minimalist style</span>
                 </div>
                 
-                <div className="flex items-center gap-2 px-3 py-2 border border-primary/20 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                <div 
+                  onClick={() => setEditDescription('Enhance the overall quality')}
+                  className="flex items-center gap-2 px-3 py-2 border border-primary/20 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                >
                   <Zap className="h-3 w-3 text-primary flex-shrink-0" />
                   <span className="text-xs text-gray-700 dark:text-gray-300 truncate">Enhance the overall quality</span>
                 </div>
                 
-                <div className="flex items-center gap-2 px-3 py-2 border border-primary/20 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                <div 
+                  onClick={() => setEditDescription('Apply a professional business look')}
+                  className="flex items-center gap-2 px-3 py-2 border border-primary/20 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                >
                   <Zap className="h-3 w-3 text-primary flex-shrink-0" />
                   <span className="text-xs text-gray-700 dark:text-gray-300 truncate">Apply a professional business look</span>
                 </div>

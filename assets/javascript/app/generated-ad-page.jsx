@@ -320,6 +320,7 @@ const GeneratedAdPage = () => {
         canvasSize={generatedAdData.canvas_size}
         versions={generatedAdData.versions || []}
         currentVersionId={generatedAdData.version_id}
+        adRequestId={generatedAdData.ad_request_id}
       />
     </div>
   );

@@ -1633,17 +1633,9 @@ def adrequest_version_create(request):
         if ad_request.user != request.user:
             return JsonResponse({'error': 'You do not have permission to create a version for this request'}, status=403)
         
-        # Check if the AdRequest has reached its version limit
-        if not can_create_ad_request_version(ad_request):
-            # Get the limit for this AdRequest
-            limit = get_ad_request_version_limit(ad_request)
-            return JsonResponse({
-                'error': f'This ad request has reached its limit of versions. Please upgrade your plan for more versions.'
-            }, status=403)
-        
-        # Check if user has available credits
+        # Check if user has available general credits for creating new versions
         if not can_create_ad_request(request.user):
-            return JsonResponse({'error': 'You have reached out your image limit creation for your plan'}, status=403)
+            return JsonResponse({'error': 'You have reached your general credit limit for your plan'}, status=403)
         print("User has available credits")
         # Get optional fields
         user_prompt = request.POST.get('user_prompt')
@@ -1789,13 +1781,9 @@ def adrequest_revision_create(request):
         if ad_request.user != request.user:
             return JsonResponse({'error': 'You do not have permission to create a version for this request'}, status=403)
         
-        # Check if the AdRequest has reached its version limit
-        if not can_create_ad_request_version(ad_request):
-            # Get the limit for this AdRequest
-            limit = get_ad_request_version_limit(ad_request)
-            return JsonResponse({
-                'error': f'This ad request has reached its limit of versions. Please upgrade your plan for more versions.'
-            }, status=403)
+        # Check if user has available version credits for creating revisions
+        if not can_create_ad_version(request.user):
+            return JsonResponse({'error': 'You have reached your version credit limit for your plan'}, status=403)
         
         # Create a new AdRequestVersion instance
         version = AdRequestVersion.objects.create(
