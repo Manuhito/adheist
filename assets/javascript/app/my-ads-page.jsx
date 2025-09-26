@@ -13,10 +13,30 @@ import {
   Eye,
   Star,
   Image as ImageIcon,
-  Plus
+  Plus,
+  EllipsisVertical,
+  Trash2
 } from 'lucide-react';
 
-function VersionCard({ versionData }) {
+function VersionCard({ versionData, onDeleteDraft }) {
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = () => {
+      if (showDropdown) {
+        setShowDropdown(false);
+      }
+    };
+
+    if (showDropdown) {
+      document.addEventListener('click', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [showDropdown]);
   const getStatusColor = (status) => {
     switch (status) {
       case 'COMPLETED':
@@ -72,9 +92,40 @@ function VersionCard({ versionData }) {
             <h3 className="text-gray-900 truncate">
               {versionData.brand_name || versionData.ad_library_name || `Ad Request #${versionData.ad_request_id}`}
             </h3>
-            <Badge className={getStatusColor(displayStatus)}>
-              {displayStatus}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge className={getStatusColor(displayStatus)}>
+                {displayStatus}
+              </Badge>
+              {/* Dropdown menu for DRAFT cards */}
+              {versionData.card_type === 'draft' && (
+                <div className="relative">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowDropdown(!showDropdown);
+                    }}
+                    className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <EllipsisVertical className="w-4 h-4 text-gray-500" />
+                  </button>
+                  {showDropdown && (
+                    <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-10 whitespace-nowrap">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowDropdown(false);
+                          onDeleteDraft(versionData);
+                        }}
+                        className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Delete Draft
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Large Centered Image */}
@@ -102,7 +153,25 @@ function VersionCard({ versionData }) {
   );
 }
 
-function VersionListItem({ versionData }) {
+function VersionListItem({ versionData, onDeleteDraft }) {
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = () => {
+      if (showDropdown) {
+        setShowDropdown(false);
+      }
+    };
+
+    if (showDropdown) {
+      document.addEventListener('click', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [showDropdown]);
   const getStatusColor = (status) => {
     switch (status) {
       case 'COMPLETED':
@@ -214,6 +283,35 @@ function VersionListItem({ versionData }) {
                   : 'View Details'}
               </Button>
             )}
+            {/* Dropdown menu for DRAFT cards */}
+            {versionData.card_type === 'draft' && (
+              <div className="relative">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowDropdown(!showDropdown);
+                  }}
+                  className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <EllipsisVertical className="w-4 h-4 text-gray-500" />
+                </button>
+                {showDropdown && (
+                  <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-10 whitespace-nowrap">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowDropdown(false);
+                        onDeleteDraft(versionData);
+                      }}
+                      className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Delete Draft
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </CardContent>
@@ -225,13 +323,17 @@ function MyAdsPage() {
   // Get data from window globals
   const myAdsData = window.__MY_ADS_DATA__ || {};
   const user = myAdsData.user || {};
-  const myVersions = myAdsData.myAds || []; // Now this contains version data, not ad request data
+  const [myVersions, setMyVersions] = useState(myAdsData.myAds || []); // Now this contains version data, not ad request data
   
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
   
   // View mode state
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  
+  // Delete confirmation state
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [adRequestToDelete, setAdRequestToDelete] = useState(null);
 
   // Set header content when component mounts
   React.useEffect(() => {
@@ -268,6 +370,81 @@ function MyAdsPage() {
   // Handle search input change
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
+  };
+
+  // Helper function to get CSRF token from cookies
+  const getCsrfToken = () => {
+    const name = 'csrftoken';
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  };
+
+  // Handle delete draft
+  const handleDeleteDraft = (versionData) => {
+    setAdRequestToDelete(versionData);
+    setShowDeleteConfirmation(true);
+  };
+
+  // Confirm delete action
+  const confirmDelete = async () => {
+    if (!adRequestToDelete?.ad_request_id) {
+      console.error('No ad request ID available');
+      setShowDeleteConfirmation(false);
+      return;
+    }
+
+    try {
+      // Get CSRF token from cookies
+      const csrfToken = getCsrfToken();
+
+      // Track event in PostHog when user confirms ad request deletion
+      if (window.posthog) {
+        window.posthog.capture('Ad Request Deleted', {
+          timestamp: new Date().toISOString(),
+          ad_request_id: adRequestToDelete.ad_request_id,
+          ad_request_status: adRequestToDelete.ad_request_status,
+          source: 'my_ads_page'
+        });
+      }
+      
+      // Call the delete endpoint
+      const response = await fetch(`/ads/adrequest/${adRequestToDelete.ad_request_id}/delete/`, {
+        method: 'DELETE',
+        headers: {
+          'X-CSRFToken': csrfToken,
+        }
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to delete ad request');
+      }
+
+      // Remove the deleted item from the list
+      setMyVersions(prevVersions => 
+        prevVersions.filter(version => version.ad_request_id !== adRequestToDelete.ad_request_id)
+      );
+
+      // Close the confirmation dialog
+      setShowDeleteConfirmation(false);
+      setAdRequestToDelete(null);
+
+    } catch (error) {
+      console.error('Error deleting ad request:', error);
+      setShowDeleteConfirmation(false);
+      setAdRequestToDelete(null);
+    }
   };
 
   // Filter versions based on search query
@@ -342,6 +519,7 @@ function MyAdsPage() {
             <VersionCard 
               key={versionData.card_type === 'draft' ? `draft-${versionData.ad_request_id}` : `version-${versionData.version_id}`} 
               versionData={versionData} 
+              onDeleteDraft={handleDeleteDraft}
             />
           ))}
         </div>
@@ -351,6 +529,7 @@ function MyAdsPage() {
             <VersionListItem 
               key={versionData.card_type === 'draft' ? `draft-${versionData.ad_request_id}` : `version-${versionData.version_id}`} 
               versionData={versionData} 
+              onDeleteDraft={handleDeleteDraft}
             />
           ))}
         </div>
@@ -386,6 +565,41 @@ function MyAdsPage() {
           <p className="text-gray-500">
             No ad versions match your search for "{searchQuery}". Try a different search term.
           </p>
+        </div>
+      )}
+
+      {/* Delete confirmation modal */}
+      {showDeleteConfirmation && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          style={{ margin: 0 }}
+          onClick={() => setShowDeleteConfirmation(false)} // Close on click outside
+        >
+          <div
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-md w-full mx-4"
+            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal
+          >
+            <h2 className="text-xl font-semibold mb-4">Delete Draft</h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              Are you sure you want to permanently delete this draft ad request? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                onClick={() => setShowDeleteConfirmation(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="px-4 py-2 text-white bg-red-500 hover:bg-red-600 rounded-md transition-colors"
+                onClick={confirmDelete}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
