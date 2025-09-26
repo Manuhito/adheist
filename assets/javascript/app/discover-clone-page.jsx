@@ -6,6 +6,7 @@ import { ImageLibrarySelect } from './components/ImageLibrarySelect.jsx';
 import { AppImageLibrarySelect } from './components/AppImageLibrarySelect.jsx';
 import ImageLibraryModal from './components/ImageLibraryModal.jsx';
 import GeneratingLoadingPage from './components/GeneratingLoadingPage.jsx';
+import NoCreditsModal from './components/NoCreditsModal.jsx';
 import { ArrowLeft, Check, Sparkles } from 'lucide-react';
 
 // Header component with back button, title and description
@@ -109,6 +110,10 @@ const DiscoverClonePageContent = () => {
   
   // Generation state
   const [isGenerating, setIsGenerating] = useState(false);
+  
+  // State for credits modal
+  const [showNoCreditsDialog, setShowNoCreditsDialog] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Function to fetch fresh data from the server - same as StepTwo
   const fetchFreshData = async (id) => {
@@ -644,7 +649,8 @@ const DiscoverClonePageContent = () => {
       if (!response.ok) {
         // Check if this is a credits error (status 403 with specific message)
         if (response.status === 403) {
-          console.error('Credits error:', data.error);
+          setErrorMessage(data.error);
+          setShowNoCreditsDialog(true);
           setIsGenerating(false);
           return;
         }
@@ -697,8 +703,16 @@ const DiscoverClonePageContent = () => {
   }
 
   return (
-    <div className="p-8">
-      <div className="max-w-7xl mx-auto">
+    <>
+      {/* No Credits Modal */}
+      <NoCreditsModal
+        isOpen={showNoCreditsDialog}
+        onClose={() => setShowNoCreditsDialog(false)}
+        errorMessage={errorMessage}
+      />
+
+      <div className="p-8">
+        <div className="max-w-7xl mx-auto">
         {/* Two Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           {/* Left Column - Current Content (60%) */}
@@ -833,7 +847,8 @@ const DiscoverClonePageContent = () => {
         onClose={toggleImageModal}
         onSelect={handleImageSelect}
       />
-    </div>
+      </div>
+    </>
   );
 };
 
