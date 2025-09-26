@@ -43,15 +43,18 @@ function VersionCard({ versionData }) {
   };
 
   const handleCardClick = () => {
-    if (versionData.version_status === 'COMPLETED') {
+    if (versionData.card_type === 'version' && versionData.version_status === 'COMPLETED') {
       window.location.href = `/ads/generated/${versionData.version_id}/`;
-    } else if (versionData.version_status === 'DRAFT') {
+    } else if (versionData.card_type === 'draft' || versionData.ad_request_status === 'DRAFT') {
       window.location.href = `/ads/discover/${versionData.ad_request_id}/create/`;
     }
     // No action for other states
   };
 
-  const isClickable = versionData.version_status === 'COMPLETED' || versionData.version_status === 'DRAFT';
+  // Determine the status to display and if the card is clickable
+  const displayStatus = versionData.card_type === 'draft' ? versionData.ad_request_status : versionData.version_status;
+  const isClickable = (versionData.card_type === 'version' && versionData.version_status === 'COMPLETED') || 
+                     (versionData.card_type === 'draft');
 
   return (
     <Card 
@@ -69,8 +72,8 @@ function VersionCard({ versionData }) {
             <h3 className="text-gray-900 truncate">
               {versionData.brand_name || versionData.ad_library_name || `Ad Request #${versionData.ad_request_id}`}
             </h3>
-            <Badge className={getStatusColor(versionData.version_status)}>
-              {versionData.version_status}
+            <Badge className={getStatusColor(displayStatus)}>
+              {displayStatus}
             </Badge>
           </div>
 
@@ -87,10 +90,10 @@ function VersionCard({ versionData }) {
             )}
           </div>
 
-          {/* Footer - Version creation date */}
+          {/* Footer - Creation date */}
           <div className="text-left">
             <p className="text-sm text-gray-500">
-              {formatDate(versionData.version_created_at)}
+              {formatDate(versionData.version_created_at || versionData.ad_request_created_at)}
             </p>
           </div>
         </div>
@@ -126,9 +129,9 @@ function VersionListItem({ versionData }) {
   };
 
   const handleCardClick = () => {
-    if (versionData.version_status === 'COMPLETED') {
+    if (versionData.card_type === 'version' && versionData.version_status === 'COMPLETED') {
       window.location.href = `/ads/generated/${versionData.version_id}/`;
-    } else if (versionData.version_status === 'DRAFT') {
+    } else if (versionData.card_type === 'draft' || versionData.ad_request_status === 'DRAFT') {
       window.location.href = `/ads/discover/${versionData.ad_request_id}/create/`;
     }
     // No action for other states
@@ -136,16 +139,19 @@ function VersionListItem({ versionData }) {
 
   const handleViewDetailsClick = (e) => {
     e.stopPropagation(); // Prevent card click
-    if (versionData.version_status === 'COMPLETED') {
+    if (versionData.card_type === 'version' && versionData.version_status === 'COMPLETED') {
       window.location.href = `/ads/generated/${versionData.version_id}/`;
-    } else if (versionData.version_status === 'DRAFT') {
+    } else if (versionData.card_type === 'draft' || versionData.ad_request_status === 'DRAFT') {
       window.location.href = `/ads/discover/${versionData.ad_request_id}/create/`;
     } else {
       window.location.href = `/ads/${versionData.ad_request_id}/details/`;
     }
   };
 
-  const isClickable = versionData.version_status === 'COMPLETED' || versionData.version_status === 'DRAFT';
+  // Determine the status to display and if the card is clickable
+  const displayStatus = versionData.card_type === 'draft' ? versionData.ad_request_status : versionData.version_status;
+  const isClickable = (versionData.card_type === 'version' && versionData.version_status === 'COMPLETED') || 
+                     (versionData.card_type === 'draft');
 
   return (
     <Card 
@@ -178,30 +184,32 @@ function VersionListItem({ versionData }) {
                 <p className="text-sm font-medium text-gray-900 truncate">
                   {versionData.brand_name || versionData.ad_library_name || `Ad Request #${versionData.ad_request_id}`}
                 </p>
-                <Badge className={getStatusColor(versionData.version_status)}>
-                  {versionData.version_status}
+                <Badge className={getStatusColor(displayStatus)}>
+                  {displayStatus}
                 </Badge>
               </div>
               <p className="text-xs text-gray-500 truncate">
-                {versionData.canvas_size} • Version #{versionData.version_id} • {formatDate(versionData.version_created_at)}
+                {versionData.canvas_size} • 
+                {versionData.card_type === 'draft' ? 'Draft' : `Version #${versionData.version_id}`} • 
+                {formatDate(versionData.version_created_at || versionData.ad_request_created_at)}
               </p>
             </div>
           </div>
 
           {/* Actions */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            {(versionData.version_status === 'COMPLETED' || 
-              versionData.version_status === 'DRAFT' || 
-              (!isClickable && versionData.version_status !== 'COMPLETED' && versionData.version_status !== 'DRAFT')) && (
+            {(displayStatus === 'COMPLETED' || 
+              displayStatus === 'DRAFT' || 
+              (!isClickable && displayStatus !== 'COMPLETED' && displayStatus !== 'DRAFT')) && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleViewDetailsClick}
                 className="text-primary hover:text-primary/80"
               >
-                {versionData.version_status === 'COMPLETED' 
+                {displayStatus === 'COMPLETED' 
                   ? 'View Generated' 
-                  : versionData.version_status === 'DRAFT' 
+                  : displayStatus === 'DRAFT' 
                   ? 'Edit Draft' 
                   : 'View Details'}
               </Button>
@@ -274,7 +282,7 @@ function MyAdsPage() {
         (version.brand_name && version.brand_name.toLowerCase().includes(searchTerm)) ||
         (version.ad_library_name && version.ad_library_name.toLowerCase().includes(searchTerm)) ||
         version.ad_request_id.toString().includes(searchTerm) ||
-        version.version_id.toString().includes(searchTerm) ||
+        (version.version_id && version.version_id.toString().includes(searchTerm)) ||
         (version.canvas_size && version.canvas_size.toLowerCase().includes(searchTerm)) ||
         (version.user_prompt && version.user_prompt.toLowerCase().includes(searchTerm))
       );
@@ -331,13 +339,19 @@ function MyAdsPage() {
       {viewMode === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {filteredVersions.map((versionData) => (
-            <VersionCard key={versionData.version_id} versionData={versionData} />
+            <VersionCard 
+              key={versionData.card_type === 'draft' ? `draft-${versionData.ad_request_id}` : `version-${versionData.version_id}`} 
+              versionData={versionData} 
+            />
           ))}
         </div>
       ) : (
         <div className="space-y-3">
           {filteredVersions.map((versionData) => (
-            <VersionListItem key={versionData.version_id} versionData={versionData} />
+            <VersionListItem 
+              key={versionData.card_type === 'draft' ? `draft-${versionData.ad_request_id}` : `version-${versionData.version_id}`} 
+              versionData={versionData} 
+            />
           ))}
         </div>
       )}
