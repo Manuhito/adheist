@@ -33,7 +33,7 @@
   window.__PAGE_CONFIG__ = {
     title: "{{ page_title|escapejs }}",
     description: "{{ page_description|escapejs }}",
-    backUrl: "/ads/discover/"
+    backUrl: "{{ back_url|escapejs }}"
   };
   
   // Pass user permissions to JavaScript

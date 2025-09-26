@@ -3024,10 +3024,30 @@ def discover_clone_adrequest_page(request, pk):
             # If not in DRAFT status, redirect to discover page
             return redirect('ads:discover_page')
         
+        # Determine the back URL based on where the user came from
+        back_url = '/ads/discover/'  # Default fallback
+        referer = request.META.get('HTTP_REFERER', '')
+        
+        if referer:
+            # Check if user came from My Ads page
+            if '/ads/my-ads/' in referer:
+                back_url = '/ads/my-ads/'
+            # Check if user came from discover page (keep default)
+            elif '/ads/discover/' in referer:
+                back_url = '/ads/discover/'
+            # For any other referrer, try to use it if it's from our domain
+            elif request.get_host() in referer:
+                # Extract the path from the referer URL
+                from urllib.parse import urlparse
+                parsed_referer = urlparse(referer)
+                if parsed_referer.path and parsed_referer.path.startswith('/ads/'):
+                    back_url = parsed_referer.path
+        
         context = {
             'ad_request': ad_request,
             'page_title': 'Clone Ad',
             'page_description': 'New ads follow the style & composition of the ad reference on the left.',
+            'back_url': back_url,
         }
         
         return render(request, 'ads/discover_clone.html', context)
