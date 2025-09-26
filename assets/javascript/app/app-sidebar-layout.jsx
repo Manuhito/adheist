@@ -17,7 +17,15 @@ import {
 } from "@/components/ui/sidebar"
 import { CustomSidebarTrigger, CustomSidebar } from "@/components/ui/custom-sidebar"
 import { Button } from "@/components/ui/button"
-import { PanelLeftClose, Menu, Compass, Bookmark, Zap, Library, Folders } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { ThemeSwitch } from "@/components/theme-switch"
+import { PanelLeftClose, Menu, Compass, Bookmark, Zap, Library, Folders, User2, ChevronUp, CreditCard, Settings, LogOut, Sparkles } from "lucide-react"
 
 function AppSidebar({ activeTab, sidebarComponent }) {
   const menuItems = [
@@ -27,6 +35,18 @@ function AppSidebar({ activeTab, sidebarComponent }) {
     { id: 'brands-library', label: 'Brands Library', href: '/ads/brands/', icon: <Library className="h-5 w-5" /> },
     { id: 'assets', label: 'Assets', href: '/ads/assets/', icon: <Folders className="h-5 w-5" /> },
   ];
+
+  // Get user data from window object if available
+  const userData = window.__USER_DATA__ || {};
+  const user = {
+    name: userData.name || '',
+    email: userData.email || '',
+    avatar: userData.avatar || '',
+    initials: userData.name 
+      ? userData.name.split(' ').map((n) => n[0]).join('').toUpperCase()
+      : userData.email ? userData.email[0].toUpperCase() : 'U',
+    displayName: userData.name || userData.email || 'User'
+  };
 
   return (
     <CustomSidebar collapsible="offcanvas">
@@ -69,6 +89,79 @@ function AppSidebar({ activeTab, sidebarComponent }) {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton>
+                  <User2 className="h-4 w-4" />
+                  <span>{user.displayName}</span>
+                  <ChevronUp className="ml-auto h-4 w-4" />
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                side="top"
+                className="w-[--radix-popper-anchor-width]"
+              >
+                <div className="px-2 py-2 flex items-center gap-3">
+                  {user.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt={user.displayName}
+                      className="h-8 w-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium">
+                      {user.initials}
+                    </div>
+                  )}
+                  <div className={`flex flex-col ${!user.name ? 'justify-center' : ''}`}>
+                    {user.name && (
+                      <span className="text-sm font-medium">{user.name}</span>
+                    )}
+                    {user.email && (
+                      <span className="text-xs text-muted-foreground">{user.email}</span>
+                    )}
+                  </div>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <a href="/users/profile/" className="flex items-center gap-2">
+                    <Settings className="h-4 w-4" />
+                    <span>Profile</span>
+                  </a>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <a href="/ads/billing/" className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4" />
+                    <span>Upgrade</span>
+                  </a>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <a href="/ads/billing/" className="flex items-center gap-2">
+                    <CreditCard className="h-4 w-4" />
+                    <span>Billing</span>
+                  </a>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <div className="px-2 py-1.5 flex items-center justify-between">
+                  <span className="text-sm">Theme</span>
+                  <ThemeSwitch />
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <a href="/accounts/logout/" className="flex items-center gap-2">
+                    <LogOut className="h-4 w-4" />
+                    <span>Sign out</span>
+                  </a>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
 
       <SidebarRail />
     </CustomSidebar>
