@@ -53,11 +53,13 @@ function AppSidebar({ activeTab, sidebarComponent }) {
       <SidebarHeader>
         <div className="flex items-center justify-between px-2 py-2">
           <div className="flex items-center">
-            <img
-              src="/static/images/web/logo-brand-name.png"
-              alt="AdHeist Logo"
-              className="h-8 w-auto"
-            />
+            <a href="/" className="flex items-center">
+              <img
+                src="/static/images/web/logo-brand-name.png"
+                alt="AdHeist Logo"
+                className="h-8 w-auto cursor-pointer hover:opacity-80 transition-opacity"
+              />
+            </a>
           </div>
           <CustomSidebarTrigger className="ml-auto">
             <PanelLeftClose className="h-5 w-5 text-muted-foreground" />
@@ -237,11 +239,13 @@ function ConditionalHeader({ content, customComponent, hideLogo = false }) {
       {/* Logo de la app - se oculta si hideLogo es true */}
       {!hideLogo && (
         <div className="flex items-center mr-4">
-          <img
-            src="/static/images/web/logo-adheist.png"
-            alt="AdHeist Logo"
-            className="h-8 w-auto"
-          />
+          <a href="/" className="flex items-center">
+            <img
+              src="/static/images/web/logo-adheist.png"
+              alt="AdHeist Logo"
+              className="h-8 w-auto cursor-pointer hover:opacity-80 transition-opacity"
+            />
+          </a>
         </div>
       )}
       
