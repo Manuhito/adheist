@@ -155,7 +155,7 @@ export function BillingPage({ pricingData, onSubscribe }) {
   }
 
   return (
-    <div>
+    <div className="max-w-7xl mx-auto p-6">
       <PricingSection
         title={translatedPricingData.title}
         subtitle={translatedPricingData.subtitle}
