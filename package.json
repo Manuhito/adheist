@@ -5,7 +5,7 @@
   "main": "webpack.config.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "NODE_ENV=production webpack --mode production",
+    "build": "NODE_ENV=production node --max-old-space-size=4096 ./node_modules/webpack/bin/webpack.js --mode production",
     "dev": "webpack --mode development",
     "dev-watch": "webpack --mode development --watch",
     "type-check": "node --max-old-space-size=4096 ./node_modules/typescript/bin/tsc --noEmit",
