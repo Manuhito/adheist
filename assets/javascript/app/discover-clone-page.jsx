@@ -61,9 +61,9 @@ const DiscoverCloneSidebar = () => {
     <div className="p-6 space-y-6">
       {/* Ad Reference Preview */}
       {adRequestData.ad_library && (
-        <div className="bg-gray-50 rounded-lg p-4">
-          <h3 className="text-sm font-medium text-gray-900 mb-3">Reference Ad</h3>
-          <div className="aspect-square bg-white rounded-md overflow-hidden border border-gray-200">
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">Reference Ad</h3>
+          <div className="aspect-square bg-white dark:bg-gray-700 rounded-md overflow-hidden border border-gray-200 dark:border-gray-600">
             <img
               src={adRequestData.ad_library.image_url}
               alt="Reference ad"
@@ -71,7 +71,7 @@ const DiscoverCloneSidebar = () => {
             />
           </div>
           {adRequestData.ad_library.company_name && (
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
               {adRequestData.ad_library.company_name}
             </p>
           )}
@@ -719,7 +719,7 @@ const DiscoverClonePageContent = () => {
           <div className="lg:col-span-3 space-y-4">
             {/* Brand Selection Section */}
             <h2 className="text-lg text-primary">Brand</h2>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               Which brand do you want to create ads for?
             </p>
             <div className="space-y-2">
@@ -730,14 +730,14 @@ const DiscoverClonePageContent = () => {
               {!selectedBrand && (
                 <p className="text-xs text-amber-500 mt-1">Please select a brand to add assets</p>
               )}
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 Brand changes not allowed after concept creation.
               </p>
             </div>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               Product image
             </p>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               Pick an image for your ad — upload one or choose from suggestions. We'll clean up the background for you!
             </p>
             {/* Image Upload Section - 4 images in a row using original components */}
@@ -763,7 +763,7 @@ const DiscoverClonePageContent = () => {
               </div>
             </div>
             <h2 className="text-lg text-primary">Context</h2>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               Platform Presets
             </p>
 
@@ -774,7 +774,7 @@ const DiscoverClonePageContent = () => {
                   key={item.id}
                   className={`relative cursor-pointer rounded-xl p-6 flex flex-col items-center justify-center transition-all ${selectedCanvasSize === item.id
                     ? "bg-primary/10 border-2 border-primary"
-                    : "bg-gray-100 border-2 border-transparent hover:bg-gray-200"
+                    : "bg-gray-100 dark:bg-gray-800 border-2 border-transparent hover:bg-gray-200 dark:hover:bg-gray-700"
                     }`}
                   onClick={() => handleCanvasSizeChange(item.id)}
                 >
@@ -797,8 +797,8 @@ const DiscoverClonePageContent = () => {
                   )}
 
                   <div className="text-center">
-                    <div className="font-medium text-sm text-gray-900">{item.label}</div>
-                    <div className="text-xs text-gray-500 mt-1">{item.size}</div>
+                    <div className="font-medium text-sm text-gray-900 dark:text-gray-100">{item.label}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{item.size}</div>
                   </div>
                 </div>
               ))}
@@ -810,8 +810,8 @@ const DiscoverClonePageContent = () => {
             <h2 className="text-lg text-primary">Ad reference</h2>
             {/* Ad Library Image */}
             {isAdLibraryLoading ? (
-              <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
-                <p className="text-gray-500 animate-pulse">Loading ad reference...</p>
+              <div className="w-full h-64 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+                <p className="text-gray-500 dark:text-gray-400 animate-pulse">Loading ad reference...</p>
               </div>
             ) : adLibraryData?.ad_image ? (
               <div className="w-full flex justify-center">
@@ -822,16 +822,16 @@ const DiscoverClonePageContent = () => {
                 />
               </div>
             ) : (
-              <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
-                <p className="text-gray-500">No ad reference available</p>
+              <div className="w-full h-64 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+                <p className="text-gray-500 dark:text-gray-400">No ad reference available</p>
               </div>
             )}
             <h2 className="text-lg text-primary">Advanced AI Copywriting</h2>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               Additional context/instructions
             </p>
             <textarea
-              className="w-full p-3 bg-gray-50 border border-input rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent focus:bg-white"
+              className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-input dark:border-gray-600 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
               placeholder="Outline the product range and services provided by the brand."
               value={userPrompt}
               onChange={handlePromptChange}
