@@ -285,7 +285,7 @@ class AdRequestAssets(BaseModel):
     brand = models.ForeignKey('UserBrand', on_delete=models.CASCADE, related_name="assets", null=True, blank=True, help_text="Brand associated with these assets")
     company_website = models.URLField(null=True, blank=True)
     logo = models.ImageField(upload_to="adrequest_assets/", null=True, blank=True)
-    main_hex_color = models.JSONField(null=True, blank=True, help_text="Array of brand colors in hex format")
+    main_hex_color = models.TextField(null=True, blank=True, help_text="Brand colors in hex format (JSON string or single color)")
     key_benefits = models.TextField(null=True, blank=True)
     # Brand information fields
     industry = models.CharField(max_length=255, null=True, blank=True, help_text="Industry/Vertical")
@@ -460,7 +460,30 @@ class AdRequest(BaseModel):
         return self.get_asset_value('company_website')
     
     def get_main_hex_color(self):
-        return self.get_asset_value('main_hex_color')
+        """Get main_hex_color and parse as JSON if needed"""
+        import json
+        value = self.get_asset_value('main_hex_color')
+        if not value:
+            return value
+        
+        # If it's already a list/dict, return as is
+        if isinstance(value, (list, dict)):
+            return value
+            
+        # If it's a string, try to parse as JSON
+        if isinstance(value, str):
+            # If it looks like a hex color (#xxxxxx), return as is for backward compatibility
+            if value.startswith('#') and len(value) in [4, 7]:
+                return value
+            
+            # Try to parse as JSON
+            try:
+                return json.loads(value)
+            except (json.JSONDecodeError, TypeError):
+                # If parsing fails, return the original string
+                return value
+        
+        return value
     
     def get_user_prompt(self):
         return self.get_asset_value('user_prompt')

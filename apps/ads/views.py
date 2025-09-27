@@ -1431,9 +1431,29 @@ def adrequest_update(request, pk):
         # Update only the fields that are explicitly in the request
         for field in text_fields:
             if field in request.POST:
-                # If the field is explicitly empty, set it to empty
-                # Otherwise, update with the new value
-                current_overrides[field] = request.POST.get(field)
+                value = request.POST.get(field)
+                
+                # Special handling for main_hex_color
+                if field == 'main_hex_color' and value:
+                    import json
+                    # If it's a single hex color, convert to JSON array format
+                    if isinstance(value, str) and value.startswith('#') and len(value) in [4, 7]:
+                        # Convert single hex color to JSON array format for consistency
+                        current_overrides[field] = json.dumps([value])
+                    elif isinstance(value, str):
+                        # If it's already JSON or other format, store as is
+                        try:
+                            # Validate it's valid JSON
+                            json.loads(value)
+                            current_overrides[field] = value
+                        except json.JSONDecodeError:
+                            # If not valid JSON, treat as single color
+                            current_overrides[field] = json.dumps([value])
+                    else:
+                        current_overrides[field] = value
+                else:
+                    # For all other fields, store as is
+                    current_overrides[field] = value
                 
         # Asignar los overrides actualizados de vuelta al modelo
         ad_request.asset_overrides = current_overrides
@@ -2923,7 +2943,7 @@ def create_user_brand(request):
             brand=brand,
             company_website=data.get('website'),
             logo=logo_asset.image if logo_asset else None,
-            main_hex_color=data.get('brand_colors', []),
+            main_hex_color=json.dumps(data.get('brand_colors', [])) if data.get('brand_colors') else None,
             industry=data.get('industry'),
             product_description=data.get('product_description'),
             target_audience=data.get('target_audience'),
