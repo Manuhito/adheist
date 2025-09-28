@@ -153,7 +153,17 @@ def profile(request):
             if hasattr(provider_account, 'get_screen_name'):
                 account_data['get_screen_name'] = provider_account.get_screen_name()
             if hasattr(provider_account, 'get_brand'):
-                account_data['get_brand'] = {'name': provider_account.get_brand().name}
+                # get_brand() can return different types depending on provider
+                # Google returns dict, others may return objects
+                brand_obj = provider_account.get_brand()
+                brand_name = None
+                
+                if isinstance(brand_obj, dict):
+                    brand_name = brand_obj.get('name') or brand_obj.get('display_name') or brand_obj.get('brand')
+                elif brand_obj is not None:
+                    brand_name = getattr(brand_obj, 'name', None) or getattr(brand_obj, 'display_name', None) or str(brand_obj)
+                
+                account_data['get_brand'] = {'name': brand_name}
         social_accounts_data.append(account_data)
     
     # Check if this is an API request
