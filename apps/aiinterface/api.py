@@ -99,22 +99,15 @@ def generate_image(request):
         
         if run_async:
             # Run as a Celery task
-            if version_id:
-                # Si hay version_id, el prompt se generará en el task
-                logger.info(f"Starting async image generation for version: {version_id}")
-                task = generate_image_task.delay(
-                    image_urls=image_urls,
-                    canvas_size=canvas_size,
-                    version_id=version_id
-                )
-            else:
-                # Si no hay version_id, necesitamos pasar el prompt directamente
-                logger.info(f"Starting async image generation with prompt: {text_prompt[:50]}...")
-                task = generate_image_task.delay(
-                    text_prompt=text_prompt,
-                    image_urls=image_urls,
-                    canvas_size=canvas_size
-                )
+            if not version_id:
+                return {"error": "version_id is required for async image generation"}
+                
+            logger.info(f"Starting async image generation for version: {version_id}")
+            task = generate_image_task.delay(
+                image_urls=image_urls,
+                canvas_size=canvas_size,
+                version_id=version_id
+            )
             
             # Return the task ID for later status checking
             return JsonResponse({

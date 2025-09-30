@@ -19,6 +19,8 @@ def invalidate_adlibrary_cache(sender, instance, **kwargs):
     """
     # Delete the cache key to force regeneration on next request
     cache.delete('adlibrary_page_names')
+    # Also delete the new cache key with ad counts
+    cache.delete('adlibrary_company_data_with_counts')
 
 
 @receiver([post_save, post_delete], sender=IndustryList)
@@ -65,10 +67,15 @@ def track_adrequest_status_changes(sender, instance, **kwargs):
                     'REOPENED': 'Generating...'
                 }
                 
+                # Get the latest version ID if available
+                latest_version = instance.versions.order_by('-created_at').first()
+                version_id = latest_version.id if latest_version else None
+                
                 # Prepare notification data
                 notification_data = {
                     'type': 'status_change',
                     'ad_request_id': instance.pk,
+                    'version_id': version_id,
                     'previous_status': previous.status,
                     'new_status': instance.status,
                     'display_status': status_mapping.get(instance.status, instance.status),
@@ -96,9 +103,14 @@ def track_adrequest_status_changes(sender, instance, **kwargs):
                 
                 # If status changed to COMPLETED, send a special notification
                 if instance.status == 'COMPLETED':
+                    # Get the latest version ID for redirection
+                    latest_version = instance.versions.order_by('-created_at').first()
+                    version_id = latest_version.id if latest_version else None
+                    
                     completion_notification = {
                         'type': 'completion',
                         'ad_request_id': instance.pk,
+                        'version_id': version_id,
                         'message': 'Your ad request has been completed!',
                         'timestamp': instance.updated_at.isoformat() if instance.updated_at else None,
                     }
@@ -117,6 +129,8 @@ def invalidate_facebook_page_cache(sender, instance, **kwargs):
     # Delete the specific cache key for this FacebookPage
     cache_key = f'facebook_page_data_{instance.id}'
     cache.delete(cache_key)
+    # Also invalidate the company data cache since FacebookPage changes affect it
+    cache.delete('adlibrary_company_data_with_counts')
 
 
 @receiver(post_save, sender=FacebookPage)

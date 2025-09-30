@@ -163,7 +163,7 @@ class AppConfiguration(BaseModel):
         help_text="Default general credits for users without subscription"
     )
     default_version_credits = models.PositiveIntegerField(
-        default=2,
+        default=0,
         help_text="Default version credits for users without subscription"
     )
     
@@ -173,7 +173,7 @@ class AppConfiguration(BaseModel):
         help_text="General credits for users with Starter subscription"
     )
     starter_version_credits = models.PositiveIntegerField(
-        default=5,
+        default=0,
         help_text="Version credits for users with Starter subscription"
     )
     
@@ -183,7 +183,7 @@ class AppConfiguration(BaseModel):
         help_text="General credits for users with Pro subscription"
     )
     pro_version_credits = models.PositiveIntegerField(
-        default=10,
+        default=0,
         help_text="Version credits for users with Pro subscription"
     )
     
@@ -193,7 +193,7 @@ class AppConfiguration(BaseModel):
         help_text="General credits for Package 1"
     )
     package1_version_credits = models.PositiveIntegerField(
-        default=3,
+        default=0,
         help_text="Version credits for Package 1"
     )
     
@@ -203,9 +203,20 @@ class AppConfiguration(BaseModel):
         help_text="General credits for Package 2"
     )
     package2_version_credits = models.PositiveIntegerField(
-        default=7,
+        default=0,
         help_text="Version credits for Package 2"
-    )    
+    )
+    
+    # Credit costs for operations
+    ad_generation_credit_cost = models.PositiveIntegerField(
+        default=1,
+        help_text="Number of credits required to generate a new ad"
+    )
+    version_creation_credit_cost = models.PositiveIntegerField(
+        default=0,
+        help_text="Number of credits required to create a new version/revision"
+    )
+    
     class Meta:
         verbose_name = "Application Configuration"
         verbose_name_plural = "Application Configuration"
@@ -278,17 +289,33 @@ class AppConfiguration(BaseModel):
             cache.set('app_configuration', config, 3600)
         
         return config
-
+    
+    @classmethod
+    def get_cost(cls):
+        """
+        Get the credit costs for operations, using cache to improve performance.
+        
+        Returns:
+            dict: Dictionary with credit costs for different operations
+        """
+        config = cls.get_config()
+        return {
+            'ad_generation': config.ad_generation_credit_cost,
+            'version_creation': config.version_creation_credit_cost
+        }
 
 class AdRequestAssets(BaseModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="asset_collections", null=True, blank=True)
     brand = models.ForeignKey('UserBrand', on_delete=models.CASCADE, related_name="assets", null=True, blank=True, help_text="Brand associated with these assets")
     company_website = models.URLField(null=True, blank=True)
     logo = models.ImageField(upload_to="adrequest_assets/", null=True, blank=True)
-    main_hex_color = models.CharField(max_length=7, null=True, blank=True)
+    main_hex_color = models.TextField(null=True, blank=True, help_text="Brand colors in hex format (JSON string or single color)")
     key_benefits = models.TextField(null=True, blank=True)
-    # New text fields
+    # Brand information fields
+    industry = models.CharField(max_length=255, null=True, blank=True, help_text="Industry/Vertical")
+    product_description = models.TextField(null=True, blank=True, help_text="Product/Service description")
     target_audience = models.TextField(null=True, blank=True)
+    functional_benefits = models.TextField(null=True, blank=True, help_text="Functional benefits")
     tone_of_voice = models.TextField(null=True, blank=True)
     font_direction = models.TextField(null=True, blank=True)
     core_features = models.TextField(null=True, blank=True)
@@ -313,9 +340,11 @@ class AdRequestAssets(BaseModel):
             # Removed 'brand' field to prevent assignment issues
             'company_website': self.company_website,
             'main_hex_color': self.main_hex_color,
-            'key_benefits': self.key_benefits,
-            # New text fields
+            # Brand information fields
+            'industry': self.industry,
+            'product_description': self.product_description,
             'target_audience': self.target_audience,
+            'functional_benefits': self.functional_benefits,
             'tone_of_voice': self.tone_of_voice,
             'font_direction': self.font_direction,
             'core_features': self.core_features,
@@ -376,9 +405,9 @@ class AdRequest(BaseModel):
                     from django.core.exceptions import ValidationError
                     raise ValidationError(f"Cannot transition from {current_status} to {self.status}. Only transition to DRAFT is allowed.")
                 
-                elif current_status == self.STATUS_DRAFT and self.status not in [self.STATUS_NEW, self.STATUS_FILLED, self.STATUS_DRAFT]:
+                elif current_status == self.STATUS_DRAFT and self.status not in [self.STATUS_NEW, self.STATUS_FILLED, self.STATUS_SUBMITTED, self.STATUS_DRAFT]:
                     from django.core.exceptions import ValidationError
-                    raise ValidationError(f"Cannot transition from {current_status} to {self.status}. Only transitions to NEW or FILLED are allowed.")
+                    raise ValidationError(f"Cannot transition from {current_status} to {self.status}. Only transitions to NEW, FILLED, or SUBMITTED are allowed.")
                 
                 elif current_status == self.STATUS_FILLED and self.status not in [self.STATUS_DRAFT, self.STATUS_SUBMITTED, self.STATUS_FILLED]:
                     from django.core.exceptions import ValidationError
@@ -455,10 +484,33 @@ class AdRequest(BaseModel):
         return self.get_asset_value('company_website')
     
     def get_main_hex_color(self):
-        return self.get_asset_value('main_hex_color')
+        """Get main_hex_color and parse as JSON if needed"""
+        import json
+        value = self.get_asset_value('main_hex_color')
+        if not value:
+            return value
+        
+        # If it's already a list/dict, return as is
+        if isinstance(value, (list, dict)):
+            return value
+            
+        # If it's a string, try to parse as JSON
+        if isinstance(value, str):
+            # If it looks like a hex color (#xxxxxx), return as is for backward compatibility
+            if value.startswith('#') and len(value) in [4, 7]:
+                return value
+            
+            # Try to parse as JSON
+            try:
+                return json.loads(value)
+            except (json.JSONDecodeError, TypeError):
+                # If parsing fails, return the original string
+                return value
+        
+        return value
     
-    def get_key_benefits(self):
-        return self.get_asset_value('key_benefits')
+    def get_user_prompt(self):
+        return self.get_asset_value('user_prompt')
     
     def get_logo(self):
         return self.logo_override if self.logo_override else None
@@ -483,6 +535,37 @@ class AdRequest(BaseModel):
     
     def get_marketing_image_3(self):
         return self.marketing_image_3_override if self.marketing_image_3_override else None
+    
+    # New getter methods for brand information fields
+    def get_industry(self):
+        return self.get_asset_value('industry')
+    
+    def get_product_description(self):
+        return self.get_asset_value('product_description')
+    
+    def get_target_audience(self):
+        return self.get_asset_value('target_audience')
+    
+    def get_functional_benefits(self):
+        return self.get_asset_value('functional_benefits')
+    
+    def get_tone_of_voice(self):
+        return self.get_asset_value('tone_of_voice')
+    
+    def get_font_direction(self):
+        return self.get_asset_value('font_direction')
+    
+    def get_core_features(self):
+        return self.get_asset_value('core_features')
+    
+    def get_emotional_lifestyle_benefits(self):
+        return self.get_asset_value('emotional_lifestyle_benefits')
+    
+    def get_proof_points(self):
+        return self.get_asset_value('proof_points')
+    
+    def get_value_propositions(self):
+        return self.get_asset_value('value_propositions')
 
 
 class AdRequestVersion(BaseModel):
@@ -551,6 +634,22 @@ class AdRequestVersion(BaseModel):
             
             # Send email notification
             self.send_completion_email()
+    
+    @property
+    def version_index(self):
+        """Calculate the version index based on creation order"""
+        if not self.ad_request:
+            return 1
+        
+        # Get all versions for this ad_request ordered by creation date
+        versions = self.ad_request.versions.order_by('created_at')
+        
+        # Find the index of this version (1-based)
+        for index, version in enumerate(versions, 1):
+            if version.id == self.id:
+                return index
+        
+        return 1  # Fallback
     
     def regenerate_prompt(self):
         """Regenerate the prompt for this version"""
@@ -836,9 +935,33 @@ class UserBrandAssets(BaseModel):
             ('logo', 'Logo'),
             ('product', 'Product'),
             ('app', 'App'),
-            ('marketing', 'Marketing')
+            ('marketing', 'Marketing'),
+            ('assets', 'Assets')
         ],
         help_text="Category of the uploaded image"
+    )
+    
+    # New fields for file information
+    original_filename = models.CharField(
+        max_length=255, 
+        blank=True, 
+        null=True,
+        help_text="Original filename with extension as uploaded by user"
+    )
+    canvas_width = models.PositiveIntegerField(
+        blank=True, 
+        null=True,
+        help_text="Width of the image in pixels"
+    )
+    canvas_height = models.PositiveIntegerField(
+        blank=True, 
+        null=True,
+        help_text="Height of the image in pixels"
+    )
+    file_size = models.PositiveIntegerField(
+        blank=True, 
+        null=True,
+        help_text="File size in bytes"
     )
     
     class Meta:

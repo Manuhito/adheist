@@ -1,0 +1,49 @@
+{% extends "web/app/app_base_sidebar.html" %}
+{% load static %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+  // Configure sidebar for this page
+  window.__SIDEBAR_DATA__ = {
+    activeTab: "discover",
+    showHeader: true,
+    hideLogo: true
+  };
+  
+  // Pass data to React component
+  window.__AD_REQUEST_DATA__ = {
+    id: {{ ad_request.id }},
+    ad_library: {% if ad_request.ad_library %}{
+      image_url: "{{ ad_request.ad_library.image_url|escapejs }}",
+      company_name: "{{ ad_request.ad_library.company_name|default:'Unknown'|escapejs }}"
+    }{% else %}null{% endif %},
+    // Brand data
+    brand: {% if ad_request.brand %}{
+      id: {{ ad_request.brand.id }},
+      name: "{{ ad_request.brand.name|escapejs }}"
+    }{% else %}null{% endif %},
+    // Product images
+    product_image_1_override: {% if ad_request.product_image_1_override %}"{{ ad_request.product_image_1_override.url|escapejs }}"{% else %}null{% endif %},
+    product_image_2_override: {% if ad_request.product_image_2_override %}"{{ ad_request.product_image_2_override.url|escapejs }}"{% else %}null{% endif %},
+    // App images
+    app_image_1_override: {% if ad_request.app_image_1_override %}"{{ ad_request.app_image_1_override.url|escapejs }}"{% else %}null{% endif %},
+    app_image_2_override: {% if ad_request.app_image_2_override %}"{{ ad_request.app_image_2_override.url|escapejs }}"{% else %}null{% endif %}
+  };
+  window.__PAGE_CONFIG__ = {
+    title: "{{ page_title|escapejs }}",
+    description: "{{ page_description|escapejs }}",
+    backUrl: "{{ back_url|escapejs }}"
+  };
+  
+  // Pass user permissions to JavaScript
+  window.__USER_PERMISSIONS__ = {
+    isStaff: {% if request.user.is_staff %}true{% else %}false{% endif %}
+  };
+</script>
+<script src="{% static 'js/discover-clone-bundle.js' %}"></script>
+{% endblock %}
+
+{% block app %}
+<!-- Content will be mounted by React in sidebar-page-content -->
+{% endblock %}

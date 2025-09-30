@@ -18,13 +18,21 @@ module.exports = {
     blog: './assets/javascript/blog/index.jsx',  // entry point para el blog
     'blog-post': './assets/javascript/blog/post/index.jsx',  // entry point para el post individual
     'app-header': './assets/javascript/app-header.js',
-    'create-adrequest': './assets/javascript/app/create-adrequest.jsx',
-    'ad-requests': './assets/javascript/app/ad-requests.tsx',  // entry point para la página de ad_requests
-    'revision-adrequest': './assets/javascript/app/revision-adrequest.jsx',  // entry point para la página de detalles de adrequest
+    //'create-adrequest': './assets/javascript/app/create-adrequest.jsx',
+    //'ad-requests': './assets/javascript/app/ad-requests.tsx',  // entry point para la página de ad_requests
+    //'revision-adrequest': './assets/javascript/app/revision-adrequest.jsx',  // entry point para la página de detalles de adrequest
     'billing': './assets/javascript/billing/index.js',  // entry point for the app billing page
     'payment': './assets/javascript/payment.js',  // entry point for the payment page
     'update-payment-method': './assets/javascript/update-payment-method.js',  // entry point for the payment method update page
     'profile': './assets/javascript/profile/index.js',  // entry point for the user profile page
+    'discover-page': './assets/javascript/app/discover-page.jsx',  // entry point for the discover page
+    'discover-clone': './assets/javascript/app/discover-clone-page.jsx',  // entry point for the discover clone page
+    'brands-page': './assets/javascript/app/brands-page.jsx',  // entry point for the brands page
+    'my-ads-page': './assets/javascript/app/my-ads-page.jsx',  // entry point for the my ads page
+    'assets-page': './assets/javascript/app/assets-page.jsx',  // entry point for the assets page
+    'brand-assets-detail': './assets/javascript/app/brand-assets-detail.jsx',  // entry point for the brand assets detail page
+    'app-sidebar-layout': './assets/javascript/app/app-sidebar-layout.jsx',  // entry point for the sidebar layout
+    'generated-ad': './assets/javascript/app/generated-ad-page.jsx',  // entry point for the generated ad page
   },
   output: {
     path: path.resolve(__dirname, './static'),

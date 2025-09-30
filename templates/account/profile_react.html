@@ -1,17 +1,23 @@
-{% extends "web/app/app_base.html" %}
+{% extends "web/app/app_base_sidebar.html" %}
 {% load static %}
 
 {% block extra_js %}
 {{ block.super }}
 <script>
+  // Configure sidebar for this page
+  window.__SIDEBAR_DATA__ = {
+    activeTab: "profile",
+    showHeader: true,
+    hideLogo: true
+  };
+</script>
+<script>
   // Pass data to React component
   window.__PROFILE_DATA__ = JSON.parse('{{ profile_data|escapejs }}');
 </script>
-<script src="{% static 'js/profile-bundle.js' %}" defer></script>
+<script src="{% static 'js/profile-bundle.js' %}"></script>
 {% endblock %}
 
 {% block app %}
-<div class="container mx-auto py-8">
-  <div id="profile-container"></div>
-</div>
+<!-- Content will be mounted by React in sidebar-page-content -->
 {% endblock %}

@@ -117,7 +117,6 @@ def send_slack_notification(error_message: str, context: Optional[Dict] = None, 
 @shared_task(bind=True, max_retries=3)
 def generate_image_task(
     self,
-    text_prompt: str = None,
     image_urls: List[str] = None,
     canvas_size: str = "1024x1024",
     version_id: Optional[int] = None,
@@ -127,10 +126,9 @@ def generate_image_task(
     Celery task to generate an image using OpenAI's GPT-image-1 model.
     
     Args:
-        text_prompt: Optional. The text prompt describing the image to generate. If not provided, will be obtained from version.
         image_urls: List of image URLs or file paths to use as base images.
         canvas_size: The desired image size (e.g., "1024x1024").
-        version_id: Optional ID of the AdRequestVersion to update with the generated image.
+        version_id: ID of the AdRequestVersion to update with the generated image.
         version_type: Type of version being generated ('initial' or 'revision').
         
     Returns:
@@ -139,36 +137,38 @@ def generate_image_task(
     # Import AdRequestVersion inside the function to ensure it's available in this scope
     from apps.ads.models import AdRequestVersion
     
+    # Initialize text_prompt to avoid UnboundLocalError
+    text_prompt = None
+    
     try:
-        # If version_id is provided but no text_prompt, generate the prompt directly
-        if version_id and not text_prompt:
-            try:
-                # Get the AdRequestVersion instance
-                version = AdRequestVersion.objects.get(id=version_id)
-                # Propagate version_type to version for conditional prompt generation
-                if version_type:
-                    setattr(version, "_version_type", version_type)
-                
-                # Import generate_prompt function here to avoid circular imports
-                from apps.ads.gen_prompt import generate_prompt
-                text_prompt = generate_prompt(version)
-                
-                # Save the generated prompt in the model for future reference
-                version.generated_prompt = text_prompt
-                version.save(update_fields=['generated_prompt'])
-                
-                logger.info(f"Generated prompt for version {version_id}: {text_prompt[:50]}...")
-            except Exception as e:
-                logger.exception(f"Error generating prompt for version {version_id}: {str(e)}")
-                raise
-        
-        if not text_prompt:
-            error_message = "No text prompt provided and couldn't get one from version"
+        # Generate the prompt from version_id
+        if not version_id:
+            error_message = "version_id is required to generate the prompt"
             logger.error(error_message)
             raise ValueError(error_message)
             
+        try:
+            # Get the AdRequestVersion instance
+            version = AdRequestVersion.objects.get(id=version_id)
+            # Propagate version_type to version for conditional prompt generation
+            if version_type:
+                setattr(version, "_version_type", version_type)
+            
+            # Import generate_prompt function here to avoid circular imports
+            from apps.ads.gen_prompt import generate_prompt
+            text_prompt = generate_prompt(version)
+            
+            # Save the generated prompt in the model for future reference
+            version.generated_prompt = text_prompt
+            version.save(update_fields=['generated_prompt'])
+            
+            logger.info(f"Generated prompt for version {version_id}: {text_prompt[:50]}...")
+        except Exception as e:
+            logger.exception(f"Error generating prompt for version {version_id}: {str(e)}")
+            raise
+            
         # Ensure text_prompt is a string to avoid NoneType errors
-        text_prompt = str(text_prompt)
+        text_prompt = str(text_prompt) if text_prompt else "Failed to generate prompt"
             
         logger.info(f"Starting image generation task with prompt: {text_prompt[:50]}...")
         

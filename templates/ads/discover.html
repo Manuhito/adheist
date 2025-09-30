@@ -1,0 +1,26 @@
+{% extends "web/app/app_base_sidebar.html" %}
+{% load static %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+  // Pass data to React component
+  window.__DISCOVER_DATA__ = {
+    user: {
+      name: "{{ request.user.get_full_name|default:'' }}",
+      email: "{{ request.user.email|default:'' }}"
+    }
+  };
+  
+  // Pass user permissions to JavaScript
+  window.__USER_PERMISSIONS__ = {
+    isStaff: {% if request.user.is_staff %}true{% else %}false{% endif %}
+  };
+</script>
+<script src="{% static 'js/discover-page-bundle.js' %}"></script>
+{% endblock %}
+
+{% block app %}
+<!-- Contenedor para el componente React -->
+<div id="discover-page-container" class="w-full h-full p-6"></div>
+{% endblock %}

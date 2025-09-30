@@ -9,7 +9,7 @@ from apps.ads.models import FAQ
 
 def home(request):
     if request.user.is_authenticated:
-        return redirect("ads:ads_home")
+        return redirect("ads:discover_page")
     else:
         # Get all active FAQ items for the landing page
         faq_items = FAQ.objects.filter(is_active=True).order_by('order', 'created_at')

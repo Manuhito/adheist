@@ -81,7 +81,6 @@ const BrandDropdown = ({ initialBrandId, onBrandChange }) => {
   if (isLoading) {
     return (
       <div className="w-full mb-6">
-        <label className="text-sm font-medium block mb-2">{t('step_two.brand', 'Brand')}</label>
         <div className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm flex items-center text-gray-400">
           {t('step_two.loading_brands', 'Loading brands...')}
         </div>
@@ -92,7 +91,6 @@ const BrandDropdown = ({ initialBrandId, onBrandChange }) => {
   if (error) {
     return (
       <div className="w-full mb-6">
-        <label className="text-sm font-medium block mb-2">{t('step_two.brand', 'Brand')}</label>
         <div className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm flex items-center text-red-500">
           {t('step_two.error_loading_brands', 'Error loading brands')}
         </div>
@@ -126,7 +124,6 @@ const BrandDropdown = ({ initialBrandId, onBrandChange }) => {
     <div className="w-full">
       <div className="flex items-end gap-2">
         <div className="flex-1">
-          <label className="text-sm font-medium block mb-2">{t('step_two.brand', 'Brand')}</label>
           <Popover open={isOpen} onOpenChange={setIsOpen}>
             <PopoverTrigger asChild>
               <Button
