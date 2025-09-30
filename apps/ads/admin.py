@@ -21,6 +21,7 @@ from .models import (
     AppConfiguration,
     FAQ,
     UserBrand,
+    UserFolder,
     UserBrandAssets,
 )
 
@@ -354,6 +355,43 @@ class UserBrandAdmin(admin.ModelAdmin):
     ]
 
 
+@admin.register(UserFolder)
+class UserFolderAdmin(admin.ModelAdmin):
+    list_display = ["folder_name", "user", "parent_folder", "full_path", "depth", "created_at", "updated_at"]
+    search_fields = ["folder_name", "user__email"]
+    list_filter = ["user", "parent_folder"]
+    raw_id_fields = ["parent_folder"]
+    
+    fieldsets = [
+        (None, {
+            "fields": ["user", "folder_name", "parent_folder"]
+        }),
+        ("Hierarchy Info", {
+            "fields": [],
+            "description": "Full path and depth are calculated automatically."
+        })
+    ]
+    
+    def get_readonly_fields(self, request, obj=None):
+        readonly = ["full_path", "depth"]
+        if obj:
+            # Make user read-only if the object already exists
+            readonly.append("user")
+        return readonly
+    
+    def get_queryset(self, request):
+        # Optimize queries by selecting related parent folders
+        return super().get_queryset(request).select_related('parent_folder', 'user')
+    
+    def full_path(self, obj):
+        return obj.full_path
+    full_path.short_description = "Full Path"
+    
+    def depth(self, obj):
+        return obj.depth
+    depth.short_description = "Depth Level"
+
+
 @admin.register(FAQ)
 class FAQAdmin(admin.ModelAdmin):
     list_display = ["question", "order", "is_active", "created_at", "updated_at"]
@@ -371,18 +409,44 @@ class FAQAdmin(admin.ModelAdmin):
 
 @admin.register(UserBrandAssets)
 class UserBrandAssetsAdmin(admin.ModelAdmin):
-    list_display = ["user", "brand", "category", "created_at", "updated_at"]
-    list_filter = ["category", "brand"]
-    search_fields = ["user__email", "brand__brand_name", "category"]
+    list_display = ["user", "container_display", "container_type", "category", "original_filename", "created_at", "updated_at"]
+    list_filter = ["category", "brand", "folder"]
+    search_fields = ["user__email", "brand__brand_name", "folder__folder_name", "category", "original_filename"]
+    raw_id_fields = ["brand", "folder"]
     
     fieldsets = [
-        (None, {
-            "fields": ["user", "brand", "image", "category"]
+        ("Organization", {
+            "fields": ["user", "brand", "folder"],
+            "description": "Asset must be assigned to either a brand OR a folder, but not both."
+        }),
+        ("Asset Information", {
+            "fields": ["image", "category"]
+        }),
+        ("File Metadata", {
+            "fields": ["original_filename", "canvas_width", "canvas_height", "file_size"],
+            "classes": ["collapse"]
         })
     ]
     
     def get_readonly_fields(self, request, obj=None):
-        # Make user and brand read-only if the object already exists
+        readonly = ["original_filename", "canvas_width", "canvas_height", "file_size"]
         if obj:
-            return ["user", "brand"]
-        return []
+            # Make user read-only if the object already exists
+            readonly.append("user")
+        return readonly
+    
+    def get_queryset(self, request):
+        # Optimize queries by selecting related objects
+        return super().get_queryset(request).select_related('user', 'brand', 'folder')
+    
+    def container_display(self, obj):
+        if obj.brand:
+            return obj.brand.brand_name
+        elif obj.folder:
+            return obj.folder.full_path
+        return "No container"
+    container_display.short_description = "Container"
+    
+    def container_type(self, obj):
+        return obj.container_type.title()
+    container_type.short_description = "Type"
