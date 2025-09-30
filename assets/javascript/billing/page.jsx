@@ -180,7 +180,7 @@ export function BillingPage({ pricingData, onSubscribe }) {
           </div>
           <div className="flex flex-col gap-4">
             <ProgressBarUsage
-              label={t('billing.ads_generation', 'Ads Generation')}
+              label={t('billing.credits', 'Credits')}
               credits={window.__USAGE_DATA__?.general_credits || 0}
               maxCredits={window.__USAGE_DATA__?.max_general_credits || 1}
             />
@@ -194,7 +194,7 @@ export function BillingPage({ pricingData, onSubscribe }) {
           <h3 className="text-lg font-medium mb-3">{t('billing.packages_and_additional_usage', 'Packages and Additional usage')}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
             <ExtraCreditCard
-              label={t('billing.ads_generation', 'Ads Generation')}
+              label={t('billing.credits', 'Credits')}
               credits={window.__USAGE_DATA__?.extra_general_credits || 0}
             />
           </div>
