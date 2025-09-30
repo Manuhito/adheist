@@ -163,7 +163,7 @@ class AppConfiguration(BaseModel):
         help_text="Default general credits for users without subscription"
     )
     default_version_credits = models.PositiveIntegerField(
-        default=2,
+        default=0,
         help_text="Default version credits for users without subscription"
     )
     
@@ -173,7 +173,7 @@ class AppConfiguration(BaseModel):
         help_text="General credits for users with Starter subscription"
     )
     starter_version_credits = models.PositiveIntegerField(
-        default=5,
+        default=0,
         help_text="Version credits for users with Starter subscription"
     )
     
@@ -183,7 +183,7 @@ class AppConfiguration(BaseModel):
         help_text="General credits for users with Pro subscription"
     )
     pro_version_credits = models.PositiveIntegerField(
-        default=10,
+        default=0,
         help_text="Version credits for users with Pro subscription"
     )
     
@@ -193,7 +193,7 @@ class AppConfiguration(BaseModel):
         help_text="General credits for Package 1"
     )
     package1_version_credits = models.PositiveIntegerField(
-        default=3,
+        default=0,
         help_text="Version credits for Package 1"
     )
     
@@ -203,7 +203,7 @@ class AppConfiguration(BaseModel):
         help_text="General credits for Package 2"
     )
     package2_version_credits = models.PositiveIntegerField(
-        default=7,
+        default=0,
         help_text="Version credits for Package 2"
     )
     
@@ -213,7 +213,7 @@ class AppConfiguration(BaseModel):
         help_text="Number of credits required to generate a new ad"
     )
     version_creation_credit_cost = models.PositiveIntegerField(
-        default=1,
+        default=0,
         help_text="Number of credits required to create a new version/revision"
     )
     
