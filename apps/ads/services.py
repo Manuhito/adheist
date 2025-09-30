@@ -26,34 +26,46 @@ def get_ad_request_limit(user):
     return default_limit
 
 def can_create_ad_request(user):
-    """Check if user can create a new AdRequest (uses general_credits)"""
-    from apps.ads.models import AdRequestUsage, ExtraCredit
+    """Check if user can create a new AdRequest using configurable cost"""
+    from apps.ads.models import AdRequestUsage, ExtraCredit, AppConfiguration
+    
+    # Get cost configuration
+    costs = AppConfiguration.get_cost()
+    required_credits = costs['ad_generation']
     
     # Get current usage record
     usage = AdRequestUsage.get_current_usage(user)
     
-    # First check if user has remaining general credits
-    if usage.general_credits > 0:
+    # First check if user has enough regular general credits
+    if usage.general_credits >= required_credits:
         return True
     
-    # If no regular credits, check for extra credits
+    # If not enough regular credits, check for extra credits
     extra_credits = ExtraCredit.get_or_create(user)
-    return extra_credits.general_credits > 0
+    total_available = usage.general_credits + extra_credits.general_credits
+    
+    return total_available >= required_credits
 
 def can_create_ad_version(user):
-    """Check if user can create a new version of an existing AdRequest (uses version_credits)"""
-    from apps.ads.models import AdRequestUsage, ExtraCredit
+    """Check if user can create a new version using general_credits with configurable cost"""
+    from apps.ads.models import AdRequestUsage, ExtraCredit, AppConfiguration
+    
+    # Get cost configuration
+    costs = AppConfiguration.get_cost()
+    required_credits = costs['version_creation']
     
     # Get current usage record
     usage = AdRequestUsage.get_current_usage(user)
     
-    # First check if user has remaining version credits
-    if usage.version_credits > 0:
+    # First check if user has enough regular general credits
+    if usage.general_credits >= required_credits:
         return True
     
-    # If no regular credits, check for extra credits
+    # If not enough regular credits, check for extra credits
     extra_credits = ExtraCredit.get_or_create(user)
-    return extra_credits.version_credits > 0
+    total_available = usage.general_credits + extra_credits.general_credits
+    
+    return total_available >= required_credits
 
 def use_general_credit(user):
     """Use one general credit from the user's available credits"""
@@ -100,6 +112,49 @@ def use_version_credit(user):
 def use_credit(user):
     """Use one credit from the user's available credits (uses general_credits for backward compatibility)"""
     return use_general_credit(user)
+
+def use_credits_for_operation(user, operation_type):
+    """
+    Use credits for a specific operation (generation or version)
+    operation_type: 'generation' or 'version'
+    """
+    from apps.ads.models import AdRequestUsage, ExtraCredit, AppConfiguration
+    
+    # Get cost configuration
+    costs = AppConfiguration.get_cost()
+    if operation_type == 'generation':
+        required_credits = costs['ad_generation']
+    elif operation_type == 'version':
+        required_credits = costs['version_creation']
+    else:
+        raise ValueError("operation_type must be 'generation' or 'version'")
+    
+    # Get current usage record
+    usage = AdRequestUsage.get_current_usage(user)
+    
+    # Try to use regular credits first
+    if usage.general_credits >= required_credits:
+        usage.general_credits -= required_credits
+        usage.save()
+        return usage
+    
+    # If not enough regular credits, use combination of regular + extra
+    extra_credits = ExtraCredit.get_or_create(user)
+    total_available = usage.general_credits + extra_credits.general_credits
+    
+    if total_available >= required_credits:
+        # Use all remaining regular credits first
+        remaining_needed = required_credits - usage.general_credits
+        usage.general_credits = 0
+        usage.save()
+        
+        # Use extra credits for the remainder
+        extra_credits.general_credits -= remaining_needed
+        extra_credits.save()
+        
+        return usage
+    
+    return None  # Not enough credits
 
 # Funciones para el control de versiones de AdRequest
 

@@ -296,9 +296,15 @@ class AppConfigurationAdmin(admin.ModelAdmin):
         "pro_general_credits", "pro_version_credits", 
         "package1_general_credits", "package1_version_credits",
         "package2_general_credits", "package2_version_credits",
+        "ad_generation_credit_cost", "version_creation_credit_cost",
         "updated_at"
     ]
     fieldsets = [
+        ("Credit Costs Configuration", {
+            "fields": ["ad_generation_credit_cost", "version_creation_credit_cost"],
+            "description": "Configure how many credits each operation costs",
+            "classes": ["wide"]
+        }),
         ("Default Plan Credits", {
             "fields": ["default_general_credits", "default_version_credits"],
             "description": "Credits for users without an active subscription",

@@ -29,7 +29,7 @@ from django.contrib.auth import get_user_model
 
 from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion, AdRequestUsage, ExtraCredit, UserBrand, UserBrandAssets
 from .forms import AdLibraryForm
-from .services import can_create_ad_request, use_credit, can_create_ad_request_version, get_ad_request_version_limit, use_general_credit, use_version_credit, can_create_ad_version
+from .services import can_create_ad_request, use_credit, can_create_ad_request_version, get_ad_request_version_limit, use_general_credit, use_version_credit, can_create_ad_version, use_credits_for_operation
 import boto3
 
 # A reasonable value for pagination would be 10 or 20 entries per page.
@@ -1738,8 +1738,8 @@ def adrequest_version_create(request):
             task_id = task.id
             print(f"Image generation task (ID: {task_id}) started for AdRequestVersion {version.id}")
             
-            # Use a general credit for new versions created from StepThreeComponent.jsx
-            use_general_credit(request.user)
+            # Use credits for new ad generation
+            use_credits_for_operation(request.user, 'generation')
             
         except Exception as img_error:
             print(f"Error starting image generation task: {str(img_error)}")
@@ -1859,8 +1859,8 @@ def adrequest_revision_create(request):
             task_id = task.id
             print(f"Image revision task (ID: {task_id}) started for AdRequestVersion {version.id}")
             
-            # Use a version credit for revisions created from revision-adrequest.jsx
-            use_version_credit(request.user)
+            # Use credits for version creation
+            use_credits_for_operation(request.user, 'version')
             
         except Exception as img_error:
             print(f"Error starting image revision task: {str(img_error)}")
@@ -2083,11 +2083,10 @@ def adrequest_details_page(request, adrequest_id):
 
 def get_user_credits(user):
     """
-    Suma los créditos generales y de versión de AdRequestUsage y ExtraCredit para el usuario.
-    Devuelve: dict con general_credits, version_credits, max_general_credits, max_version_credits
+    Suma los créditos generales de AdRequestUsage y ExtraCredit para el usuario.
+    Devuelve: dict con general_credits, max_general_credits, extra_general_credits
     """
     general_credits = 0
-    version_credits = 0
     plan_type = None
     is_free_tier = False
     
@@ -2096,7 +2095,6 @@ def get_user_credits(user):
         if user.has_active_subscription():
             usage = AdRequestUsage.get_current_usage(user)
             general_credits += getattr(usage, 'general_credits', 0)
-            version_credits += getattr(usage, 'version_credits', 0)
             plan_type = getattr(usage, 'plan_type', None)
             is_free_tier = getattr(usage, 'is_free_tier', False)
         else:
@@ -2116,24 +2114,21 @@ def get_user_credits(user):
                     billing_period_end=None,
                     is_free_tier=True,
                     general_credits=general_credits_default,
-                    version_credits=version_credits_default
+                    version_credits=version_credits_default  # Mantener para compatibilidad
                 )
             
             if usage:
                 general_credits += getattr(usage, 'general_credits', 0)
-                version_credits += getattr(usage, 'version_credits', 0)
                 plan_type = getattr(usage, 'plan_type', None)
                 is_free_tier = getattr(usage, 'is_free_tier', False)
     except Exception:
         pass
     
     extra_general_credits = 0
-    extra_version_credits = 0
     try:
         extra = ExtraCredit.objects.filter(user=user).first()
         if extra:
             extra_general_credits = getattr(extra, 'general_credits', 0)
-            extra_version_credits = getattr(extra, 'version_credits', 0)
     except Exception:
         pass
     
@@ -2151,11 +2146,8 @@ def get_user_credits(user):
     
     return {
         'general_credits': general_credits,
-        'version_credits': version_credits,
         'max_general_credits': plan_limits['general_credits'],
-        'max_version_credits': plan_limits['version_credits'],
         'extra_general_credits': extra_general_credits,
-        'extra_version_credits': extra_version_credits,
         'is_free_tier': is_free_tier
     }
 
@@ -2176,7 +2168,7 @@ def reward_user_for_rating(user):
         from .models import AppConfiguration
         config = AppConfiguration.get_config()
         default_general_credits = config.default_general_credits
-        default_version_credits = config.default_version_credits
+        default_version_credits = config.default_version_credits  # Mantener para compatibilidad
         
         # Get or create user's free tier usage record
         from .models import AdRequestUsage
@@ -2185,19 +2177,17 @@ def reward_user_for_rating(user):
             is_free_tier=True,
             defaults={
                 'general_credits': default_general_credits,
-                'version_credits': default_version_credits
+                'version_credits': default_version_credits  # Mantener para compatibilidad
             }
         )
         
-        # If record already existed, update the credits
+        # If record already existed, update only general credits
         if not created:
             usage.general_credits = default_general_credits
-            usage.version_credits = default_version_credits
-            usage.save(update_fields=['general_credits', 'version_credits'])
+            usage.save(update_fields=['general_credits'])
         
         return {
-            'general_credits': usage.general_credits,
-            'version_credits': usage.version_credits
+            'general_credits': usage.general_credits
         }
     except Exception as e:
         print(f"Error rewarding user for rating: {str(e)}")

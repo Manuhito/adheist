@@ -205,7 +205,18 @@ class AppConfiguration(BaseModel):
     package2_version_credits = models.PositiveIntegerField(
         default=7,
         help_text="Version credits for Package 2"
-    )    
+    )
+    
+    # Credit costs for operations
+    ad_generation_credit_cost = models.PositiveIntegerField(
+        default=1,
+        help_text="Number of credits required to generate a new ad"
+    )
+    version_creation_credit_cost = models.PositiveIntegerField(
+        default=1,
+        help_text="Number of credits required to create a new version/revision"
+    )
+    
     class Meta:
         verbose_name = "Application Configuration"
         verbose_name_plural = "Application Configuration"
@@ -278,7 +289,20 @@ class AppConfiguration(BaseModel):
             cache.set('app_configuration', config, 3600)
         
         return config
-
+    
+    @classmethod
+    def get_cost(cls):
+        """
+        Get the credit costs for operations, using cache to improve performance.
+        
+        Returns:
+            dict: Dictionary with credit costs for different operations
+        """
+        config = cls.get_config()
+        return {
+            'ad_generation': config.ad_generation_credit_cost,
+            'version_creation': config.version_creation_credit_cost
+        }
 
 class AdRequestAssets(BaseModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="asset_collections", null=True, blank=True)
