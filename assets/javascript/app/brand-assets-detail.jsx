@@ -19,6 +19,7 @@ import { ViewModeToggle } from './components/ViewModeToggle.jsx';
 import { CreateFolderModal } from './components/CreateFolderModal.jsx';
 import { BrandsContainer } from './components/BrandFolderComponents.jsx';
 import { FileUploadArea } from './components/FileUploadArea.jsx';
+import { AlertNotification } from '@/components/ui/alert-notification.tsx';
 
 // Helper function to get CSRF token from cookies
 function getCookie(name) {
@@ -54,6 +55,7 @@ function BrandAssetsDetailPage() {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [showCreateFolderModal, setShowCreateFolderModal] = useState(false);
+  const [notification, setNotification] = useState(null);
 
   // Load assets data
   useEffect(() => {
@@ -185,8 +187,11 @@ function BrandAssetsDetailPage() {
         setSelectedFiles([]);
         setShowUploadModal(false);
         
-        // Show success message (you can implement a toast here)
-        alert(data.message);
+        // Show success message
+        setNotification({
+          message: data.message || 'Assets uploaded successfully!',
+          variant: 'success'
+        });
       } else {
         console.error('Upload failed with status:', response.status);
         
@@ -206,11 +211,17 @@ function BrandAssetsDetailPage() {
           }
         }
         
-        alert(errorMessage);
+        setNotification({
+          message: errorMessage,
+          variant: 'error'
+        });
       }
     } catch (error) {
       console.error('Upload error:', error);
-      alert('Network error. Please check your connection and try again.');
+      setNotification({
+        message: 'Network error. Please check your connection and try again.',
+        variant: 'error'
+      });
     } finally {
       setUploading(false);
     }
@@ -280,6 +291,14 @@ function BrandAssetsDetailPage() {
 
   return (
     <div className="max-w-7xl mx-auto p-6">
+      {/* Notification */}
+      {notification && (
+        <AlertNotification
+          message={notification.message}
+          variant={notification.variant}
+          onClose={() => setNotification(null)}
+        />
+      )}
       {/* Search Bar, Create Folder Button and View Toggle */}
       <div className="mb-6 flex items-center justify-between gap-4">
         {/* Search Bar */}
