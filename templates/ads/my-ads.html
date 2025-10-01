@@ -1,0 +1,29 @@
+{% extends "web/app/app_base_sidebar.html" %}
+{% load static %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+  // Configure sidebar for this page
+  window.__SIDEBAR_DATA__ = {
+    activeTab: "my-ads",
+    showHeader: true,
+    hideLogo: true
+  };
+</script>
+<script>
+  // Pass data to React component
+  window.__MY_ADS_DATA__ = {
+    user: {
+      name: "{{ request.user.get_full_name|default:'' }}",
+      email: "{{ request.user.email|default:'' }}"
+    },
+    myAds: {{ my_ads_data|safe }}
+  };
+</script>
+<script src="{% static 'js/my-ads-page-bundle.js' %}"></script>
+{% endblock %}
+
+{% block app %}
+<!-- Content will be mounted by React in sidebar-page-content -->
+{% endblock %}

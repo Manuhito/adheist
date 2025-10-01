@@ -50,12 +50,12 @@ export function PricingCard({
   return (
     <Card
       className={cn(
-        "relative flex flex-col gap-8 overflow-hidden p-6",
+        "relative flex flex-col gap-6 overflow-hidden p-5",
         isHighlighted ? "bg-foreground text-background" : "bg-background text-foreground",
         isPopular && "ring-2 ring-primary")}>
       {isHighlighted && <HighlightedBackground />}
       {isPopular && <PopularBackground />}
-      <h2 className="flex items-center gap-3 text-xl font-medium capitalize">
+      <h2 className="flex items-center gap-2 text-lg font-medium capitalize">
         {tier.name}
         {isCurrentPlan ? (
           <Badge
@@ -70,7 +70,7 @@ export function PricingCard({
           </Badge>
         )}
       </h2>
-      <div className="relative h-12">
+      <div className="relative h-10">
         {typeof price === "number" ? (
           <>
             <NumberFlow
@@ -80,7 +80,7 @@ export function PricingCard({
                 trailingZeroDisplay: "stripIfInteger",
               }}
               value={price}
-              className="text-4xl font-medium" />
+              className="text-3xl font-medium" />
             <p className="-mt-2 text-xs text-muted-foreground">
               {paymentFrequency === 'package' 
                 ? t('pricing.one_time', 'One-time package') 
@@ -88,20 +88,20 @@ export function PricingCard({
             </p>
           </>
         ) : (
-          <h1 className="text-4xl font-medium">{price}</h1>
+          <h1 className="text-3xl font-medium">{price}</h1>
         )}
       </div>
-      <div className="flex-1 space-y-2">
+      <div className="flex-1 space-y-1">
         <h3 className="text-sm font-medium">{tier.description}</h3>
-        <ul className="space-y-2">
+        <ul className="space-y-1">
           {tier.features.map((feature, index) => (
             <li
               key={index}
               className={cn(
-                "flex items-center gap-2 text-sm font-medium",
+                "flex items-center gap-1.5 text-xs font-medium",
                 isHighlighted ? "text-background" : "text-muted-foreground"
               )}>
-              <BadgeCheck className="h-4 w-4" />
+              <BadgeCheck className="h-3 w-3" />
               {feature}
             </li>
           ))}
@@ -109,16 +109,16 @@ export function PricingCard({
       </div>
       <Button
         variant={isHighlighted ? "secondary" : "default"}
-        className="w-full relative z-10"
+        className="w-full relative z-10 py-1.5 text-sm h-auto"
         onClick={() => onSubscribe && onSubscribe(priceId)}
         disabled={!onSubscribe || !priceId || isCurrentPlan}
       >
         {getButtonText()}
         {!isCurrentPlan && (
           hasActiveSubscription ? (
-            isUpgrade ? <ArrowUp className="ml-2 h-4 w-4" /> : <ArrowDown className="ml-2 h-4 w-4" />
+            isUpgrade ? <ArrowUp className="ml-1.5 h-3 w-3" /> : <ArrowDown className="ml-1.5 h-3 w-3" />
           ) : (
-            <ArrowRight className="ml-2 h-4 w-4" />
+            <ArrowRight className="ml-1.5 h-3 w-3" />
           )
         )}
       </Button>

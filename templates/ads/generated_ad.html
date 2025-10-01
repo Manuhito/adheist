@@ -1,0 +1,37 @@
+{% extends "web/app/app_base_sidebar.html" %}
+{% load static %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+  // Override sidebar data to hide logo
+  window.__SIDEBAR_DATA__ = {
+    ...window.__SIDEBAR_DATA__,
+    hideLogo: true
+  };
+  
+  window.__GENERATED_AD_DATA__ = {
+    version_id: {{ version.id }},
+    generated_image: {% if version.generated_image %}"{{ version.generated_image.url|escapejs }}"{% else %}null{% endif %},
+    ad_request_id: {{ version.ad_request.id }},
+    version_index: {% if version.version_index %}{{ version.version_index }}{% else %}1{% endif %},
+    created_at: "{{ version.created_at|date:'c' }}",
+    brand_name: {% if version.ad_request.base_assets and version.ad_request.base_assets.brand %}"{{ version.ad_request.base_assets.brand.brand_name|escapejs }}"{% else %}"Generated Ad"{% endif %},
+    canvas_size: "{{ version.ad_request.canvas_size|default:'1024x1024' }}",
+    versions: [
+      {% for v in version.ad_request.versions.all %}
+      {
+        id: {{ v.id }},
+        generated_image: {% if v.generated_image %}"{{ v.generated_image.url|escapejs }}"{% else %}null{% endif %},
+        canvas_size: "{{ v.ad_request.canvas_size|default:'1024x1024' }}"
+      }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    ]
+  };
+</script>
+<script src="{% static 'js/generated-ad-bundle.js' %}"></script>
+{% endblock %}
+
+{% block app %}
+<!-- Content will be mounted by React in sidebar-page-content -->
+{% endblock %}

@@ -49,26 +49,29 @@ async function handleCreatePaymentIntent(priceId) {
   }
 }
 
-/**
- * Mount the React application to the DOM when the document is loaded
- * Following the same pattern as create-adrequest.jsx
- */
+// Initialize the component when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-  const container = document.getElementById('pricing-section-container');
+  function checkAndMount() {
+    if (window.sidebarLayoutReady) {
+      const container = document.getElementById('sidebar-page-content');
+      if (container) {
+        // Get pricing data from window object
+        const pricingData = window.__PRICING_DATA__;
 
-  if (container) {
-    // Get pricing data from window object
-    const pricingData = window.__PRICING_DATA__;
-
-    // Create root and render component
-    const root = createRoot(container);
-    root.render(
-      <BillingPage
-        pricingData={pricingData}
-        onSubscribe={handleCreatePaymentIntent}
-      />
-    );
-  } else {
-    console.error('Could not find mount point for Billing page');
+        // Create root and render component
+        const root = createRoot(container);
+        root.render(
+          <BillingPage
+            pricingData={pricingData}
+            onSubscribe={handleCreatePaymentIntent}
+          />
+        );
+      }
+    } else {
+      // Wait for sidebar layout to be ready
+      setTimeout(checkAndMount, 50);
+    }
   }
+  
+  checkAndMount();
 });

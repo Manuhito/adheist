@@ -18,6 +18,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST, require_http_methods
 import json
 import requests
+from django.core.serializers.json import DjangoJSONEncoder
 import urllib.parse
 import os
 from django.conf import settings
@@ -26,9 +27,9 @@ from django.utils import timezone
 from apps.aiinterface.tasks import send_slack_notification
 from django.contrib.auth import get_user_model
 
-from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion, AdRequestUsage, ExtraCredit, UserBrand, UserBrandAssets
+from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion, AdRequestUsage, ExtraCredit, UserBrand, UserBrandAssets, UserFolder
 from .forms import AdLibraryForm
-from .services import can_create_ad_request, use_credit, can_create_ad_request_version, get_ad_request_version_limit, use_general_credit, use_version_credit, can_create_ad_version
+from .services import can_create_ad_request, use_credit, can_create_ad_request_version, get_ad_request_version_limit, use_general_credit, use_version_credit, can_create_ad_version, use_credits_for_operation
 import boto3
 
 # A reasonable value for pagination would be 10 or 20 entries per page.
@@ -511,6 +512,57 @@ def payment_success(request):
 
 
 @login_required
+def discover_page(request):
+    """
+    Render the discover page with React components.
+    """
+    template = "ads/discover.html"
+    context = {
+        "active_tab": "discover",
+    }
+    
+    return TemplateResponse(request, template, context)
+
+
+@login_required
+def brands_page(request):
+    """
+    Render the brands library page with React components.
+    """
+    # Get all AdRequestAssets for the current user that have an associated brand
+    user_assets = AdRequestAssets.objects.filter(
+        user=request.user,
+        brand__isnull=False
+    ).select_related('brand').distinct('brand')
+    
+    # Prepare brands data for frontend
+    brands_data = []
+    for asset in user_assets:
+        brand_info = {
+            'id': asset.brand.id,
+            'name': asset.brand.brand_name,
+            'logo_url': asset.logo.url if asset.logo else None,
+            'company_website': asset.company_website,
+            'industry': asset.industry,
+            'product_description': asset.product_description,
+            'main_hex_color': asset.main_hex_color,
+            'created_at': asset.created_at.isoformat() if asset.created_at else None,
+        }
+        brands_data.append(brand_info)
+    
+    # Convert to JSON for frontend
+    brands_json = json.dumps(brands_data, cls=DjangoJSONEncoder)
+    
+    template = "ads/brands.html"
+    context = {
+        "active_tab": "brands-library",
+        "brands_data": brands_json,
+    }
+    
+    return TemplateResponse(request, template, context)
+
+
+@login_required
 def home(request):
     template = "ads/ads_home.html"
     
@@ -772,9 +824,13 @@ def get_adlibrary_filters(request):
     
     GET Parameters:
         company_name: Filter by company name (case-insensitive contains)
+        page_id: Filter by Facebook page ID (takes priority over company_name)
         industries: Filter by industry names (comma-separated list)
         tags: Filter by tag names (comma-separated list)
-        is_active: Filter by active status (true/false)
+        media_type: Filter by media type ('image', 'meme', 'image_and_meme')
+        publisher_platform: Filter by platform ('FACEBOOK', 'INSTAGRAM', 'AUDIENCE_NETWORK', 'MESSENGER', 'THREADS', or comma-separated for multiple)
+        meta_status: Filter by meta status ('ACTIVE', 'INACTIVE', or 'all' for both)
+        is_active: Filter by active status (true/false, default: true)
         page: Page number for pagination (default: 1)
         page_size: Number of items per page (default: 20)
     
@@ -784,8 +840,15 @@ def get_adlibrary_filters(request):
     
     # Get filter parameters from request
     company_name = request.GET.get('company_name', '')
+    page_id = request.GET.get('page_id', '')  # New parameter for Facebook page ID
     industries = request.GET.getlist('industries', [])
     tags = request.GET.getlist('tags', [])
+    media_type = request.GET.get('media_type', '')  # New parameter for media type
+    publisher_platform = request.GET.get('publisher_platform', '')  # New parameter for platform
+    meta_status = request.GET.get('meta_status', '')  # New parameter for meta status
+    
+    # DEBUG: Print all received parameters
+    print(f"DEBUG: Received parameters - media_type='{media_type}', meta_status='{meta_status}', has_filters check will be: {bool(company_name or page_id or industries or tags or media_type or publisher_platform or meta_status)}")
     
     # Get is_active filter parameter (default to True if not provided)
     is_active_param = request.GET.get('is_active', 'true').lower()
@@ -812,15 +875,28 @@ def get_adlibrary_filters(request):
         tags = [request.GET.get('tag')]
     
     # Check if any filter parameters are provided
-    has_filters = company_name or industries or tags
+    has_filters = company_name or page_id or industries or tags or media_type or publisher_platform or meta_status
+    print(f"DEBUG: has_filters = {has_filters}")
     
     if has_filters:
-        # Comenzar con una consulta base sin filtros
-        adlibraries = AdLibrary.objects.filter(is_active=True)
+        # Comenzar con una consulta base con filtros básicos de estado
+        base_filters = Q(is_active=True)
+        if is_active:
+            base_filters &= Q(meta_status=AdLibrary.STATUS_ACTIVE)
         
-        # Aplicar filtros específicos primero
-        # Apply company name filter if provided (AND logic)
-        if company_name:
+        adlibraries = AdLibrary.objects.filter(base_filters)
+        
+        # Apply company filter if provided (AND logic)
+        # Priority: page_id over company_name for more precise filtering
+        if page_id:
+            try:
+                page_id_int = int(page_id)
+                adlibraries = adlibraries.filter(facebook_page_id=page_id_int)
+            except (ValueError, TypeError):
+                # If page_id is not a valid integer, fall back to company_name filter
+                if company_name:
+                    adlibraries = adlibraries.filter(facebook_page__page_name__icontains=company_name)
+        elif company_name:
             adlibraries = adlibraries.filter(facebook_page__page_name__icontains=company_name)
         
         # Create combined query for industries and tags (OR logic between them)
@@ -850,15 +926,43 @@ def get_adlibrary_filters(request):
         if combined_query:
             adlibraries = adlibraries.filter(combined_query).distinct()
         
-        # Aplicar el filtro is_active al final
-        if is_active:
-            adlibraries = adlibraries.filter(meta_status=AdLibrary.STATUS_ACTIVE)
+        # Apply media_type filter if provided
+        if media_type:
+            print(f"DEBUG: Filtering by media_type='{media_type}'")
+            print(f"DEBUG: Before filter count: {adlibraries.count()}")
+            adlibraries = adlibraries.filter(media_type=media_type)
+            print(f"DEBUG: After filter count: {adlibraries.count()}")
+            print(f"DEBUG: Sample media_types in filtered results: {list(adlibraries.values_list('media_type', flat=True).distinct())}")
+        
+        # Apply publisher_platform filter if provided
+        if publisher_platform:
+            print(f"DEBUG: Filtering by publisher_platform='{publisher_platform}'")
+            print(f"DEBUG: Before platform filter count: {adlibraries.count()}")
+            try:
+                # Handle comma-separated platforms (for "All" option)
+                if ',' in publisher_platform:
+                    platform_list = [p.strip() for p in publisher_platform.split(',')]
+                    print(f"DEBUG: Platform list: {platform_list}")
+                    adlibraries = adlibraries.filter(publisher_platform__overlap=platform_list)
+                else:
+                    print(f"DEBUG: Single platform: {publisher_platform}")
+                    adlibraries = adlibraries.filter(publisher_platform__contains=[publisher_platform])
+                print(f"DEBUG: After platform filter count: {adlibraries.count()}")
+            except Exception as e:
+                print(f"DEBUG: Error in publisher_platform filter: {e}")
+                raise
+        
+        # Apply meta_status filter if provided
+        if meta_status and meta_status != 'all':
+            adlibraries = adlibraries.filter(meta_status=meta_status.upper())
     else:
         # Si no hay filtros específicos, mostrar solo favoritos
+        print("DEBUG: No filters detected, showing favorites only")
         if is_active:
             adlibraries = AdLibrary.objects.filter(is_fav=True, meta_status=AdLibrary.STATUS_ACTIVE, is_active=True)
         else:
             adlibraries = AdLibrary.objects.filter(is_fav=True, is_active=True)
+        print(f"DEBUG: Favorites query count: {adlibraries.count()}")
     
     # Aplicar paginación a los resultados
     paginator = Paginator(adlibraries, page_size)
@@ -925,6 +1029,7 @@ def get_adlibrary_filters(request):
         'Step 1 Filter query',
         properties={
             'company_name': company_name,
+            'page_id': page_id,
             'industries': industries,
             'tags': tags,
             'page': page,
@@ -950,33 +1055,46 @@ def get_adlibrary_filters(request):
 
 def get_adlibrary_company_list(request):
     """
-    Get a simple list of all unique company names from FacebookPage in Apify app.
-    Uses Redis caching for improved performance.
+    Get a list of all unique company names from FacebookPage with their ad counts.
+    Uses Redis caching that updates when AdLibrary changes.
     
-    Returns: JSON with list of unique company names
+    Returns: JSON with list of companies and their ad counts
     """
     from django.core.cache import cache
+    from django.db.models import Count, Q
     from apps.apify.models import FacebookPage
+    from apps.ads.models import AdLibrary
     
     # Try to get from cache first
-    cache_key = 'adlibrary_company_names'
-    company_names = cache.get(cache_key)
+    cache_key = 'adlibrary_company_data_with_counts'
+    company_data = cache.get(cache_key)
     
     # If not in cache, get from database and cache it
-    if company_names is None:
-        # Consultar directamente las páginas de Facebook activas
-        # Esto es mucho más eficiente que consultar todos los AdLibrary
-        company_names = list(FacebookPage.objects.filter(
+    if company_data is None:
+        # Get FacebookPages with their ad counts
+        facebook_pages = FacebookPage.objects.filter(
             is_active=True,
             page_name__isnull=False
         ).exclude(
             page_name=''
-        ).values_list('page_name', flat=True).distinct().order_by('page_name'))
+        ).annotate(
+            ad_count=Count('adlibraries', filter=Q(adlibraries__is_active=True))
+        ).values('id', 'page_name', 'ad_count', 'page_url').distinct().order_by('page_name')
         
-        # Cache for 1 hour (3600 seconds)
-        cache.set(cache_key, company_names, 3600)
+        # Convert to list of dictionaries and clean page_url
+        company_data = []
+        for page in facebook_pages:
+            page_dict = dict(page)
+            # Remove https:// from page_url for twenty-icons.com compatibility
+            if page_dict.get('page_url'):
+                import re
+                page_dict['page_url'] = re.sub(r'^https?://', '', page_dict['page_url'])
+            company_data.append(page_dict)
+        
+        # Cache indefinitely - will be invalidated by signals
+        cache.set(cache_key, company_data, None)
     
-    return JsonResponse({'companies': company_names}, safe=True)
+    return JsonResponse({'companies': company_data}, safe=True)
 
 
 @login_required
@@ -1033,9 +1151,14 @@ def user_images(request):
 def upload_brand_asset(request):
     """
     Upload an image to UserBrandAssets model.
-    Expects 'image' file, 'category' (logo, product, app, marketing), and optional 'brand_id' in POST data.
+    Expects 'image' file, 'category' (logo, product, app, marketing), and optional 'brand_id' or 'folder_id' in POST data.
+    The asset will be associated with either a brand or a folder, but not both.
+    Extracts and stores file metadata including filename, dimensions, and file size.
     """
     try:
+        from PIL import Image
+        import os
+        
         # Get the uploaded image
         image = request.FILES.get('image')
         if not image:
@@ -1046,15 +1169,25 @@ def upload_brand_asset(request):
         if category not in ['logo', 'product', 'app', 'marketing']:
             category = 'product'  # Default to product if invalid category
         
-        # Get the brand
+        # Get the container (brand or folder)
         brand_id = request.POST.get('brand_id')
+        folder_id = request.POST.get('folder_id')
+        
+        brand = None
+        folder = None
+        
         if brand_id:
             try:
                 brand = UserBrand.objects.get(id=brand_id, user=request.user)
             except UserBrand.DoesNotExist:
                 return JsonResponse({'success': False, 'error': 'Brand not found'}, status=404)
+        elif folder_id:
+            try:
+                folder = UserFolder.objects.get(id=folder_id, user=request.user)
+            except UserFolder.DoesNotExist:
+                return JsonResponse({'success': False, 'error': 'Folder not found'}, status=404)
         else:
-            # If no brand specified, get the first brand or create a default one
+            # If no container specified, get the first brand or create a default one
             brand = UserBrand.objects.filter(user=request.user).first()
             if not brand:
                 brand = UserBrand.objects.create(
@@ -1062,25 +1195,69 @@ def upload_brand_asset(request):
                     brand_name=f"{request.user.username}'s Brand"
                 )
         
-        # Create the UserBrandAssets object
+        # Extract logo file metadata for storage
+        original_filename = image.name  # Original logo filename with extension (e.g., "company-logo.png")
+        file_size = image.size  # Logo file size in bytes
+        canvas_width = None
+        canvas_height = None
+        
+        # Extract logo dimensions using PIL (Python Imaging Library)
+        try:
+            # Create a copy of the file content to avoid closing the original file
+            from io import BytesIO
+            image_copy = BytesIO(image.read())
+            
+            # Open the copied image data to read its canvas dimensions
+            with Image.open(image_copy) as pil_image:
+                canvas_width, canvas_height = pil_image.size  # Get logo width and height in pixels
+            
+            # Reset file pointer to beginning for Django file handling
+            image.seek(0)
+        except Exception as e:
+            # If we can't read the logo dimensions, log the error but continue with upload
+            print(f"Could not extract logo dimensions from {original_filename}: {e}")
+            # Reset file pointer in case of error
+            image.seek(0)
+        
+        # Create the UserBrandAssets object with complete logo metadata
         asset = UserBrandAssets.objects.create(
             user=request.user,
             brand=brand,
+            folder=folder,
             image=image,
-            category=category
+            category=category,
+            original_filename=original_filename,  # Store original logo filename
+            canvas_width=canvas_width,           # Store logo width in pixels
+            canvas_height=canvas_height,         # Store logo height in pixels
+            file_size=file_size                  # Store logo file size in bytes
         )
         
-        # Return success response with the new asset data
-        return JsonResponse({
+        # Return success response with complete logo metadata for frontend display
+        response_data = {
             'success': True,
             'image': {
                 'id': asset.id,
                 'url': asset.image.url,
                 'category': asset.category,
-                'brand_id': asset.brand.id,
-                'brand_name': asset.brand.brand_name
+                'original_filename': asset.original_filename,  # Logo filename (e.g., "company-logo.png")
+                'canvas_width': asset.canvas_width,           # Logo width in pixels
+                'canvas_height': asset.canvas_height,         # Logo height in pixels
+                'file_size': asset.file_size,                 # Logo file size in bytes
+                'canvas_size': f"{asset.canvas_width}x{asset.canvas_height}" if asset.canvas_width and asset.canvas_height else None  # Formatted dimensions (e.g., "1024x768")
             }
-        })
+        }
+        
+        # Add container information
+        if asset.brand:
+            response_data['image']['brand_id'] = asset.brand.id
+            response_data['image']['brand_name'] = asset.brand.brand_name
+            response_data['image']['container_type'] = 'brand'
+        elif asset.folder:
+            response_data['image']['folder_id'] = asset.folder.id
+            response_data['image']['folder_name'] = asset.folder.folder_name
+            response_data['image']['container_type'] = 'folder'
+        
+        return JsonResponse(response_data)
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
@@ -1270,7 +1447,9 @@ def adrequest_update(request, pk):
             'company_website', 'main_hex_color', 'key_benefits',
             # New text fields
             'target_audience', 'tone_of_voice', 'font_direction', 'core_features',
-            'emotional_lifestyle_benefits', 'proof_points', 'value_propositions'
+            'emotional_lifestyle_benefits', 'proof_points', 'value_propositions',
+            # User prompt field for discover clone page
+            'user_prompt'
         ]
         
         # Get current overrides or initialize if needed
@@ -1279,9 +1458,29 @@ def adrequest_update(request, pk):
         # Update only the fields that are explicitly in the request
         for field in text_fields:
             if field in request.POST:
-                # If the field is explicitly empty, set it to empty
-                # Otherwise, update with the new value
-                current_overrides[field] = request.POST.get(field)
+                value = request.POST.get(field)
+                
+                # Special handling for main_hex_color
+                if field == 'main_hex_color' and value:
+                    import json
+                    # If it's a single hex color, convert to JSON array format
+                    if isinstance(value, str) and value.startswith('#') and len(value) in [4, 7]:
+                        # Convert single hex color to JSON array format for consistency
+                        current_overrides[field] = json.dumps([value])
+                    elif isinstance(value, str):
+                        # If it's already JSON or other format, store as is
+                        try:
+                            # Validate it's valid JSON
+                            json.loads(value)
+                            current_overrides[field] = value
+                        except json.JSONDecodeError:
+                            # If not valid JSON, treat as single color
+                            current_overrides[field] = json.dumps([value])
+                    else:
+                        current_overrides[field] = value
+                else:
+                    # For all other fields, store as is
+                    current_overrides[field] = value
                 
         # Asignar los overrides actualizados de vuelta al modelo
         ad_request.asset_overrides = current_overrides
@@ -1481,17 +1680,9 @@ def adrequest_version_create(request):
         if ad_request.user != request.user:
             return JsonResponse({'error': 'You do not have permission to create a version for this request'}, status=403)
         
-        # Check if the AdRequest has reached its version limit
-        if not can_create_ad_request_version(ad_request):
-            # Get the limit for this AdRequest
-            limit = get_ad_request_version_limit(ad_request)
-            return JsonResponse({
-                'error': f'This ad request has reached its limit of versions. Please upgrade your plan for more versions.'
-            }, status=403)
-        
-        # Check if user has available credits
+        # Check if user has available general credits for creating new versions
         if not can_create_ad_request(request.user):
-            return JsonResponse({'error': 'You have reached out your image limit creation for your plan'}, status=403)
+            return JsonResponse({'error': 'You have reached your general credit limit for your plan'}, status=403)
         print("User has available credits")
         # Get optional fields
         user_prompt = request.POST.get('user_prompt')
@@ -1574,8 +1765,8 @@ def adrequest_version_create(request):
             task_id = task.id
             print(f"Image generation task (ID: {task_id}) started for AdRequestVersion {version.id}")
             
-            # Use a general credit for new versions created from StepThreeComponent.jsx
-            use_general_credit(request.user)
+            # Use credits for new ad generation
+            use_credits_for_operation(request.user, 'generation')
             
         except Exception as img_error:
             print(f"Error starting image generation task: {str(img_error)}")
@@ -1637,13 +1828,9 @@ def adrequest_revision_create(request):
         if ad_request.user != request.user:
             return JsonResponse({'error': 'You do not have permission to create a version for this request'}, status=403)
         
-        # Check if the AdRequest has reached its version limit
-        if not can_create_ad_request_version(ad_request):
-            # Get the limit for this AdRequest
-            limit = get_ad_request_version_limit(ad_request)
-            return JsonResponse({
-                'error': f'This ad request has reached its limit of versions. Please upgrade your plan for more versions.'
-            }, status=403)
+        # Check if user has available version credits for creating revisions
+        if not can_create_ad_version(request.user):
+            return JsonResponse({'error': 'You have reached your version credit limit for your plan'}, status=403)
         
         # Create a new AdRequestVersion instance
         version = AdRequestVersion.objects.create(
@@ -1699,8 +1886,8 @@ def adrequest_revision_create(request):
             task_id = task.id
             print(f"Image revision task (ID: {task_id}) started for AdRequestVersion {version.id}")
             
-            # Use a version credit for revisions created from revision-adrequest.jsx
-            use_version_credit(request.user)
+            # Use credits for version creation
+            use_credits_for_operation(request.user, 'version')
             
         except Exception as img_error:
             print(f"Error starting image revision task: {str(img_error)}")
@@ -1923,11 +2110,10 @@ def adrequest_details_page(request, adrequest_id):
 
 def get_user_credits(user):
     """
-    Suma los créditos generales y de versión de AdRequestUsage y ExtraCredit para el usuario.
-    Devuelve: dict con general_credits, version_credits, max_general_credits, max_version_credits
+    Suma los créditos generales de AdRequestUsage y ExtraCredit para el usuario.
+    Devuelve: dict con general_credits, max_general_credits, extra_general_credits
     """
     general_credits = 0
-    version_credits = 0
     plan_type = None
     is_free_tier = False
     
@@ -1936,7 +2122,6 @@ def get_user_credits(user):
         if user.has_active_subscription():
             usage = AdRequestUsage.get_current_usage(user)
             general_credits += getattr(usage, 'general_credits', 0)
-            version_credits += getattr(usage, 'version_credits', 0)
             plan_type = getattr(usage, 'plan_type', None)
             is_free_tier = getattr(usage, 'is_free_tier', False)
         else:
@@ -1956,24 +2141,21 @@ def get_user_credits(user):
                     billing_period_end=None,
                     is_free_tier=True,
                     general_credits=general_credits_default,
-                    version_credits=version_credits_default
+                    version_credits=version_credits_default  # Mantener para compatibilidad
                 )
             
             if usage:
                 general_credits += getattr(usage, 'general_credits', 0)
-                version_credits += getattr(usage, 'version_credits', 0)
                 plan_type = getattr(usage, 'plan_type', None)
                 is_free_tier = getattr(usage, 'is_free_tier', False)
     except Exception:
         pass
     
     extra_general_credits = 0
-    extra_version_credits = 0
     try:
         extra = ExtraCredit.objects.filter(user=user).first()
         if extra:
             extra_general_credits = getattr(extra, 'general_credits', 0)
-            extra_version_credits = getattr(extra, 'version_credits', 0)
     except Exception:
         pass
     
@@ -1991,11 +2173,8 @@ def get_user_credits(user):
     
     return {
         'general_credits': general_credits,
-        'version_credits': version_credits,
         'max_general_credits': plan_limits['general_credits'],
-        'max_version_credits': plan_limits['version_credits'],
         'extra_general_credits': extra_general_credits,
-        'extra_version_credits': extra_version_credits,
         'is_free_tier': is_free_tier
     }
 
@@ -2016,7 +2195,7 @@ def reward_user_for_rating(user):
         from .models import AppConfiguration
         config = AppConfiguration.get_config()
         default_general_credits = config.default_general_credits
-        default_version_credits = config.default_version_credits
+        default_version_credits = config.default_version_credits  # Mantener para compatibilidad
         
         # Get or create user's free tier usage record
         from .models import AdRequestUsage
@@ -2025,19 +2204,17 @@ def reward_user_for_rating(user):
             is_free_tier=True,
             defaults={
                 'general_credits': default_general_credits,
-                'version_credits': default_version_credits
+                'version_credits': default_version_credits  # Mantener para compatibilidad
             }
         )
         
-        # If record already existed, update the credits
+        # If record already existed, update only general credits
         if not created:
             usage.general_credits = default_general_credits
-            usage.version_credits = default_version_credits
-            usage.save(update_fields=['general_credits', 'version_credits'])
+            usage.save(update_fields=['general_credits'])
         
         return {
-            'general_credits': usage.general_credits,
-            'version_credits': usage.version_credits
+            'general_credits': usage.general_credits
         }
     except Exception as e:
         print(f"Error rewarding user for rating: {str(e)}")
@@ -2131,7 +2308,11 @@ def billing_page(request):
     Render the billing page with pricing information.
     """
     from apps.subscriptions.metadata import get_active_products_with_metadata, PlanInterval
+    from django.conf import settings
     logger = logging.getLogger(__name__)
+    
+    # Check if we're in BETA pricing mode
+    is_beta_pricing = settings.PRICING_MODEL == 'BETA'
     
     # Get products from the metadata system
     products_with_metadata = list(get_active_products_with_metadata())
@@ -2166,44 +2347,74 @@ def billing_page(request):
         else:
             subscription_products.append(product)
     
-    # Initialize pricing data without Free plan
+    # Initialize pricing data
     pricing_data = {
         "title": "Pricing Plans",
         "subtitle": "Choose the perfect plan for your needs",
-        "frequencies": ["monthly", "usage"],
+        "frequencies": ["monthly"] if is_beta_pricing else ["monthly", "usage"],
         "tiers": [],
         "usagePackages": []
     }
     
-    # Construir usagePackages con los package_products
-    for product in package_products:
-        # Obtener el precio para el paquete
-        # Intentamos obtener un precio activo para el producto
-        try:
-            # Primero intentamos obtener el precio usando el método _get_price
-            price = product._get_price(None, fail_hard=False)
-            
-            if not price:
-                # Si no hay precio con _get_price, intentamos obtener cualquier precio activo
-                from djstripe.models import Price
-                prices = Price.objects.filter(product=product.product.id, active=True)
-                if prices.exists():
-                    price = prices.first()
-            
-            if price:
-                package = {
-                    "name": product.metadata.name,
-                    "description": product.metadata.description,
-                    "price": int(price.unit_amount / 100),
-                    "priceId": price.id,  # ID dinámico desde Stripe
-                    "features": product.metadata.features,
-                    "cta": "Buy Package",
-                    "highlighted": product.metadata.slug == "package-1",
-                    "popular": product.metadata.slug == "package-2"
-                }
-                pricing_data["usagePackages"].append(package)
-        except Exception as e:
-            logger.error(f"Error obteniendo precio para paquete {product.metadata.slug}: {str(e)}")
+    # Initialize tiers with empty array if in BETA mode
+    if is_beta_pricing:
+        # Clear any existing tiers
+        pricing_data["tiers"] = []
+        
+        # Add Beta plan
+        beta_plan = {
+            "name": "Beta",
+            "description": "Basic features for individuals",
+            "price": {
+                "monthly": 0
+            },
+            "features": [
+                "Search 1M+ Ads Library",
+                "Unlimited Ads (With Feedback)",
+                "Unlimited Revisions (With Feedback)",
+                "20 BrandKits",
+                "5 GB of assets"
+            ],
+            "cta": "Current Plan",
+            "highlighted": False,
+            "popular": False,
+            "is_current_plan": True,
+            "is_disabled": False,
+            "cancel_at_period_end": False,
+            "current_period_end": None
+        }
+        pricing_data["tiers"].append(beta_plan)
+    
+    # Construir usagePackages con los package_products solo si no estamos en modo BETA
+    if not is_beta_pricing:
+        for product in package_products:
+            # Obtener el precio para el paquete
+            # Intentamos obtener un precio activo para el producto
+            try:
+                # Primero intentamos obtener el precio usando el método _get_price
+                price = product._get_price(None, fail_hard=False)
+                
+                if not price:
+                    # Si no hay precio con _get_price, intentamos obtener cualquier precio activo
+                    from djstripe.models import Price
+                    prices = Price.objects.filter(product=product.product.id, active=True)
+                    if prices.exists():
+                        price = prices.first()
+                
+                if price:
+                    package = {
+                        "name": product.metadata.name,
+                        "description": product.metadata.description,
+                        "price": int(price.unit_amount / 100),
+                        "priceId": price.id,  # ID dinámico desde Stripe
+                        "features": product.metadata.features,
+                        "cta": "Buy Package",
+                        "highlighted": product.metadata.slug == "package-1",
+                        "popular": product.metadata.slug == "package-2"
+                    }
+                    pricing_data["usagePackages"].append(package)
+            except Exception as e:
+                logger.error(f"Error obteniendo precio para paquete {product.metadata.slug}: {str(e)}")
     # Get current user's subscription plan ID if available
     current_plan_id = None
     current_plan_name = None
@@ -2249,76 +2460,86 @@ def billing_page(request):
             if highest_tier_sub:
                 current_plan_id = highest_tier_sub.plan.product.id
                 print(f"Highest tier subscription: {current_plan_name}")
-    # Add tiers from metadata
-    for product in subscription_products:
-        slug = product.metadata.slug
-        if slug in product_mapping:
-            # Get prices
-            monthly_price = product._get_price(PlanInterval.month, fail_hard=False)
-            # No more yearly prices
-            
-            # Check if this is the current plan
-            is_current_plan = current_plan_id == product.product.id
-            
-            # Get subscription details if this is the current plan
-            cancel_at_period_end = False
-            current_period_end = None
-            if is_current_plan and highest_tier_sub:
-                cancel_at_period_end = highest_tier_sub.cancel_at_period_end or False
-                current_period_end = highest_tier_sub.current_period_end.isoformat() if highest_tier_sub.current_period_end else None
-            
-            # Check if this plan should be disabled (user has a higher tier plan)
-            is_disabled = False
-            if current_plan_name:
-                current_tier_position = tier_order.index(current_plan_name) if current_plan_name in tier_order else -1
-                this_tier_position = tier_order.index(product_mapping[slug]['display_name']) if product_mapping[slug]['display_name'] in tier_order else -1
+    # Add tiers from metadata only if not in BETA pricing mode
+    if not is_beta_pricing:
+        for product in subscription_products:
+            slug = product.metadata.slug
+            if slug in product_mapping:
+                # Get prices
+                monthly_price = product._get_price(PlanInterval.month, fail_hard=False)
+                # No more yearly prices
                 
-                # Disable if this plan is lower tier than current plan
-                if this_tier_position < current_tier_position:
-                    is_disabled = True
-            
-            # Format price display
-            price_data = {}
-            if monthly_price:
-                try:
-                    price_data["monthly"] = int(monthly_price.unit_amount / 100)
-                except (TypeError, ValueError):
-                    price_data["monthly"] = product.get_price_display(monthly_price)
-            else:
-                price_data["monthly"] = "Custom"
+                # Check if this is the current plan
+                is_current_plan = current_plan_id == product.product.id
                 
-            # No more yearly prices
-            
-            # Add price IDs to price data
-            if monthly_price:
-                price_data["monthlyPriceId"] = monthly_price.id
-            # No more yearly price IDs
+                # Get subscription details if this is the current plan
+                cancel_at_period_end = False
+                current_period_end = None
+                if is_current_plan and highest_tier_sub:
+                    cancel_at_period_end = highest_tier_sub.cancel_at_period_end or False
+                    current_period_end = highest_tier_sub.current_period_end.isoformat() if highest_tier_sub.current_period_end else None
                 
-            # Create tier data
-            tier = {
-                "name": product_mapping[slug]['display_name'],
-                "description": product.metadata.description or f"For {product_mapping[slug]['display_name']} users",
-                "price": price_data,
-                "features": product.metadata.features,
-                "cta": product_mapping[slug]["cta"],
-                "highlighted": product_mapping[slug]["highlighted"],
-                "popular": product_mapping[slug]["popular"],
-                "is_current_plan": is_current_plan,
-                "is_disabled": is_disabled,
-                "cancel_at_period_end": cancel_at_period_end,
-                "current_period_end": current_period_end
-            }
-            
-            pricing_data["tiers"].append(tier)
+                # Check if this plan should be disabled (user has a higher tier plan)
+                is_disabled = False
+                if current_plan_name:
+                    try:
+                        current_tier_position = tier_order.index(current_plan_name) if current_plan_name in tier_order else -1
+                        this_tier_position = tier_order.index(product_mapping[slug]['display_name']) if product_mapping[slug]['display_name'] in tier_order else -1
+                        
+                        # Disable if this plan is lower tier than current plan
+                        if this_tier_position < current_tier_position:
+                            is_disabled = True
+                    except (ValueError, IndexError):
+                        # If there's an error with tier positions, don't disable the plan
+                        is_disabled = False
+                
+                # Format price display
+                price_data = {}
+                if monthly_price:
+                    try:
+                        price_data["monthly"] = int(monthly_price.unit_amount / 100)
+                    except (TypeError, ValueError):
+                        price_data["monthly"] = product.get_price_display(monthly_price)
+                else:
+                    price_data["monthly"] = "Custom"
+                    
+                # No more yearly prices
+                
+                # Add price IDs to price data
+                if monthly_price:
+                    price_data["monthlyPriceId"] = monthly_price.id
+                # No more yearly price IDs
+                
+                # Create tier data
+                tier = {
+                    "name": product_mapping[slug]['display_name'],
+                    "description": product.metadata.description or f"For {product_mapping[slug]['display_name']} users",
+                    "price": price_data,
+                    "features": product.metadata.features,
+                    "cta": product_mapping[slug]["cta"],
+                    "highlighted": product_mapping[slug]["highlighted"],
+                    "popular": product_mapping[slug]["popular"],
+                    "is_current_plan": is_current_plan,
+                    "is_disabled": is_disabled,
+                    "cancel_at_period_end": cancel_at_period_end,
+                    "current_period_end": current_period_end
+                }
+                
+                pricing_data["tiers"].append(tier)
     
     # Enterprise plan has been removed
     
-    # Sort tiers in the correct order: Starter, Pro
-    tier_order_without_free = ["Starter", "Pro"]
-    pricing_data["tiers"] = sorted(
-        pricing_data["tiers"], 
-        key=lambda x: tier_order_without_free.index(x["name"]) if x["name"] in tier_order_without_free else 999
-    )
+    # Sort tiers based on pricing mode
+    if is_beta_pricing:
+        # No need to sort with only one tier
+        pass
+    else:
+        # Sort tiers in the correct order: Starter, Pro
+        tier_order_without_free = ["Starter", "Pro"]
+        pricing_data["tiers"] = sorted(
+            pricing_data["tiers"], 
+            key=lambda x: tier_order_without_free.index(x["name"]) if x["name"] in tier_order_without_free else 999
+        )
         
     # Get payment method information if user has a subscription
     payment_method_data = {
@@ -2579,6 +2800,7 @@ def get_user_invoices(request):
 def toggle_favorite(request):
     """
     Toggle the is_fav status of an AdLibrary item.
+    Only staff users can toggle favorite status.
     
     POST Parameters:
     - id: The ID of the AdLibrary item to toggle favorite status
@@ -2586,6 +2808,9 @@ def toggle_favorite(request):
     Returns: JSON with success status and updated is_fav value
     """
     try:
+        if not request.user.is_staff:
+            return JsonResponse({'error': 'Permission denied'}, status=403)
+        
         data = json.loads(request.body)
         item_id = data.get('adlibrary_id')
         
@@ -2700,19 +2925,105 @@ def get_user_brands(request):
 
 
 @login_required
+@require_http_methods(["GET"])
+def get_user_containers(request):
+    """
+    Get all containers (brands + folders) associated with the current user.
+    
+    Returns: JSON with list of user containers (brands and root folders)
+    """
+    try:
+        containers_data = []
+        
+        # Get all unique brands that have assets for the current user
+        user_brands = UserBrand.objects.filter(
+            brand_assets__user=request.user
+        ).distinct().order_by('brand_name')
+        
+        # Add brands
+        for brand in user_brands:
+            brand_info = {
+                'id': brand.id,
+                'name': brand.brand_name,
+                'type': 'brand',
+                'created_at': brand.created_at.isoformat() if brand.created_at else None,
+            }
+            containers_data.append(brand_info)
+        
+        # Get all root folders (folders without parent and without brand) for the current user
+        user_folders = UserFolder.objects.filter(
+            user=request.user,
+            parent_folder__isnull=True,  # Only root folders
+            brand__isnull=True  # Exclude brand-specific folders
+        ).order_by('folder_name')
+        
+        # Add root folders
+        for folder in user_folders:
+            folder_info = {
+                'id': folder.id,
+                'name': folder.folder_name,
+                'type': 'folder',
+                'full_path': folder.full_path,
+                'created_at': folder.created_at.isoformat() if folder.created_at else None,
+            }
+            containers_data.append(folder_info)
+        
+        # Sort containers by name
+        containers_data.sort(key=lambda x: x['name'].lower())
+        
+        return JsonResponse({
+            'success': True,
+            'containers': containers_data
+        })
+    except Exception as e:
+        logging.error(f"Error retrieving user containers: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
+
+
+@login_required
 @require_http_methods(["POST"])
 def create_user_brand(request):
     """
-    Create a new brand for the current user.
+    Create a new brand for the current user and associated AdRequestAssets.
     
     Expected POST data:
     - brand_name: Name of the brand to create
+    - industry: Industry/Vertical (optional)
+    - website: Brand website (optional)
+    - product_description: Product/Service description (optional)
+    - target_audience: Target audience description (optional)
+    - functional_benefits: Functional benefits (optional)
+    - brand_colors: Array of brand colors in hex format (optional)
+    - tone_of_voice: Tone of voice (optional)
+    - font_direction: Font direction (optional)
+    - core_features: Core features (optional)
+    - emotional_lifestyle_benefits: Emotional/Lifestyle benefits (optional)
+    - proof_points: Proof points (optional)
+    - value_propositions: Value propositions (optional)
+    - logo_file: Logo image file (optional)
     
     Returns: JSON with the created brand data
     """
     try:
-        # Get the brand name from the request
-        data = json.loads(request.body)
+        # Handle multipart form data for file upload
+        if request.content_type.startswith('multipart/form-data'):
+            data = request.POST.dict()
+            logo_file = request.FILES.get('logo_file')
+            # Parse brand_colors if it's a JSON string
+            brand_colors_str = data.get('brand_colors')
+            if brand_colors_str:
+                try:
+                    data['brand_colors'] = json.loads(brand_colors_str)
+                except json.JSONDecodeError:
+                    data['brand_colors'] = []
+        else:
+            # Handle JSON data
+            data = json.loads(request.body)
+            logo_file = None
+        
         brand_name = data.get('brand_name')
         
         if not brand_name:
@@ -2728,17 +3039,62 @@ def create_user_brand(request):
                 'error': 'A brand with this name already exists'
             }, status=400)
         
-        # Create the new brand
+        # Create the new brand (simple, just name)
         brand = UserBrand.objects.create(
             user=request.user,
             brand_name=brand_name
+        )
+        
+        # Handle logo upload if provided
+        logo_asset = None
+        if logo_file:
+            logo_asset = UserBrandAssets.objects.create(
+                user=request.user,
+                brand=brand,
+                image=logo_file,
+                category='logo',
+                original_filename=logo_file.name,
+                file_size=logo_file.size
+            )
+        
+        # Create associated AdRequestAssets with all brand data
+        ad_request_assets = AdRequestAssets.objects.create(
+            user=request.user,
+            brand=brand,
+            company_website=data.get('website'),
+            logo=logo_asset.image if logo_asset else None,
+            main_hex_color=json.dumps(data.get('brand_colors', [])) if data.get('brand_colors') else None,
+            industry=data.get('industry'),
+            product_description=data.get('product_description'),
+            target_audience=data.get('target_audience'),
+            functional_benefits=data.get('functional_benefits'),
+            tone_of_voice=data.get('tone_of_voice'),
+            font_direction=data.get('font_direction'),
+            core_features=data.get('core_features'),
+            emotional_lifestyle_benefits=data.get('emotional_lifestyle_benefits'),
+            proof_points=data.get('proof_points'),
+            value_propositions=data.get('value_propositions')
         )
         
         return JsonResponse({
             'success': True,
             'brand': {
                 'id': brand.id,
-                'name': brand.brand_name
+                'name': brand.brand_name,
+                'industry': ad_request_assets.industry,
+                'website': ad_request_assets.company_website,
+                'product_description': ad_request_assets.product_description,
+                'target_audience': ad_request_assets.target_audience,
+                'functional_benefits': ad_request_assets.functional_benefits,
+                'brand_colors': ad_request_assets.main_hex_color,
+                'tone_of_voice': ad_request_assets.tone_of_voice,
+                'font_direction': ad_request_assets.font_direction,
+                'core_features': ad_request_assets.core_features,
+                'emotional_lifestyle_benefits': ad_request_assets.emotional_lifestyle_benefits,
+                'proof_points': ad_request_assets.proof_points,
+                'value_propositions': ad_request_assets.value_propositions,
+                'logo_url': logo_asset.image.url if logo_asset else None,
+                'ad_request_assets_id': ad_request_assets.id
             }
         })
     except Exception as e:
@@ -2790,3 +3146,561 @@ def deactivate_image(request):
         })
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def discover_clone_adrequest_page(request, pk):
+    """
+    Page for cloning an AdRequest from discover page.
+    Shows the selected ad reference and allows creating a new ad based on it.
+    Only accessible if the AdRequest is in DRAFT status.
+    """
+    try:
+        # Get the AdRequest and verify user permissions
+        ad_request = get_object_or_404(AdRequest, id=pk, user=request.user)
+        
+        # Validate that the AdRequest is in DRAFT status only
+        if ad_request.status != 'DRAFT':
+            # If not in DRAFT status, redirect to discover page
+            return redirect('ads:discover_page')
+        
+        # Determine the back URL based on where the user came from
+        back_url = '/ads/discover/'  # Default fallback
+        referer = request.META.get('HTTP_REFERER', '')
+        
+        if referer:
+            # Check if user came from My Ads page
+            if '/ads/my-ads/' in referer:
+                back_url = '/ads/my-ads/'
+            # Check if user came from discover page (keep default)
+            elif '/ads/discover/' in referer:
+                back_url = '/ads/discover/'
+            # For any other referrer, try to use it if it's from our domain
+            elif request.get_host() in referer:
+                # Extract the path from the referer URL
+                from urllib.parse import urlparse
+                parsed_referer = urlparse(referer)
+                if parsed_referer.path and parsed_referer.path.startswith('/ads/'):
+                    back_url = parsed_referer.path
+        
+        context = {
+            'ad_request': ad_request,
+            'page_title': 'Clone Ad',
+            'page_description': 'New ads follow the style & composition of the ad reference on the left.',
+            'back_url': back_url,
+        }
+        
+        return render(request, 'ads/discover_clone.html', context)
+        
+    except AdRequest.DoesNotExist:
+        return redirect('ads:discover_page')
+
+
+@login_required
+def my_ads_page(request):
+    """
+    Render the My Ads page with React components.
+    Shows all AdRequestVersions created by the current user as individual cards,
+    plus DRAFT AdRequests without versions as cards that allow navigation to discover clone.
+    """
+    # Get all AdRequests for the current user with their versions
+    ad_requests = AdRequest.objects.filter(user=request.user).prefetch_related(
+        'versions'
+    ).order_by('-updated_at')
+    
+    # Prepare data for frontend - one card per version + draft cards
+    my_ads_data = []
+    for ad_request in ad_requests:
+        # Get brand information once per AdRequest
+        brand_name = None
+        if hasattr(ad_request, 'base_assets') and ad_request.base_assets and ad_request.base_assets.brand:
+            brand_name = ad_request.base_assets.brand.brand_name
+        
+        # Check if this AdRequest has versions
+        versions = ad_request.versions.all()
+        
+        if versions.exists():
+            # Create a card for each version
+            for version in versions:
+                version_card_data = {
+                    # Version-specific data
+                    'version_id': version.id,
+                    'version_status': version.status,
+                    'image_url': version.generated_image.url if version.generated_image else None,
+                    'version_created_at': version.created_at.isoformat() if version.created_at else None,
+                    'user_prompt': version.user_prompt,
+                    'rating': version.rating,
+                    'review': version.review,
+                    
+                    # AdRequest data (inherited by each version card)
+                    'ad_request_id': ad_request.id,
+                    'ad_request_status': ad_request.status,
+                    'canvas_size': ad_request.canvas_size,
+                    'ad_request_created_at': ad_request.created_at.isoformat() if ad_request.created_at else None,
+                    'ad_request_updated_at': ad_request.updated_at.isoformat() if ad_request.updated_at else None,
+                    'brand_name': brand_name,
+                    'ad_library_name': ad_request.ad_library.facebook_page.page_name if ad_request.ad_library else None,
+                    
+                    # Card type identifier
+                    'card_type': 'version',
+                }
+                my_ads_data.append(version_card_data)
+        
+        elif ad_request.status == AdRequest.STATUS_DRAFT:
+            # Create a card for DRAFT AdRequests without versions
+            draft_card_data = {
+                # No version-specific data
+                'version_id': None,
+                'version_status': None,
+                'image_url': None,
+                'version_created_at': None,
+                'user_prompt': None,
+                'rating': None,
+                'review': None,
+                
+                # AdRequest data
+                'ad_request_id': ad_request.id,
+                'ad_request_status': ad_request.status,
+                'canvas_size': ad_request.canvas_size,
+                'ad_request_created_at': ad_request.created_at.isoformat() if ad_request.created_at else None,
+                'ad_request_updated_at': ad_request.updated_at.isoformat() if ad_request.updated_at else None,
+                'brand_name': brand_name,
+                'ad_library_name': ad_request.ad_library.facebook_page.page_name if ad_request.ad_library else None,
+                
+                # Card type identifier
+                'card_type': 'draft',
+            }
+            my_ads_data.append(draft_card_data)
+    
+    # Sort by most recent activity (version creation date for versions, ad_request updated_at for drafts)
+    my_ads_data.sort(key=lambda x: x['version_created_at'] or x['ad_request_updated_at'] or '', reverse=True)
+    
+    # Convert to JSON for frontend
+    my_ads_json = json.dumps(my_ads_data, cls=DjangoJSONEncoder)
+    
+    template = "ads/my-ads.html"
+    context = {
+        "active_tab": "my-ads",
+        "my_ads_data": my_ads_json,
+    }
+    
+    return TemplateResponse(request, template, context)
+
+
+@login_required
+def assets_page(request):
+    """
+    Render the Assets page with React components.
+    Shows all UserBrands and UserFolders for the current user as containers.
+    """
+    # Get all unique brands that have assets for the current user
+    user_brands = UserBrand.objects.filter(
+        brand_assets__user=request.user
+    ).distinct().order_by('brand_name')
+    
+    # Get all root folders (folders without parent and without brand) for the current user
+    user_folders = UserFolder.objects.filter(
+        user=request.user,
+        parent_folder__isnull=True,  # Only root folders
+        brand__isnull=True  # Exclude brand-specific folders
+    ).order_by('folder_name')
+    
+    # Prepare containers data for frontend (brands + folders)
+    containers_data = []
+    
+    # Add brands
+    for brand in user_brands:
+        brand_info = {
+            'id': brand.id,
+            'name': brand.brand_name,
+            'type': 'brand',
+            'created_at': brand.created_at.isoformat() if brand.created_at else None,
+        }
+        containers_data.append(brand_info)
+    
+    # Add root folders
+    for folder in user_folders:
+        folder_info = {
+            'id': folder.id,
+            'name': folder.folder_name,
+            'type': 'folder',
+            'full_path': folder.full_path,
+            'created_at': folder.created_at.isoformat() if folder.created_at else None,
+        }
+        containers_data.append(folder_info)
+    
+    # Sort containers by name
+    containers_data.sort(key=lambda x: x['name'].lower())
+    
+    # Convert to JSON for frontend
+    containers_json = json.dumps(containers_data, cls=DjangoJSONEncoder)
+    
+    template = "ads/assets.html"
+    context = {
+        "active_tab": "assets",
+        "containers_data": containers_json,
+    }
+    
+    return TemplateResponse(request, template, context)
+
+
+@login_required
+def folder_assets_detail(request, folder_id):
+    """
+    Get all UserBrandAssets for a specific folder and return as JSON.
+    """
+    try:
+        # Verify the folder belongs to the user
+        folder = get_object_or_404(UserFolder, id=folder_id, user=request.user)
+        
+        # Get direct assets for this folder only (not subfolders)
+        assets = UserBrandAssets.objects.filter(
+            user=request.user,
+            folder=folder
+        ).order_by('-created_at')
+        
+        # Get direct subfolders of this folder
+        subfolders = UserFolder.objects.filter(
+            user=request.user,
+            parent_folder=folder
+        ).order_by('folder_name')
+        
+        # Prepare assets data for frontend
+        assets_data = []
+        for asset in assets:
+            asset_info = {
+                'id': asset.id,
+                'image_url': asset.image.url if asset.image else None,
+                'category': asset.category,
+                'original_filename': asset.original_filename,
+                'canvas_width': asset.canvas_width,
+                'canvas_height': asset.canvas_height,
+                'file_size': asset.file_size,
+                'folder_name': asset.folder.folder_name if asset.folder else None,
+                'folder_path': asset.folder.full_path if asset.folder else None,
+                'created_at': asset.created_at.isoformat() if asset.created_at else None,
+            }
+            assets_data.append(asset_info)
+        
+        # Prepare subfolders data for frontend
+        subfolders_data = []
+        for subfolder in subfolders:
+            subfolder_info = {
+                'id': subfolder.id,
+                'name': subfolder.folder_name,
+                'type': 'folder',
+                'full_path': subfolder.full_path,
+                'created_at': subfolder.created_at.isoformat() if subfolder.created_at else None,
+            }
+            subfolders_data.append(subfolder_info)
+        
+        return JsonResponse({
+            'success': True,
+            'folder': {
+                'id': folder.id,
+                'name': folder.folder_name,
+                'full_path': folder.full_path,
+                'assets_count': len(assets_data),
+                'subfolders_count': len(subfolders_data)
+            },
+            'assets': assets_data,
+            'subfolders': subfolders_data
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def folder_assets_detail_page(request, folder_id):
+    """
+    Render the Folder Assets Detail page with React components.
+    """
+    try:
+        # Verify the folder belongs to the user
+        folder = get_object_or_404(UserFolder, id=folder_id, user=request.user)
+        
+        template = "ads/folder_assets_detail.html"
+        context = {
+            "active_tab": "assets",
+            "folder_id": folder_id,
+            "folder_name": folder.folder_name,
+            "folder_path": folder.full_path,
+        }
+        
+        return TemplateResponse(request, template, context)
+        
+    except Exception as e:
+        # Redirect to assets page if folder not found
+        return redirect('assets_page')
+
+
+@login_required
+@require_POST
+def create_folder(request):
+    """
+    Create a new UserFolder for the current user.
+    Expects 'folder_name' and optional 'parent_folder_id' and 'brand_id' in POST data.
+    """
+    try:
+        folder_name = request.POST.get('folder_name', '').strip()
+        parent_folder_id = request.POST.get('parent_folder_id')
+        brand_id = request.POST.get('brand_id')
+        
+        if not folder_name:
+            return JsonResponse({'error': 'Folder name is required'}, status=400)
+        
+        # Validate parent folder if provided
+        parent_folder = None
+        if parent_folder_id:
+            try:
+                parent_folder = UserFolder.objects.get(
+                    id=parent_folder_id,
+                    user=request.user
+                )
+            except UserFolder.DoesNotExist:
+                return JsonResponse({'error': 'Parent folder not found'}, status=404)
+        
+        # Validate brand if provided
+        brand = None
+        if brand_id:
+            try:
+                brand = UserBrand.objects.get(
+                    id=brand_id,
+                    user=request.user
+                )
+            except UserBrand.DoesNotExist:
+                return JsonResponse({'error': 'Brand not found'}, status=404)
+        
+        # Check if folder with same name already exists in the same context
+        existing_folder = UserFolder.objects.filter(
+            user=request.user,
+            folder_name=folder_name,
+            parent_folder=parent_folder,
+            brand=brand
+        ).first()
+        
+        if existing_folder:
+            return JsonResponse({'error': 'A folder with this name already exists in this location'}, status=400)
+        
+        # Create the folder
+        folder = UserFolder.objects.create(
+            user=request.user,
+            folder_name=folder_name,
+            parent_folder=parent_folder,
+            brand=brand
+        )
+        
+        # Return folder data
+        folder_data = {
+            'id': folder.id,
+            'name': folder.folder_name,
+            'type': 'folder',
+            'full_path': folder.full_path,
+            'assets_count': 0,
+            'created_at': folder.created_at.isoformat(),
+        }
+        
+        return JsonResponse({
+            'success': True,
+            'folder': folder_data,
+            'message': f'Folder "{folder_name}" created successfully'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def brand_assets_detail(request, brand_id):
+    """
+    Get all UserBrandAssets and UserFolders for a specific brand and return as JSON.
+    """
+    try:
+        # Verify the brand belongs to the user
+        brand = get_object_or_404(UserBrand, id=brand_id)
+        
+        # Get all assets for this brand and user
+        assets = UserBrandAssets.objects.filter(
+            user=request.user,
+            brand=brand
+        ).order_by('-created_at')
+        
+        # Get all folders for this brand and user (only direct brand folders, not subfolders)
+        folders = UserFolder.objects.filter(
+            user=request.user,
+            brand=brand,
+            parent_folder__isnull=True  # Only root-level brand folders
+        ).order_by('folder_name')
+        
+        # Prepare assets data
+        assets_data = []
+        for asset in assets:
+            asset_info = {
+                'id': asset.id,
+                'brand_name': brand.brand_name,
+                'image_url': asset.image.url if asset.image else None,
+                'category': asset.category,
+                'original_filename': asset.original_filename,
+                'created_at': asset.created_at.isoformat() if asset.created_at else None,
+            }
+            assets_data.append(asset_info)
+        
+        # Prepare folders data
+        folders_data = []
+        for folder in folders:
+            folder_info = {
+                'id': folder.id,
+                'name': folder.folder_name,
+                'type': 'folder',
+                'full_path': folder.full_path,
+                'created_at': folder.created_at.isoformat() if folder.created_at else None,
+            }
+            folders_data.append(folder_info)
+        
+        return JsonResponse({
+            'brand': {
+                'id': brand.id,
+                'name': brand.brand_name,
+                'assets_count': len(assets_data),
+                'folders_count': len(folders_data)
+            },
+            'assets': assets_data,
+            'folders': folders_data
+        })
+        
+    except UserBrand.DoesNotExist:
+        return JsonResponse({'error': 'Brand not found'}, status=404)
+
+
+@login_required
+def brand_assets_detail_page(request, brand_id):
+    """
+    Render the Brand Assets Detail page with React components.
+    Shows all assets for a specific brand.
+    """
+    try:
+        # Verify the brand belongs to the user
+        brand = get_object_or_404(UserBrand, id=brand_id)
+        
+        template = "ads/brand-assets-detail.html"
+        context = {
+            "active_tab": "assets",
+            "brand_id": brand_id,
+            "brand_name": brand.brand_name,
+        }
+        
+        return TemplateResponse(request, template, context)
+        
+    except UserBrand.DoesNotExist:
+        return redirect('ads:assets_page')
+
+
+@login_required
+@require_http_methods(["POST"])
+def upload_brand_assets(request, brand_id):
+    """
+    Upload multiple assets for a specific brand.
+    """
+    try:
+        # Verify the brand belongs to the user
+        brand = get_object_or_404(UserBrand, id=brand_id)
+        
+        uploaded_assets = []
+        
+        # Process each uploaded file
+        for key, file in request.FILES.items():
+            if key.startswith('asset_'):
+                # Create new UserBrandAssets instance
+                asset = UserBrandAssets.objects.create(
+                    user=request.user,
+                    brand=brand,
+                    image=file,
+                    category='assets',
+                    original_filename=file.name
+                )
+                
+                uploaded_assets.append({
+                    'id': asset.id,
+                    'image_url': asset.image.url,
+                    'original_filename': asset.original_filename,
+                    'created_at': asset.created_at.isoformat(),
+                })
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'{len(uploaded_assets)} assets uploaded successfully',
+            'assets': uploaded_assets
+        })
+        
+    except UserBrand.DoesNotExist:
+        return JsonResponse({'error': 'Brand not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def upload_folder_assets(request, folder_id):
+    """
+    Upload multiple assets for a specific folder.
+    """
+    try:
+        # Verify the folder belongs to the user
+        folder = get_object_or_404(UserFolder, id=folder_id, user=request.user)
+        
+        uploaded_assets = []
+        
+        # Process each uploaded file
+        for key, file in request.FILES.items():
+            if key.startswith('asset_'):
+                # Create new UserBrandAssets instance for folder
+                asset = UserBrandAssets.objects.create(
+                    user=request.user,
+                    folder=folder,
+                    image=file,
+                    category='assets',
+                    original_filename=file.name
+                )
+                
+                uploaded_assets.append({
+                    'id': asset.id,
+                    'image_url': asset.image.url,
+                    'original_filename': asset.original_filename,
+                    'created_at': asset.created_at.isoformat(),
+                })
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'{len(uploaded_assets)} assets uploaded successfully',
+            'assets': uploaded_assets
+        })
+        
+    except UserFolder.DoesNotExist:
+        return JsonResponse({'error': 'Folder not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def generated_ad_page(request, version_id):
+    """
+    Display the generated ad page for a specific AdRequestVersion.
+    Shows the generated image with action buttons.
+    """
+    try:
+        # Get the AdRequestVersion and verify user permissions
+        version = get_object_or_404(AdRequestVersion, id=version_id, ad_request__user=request.user)
+        
+        # Verify that the version has a generated image
+        if not version.generated_image:
+            return redirect('ads:my_ads_page')
+        
+        context = {
+            'version': version,
+        }
+        
+        return render(request, 'ads/generated_ad.html', context)
+        
+    except AdRequestVersion.DoesNotExist:
+        return redirect('ads:my_ads_page')

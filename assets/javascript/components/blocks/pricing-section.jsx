@@ -74,8 +74,8 @@ export function PricingSection({
           ))}
         </div>
       </div>
-      <div className="w-full max-w-6xl mx-auto">
-        <div className={`grid gap-6 sm:grid-cols-2 ${selectedFrequency === "usage" && usagePackages?.length === 2 ? 'xl:grid-cols-2' : tiers.length === 3 ? 'xl:grid-cols-3' : 'xl:grid-cols-4'}`}>
+      <div className="w-full max-w-7xl mx-auto">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {/* Renderizar productos con columnas vacías al inicio para centrar */}
           {(() => {
             const products = renderProducts();
