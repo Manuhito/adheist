@@ -27,7 +27,7 @@ from django.utils import timezone
 from apps.aiinterface.tasks import send_slack_notification
 from django.contrib.auth import get_user_model
 
-from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion, AdRequestUsage, ExtraCredit, UserBrand, UserBrandAssets
+from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion, AdRequestUsage, ExtraCredit, UserBrand, UserBrandAssets, UserFolder
 from .forms import AdLibraryForm
 from .services import can_create_ad_request, use_credit, can_create_ad_request_version, get_ad_request_version_limit, use_general_credit, use_version_credit, can_create_ad_version, use_credits_for_operation
 import boto3
@@ -1151,7 +1151,8 @@ def user_images(request):
 def upload_brand_asset(request):
     """
     Upload an image to UserBrandAssets model.
-    Expects 'image' file, 'category' (logo, product, app, marketing), and optional 'brand_id' in POST data.
+    Expects 'image' file, 'category' (logo, product, app, marketing), and optional 'brand_id' or 'folder_id' in POST data.
+    The asset will be associated with either a brand or a folder, but not both.
     Extracts and stores file metadata including filename, dimensions, and file size.
     """
     try:
@@ -1168,15 +1169,25 @@ def upload_brand_asset(request):
         if category not in ['logo', 'product', 'app', 'marketing']:
             category = 'product'  # Default to product if invalid category
         
-        # Get the brand
+        # Get the container (brand or folder)
         brand_id = request.POST.get('brand_id')
+        folder_id = request.POST.get('folder_id')
+        
+        brand = None
+        folder = None
+        
         if brand_id:
             try:
                 brand = UserBrand.objects.get(id=brand_id, user=request.user)
             except UserBrand.DoesNotExist:
                 return JsonResponse({'success': False, 'error': 'Brand not found'}, status=404)
+        elif folder_id:
+            try:
+                folder = UserFolder.objects.get(id=folder_id, user=request.user)
+            except UserFolder.DoesNotExist:
+                return JsonResponse({'success': False, 'error': 'Folder not found'}, status=404)
         else:
-            # If no brand specified, get the first brand or create a default one
+            # If no container specified, get the first brand or create a default one
             brand = UserBrand.objects.filter(user=request.user).first()
             if not brand:
                 brand = UserBrand.objects.create(
@@ -1192,21 +1203,27 @@ def upload_brand_asset(request):
         
         # Extract logo dimensions using PIL (Python Imaging Library)
         try:
-            # Open the uploaded logo to read its canvas dimensions
-            pil_image = Image.open(image)
-            canvas_width, canvas_height = pil_image.size  # Get logo width and height in pixels
-            pil_image.close()
+            # Create a copy of the file content to avoid closing the original file
+            from io import BytesIO
+            image_copy = BytesIO(image.read())
             
-            # Reset file pointer to beginning after PIL reading for Django file handling
+            # Open the copied image data to read its canvas dimensions
+            with Image.open(image_copy) as pil_image:
+                canvas_width, canvas_height = pil_image.size  # Get logo width and height in pixels
+            
+            # Reset file pointer to beginning for Django file handling
             image.seek(0)
         except Exception as e:
             # If we can't read the logo dimensions, log the error but continue with upload
             print(f"Could not extract logo dimensions from {original_filename}: {e}")
+            # Reset file pointer in case of error
+            image.seek(0)
         
         # Create the UserBrandAssets object with complete logo metadata
         asset = UserBrandAssets.objects.create(
             user=request.user,
             brand=brand,
+            folder=folder,
             image=image,
             category=category,
             original_filename=original_filename,  # Store original logo filename
@@ -1216,21 +1233,31 @@ def upload_brand_asset(request):
         )
         
         # Return success response with complete logo metadata for frontend display
-        return JsonResponse({
+        response_data = {
             'success': True,
             'image': {
                 'id': asset.id,
                 'url': asset.image.url,
                 'category': asset.category,
-                'brand_id': asset.brand.id,
-                'brand_name': asset.brand.brand_name,
                 'original_filename': asset.original_filename,  # Logo filename (e.g., "company-logo.png")
                 'canvas_width': asset.canvas_width,           # Logo width in pixels
                 'canvas_height': asset.canvas_height,         # Logo height in pixels
                 'file_size': asset.file_size,                 # Logo file size in bytes
                 'canvas_size': f"{asset.canvas_width}x{asset.canvas_height}" if asset.canvas_width and asset.canvas_height else None  # Formatted dimensions (e.g., "1024x768")
             }
-        })
+        }
+        
+        # Add container information
+        if asset.brand:
+            response_data['image']['brand_id'] = asset.brand.id
+            response_data['image']['brand_name'] = asset.brand.brand_name
+            response_data['image']['container_type'] = 'brand'
+        elif asset.folder:
+            response_data['image']['folder_id'] = asset.folder.id
+            response_data['image']['folder_name'] = asset.folder.folder_name
+            response_data['image']['container_type'] = 'folder'
+        
+        return JsonResponse(response_data)
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
@@ -2898,6 +2925,65 @@ def get_user_brands(request):
 
 
 @login_required
+@require_http_methods(["GET"])
+def get_user_containers(request):
+    """
+    Get all containers (brands + folders) associated with the current user.
+    
+    Returns: JSON with list of user containers (brands and root folders)
+    """
+    try:
+        containers_data = []
+        
+        # Get all unique brands that have assets for the current user
+        user_brands = UserBrand.objects.filter(
+            brand_assets__user=request.user
+        ).distinct().order_by('brand_name')
+        
+        # Add brands
+        for brand in user_brands:
+            brand_info = {
+                'id': brand.id,
+                'name': brand.brand_name,
+                'type': 'brand',
+                'created_at': brand.created_at.isoformat() if brand.created_at else None,
+            }
+            containers_data.append(brand_info)
+        
+        # Get all root folders (folders without parent and without brand) for the current user
+        user_folders = UserFolder.objects.filter(
+            user=request.user,
+            parent_folder__isnull=True,  # Only root folders
+            brand__isnull=True  # Exclude brand-specific folders
+        ).order_by('folder_name')
+        
+        # Add root folders
+        for folder in user_folders:
+            folder_info = {
+                'id': folder.id,
+                'name': folder.folder_name,
+                'type': 'folder',
+                'full_path': folder.full_path,
+                'created_at': folder.created_at.isoformat() if folder.created_at else None,
+            }
+            containers_data.append(folder_info)
+        
+        # Sort containers by name
+        containers_data.sort(key=lambda x: x['name'].lower())
+        
+        return JsonResponse({
+            'success': True,
+            'containers': containers_data
+        })
+    except Exception as e:
+        logging.error(f"Error retrieving user containers: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
+
+
+@login_required
 @require_http_methods(["POST"])
 def create_user_brand(request):
     """
@@ -3205,46 +3291,230 @@ def my_ads_page(request):
 def assets_page(request):
     """
     Render the Assets page with React components.
-    Shows all UserBrands for the current user as folders.
+    Shows all UserBrands and UserFolders for the current user as containers.
     """
     # Get all unique brands that have assets for the current user
     user_brands = UserBrand.objects.filter(
         brand_assets__user=request.user
     ).distinct().order_by('brand_name')
     
-    # Prepare brands data for frontend
-    brands_data = []
+    # Get all root folders (folders without parent and without brand) for the current user
+    user_folders = UserFolder.objects.filter(
+        user=request.user,
+        parent_folder__isnull=True,  # Only root folders
+        brand__isnull=True  # Exclude brand-specific folders
+    ).order_by('folder_name')
+    
+    # Prepare containers data for frontend (brands + folders)
+    containers_data = []
+    
+    # Add brands
     for brand in user_brands:
-        # Count assets for this brand
-        assets_count = UserBrandAssets.objects.filter(
-            user=request.user,
-            brand=brand
-        ).count()
-        
         brand_info = {
             'id': brand.id,
             'name': brand.brand_name,
-            'assets_count': assets_count,
+            'type': 'brand',
             'created_at': brand.created_at.isoformat() if brand.created_at else None,
         }
-        brands_data.append(brand_info)
+        containers_data.append(brand_info)
+    
+    # Add root folders
+    for folder in user_folders:
+        folder_info = {
+            'id': folder.id,
+            'name': folder.folder_name,
+            'type': 'folder',
+            'full_path': folder.full_path,
+            'created_at': folder.created_at.isoformat() if folder.created_at else None,
+        }
+        containers_data.append(folder_info)
+    
+    # Sort containers by name
+    containers_data.sort(key=lambda x: x['name'].lower())
     
     # Convert to JSON for frontend
-    brands_json = json.dumps(brands_data, cls=DjangoJSONEncoder)
+    containers_json = json.dumps(containers_data, cls=DjangoJSONEncoder)
     
     template = "ads/assets.html"
     context = {
         "active_tab": "assets",
-        "brands_data": brands_json,
+        "containers_data": containers_json,
     }
     
     return TemplateResponse(request, template, context)
 
 
 @login_required
+def folder_assets_detail(request, folder_id):
+    """
+    Get all UserBrandAssets for a specific folder and return as JSON.
+    """
+    try:
+        # Verify the folder belongs to the user
+        folder = get_object_or_404(UserFolder, id=folder_id, user=request.user)
+        
+        # Get direct assets for this folder only (not subfolders)
+        assets = UserBrandAssets.objects.filter(
+            user=request.user,
+            folder=folder
+        ).order_by('-created_at')
+        
+        # Get direct subfolders of this folder
+        subfolders = UserFolder.objects.filter(
+            user=request.user,
+            parent_folder=folder
+        ).order_by('folder_name')
+        
+        # Prepare assets data for frontend
+        assets_data = []
+        for asset in assets:
+            asset_info = {
+                'id': asset.id,
+                'image_url': asset.image.url if asset.image else None,
+                'category': asset.category,
+                'original_filename': asset.original_filename,
+                'canvas_width': asset.canvas_width,
+                'canvas_height': asset.canvas_height,
+                'file_size': asset.file_size,
+                'folder_name': asset.folder.folder_name if asset.folder else None,
+                'folder_path': asset.folder.full_path if asset.folder else None,
+                'created_at': asset.created_at.isoformat() if asset.created_at else None,
+            }
+            assets_data.append(asset_info)
+        
+        # Prepare subfolders data for frontend
+        subfolders_data = []
+        for subfolder in subfolders:
+            subfolder_info = {
+                'id': subfolder.id,
+                'name': subfolder.folder_name,
+                'type': 'folder',
+                'full_path': subfolder.full_path,
+                'created_at': subfolder.created_at.isoformat() if subfolder.created_at else None,
+            }
+            subfolders_data.append(subfolder_info)
+        
+        return JsonResponse({
+            'success': True,
+            'folder': {
+                'id': folder.id,
+                'name': folder.folder_name,
+                'full_path': folder.full_path,
+                'assets_count': len(assets_data),
+                'subfolders_count': len(subfolders_data)
+            },
+            'assets': assets_data,
+            'subfolders': subfolders_data
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def folder_assets_detail_page(request, folder_id):
+    """
+    Render the Folder Assets Detail page with React components.
+    """
+    try:
+        # Verify the folder belongs to the user
+        folder = get_object_or_404(UserFolder, id=folder_id, user=request.user)
+        
+        template = "ads/folder_assets_detail.html"
+        context = {
+            "active_tab": "assets",
+            "folder_id": folder_id,
+            "folder_name": folder.folder_name,
+            "folder_path": folder.full_path,
+        }
+        
+        return TemplateResponse(request, template, context)
+        
+    except Exception as e:
+        # Redirect to assets page if folder not found
+        return redirect('assets_page')
+
+
+@login_required
+@require_POST
+def create_folder(request):
+    """
+    Create a new UserFolder for the current user.
+    Expects 'folder_name' and optional 'parent_folder_id' and 'brand_id' in POST data.
+    """
+    try:
+        folder_name = request.POST.get('folder_name', '').strip()
+        parent_folder_id = request.POST.get('parent_folder_id')
+        brand_id = request.POST.get('brand_id')
+        
+        if not folder_name:
+            return JsonResponse({'error': 'Folder name is required'}, status=400)
+        
+        # Validate parent folder if provided
+        parent_folder = None
+        if parent_folder_id:
+            try:
+                parent_folder = UserFolder.objects.get(
+                    id=parent_folder_id,
+                    user=request.user
+                )
+            except UserFolder.DoesNotExist:
+                return JsonResponse({'error': 'Parent folder not found'}, status=404)
+        
+        # Validate brand if provided
+        brand = None
+        if brand_id:
+            try:
+                brand = UserBrand.objects.get(
+                    id=brand_id,
+                    user=request.user
+                )
+            except UserBrand.DoesNotExist:
+                return JsonResponse({'error': 'Brand not found'}, status=404)
+        
+        # Check if folder with same name already exists in the same context
+        existing_folder = UserFolder.objects.filter(
+            user=request.user,
+            folder_name=folder_name,
+            parent_folder=parent_folder,
+            brand=brand
+        ).first()
+        
+        if existing_folder:
+            return JsonResponse({'error': 'A folder with this name already exists in this location'}, status=400)
+        
+        # Create the folder
+        folder = UserFolder.objects.create(
+            user=request.user,
+            folder_name=folder_name,
+            parent_folder=parent_folder,
+            brand=brand
+        )
+        
+        # Return folder data
+        folder_data = {
+            'id': folder.id,
+            'name': folder.folder_name,
+            'type': 'folder',
+            'full_path': folder.full_path,
+            'assets_count': 0,
+            'created_at': folder.created_at.isoformat(),
+        }
+        
+        return JsonResponse({
+            'success': True,
+            'folder': folder_data,
+            'message': f'Folder "{folder_name}" created successfully'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
 def brand_assets_detail(request, brand_id):
     """
-    Get all UserBrandAssets for a specific brand and return as JSON.
+    Get all UserBrandAssets and UserFolders for a specific brand and return as JSON.
     """
     try:
         # Verify the brand belongs to the user
@@ -3255,6 +3525,13 @@ def brand_assets_detail(request, brand_id):
             user=request.user,
             brand=brand
         ).order_by('-created_at')
+        
+        # Get all folders for this brand and user (only direct brand folders, not subfolders)
+        folders = UserFolder.objects.filter(
+            user=request.user,
+            brand=brand,
+            parent_folder__isnull=True  # Only root-level brand folders
+        ).order_by('folder_name')
         
         # Prepare assets data
         assets_data = []
@@ -3269,12 +3546,27 @@ def brand_assets_detail(request, brand_id):
             }
             assets_data.append(asset_info)
         
+        # Prepare folders data
+        folders_data = []
+        for folder in folders:
+            folder_info = {
+                'id': folder.id,
+                'name': folder.folder_name,
+                'type': 'folder',
+                'full_path': folder.full_path,
+                'created_at': folder.created_at.isoformat() if folder.created_at else None,
+            }
+            folders_data.append(folder_info)
+        
         return JsonResponse({
             'brand': {
                 'id': brand.id,
                 'name': brand.brand_name,
+                'assets_count': len(assets_data),
+                'folders_count': len(folders_data)
             },
-            'assets': assets_data
+            'assets': assets_data,
+            'folders': folders_data
         })
         
     except UserBrand.DoesNotExist:
@@ -3343,6 +3635,49 @@ def upload_brand_assets(request, brand_id):
         
     except UserBrand.DoesNotExist:
         return JsonResponse({'error': 'Brand not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def upload_folder_assets(request, folder_id):
+    """
+    Upload multiple assets for a specific folder.
+    """
+    try:
+        # Verify the folder belongs to the user
+        folder = get_object_or_404(UserFolder, id=folder_id, user=request.user)
+        
+        uploaded_assets = []
+        
+        # Process each uploaded file
+        for key, file in request.FILES.items():
+            if key.startswith('asset_'):
+                # Create new UserBrandAssets instance for folder
+                asset = UserBrandAssets.objects.create(
+                    user=request.user,
+                    folder=folder,
+                    image=file,
+                    category='assets',
+                    original_filename=file.name
+                )
+                
+                uploaded_assets.append({
+                    'id': asset.id,
+                    'image_url': asset.image.url,
+                    'original_filename': asset.original_filename,
+                    'created_at': asset.created_at.isoformat(),
+                })
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'{len(uploaded_assets)} assets uploaded successfully',
+            'assets': uploaded_assets
+        })
+        
+    except UserFolder.DoesNotExist:
+        return JsonResponse({'error': 'Folder not found'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 

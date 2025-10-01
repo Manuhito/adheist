@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 from django.urls import reverse
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
@@ -921,13 +922,113 @@ class UserBrand(BaseModel):
         return f"{self.user.email} - {self.brand_name}"
 
 
+class UserFolder(BaseModel):
+    """
+    Model to store user custom folders for organizing assets.
+    Supports hierarchical folder structure with parent-child relationships.
+    Can be associated with a brand for brand-specific organization.
+    """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="folders")
+    folder_name = models.CharField(max_length=255, help_text="Name of the folder")
+    parent_folder = models.ForeignKey('self', on_delete=models.CASCADE, related_name="subfolders", blank=True, null=True, help_text="Parent folder for hierarchical organization")
+    brand = models.ForeignKey('UserBrand', on_delete=models.CASCADE, related_name="folders", blank=True, null=True, help_text="Brand this folder belongs to (for brand-specific folders)")
+    
+    class Meta:
+        verbose_name = "User Folder"
+        verbose_name_plural = "User Folders"
+        ordering = ['created_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'folder_name', 'parent_folder', 'brand'],
+                name='unique_user_folder_in_context'
+            ),
+            # Ensure folder hierarchy logic: 
+            # - Root folders: no parent, may have brand
+            # - Subfolders: have parent, inherit brand context
+            # - Brand folders: have brand, no parent (or parent with same brand)
+            models.CheckConstraint(
+                check=Q(parent_folder__isnull=True) | Q(brand__isnull=True),
+                name='folder_hierarchy_constraint'
+            )
+        ]
+    
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        
+        # Prevent circular references
+        if self.parent_folder:
+            current = self.parent_folder
+            visited = set()
+            while current:
+                if current.id == self.id:
+                    raise ValidationError("Folder cannot be its own parent (circular reference).")
+                if current.id in visited:
+                    raise ValidationError("Circular reference detected in folder hierarchy.")
+                visited.add(current.id)
+                current = current.parent_folder
+        
+        # Validate brand-folder relationship
+        if self.parent_folder and self.brand:
+            # Subfolders inherit brand context from parent
+            if self.parent_folder.brand and self.parent_folder.brand != self.brand:
+                raise ValidationError("Subfolder must belong to the same brand as its parent folder.")
+            # If parent has no brand, subfolder cannot have brand either
+            if not self.parent_folder.brand:
+                raise ValidationError("Subfolder cannot belong to a brand if parent folder is not brand-specific.")
+    
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+    
+    @property
+    def full_path(self):
+        """Returns the full path of the folder (e.g., 'Marketing/Campaigns/Q1')"""
+        if self.parent_folder:
+            return f"{self.parent_folder.full_path}/{self.folder_name}"
+        return self.folder_name
+    
+    @property
+    def depth(self):
+        """Returns the depth level of the folder (0 for root folders)"""
+        if self.parent_folder:
+            return self.parent_folder.depth + 1
+        return 0
+    
+    def get_all_children(self):
+        """Returns all descendant folders (children, grandchildren, etc.)"""
+        children = list(self.subfolders.all())
+        for child in list(children):
+            children.extend(child.get_all_children())
+        return children
+    
+    def get_root_folder(self):
+        """Returns the root folder of this folder's hierarchy"""
+        if self.parent_folder:
+            return self.parent_folder.get_root_folder()
+        return self
+    
+    def is_ancestor_of(self, folder):
+        """Check if this folder is an ancestor of the given folder"""
+        current = folder.parent_folder
+        while current:
+            if current == self:
+                return True
+            current = current.parent_folder
+        return False
+    
+    def __str__(self):
+        return f"{self.user.email} - {self.full_path}"
+
+
 class UserBrandAssets(BaseModel):
     """
     Model to centralize storage of user-uploaded images.
     Keeps track of all images uploaded by users for their ad requests.
+    Assets can be organized by brand or by custom folder.
     """
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="brand_assets")
-    brand = models.ForeignKey(UserBrand, on_delete=models.CASCADE, related_name="brand_assets")
+    brand = models.ForeignKey(UserBrand, on_delete=models.CASCADE, related_name="brand_assets", blank=True, null=True)
+    folder = models.ForeignKey(UserFolder, on_delete=models.CASCADE, related_name="folder_assets", blank=True, null=True)
     image = models.ImageField(upload_to="brand_assets/", help_text="Image uploaded by the user")
     category = models.CharField(
         max_length=20, 
@@ -968,9 +1069,41 @@ class UserBrandAssets(BaseModel):
         verbose_name = "User Brand Asset"
         verbose_name_plural = "User Brand Assets"
         ordering = ['-created_at']
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(brand__isnull=False, folder__isnull=True) | models.Q(brand__isnull=True, folder__isnull=False),
+                name='asset_must_have_brand_or_folder'
+            )
+        ]
+    
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        
+        # Ensure asset is assigned to either a brand or a folder, but not both
+        if self.brand and self.folder:
+            raise ValidationError("Asset cannot be assigned to both a brand and a folder.")
+        
+        if not self.brand and not self.folder:
+            raise ValidationError("Asset must be assigned to either a brand or a folder.")
+    
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
     
     def __str__(self):
-        return f"{self.user.email} - {self.brand.brand_name} - {self.category} asset"
+        container = self.brand.brand_name if self.brand else self.folder.folder_name
+        container_type = "brand" if self.brand else "folder"
+        return f"{self.user.email} - {container} ({container_type}) - {self.category} asset"
+    
+    @property
+    def container_name(self):
+        """Returns the name of the container (brand or folder) this asset belongs to."""
+        return self.brand.brand_name if self.brand else self.folder.folder_name
+    
+    @property
+    def container_type(self):
+        """Returns the type of container this asset belongs to ('brand' or 'folder')."""
+        return 'brand' if self.brand else 'folder'
 
 
 class FAQ(BaseModel):
