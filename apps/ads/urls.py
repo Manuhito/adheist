@@ -34,6 +34,7 @@ urlpatterns = [
     path("api/deactivate-image/", views.deactivate_image, name="deactivate_image"),
     path("api/request-brand/", views.request_brand, name="request_brand"),
     path("api/user-brands/", views.get_user_brands, name="get_user_brands"),
+    path("api/containers/", views.get_user_containers, name="get_user_containers"),
     path("api/create-user-brand/", views.create_user_brand, name="create_user_brand"),
     path("api/version/rate/", views.adrequest_version_rate, name="adrequest_version_rate"),
     path("user-images/", views.user_images, name="user_images"),

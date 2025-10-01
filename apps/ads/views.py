@@ -1151,7 +1151,8 @@ def user_images(request):
 def upload_brand_asset(request):
     """
     Upload an image to UserBrandAssets model.
-    Expects 'image' file, 'category' (logo, product, app, marketing), and optional 'brand_id' in POST data.
+    Expects 'image' file, 'category' (logo, product, app, marketing), and optional 'brand_id' or 'folder_id' in POST data.
+    The asset will be associated with either a brand or a folder, but not both.
     Extracts and stores file metadata including filename, dimensions, and file size.
     """
     try:
@@ -1168,15 +1169,25 @@ def upload_brand_asset(request):
         if category not in ['logo', 'product', 'app', 'marketing']:
             category = 'product'  # Default to product if invalid category
         
-        # Get the brand
+        # Get the container (brand or folder)
         brand_id = request.POST.get('brand_id')
+        folder_id = request.POST.get('folder_id')
+        
+        brand = None
+        folder = None
+        
         if brand_id:
             try:
                 brand = UserBrand.objects.get(id=brand_id, user=request.user)
             except UserBrand.DoesNotExist:
                 return JsonResponse({'success': False, 'error': 'Brand not found'}, status=404)
+        elif folder_id:
+            try:
+                folder = UserFolder.objects.get(id=folder_id, user=request.user)
+            except UserFolder.DoesNotExist:
+                return JsonResponse({'success': False, 'error': 'Folder not found'}, status=404)
         else:
-            # If no brand specified, get the first brand or create a default one
+            # If no container specified, get the first brand or create a default one
             brand = UserBrand.objects.filter(user=request.user).first()
             if not brand:
                 brand = UserBrand.objects.create(
@@ -1192,21 +1203,27 @@ def upload_brand_asset(request):
         
         # Extract logo dimensions using PIL (Python Imaging Library)
         try:
-            # Open the uploaded logo to read its canvas dimensions
-            pil_image = Image.open(image)
-            canvas_width, canvas_height = pil_image.size  # Get logo width and height in pixels
-            pil_image.close()
+            # Create a copy of the file content to avoid closing the original file
+            from io import BytesIO
+            image_copy = BytesIO(image.read())
             
-            # Reset file pointer to beginning after PIL reading for Django file handling
+            # Open the copied image data to read its canvas dimensions
+            with Image.open(image_copy) as pil_image:
+                canvas_width, canvas_height = pil_image.size  # Get logo width and height in pixels
+            
+            # Reset file pointer to beginning for Django file handling
             image.seek(0)
         except Exception as e:
             # If we can't read the logo dimensions, log the error but continue with upload
             print(f"Could not extract logo dimensions from {original_filename}: {e}")
+            # Reset file pointer in case of error
+            image.seek(0)
         
         # Create the UserBrandAssets object with complete logo metadata
         asset = UserBrandAssets.objects.create(
             user=request.user,
             brand=brand,
+            folder=folder,
             image=image,
             category=category,
             original_filename=original_filename,  # Store original logo filename
@@ -1216,21 +1233,31 @@ def upload_brand_asset(request):
         )
         
         # Return success response with complete logo metadata for frontend display
-        return JsonResponse({
+        response_data = {
             'success': True,
             'image': {
                 'id': asset.id,
                 'url': asset.image.url,
                 'category': asset.category,
-                'brand_id': asset.brand.id,
-                'brand_name': asset.brand.brand_name,
                 'original_filename': asset.original_filename,  # Logo filename (e.g., "company-logo.png")
                 'canvas_width': asset.canvas_width,           # Logo width in pixels
                 'canvas_height': asset.canvas_height,         # Logo height in pixels
                 'file_size': asset.file_size,                 # Logo file size in bytes
                 'canvas_size': f"{asset.canvas_width}x{asset.canvas_height}" if asset.canvas_width and asset.canvas_height else None  # Formatted dimensions (e.g., "1024x768")
             }
-        })
+        }
+        
+        # Add container information
+        if asset.brand:
+            response_data['image']['brand_id'] = asset.brand.id
+            response_data['image']['brand_name'] = asset.brand.brand_name
+            response_data['image']['container_type'] = 'brand'
+        elif asset.folder:
+            response_data['image']['folder_id'] = asset.folder.id
+            response_data['image']['folder_name'] = asset.folder.folder_name
+            response_data['image']['container_type'] = 'folder'
+        
+        return JsonResponse(response_data)
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
@@ -2847,6 +2874,65 @@ def get_user_brands(request):
         })
     except Exception as e:
         logging.error(f"Error retrieving user brands: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
+
+
+@login_required
+@require_http_methods(["GET"])
+def get_user_containers(request):
+    """
+    Get all containers (brands + folders) associated with the current user.
+    
+    Returns: JSON with list of user containers (brands and root folders)
+    """
+    try:
+        containers_data = []
+        
+        # Get all unique brands that have assets for the current user
+        user_brands = UserBrand.objects.filter(
+            brand_assets__user=request.user
+        ).distinct().order_by('brand_name')
+        
+        # Add brands
+        for brand in user_brands:
+            brand_info = {
+                'id': brand.id,
+                'name': brand.brand_name,
+                'type': 'brand',
+                'created_at': brand.created_at.isoformat() if brand.created_at else None,
+            }
+            containers_data.append(brand_info)
+        
+        # Get all root folders (folders without parent and without brand) for the current user
+        user_folders = UserFolder.objects.filter(
+            user=request.user,
+            parent_folder__isnull=True,  # Only root folders
+            brand__isnull=True  # Exclude brand-specific folders
+        ).order_by('folder_name')
+        
+        # Add root folders
+        for folder in user_folders:
+            folder_info = {
+                'id': folder.id,
+                'name': folder.folder_name,
+                'type': 'folder',
+                'full_path': folder.full_path,
+                'created_at': folder.created_at.isoformat() if folder.created_at else None,
+            }
+            containers_data.append(folder_info)
+        
+        # Sort containers by name
+        containers_data.sort(key=lambda x: x['name'].lower())
+        
+        return JsonResponse({
+            'success': True,
+            'containers': containers_data
+        })
+    except Exception as e:
+        logging.error(f"Error retrieving user containers: {str(e)}")
         return JsonResponse({
             'success': False,
             'error': str(e)

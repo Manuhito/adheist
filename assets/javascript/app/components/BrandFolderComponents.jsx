@@ -98,7 +98,7 @@ export function BrandsContainer({ brands, viewMode, onBrandClick }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {brands.map((brand) => (
           <BrandFolderCard 
-            key={brand.id} 
+            key={`${brand.type || 'brand'}-${brand.id}`} 
             brand={brand} 
             onClick={onBrandClick}
           />
@@ -111,7 +111,7 @@ export function BrandsContainer({ brands, viewMode, onBrandClick }) {
     <div className="space-y-3">
       {brands.map((brand) => (
         <BrandFolderListItem 
-          key={brand.id} 
+          key={`${brand.type || 'brand'}-${brand.id}`} 
           brand={brand} 
           onClick={onBrandClick}
         />
