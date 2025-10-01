@@ -10,6 +10,7 @@ class OpenAIConfigurationAdmin(admin.ModelAdmin):
     list_display = (
         'openai_image_model',
         'openai_prompt_model',
+        'web_parsing_model',
         'text_input_price',
         'image_input_price',
         'image_output_price',
@@ -23,6 +24,10 @@ class OpenAIConfigurationAdmin(admin.ModelAdmin):
         ('OpenAI Prompt Generation', {
             'fields': ('openai_prompt_model', 'text_input_price_prompt', 'text_output_price_prompt'),
             'description': 'Configure OpenAI settings for prompt generation (in USD per 1M tokens)'
+        }),
+        ('Web Parsing Configuration', {
+            'fields': ('web_parsing_model', 'web_parsing_input_price', 'web_parsing_output_price', 'web_parsing_prompt'),
+            'description': 'Configure OpenAI settings for website content analysis. The prompt field contains custom extraction instructions that will be combined with the website content and hardcoded response format requirements.'
         }),
     )
     

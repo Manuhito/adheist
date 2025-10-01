@@ -2179,6 +2179,65 @@ def get_user_credits(user):
     }
 
 
+def deduct_user_credits(user, general_credits_to_deduct):
+    """
+    Deduct general credits from user's account.
+    First deducts from regular credits, then from extra credits if needed.
+    
+    Args:
+        user: The user to deduct credits from
+        general_credits_to_deduct: Number of general credits to deduct
+        
+    Returns:
+        bool: True if successful, False if insufficient credits
+    """
+    try:
+        from .models import AdRequestUsage, ExtraCredit
+        
+        # Get current usage record
+        if user.has_active_subscription():
+            usage = AdRequestUsage.get_current_usage(user)
+        else:
+            usage = AdRequestUsage.objects.filter(user=user, is_free_tier=True).first()
+            if not usage:
+                return False  # No credits available
+        
+        # Check if user has enough credits
+        current_general = getattr(usage, 'general_credits', 0)
+        extra_credit_obj = ExtraCredit.objects.filter(user=user).first()
+        extra_general = getattr(extra_credit_obj, 'general_credits', 0) if extra_credit_obj else 0
+        
+        total_available = current_general + extra_general
+        
+        if total_available < general_credits_to_deduct:
+            return False  # Insufficient credits
+        
+        # Deduct from regular credits first
+        remaining_to_deduct = general_credits_to_deduct
+        
+        if current_general >= remaining_to_deduct:
+            # Can deduct entirely from regular credits
+            usage.general_credits = current_general - remaining_to_deduct
+            usage.save()
+        else:
+            # Need to use extra credits too
+            usage.general_credits = 0
+            usage.save()
+            
+            remaining_to_deduct -= current_general
+            
+            # Deduct remaining from extra credits
+            if extra_credit_obj and remaining_to_deduct > 0:
+                extra_credit_obj.general_credits = max(0, extra_general - remaining_to_deduct)
+                extra_credit_obj.save()
+        
+        return True
+        
+    except Exception as e:
+        print(f"Error deducting user credits: {str(e)}")
+        return False
+
+
 def reward_user_for_rating(user):
     """
     Reward a user with credits for submitting a rating.
@@ -3704,3 +3763,51 @@ def generated_ad_page(request, version_id):
         
     except AdRequestVersion.DoesNotExist:
         return redirect('ads:my_ads_page')
+
+
+@login_required
+@require_http_methods(["POST"])
+def analyze_website_for_brand_assets(request):
+    """
+    API endpoint to analyze a website and extract brand assets using OpenAI.
+    
+    Required POST data:
+    - website_url: The URL of the website to analyze
+    
+    Returns:
+    - JSON response with extracted brand assets or error message
+    """
+    try:
+        website_url = request.POST.get('website_url', '').strip()
+        
+        if not website_url:
+            return JsonResponse({
+                'success': False,
+                'error': 'Website URL is required'
+            }, status=400)
+        
+        # Import here to avoid circular imports
+        from .website_analysis import extract_brand_assets_from_website
+        
+        # Perform the extraction
+        result = extract_brand_assets_from_website(request.user, website_url)
+        
+        if result['success']:
+            return JsonResponse({
+                'success': True,
+                'extracted_assets': result['extracted_assets'],
+                'extraction_id': result['extraction_id'],
+                'cost': float(result['cost'])
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': result['error'],
+                'extraction_id': result.get('extraction_id')
+            }, status=400)
+            
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Unexpected error: {str(e)}'
+        }, status=500)

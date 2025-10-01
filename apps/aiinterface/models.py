@@ -58,6 +58,32 @@ class OpenAIConfiguration(models.Model):
         help_text="Price per 1M output tokens for prompt generation (in USD)"
     )
     
+    # Web parsing configuration
+    web_parsing_model = models.CharField(
+        max_length=50,
+        default="gpt-4o-mini",
+        help_text="OpenAI model to use for website content analysis"
+    )
+    
+    web_parsing_input_price = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=0.15,
+        help_text="Price per 1M input tokens for web parsing (in USD)"
+    )
+    
+    web_parsing_output_price = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=0.60,
+        help_text="Price per 1M output tokens for web parsing (in USD)"
+    )
+    
+    web_parsing_prompt = models.TextField(
+        default="Extract brand information from the website content focusing on the company's main products/services, target market, and brand personality. Be thorough but only extract information that is clearly visible on the website.",
+        help_text="Custom instructions for website analysis. This will be combined with the website content and fixed response format instructions."
+    )
+    
     class Meta:
         verbose_name = "OpenAI Configuration"
         verbose_name_plural = "OpenAI Configuration"
@@ -113,4 +139,20 @@ class OpenAIConfiguration(models.Model):
             'openai_prompt_model': config.openai_prompt_model,
             'text_input_price_prompt': config.text_input_price_prompt,
             'text_output_price_prompt': config.text_output_price_prompt,
+        }
+    
+    @classmethod
+    def get_webparsing_config(cls):
+        """
+        Get the web parsing configuration settings.
+        
+        Returns:
+            dict: Web parsing configuration settings
+        """
+        config = cls.get_config()
+        return {
+            'web_parsing_model': config.web_parsing_model,
+            'web_parsing_input_price': config.web_parsing_input_price,
+            'web_parsing_output_price': config.web_parsing_output_price,
+            'web_parsing_prompt': config.web_parsing_prompt,
         }
