@@ -357,17 +357,21 @@ class UserBrandAdmin(admin.ModelAdmin):
 
 @admin.register(UserFolder)
 class UserFolderAdmin(admin.ModelAdmin):
-    list_display = ["folder_name", "user", "parent_folder", "full_path", "depth", "created_at", "updated_at"]
-    search_fields = ["folder_name", "user__email"]
-    list_filter = ["user", "parent_folder"]
-    raw_id_fields = ["parent_folder"]
+    list_display = ["folder_name", "user", "brand", "parent_folder", "folder_type", "full_path", "depth", "created_at", "updated_at"]
+    search_fields = ["folder_name", "user__email", "brand__brand_name"]
+    list_filter = ["user", "brand", "parent_folder"]
+    raw_id_fields = ["parent_folder", "brand"]
     
     fieldsets = [
         (None, {
-            "fields": ["user", "folder_name", "parent_folder"]
+            "fields": ["user", "folder_name"]
+        }),
+        ("Organization", {
+            "fields": ["parent_folder", "brand"],
+            "description": "Choose either a parent folder (for subfolders) or a brand (for brand-specific folders). Cannot have both."
         }),
         ("Hierarchy Info", {
-            "fields": [],
+            "fields": ["full_path", "depth"],
             "description": "Full path and depth are calculated automatically."
         })
     ]
@@ -380,8 +384,20 @@ class UserFolderAdmin(admin.ModelAdmin):
         return readonly
     
     def get_queryset(self, request):
-        # Optimize queries by selecting related parent folders
-        return super().get_queryset(request).select_related('parent_folder', 'user')
+        # Optimize queries by selecting related parent folders and brands
+        return super().get_queryset(request).select_related('parent_folder', 'user', 'brand')
+    
+    def folder_type(self, obj):
+        """Display the type of folder based on its context"""
+        if obj.brand and obj.parent_folder:
+            return "Brand Subfolder"
+        elif obj.brand:
+            return "Brand Folder"
+        elif obj.parent_folder:
+            return "Subfolder"
+        else:
+            return "Root Folder"
+    folder_type.short_description = "Type"
     
     def full_path(self, obj):
         return obj.full_path
@@ -390,6 +406,35 @@ class UserFolderAdmin(admin.ModelAdmin):
     def depth(self, obj):
         return obj.depth
     depth.short_description = "Depth Level"
+    
+    def save_model(self, request, obj, form, change):
+        """Custom save to provide better error messages"""
+        try:
+            super().save_model(request, obj, form, change)
+        except Exception as e:
+            from django.contrib import messages
+            messages.error(request, f"Error saving folder: {str(e)}")
+            raise
+    
+    def get_form(self, request, obj=None, **kwargs):
+        """Customize form to show helpful text"""
+        form = super().get_form(request, obj, **kwargs)
+        
+        # Add help text for brand field
+        if 'brand' in form.base_fields:
+            form.base_fields['brand'].help_text = (
+                "Select a brand to create a brand-specific folder. "
+                "Leave empty for general folders."
+            )
+        
+        # Add help text for parent_folder field
+        if 'parent_folder' in form.base_fields:
+            form.base_fields['parent_folder'].help_text = (
+                "Select a parent folder to create a subfolder. "
+                "Leave empty for root-level folders."
+            )
+        
+        return form
 
 
 @admin.register(FAQ)

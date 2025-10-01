@@ -11,10 +11,14 @@ import {
   Upload,
   X,
   Plus,
-  Trash2
+  Trash2,
+  FolderPlus
 } from 'lucide-react';
 import { AssetsContainer } from './components/AssetComponents.jsx';
 import { ViewModeToggle } from './components/ViewModeToggle.jsx';
+import { CreateFolderModal } from './components/CreateFolderModal.jsx';
+import { BrandsContainer } from './components/BrandFolderComponents.jsx';
+import { FileUploadArea } from './components/FileUploadArea.jsx';
 
 // Helper function to get CSRF token from cookies
 function getCookie(name) {
@@ -32,142 +36,6 @@ function getCookie(name) {
   return cookieValue;
 }
 
-function FileUploadArea({ selectedFiles, setSelectedFiles }) {
-  const [isDragOver, setIsDragOver] = useState(false);
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setIsDragOver(true);
-  };
-
-  const handleDragLeave = (e) => {
-    e.preventDefault();
-    setIsDragOver(false);
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    
-    const files = Array.from(e.dataTransfer.files).filter(file => 
-      file.type.startsWith('image/')
-    );
-    
-    setSelectedFiles(prev => [...prev, ...files]);
-  };
-
-  const handleFileSelect = (e) => {
-    const files = Array.from(e.target.files).filter(file => 
-      file.type.startsWith('image/')
-    );
-    
-    setSelectedFiles(prev => [...prev, ...files]);
-  };
-
-  const removeFile = (index) => {
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
-  };
-
-  return (
-    <div className="space-y-4">
-      {/* Drop Zone */}
-      <div
-        className={`border border-dashed rounded-lg p-6 transition-colors ${
-          isDragOver 
-            ? 'border-primary bg-primary/5 dark:bg-primary/10' 
-            : 'border-gray-200 hover:border-gray-300 bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:hover:border-gray-600'
-        } ${selectedFiles.length > 0 ? '' : 'text-center'}`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
-        {selectedFiles.length === 0 ? (
-          // Vertical layout when no files selected
-          <>
-            {/* Plus Icon in Container */}
-            <div 
-              className="mx-auto w-16 h-16 bg-gray-100 dark:bg-gray-600 border border-dashed border-gray-300 dark:border-gray-500 rounded-lg flex items-center justify-center mb-4 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors"
-              onClick={() => document.getElementById('file-upload').click()}
-            >
-              <Plus className="w-8 h-8 text-gray-500 dark:text-gray-400" />
-            </div>
-            
-            <p className="text-lg text-gray-900 dark:text-gray-100 mb-2">
-              Choose images or drag & drop it here.
-            </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              JPG, JPEG, PNG and WEBP. Max 20 MB.
-            </p>
-          </>
-        ) : (
-          // Horizontal layout when files are selected
-          <div className="flex items-center gap-4">
-            {/* Plus Icon in Container */}
-            <div 
-              className="w-12 h-12 bg-gray-100 dark:bg-gray-600 border border-dashed border-gray-300 dark:border-gray-500 rounded-lg flex items-center justify-center cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors flex-shrink-0"
-              onClick={() => document.getElementById('file-upload').click()}
-            >
-              <Plus className="w-6 h-6 text-gray-500 dark:text-gray-400" />
-            </div>
-            
-            <div className="flex-1">
-              <p className="text-base text-gray-900 dark:text-gray-100 mb-1">
-                Choose images or drag & drop it here.
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                JPG, JPEG, PNG and WEBP. Max 20 MB.
-              </p>
-            </div>
-          </div>
-        )}
-        
-        <input
-          type="file"
-          multiple
-          accept="image/*"
-          onChange={handleFileSelect}
-          className="hidden"
-          id="file-upload"
-        />
-      </div>
-
-      {/* File Previews */}
-      {selectedFiles.length > 0 && (
-        <div className="space-y-3">
-          <h4 className="font-medium text-gray-900 dark:text-gray-100">
-            Selected Files ({selectedFiles.length})
-          </h4>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
-            {selectedFiles.map((file, index) => (
-              <div key={index} className="relative group">
-                <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
-                  <img
-                    src={URL.createObjectURL(file)}
-                    alt={file.name}
-                    className="w-full h-full object-cover"
-                  />
-                  {/* Overlay with trash icon */}
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <button
-                      onClick={() => removeFile(index)}
-                      className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">
-                  {file.name}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 
 function BrandAssetsDetailPage() {
   // Get data from window globals
@@ -178,37 +46,44 @@ function BrandAssetsDetailPage() {
   
   // State
   const [assets, setAssets] = useState([]);
+  const [folders, setFolders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('grid');
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [showCreateFolderModal, setShowCreateFolderModal] = useState(false);
 
   // Load assets data
   useEffect(() => {
     const loadAssets = async () => {
-      try {
         // First try to get data from sessionStorage
         const storedData = sessionStorage.getItem('brandAssetsData');
         if (storedData) {
           const data = JSON.parse(storedData);
           setAssets(data.assets || []);
-          sessionStorage.removeItem('brandAssetsData'); // Clean up
-        } else {
-          // Fallback: fetch from API
+          setFolders(data.folders || []);
+          setLoading(false);
+          return;
+        }
+        
+        // If no stored data, fetch from API
+        try {
           const response = await fetch(`/ads/assets/${brandId}/`);
           if (response.ok) {
             const data = await response.json();
             setAssets(data.assets || []);
+            setFolders(data.folders || []);
+          } else {
+            console.error('Failed to load assets');
           }
+        } catch (error) {
+          console.error('Error loading assets:', error);
+        } finally {
+          setLoading(false);
         }
-      } catch (error) {
-        console.error('Error loading assets:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+      };
 
     if (brandId) {
       loadAssets();
@@ -341,6 +216,30 @@ function BrandAssetsDetailPage() {
     }
   };
 
+  // Handle folder creation
+  const handleFolderCreated = (newFolder) => {
+    console.log('Brand folder created:', newFolder);
+    // Add the new folder to the folders list
+    setFolders(prev => [...prev, newFolder].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase())));
+  };
+
+  // Handle folder click (navigate to folder detail)
+  const handleFolderClick = async (folder) => {
+    try {
+      const response = await fetch(`/ads/assets/folder/${folder.id}/`);
+      if (response.ok) {
+        const data = await response.json();
+        // Store the folder assets data and navigate to folder detail page
+        sessionStorage.setItem('folderAssetsData', JSON.stringify(data));
+        window.location.href = `/ads/assets/folder/${folder.id}/detail/`;
+      } else {
+        console.error('Failed to fetch folder assets');
+      }
+    } catch (error) {
+      console.error('Error fetching folder assets:', error);
+    }
+  };
+
   // Filter assets based on search query
   const filteredAssets = useMemo(() => {
     if (!searchQuery.trim()) {
@@ -351,16 +250,29 @@ function BrandAssetsDetailPage() {
       const searchTerm = searchQuery.toLowerCase().trim();
       return (
         asset.brand_name.toLowerCase().includes(searchTerm) ||
-        asset.id.toString().includes(searchTerm)
+        (asset.original_filename && asset.original_filename.toLowerCase().includes(searchTerm)) ||
+        (asset.description && asset.description.toLowerCase().includes(searchTerm))
       );
     });
   }, [assets, searchQuery]);
+
+  // Filter folders based on search query
+  const filteredFolders = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return folders;
+    }
+    
+    return folders.filter(folder => {
+      const searchTerm = searchQuery.toLowerCase().trim();
+      return folder.name.toLowerCase().includes(searchTerm);
+    });
+  }, [folders, searchQuery]);
 
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto p-6">
         <div className="text-center">
-          <p className="text-gray-500">Loading assets...</p>
+          <p className="text-gray-500 dark:text-gray-400">Loading assets...</p>
         </div>
       </div>
     );
@@ -368,7 +280,7 @@ function BrandAssetsDetailPage() {
 
   return (
     <div className="max-w-7xl mx-auto p-6">
-      {/* Search Bar and View Toggle */}
+      {/* Search Bar, Create Folder Button and View Toggle */}
       <div className="mb-6 flex items-center justify-between gap-4">
         {/* Search Bar */}
         <div className="relative flex-1 max-w-lg">
@@ -384,9 +296,29 @@ function BrandAssetsDetailPage() {
           />
         </div>
 
-        {/* View Mode Toggle */}
-        <ViewModeToggle viewMode={viewMode} setViewMode={setViewMode} />
+        {/* Create Folder Button and View Mode Toggle */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowCreateFolderModal(true)}
+            className="p-2 text-gray-600 hover:text-primary dark:text-gray-400 dark:hover:text-primary transition-colors rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
+            title="New Folder"
+          >
+            <FolderPlus className="h-5 w-5" />
+          </button>
+          <ViewModeToggle viewMode={viewMode} setViewMode={setViewMode} />
+        </div>
       </div>
+
+      {/* Folders Section */}
+      {filteredFolders.length > 0 && (
+        <div className="mb-8">
+          <BrandsContainer 
+            brands={filteredFolders}
+            viewMode={viewMode}
+            onBrandClick={handleFolderClick}
+          />
+        </div>
+      )}
 
       {/* Assets Container */}
       <AssetsContainer 
@@ -396,16 +328,16 @@ function BrandAssetsDetailPage() {
       />
 
       {/* Empty State */}
-      {filteredAssets.length === 0 && !loading && (
+      {filteredAssets.length === 0 && filteredFolders.length === 0 && !loading && (
         <div className="mt-12 text-center">
-          <ImageIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            {searchQuery.trim() ? 'No assets found' : 'No assets yet'}
+          <ImageIcon className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500 mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+            {searchQuery.trim() ? 'No results found' : 'No content yet'}
           </h3>
-          <p className="text-gray-500">
+          <p className="text-gray-500 dark:text-gray-400">
             {searchQuery.trim() 
-              ? `No assets match your search for "${searchQuery}".`
-              : 'Upload assets to this brand to see them here.'
+              ? `No folders or assets match your search for "${searchQuery}".`
+              : 'Create folders or upload assets to organize your brand content.'
             }
           </p>
         </div>
@@ -447,6 +379,17 @@ function BrandAssetsDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Create Folder Modal */}
+      <CreateFolderModal
+        open={showCreateFolderModal}
+        onOpenChange={setShowCreateFolderModal}
+        onFolderCreated={handleFolderCreated}
+        parentFolderId={null}
+        parentFolderName={null}
+        brandId={brandId}
+        brandName={brandName}
+      />
     </div>
   );
 }

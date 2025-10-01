@@ -1,0 +1,33 @@
+{% extends "web/app/app_base_sidebar.html" %}
+{% load static %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+  // Configure sidebar for this page
+  window.__SIDEBAR_DATA__ = {
+    activeTab: "assets",
+    showHeader: true,
+    hideLogo: true
+  };
+</script>
+<script>
+  // Pass data to React component
+  window.__FOLDER_ASSETS_DATA__ = {
+    user: {
+      name: "{{ request.user.get_full_name|default:'' }}",
+      email: "{{ request.user.email|default:'' }}"
+    },
+    folder: {
+      id: {{ folder_id }},
+      name: "{{ folder_name|escapejs }}",
+      path: "{{ folder_path|escapejs }}"
+    }
+  };
+</script>
+<script src="{% static 'js/folder-assets-detail-bundle.js' %}"></script>
+{% endblock %}
+
+{% block app %}
+<!-- Content will be mounted by React in sidebar-page-content -->
+{% endblock %}

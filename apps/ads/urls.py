@@ -42,8 +42,12 @@ urlpatterns = [
     path("brands/", views.brands_page, name="brands_page"),
     path("my-ads/", views.my_ads_page, name="my_ads_page"),
     path("assets/", views.assets_page, name="assets_page"),
+    path("assets/create-folder/", views.create_folder, name="create_folder"),
     path("assets/<int:brand_id>/", views.brand_assets_detail, name="brand_assets_detail"),
     path("assets/<int:brand_id>/detail/", views.brand_assets_detail_page, name="brand_assets_detail_page"),
     path("assets/<int:brand_id>/upload/", views.upload_brand_assets, name="upload_brand_assets"),
+    path("assets/folder/<int:folder_id>/", views.folder_assets_detail, name="folder_assets_detail"),
+    path("assets/folder/<int:folder_id>/detail/", views.folder_assets_detail_page, name="folder_assets_detail_page"),
+    path("assets/folder/<int:folder_id>/upload/", views.upload_folder_assets, name="upload_folder_assets"),
     path("generated/<int:version_id>/", views.generated_ad_page, name="generated_ad_page"),
 ]

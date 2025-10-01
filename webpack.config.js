@@ -31,6 +31,7 @@ module.exports = {
     'my-ads-page': './assets/javascript/app/my-ads-page.jsx',  // entry point for the my ads page
     'assets-page': './assets/javascript/app/assets-page.jsx',  // entry point for the assets page
     'brand-assets-detail': './assets/javascript/app/brand-assets-detail.jsx',  // entry point for the brand assets detail page
+    'folder-assets-detail': './assets/javascript/app/folder-assets-detail.jsx',  // entry point for the folder assets detail page
     'app-sidebar-layout': './assets/javascript/app/app-sidebar-layout.jsx',  // entry point for the sidebar layout
     'generated-ad': './assets/javascript/app/generated-ad-page.jsx',  // entry point for the generated ad page
   },

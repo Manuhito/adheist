@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 from django.urls import reverse
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
@@ -925,10 +926,12 @@ class UserFolder(BaseModel):
     """
     Model to store user custom folders for organizing assets.
     Supports hierarchical folder structure with parent-child relationships.
+    Can be associated with a brand for brand-specific organization.
     """
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="folders")
     folder_name = models.CharField(max_length=255, help_text="Name of the folder")
     parent_folder = models.ForeignKey('self', on_delete=models.CASCADE, related_name="subfolders", blank=True, null=True, help_text="Parent folder for hierarchical organization")
+    brand = models.ForeignKey('UserBrand', on_delete=models.CASCADE, related_name="folders", blank=True, null=True, help_text="Brand this folder belongs to (for brand-specific folders)")
     
     class Meta:
         verbose_name = "User Folder"
@@ -936,8 +939,16 @@ class UserFolder(BaseModel):
         ordering = ['created_at']
         constraints = [
             models.UniqueConstraint(
-                fields=['user', 'folder_name', 'parent_folder'],
-                name='unique_user_folder_in_parent'
+                fields=['user', 'folder_name', 'parent_folder', 'brand'],
+                name='unique_user_folder_in_context'
+            ),
+            # Ensure folder hierarchy logic: 
+            # - Root folders: no parent, may have brand
+            # - Subfolders: have parent, inherit brand context
+            # - Brand folders: have brand, no parent (or parent with same brand)
+            models.CheckConstraint(
+                check=Q(parent_folder__isnull=True) | Q(brand__isnull=True),
+                name='folder_hierarchy_constraint'
             )
         ]
     
@@ -955,6 +966,15 @@ class UserFolder(BaseModel):
                     raise ValidationError("Circular reference detected in folder hierarchy.")
                 visited.add(current.id)
                 current = current.parent_folder
+        
+        # Validate brand-folder relationship
+        if self.parent_folder and self.brand:
+            # Subfolders inherit brand context from parent
+            if self.parent_folder.brand and self.parent_folder.brand != self.brand:
+                raise ValidationError("Subfolder must belong to the same brand as its parent folder.")
+            # If parent has no brand, subfolder cannot have brand either
+            if not self.parent_folder.brand:
+                raise ValidationError("Subfolder cannot belong to a brand if parent folder is not brand-specific.")
     
     def save(self, *args, **kwargs):
         self.clean()
