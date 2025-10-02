@@ -3821,7 +3821,7 @@ def analyze_website_for_brand_assets(request):
 
 
 @login_required
-@require_http_methods(["PUT"])
+@require_http_methods(["PUT", "POST"])  # Allow POST for multipart data
 def update_user_brand(request, brand_id):
     """
     Update an existing user brand and its associated AdRequestAssets.
@@ -3845,6 +3845,15 @@ def update_user_brand(request, brand_id):
     Returns: JSON with updated brand information
     """
     try:
+        import json  # Import json at the beginning of the function
+        
+        # Check if this is an update request (could be POST with multipart data)
+        is_update_request = request.method == 'PUT' or request.headers.get('X-Update-Mode') == 'true'
+        print(f"=== REQUEST TYPE DEBUG ===")
+        print(f"Method: {request.method}")
+        print(f"X-Update-Mode header: {request.headers.get('X-Update-Mode')}")
+        print(f"Is update request: {is_update_request}")
+        
         # Get the brand and verify ownership
         try:
             brand = UserBrand.objects.get(id=brand_id, user=request.user)
@@ -3868,11 +3877,26 @@ def update_user_brand(request, brand_id):
             # FormData (with file upload)
             data = request.POST.dict()
             logo_file = request.FILES.get('logo_file')
+            remove_logo = data.get('remove_logo') == 'true'
+            
+            # Debug logs
+            print(f"=== BACKEND LOGO DEBUG ===")
+            print(f"Content-Type: {request.content_type}")
+            print(f"Request method: {request.method}")
+            print(f"POST data: {dict(request.POST)}")
+            print(f"POST data keys: {list(data.keys())}")
+            print(f"FILES data: {dict(request.FILES)}")
+            print(f"FILES keys: {list(request.FILES.keys())}")
+            print(f"logo_file: {logo_file}")
+            print(f"remove_logo: {remove_logo}")
         else:
             # JSON data
-            import json
+            print(f"=== JSON REQUEST DEBUG ===")
+            print(f"Content-Type: {request.content_type}")
+            print(f"Request method: {request.method}")
             data = json.loads(request.body)
             logo_file = None
+            remove_logo = False
         
         # Update brand name if provided
         brand_name = data.get('brand_name', '').strip()
@@ -3915,7 +3939,6 @@ def update_user_brand(request, brand_id):
         if brand_colors:
             if isinstance(brand_colors, str):
                 # Parse JSON string
-                import json
                 try:
                     brand_colors = json.loads(brand_colors)
                 except json.JSONDecodeError:
@@ -3927,9 +3950,22 @@ def update_user_brand(request, brand_id):
                 if valid_colors:
                     ad_request_assets.main_hex_color = json.dumps(valid_colors)
         
-        # Handle logo upload if provided
+        # Handle logo changes
+        print(f"=== LOGO UPDATE LOGIC ===")
+        print(f"logo_file exists: {bool(logo_file)}")
+        print(f"remove_logo flag: {remove_logo}")
+        print(f"Current logo: {ad_request_assets.logo}")
+        
         if logo_file:
+            # New logo file uploaded
+            print(f"Updating logo with new file: {logo_file}")
             ad_request_assets.logo = logo_file
+        elif remove_logo:
+            # Remove existing logo
+            print(f"Removing existing logo")
+            ad_request_assets.logo = None
+        else:
+            print(f"No logo changes, preserving existing logo")
         
         ad_request_assets.save()
         

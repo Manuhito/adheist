@@ -425,8 +425,19 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, adRequestId = null,
       const isUpdating = createdBrandId !== null;
       const endpoint = isUpdating ? `/ads/api/update-user-brand/${createdBrandId}/` : '/ads/api/create-user-brand/';
       
-      // If there's a logo file, use FormData for multipart upload
-      if (selectedLogoData && selectedLogoData.file) {
+      // Check if we need to handle logo changes
+      const hasNewLogoFile = selectedLogoData && selectedLogoData.file;
+      const shouldRemoveLogo = isUpdating && !selectedLogoData; // In edit mode, null means remove logo
+      
+      // Debug logs
+      console.log('=== LOGO DEBUG ===');
+      console.log('isUpdating:', isUpdating);
+      console.log('selectedLogoData:', selectedLogoData);
+      console.log('hasNewLogoFile:', hasNewLogoFile);
+      console.log('shouldRemoveLogo:', shouldRemoveLogo);
+      
+      // If there's a logo file or we need to remove logo, use FormData for multipart upload
+      if (hasNewLogoFile || shouldRemoveLogo) {
         const formDataMultipart = new FormData();
         
         // Add all text fields
@@ -438,13 +449,32 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, adRequestId = null,
           }
         });
         
-        // Add logo file
-        formDataMultipart.append('logo_file', selectedLogoData.file);
+        // Handle logo changes
+        if (hasNewLogoFile) {
+          // Add new logo file
+          console.log('Adding logo file to FormData:', selectedLogoData.file);
+          formDataMultipart.append('logo_file', selectedLogoData.file);
+        } else if (shouldRemoveLogo) {
+          // Signal to remove logo
+          console.log('Adding remove_logo flag to FormData');
+          formDataMultipart.append('remove_logo', 'true');
+        }
+        
+        // Debug FormData contents
+        console.log('FormData entries:');
+        for (let [key, value] of formDataMultipart.entries()) {
+          console.log(`${key}:`, value);
+        }
 
-        response = await fetch(endpoint, {
-          method: isUpdating ? 'PUT' : 'POST',
+        // Use POST for multipart data (PUT can have issues with multipart)
+        const multipartEndpoint = isUpdating ? `/ads/api/update-user-brand/${createdBrandId}/` : '/ads/api/create-user-brand/';
+        
+        response = await fetch(multipartEndpoint, {
+          method: 'POST', // Always use POST for multipart data
           headers: {
             'X-CSRFToken': getCsrfToken(),
+            // Add a custom header to indicate this is an update
+            ...(isUpdating && { 'X-Update-Mode': 'true' })
           },
           body: formDataMultipart,
         });
