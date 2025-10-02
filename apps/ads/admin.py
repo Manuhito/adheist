@@ -501,7 +501,7 @@ class UserBrandAssetsAdmin(admin.ModelAdmin):
 @admin.register(BrandAssetExtraction)
 class BrandAssetExtractionAdmin(admin.ModelAdmin):
     list_display = [
-        "user", "website_url", "status", "model_used", 
+        "user", "brand", "website_url", "status", "model_used", 
         "input_tokens", "output_tokens", "total_cost_usd", "created_at"
     ]
     list_filter = ["status", "model_used", "created_at"]

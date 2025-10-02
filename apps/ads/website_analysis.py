@@ -203,7 +203,7 @@ def deduct_extraction_credits(user) -> bool:
         return False
 
 
-def create_brand_from_extraction(user, extracted_assets: Dict[str, Any], website_url: str, ad_request_id: str = None) -> Dict[str, Any]:
+def create_brand_from_extraction(user, extracted_assets: Dict[str, Any], website_url: str, ad_request_id: str = None, extraction_id: int = None) -> Dict[str, Any]:
     """
     Create UserBrand and AdRequestAssets from extracted website data.
     
@@ -212,6 +212,7 @@ def create_brand_from_extraction(user, extracted_assets: Dict[str, Any], website
         extracted_assets: Dictionary with extracted brand data
         website_url: Original website URL
         ad_request_id: Optional ID of AdRequest to associate with created brand
+        extraction_id: Optional ID of BrandAssetExtraction to link with created brand
         
     Returns:
         Dict containing created brand information or error
@@ -275,6 +276,19 @@ def create_brand_from_extraction(user, extracted_assets: Dict[str, Any], website
                 log.warning(f"AdRequest {ad_request_id} not found for user {user.email}")
             except Exception as e:
                 log.error(f"Error associating AdRequest {ad_request_id} with brand: {str(e)}")
+        
+        # Link the extraction with the created brand if extraction_id is provided
+        if extraction_id:
+            try:
+                from apps.ads.models import BrandAssetExtraction
+                extraction = BrandAssetExtraction.objects.get(id=extraction_id, user=user)
+                extraction.brand = brand
+                extraction.save()
+                log.info(f"Linked BrandAssetExtraction {extraction_id} with brand '{brand_name}'")
+            except BrandAssetExtraction.DoesNotExist:
+                log.warning(f"BrandAssetExtraction {extraction_id} not found for user {user.email}")
+            except Exception as e:
+                log.error(f"Error linking BrandAssetExtraction {extraction_id} with brand: {str(e)}")
         
         log.info(f"Successfully created brand '{brand_name}' and assets for user {user.email}")
         
@@ -363,7 +377,8 @@ def extract_brand_assets_from_website(user, website_url: str, ad_request_id: str
             user, 
             analysis_result['extracted_assets'], 
             website_url,
-            ad_request_id
+            ad_request_id,
+            extraction.id
         )
         
         log.info(f"Successfully completed brand asset extraction for user {user.email}")

@@ -1137,6 +1137,13 @@ class BrandAssetExtraction(BaseModel):
         on_delete=models.CASCADE,
         help_text="User who requested the extraction"
     )
+    brand = models.ForeignKey(
+        'UserBrand',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="Brand created from this extraction (if any)"
+    )
     website_url = models.URLField(
         help_text="The website URL that was analyzed"
     )
