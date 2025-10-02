@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover.tsx';
 import { Button } from '../../components/ui/button.tsx';
-import { Check, ChevronDown, Building } from 'lucide-react';
+import { Check, ChevronDown, Building, Pen } from 'lucide-react';
 import { useTranslation } from '../../lib/useTranslation';
 import CreateBrandModal from './CreateBrandModal.jsx';
 
@@ -16,6 +16,7 @@ const BrandDropdown = ({ initialBrandId, onBrandChange, adRequestId = null }) =>
   const [selectedBrand, setSelectedBrand] = useState(initialBrandId ? initialBrandId.toString() : null);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingBrand, setEditingBrand] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   const triggerRef = useRef(null);
   const [contentWidth, setContentWidth] = useState(null);
@@ -113,6 +114,20 @@ const BrandDropdown = ({ initialBrandId, onBrandChange, adRequestId = null }) =>
     }
   };
 
+  // Handle brand edit
+  const handleEditBrand = (brand, e) => {
+    e.stopPropagation(); // Prevent dropdown from closing
+    setEditingBrand(brand);
+    setIsModalOpen(true);
+    setIsOpen(false); // Close dropdown
+  };
+
+  // Handle modal close
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setEditingBrand(null);
+  };
+
   // Get selected brand name for display
   const getSelectedBrandName = () => {
     if (!selectedBrand) return null;
@@ -177,10 +192,21 @@ const BrandDropdown = ({ initialBrandId, onBrandChange, adRequestId = null }) =>
                         className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
                         onClick={() => handleSelectBrand(brand)}
                       >
-                        <span>{brand.name}</span>
-                        {selectedBrand === brand.id.toString() && (
-                          <Check className="ml-auto h-4 w-4" />
-                        )}
+                        <span className="flex-1">{brand.name}</span>
+                        <div className="flex items-center gap-1 ml-2">
+                          <button
+                            onClick={(e) => handleEditBrand(brand, e)}
+                            className="p-1 rounded hover:bg-accent-foreground/10 transition-colors"
+                            title={t('brand.edit', 'Edit brand')}
+                          >
+                            <Pen className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                          </button>
+                          <div className="w-4 h-4 flex items-center justify-center">
+                            {selectedBrand === brand.id.toString() && (
+                              <Check className="h-4 w-4" />
+                            )}
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -204,12 +230,13 @@ const BrandDropdown = ({ initialBrandId, onBrandChange, adRequestId = null }) =>
         </Button>
       </div>
       
-      {/* Modal for creating a new brand */}
+      {/* Modal for creating/editing a brand */}
       <CreateBrandModal 
         isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+        onClose={handleModalClose} 
         onBrandCreated={handleBrandCreated}
         adRequestId={adRequestId}
+        editingBrand={editingBrand}
       />
     </div>
   );

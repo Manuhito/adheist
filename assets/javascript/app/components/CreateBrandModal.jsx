@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -16,7 +16,7 @@ import ColorPickerModal from './ColorPickerModal.jsx';
 /**
  * Modal component for creating a new brand
  */
-const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, adRequestId = null }) => {
+const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, adRequestId = null, editingBrand = null }) => {
   const { t } = useTranslation();
   const fileInputRef = useRef(null);
   const [brandName, setBrandName] = useState('');
@@ -41,6 +41,68 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, adRequestId = null 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState('');
   const [createdBrandId, setCreatedBrandId] = useState(null);
+
+  // Effect to preload data when editing a brand
+  useEffect(() => {
+    if (editingBrand) {
+      // Fetch the complete brand data including AdRequestAssets
+      const fetchBrandData = async () => {
+        try {
+          const response = await fetch(`/ads/api/brand-details/${editingBrand.id}/`);
+          const data = await response.json();
+          
+          if (data.success && data.brand) {
+            const brand = data.brand;
+            setBrandName(brand.name || '');
+            setIndustry(brand.industry || '');
+            setWebsite(brand.website || '');
+            setProductDescription(brand.product_description || '');
+            setTargetAudience(brand.target_audience || '');
+            setToneOfVoice(brand.tone_of_voice || '');
+            setFontDirection(brand.font_direction || '');
+            setCoreFeatures(brand.core_features || '');
+            setFunctionalBenefits(brand.functional_benefits || '');
+            setEmotionalBenefits(brand.emotional_lifestyle_benefits || '');
+            setProofPoints(brand.proof_points || '');
+            setValuePropositions(brand.value_propositions || '');
+            setBrandColors(brand.brand_colors || []);
+            
+            // Set the created brand ID for update mode
+            setCreatedBrandId(editingBrand.id);
+            
+            // Set logo if available
+            if (brand.logo_url) {
+              setSelectedLogoData({
+                url: brand.logo_url,
+                file: null
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching brand data:', error);
+        }
+      };
+      
+      fetchBrandData();
+    } else {
+      // Reset form when not editing
+      setBrandName('');
+      setIndustry('');
+      setWebsite('');
+      setProductDescription('');
+      setTargetAudience('');
+      setToneOfVoice('');
+      setFontDirection('');
+      setCoreFeatures('');
+      setFunctionalBenefits('');
+      setEmotionalBenefits('');
+      setProofPoints('');
+      setValuePropositions('');
+      setBrandColors([]);
+      setCreatedBrandId(null);
+      setSelectedLogoData(null);
+    }
+  }, [editingBrand]);
 
   const handleBrandNameChange = (e) => {
     setBrandName(e.target.value);
@@ -441,11 +503,12 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, adRequestId = null 
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
         <DialogHeader className="border-b border-gray-200 pb-4">
-          <DialogTitle>Create Brand</DialogTitle>
+          <DialogTitle>{editingBrand ? 'Edit Brand' : 'Create Brand'}</DialogTitle>
         </DialogHeader>
         <div className="py-4">
-          {/* Website Analysis Section - Full Width */}
-          <div className="space-y-3 mb-6">
+          {/* Website Analysis Section - Only show when creating new brand */}
+          {!editingBrand && (
+            <div className="space-y-3 mb-6">
             <p className="text-sm text-gray-600">
               Analyze your brand website to generate the fields below{' '}
               <span className="text-primary">(4 Credits)</span>
@@ -481,7 +544,8 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, adRequestId = null 
                 {analysisError}
               </div>
             )}
-          </div>
+            </div>
+          )}
 
           {/* Two Column Layout */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

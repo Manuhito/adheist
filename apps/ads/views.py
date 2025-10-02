@@ -2994,10 +2994,11 @@ def get_user_containers(request):
     try:
         containers_data = []
         
-        # Get all unique brands that have assets for the current user
+        # Get all brands for the current user
+        # Note: This shows all user's brands, even if they don't have uploaded assets yet
         user_brands = UserBrand.objects.filter(
-            brand_assets__user=request.user
-        ).distinct().order_by('brand_name')
+            user=request.user
+        ).order_by('brand_name')
         
         # Add brands
         for brand in user_brands:
@@ -3352,10 +3353,11 @@ def assets_page(request):
     Render the Assets page with React components.
     Shows all UserBrands and UserFolders for the current user as containers.
     """
-    # Get all unique brands that have assets for the current user
+    # Get all brands for the current user
+    # Note: This shows all user's brands, even if they don't have uploaded assets yet
     user_brands = UserBrand.objects.filter(
-        brand_assets__user=request.user
-    ).distinct().order_by('brand_name')
+        user=request.user
+    ).order_by('brand_name')
     
     # Get all root folders (folders without parent and without brand) for the current user
     user_folders = UserFolder.objects.filter(
@@ -3956,6 +3958,72 @@ def update_user_brand(request, brand_id):
                 'emotional_lifestyle_benefits': ad_request_assets.emotional_lifestyle_benefits,
                 'proof_points': ad_request_assets.proof_points,
                 'value_propositions': ad_request_assets.value_propositions,
+                'logo_url': ad_request_assets.logo.url if ad_request_assets.logo else None,
+                'ad_request_assets_id': ad_request_assets.id
+            }
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["GET"])
+def get_brand_details(request, brand_id):
+    """
+    Get complete brand details including AdRequestAssets data.
+    
+    Returns: JSON with complete brand information for editing
+    """
+    try:
+        # Get the brand and verify ownership
+        try:
+            brand = UserBrand.objects.get(id=brand_id, user=request.user)
+        except UserBrand.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'Brand not found or you do not have permission to view it'
+            }, status=404)
+        
+        # Get the associated AdRequestAssets
+        try:
+            ad_request_assets = AdRequestAssets.objects.get(brand=brand)
+        except AdRequestAssets.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'Associated brand assets not found'
+            }, status=404)
+        
+        # Prepare brand colors
+        brand_colors_list = []
+        if ad_request_assets.main_hex_color:
+            try:
+                import json
+                brand_colors_list = json.loads(ad_request_assets.main_hex_color)
+            except (json.JSONDecodeError, TypeError):
+                brand_colors_list = []
+        
+        return JsonResponse({
+            'success': True,
+            'brand': {
+                'id': brand.id,
+                'name': brand.brand_name,
+                'industry': ad_request_assets.industry,
+                'website': ad_request_assets.company_website,
+                'product_description': ad_request_assets.product_description,
+                'target_audience': ad_request_assets.target_audience,
+                'functional_benefits': ad_request_assets.functional_benefits,
+                'brand_colors': brand_colors_list,
+                'tone_of_voice': ad_request_assets.tone_of_voice,
+                'font_direction': ad_request_assets.font_direction,
+                'core_features': ad_request_assets.core_features,
+                'emotional_lifestyle_benefits': ad_request_assets.emotional_lifestyle_benefits,
+                'proof_points': ad_request_assets.proof_points,
+                'value_propositions': ad_request_assets.value_propositions,
+                'key_benefits': ad_request_assets.key_benefits,
                 'logo_url': ad_request_assets.logo.url if ad_request_assets.logo else None,
                 'ad_request_assets_id': ad_request_assets.id
             }
