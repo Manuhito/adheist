@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -16,7 +16,7 @@ import ColorPickerModal from './ColorPickerModal.jsx';
 /**
  * Modal component for creating a new brand
  */
-const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
+const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, adRequestId = null, editingBrand = null }) => {
   const { t } = useTranslation();
   const fileInputRef = useRef(null);
   const [brandName, setBrandName] = useState('');
@@ -40,6 +40,69 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState('');
+  const [createdBrandId, setCreatedBrandId] = useState(null);
+
+  // Effect to preload data when editing a brand
+  useEffect(() => {
+    if (editingBrand) {
+      // Fetch the complete brand data including AdRequestAssets
+      const fetchBrandData = async () => {
+        try {
+          const response = await fetch(`/ads/api/brand-details/${editingBrand.id}/`);
+          const data = await response.json();
+          
+          if (data.success && data.brand) {
+            const brand = data.brand;
+            setBrandName(brand.name || '');
+            setIndustry(brand.industry || '');
+            setWebsite(brand.website || '');
+            setProductDescription(brand.product_description || '');
+            setTargetAudience(brand.target_audience || '');
+            setToneOfVoice(brand.tone_of_voice || '');
+            setFontDirection(brand.font_direction || '');
+            setCoreFeatures(brand.core_features || '');
+            setFunctionalBenefits(brand.functional_benefits || '');
+            setEmotionalBenefits(brand.emotional_lifestyle_benefits || '');
+            setProofPoints(brand.proof_points || '');
+            setValuePropositions(brand.value_propositions || '');
+            setBrandColors(brand.brand_colors || []);
+            
+            // Set the created brand ID for update mode
+            setCreatedBrandId(editingBrand.id);
+            
+            // Set logo if available
+            if (brand.logo_url) {
+              setSelectedLogoData({
+                url: brand.logo_url,
+                file: null
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching brand data:', error);
+        }
+      };
+      
+      fetchBrandData();
+    } else {
+      // Reset form when not editing
+      setBrandName('');
+      setIndustry('');
+      setWebsite('');
+      setProductDescription('');
+      setTargetAudience('');
+      setToneOfVoice('');
+      setFontDirection('');
+      setCoreFeatures('');
+      setFunctionalBenefits('');
+      setEmotionalBenefits('');
+      setProofPoints('');
+      setValuePropositions('');
+      setBrandColors([]);
+      setCreatedBrandId(null);
+      setSelectedLogoData(null);
+    }
+  }, [editingBrand]);
 
   const handleBrandNameChange = (e) => {
     setBrandName(e.target.value);
@@ -119,6 +182,9 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
     try {
       const formData = new FormData();
       formData.append('website_url', websiteUrl.trim());
+      if (adRequestId) {
+        formData.append('ad_request_id', adRequestId);
+      }
 
       const response = await fetch('/ads/api/analyze-website/', {
         method: 'POST',
@@ -160,7 +226,50 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
         // Set website field to the analyzed URL
         setWebsite(websiteUrl.trim());
 
-        console.log('Website analysis completed successfully');
+        // Check if a brand was automatically created
+        if (data.brand_created && data.brand) {
+          console.log('Website analysis completed and brand created automatically:', data.brand.name);
+          
+          // Notify parent component about the new brand
+          if (onBrandCreated) {
+            onBrandCreated(data.brand);
+          }
+          
+          // Show success message but keep modal open
+          // Create a temporary notification container
+          const notificationContainer = document.createElement('div');
+          document.body.appendChild(notificationContainer);
+          
+          // Import and render AlertNotification
+          import('@/components/ui/alert-notification.tsx').then(({ AlertNotification }) => {
+            const { createRoot } = require('react-dom/client');
+            const root = createRoot(notificationContainer);
+            
+            root.render(
+              React.createElement(AlertNotification, {
+                variant: 'success',
+                message: `Brand "${data.brand.name}" has been created and associated with your ad request. You can now edit the details below.`,
+                duration: 7000,
+                onClose: () => {
+                  root.unmount();
+                  document.body.removeChild(notificationContainer);
+                }
+              })
+            );
+          });
+          
+          // Store the created brand ID for later updates
+          setCreatedBrandId(data.brand.id);
+          
+          // Don't close modal - let user edit the created brand
+          console.log('Brand created successfully - modal remains open for editing');
+          return; // Exit early since brand was created
+        } else if (data.brand_created === false && data.brand_creation_error) {
+          console.warn('Brand creation failed:', data.brand_creation_error);
+          // Continue with form population even if brand creation failed
+        }
+
+        console.log('Website analysis completed successfully - form populated');
       } else {
         throw new Error('No data extracted from website');
       }
@@ -312,8 +421,23 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
 
       let response;
       
-      // If there's a logo file, use FormData for multipart upload
-      if (selectedLogoData && selectedLogoData.file) {
+      // Determine if we're creating or updating
+      const isUpdating = createdBrandId !== null;
+      const endpoint = isUpdating ? `/ads/api/update-user-brand/${createdBrandId}/` : '/ads/api/create-user-brand/';
+      
+      // Check if we need to handle logo changes
+      const hasNewLogoFile = selectedLogoData && selectedLogoData.file;
+      const shouldRemoveLogo = isUpdating && !selectedLogoData; // In edit mode, null means remove logo
+      
+      // Debug logs
+      console.log('=== LOGO DEBUG ===');
+      console.log('isUpdating:', isUpdating);
+      console.log('selectedLogoData:', selectedLogoData);
+      console.log('hasNewLogoFile:', hasNewLogoFile);
+      console.log('shouldRemoveLogo:', shouldRemoveLogo);
+      
+      // If there's a logo file or we need to remove logo, use FormData for multipart upload
+      if (hasNewLogoFile || shouldRemoveLogo) {
         const formDataMultipart = new FormData();
         
         // Add all text fields
@@ -325,20 +449,39 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
           }
         });
         
-        // Add logo file
-        formDataMultipart.append('logo_file', selectedLogoData.file);
+        // Handle logo changes
+        if (hasNewLogoFile) {
+          // Add new logo file
+          console.log('Adding logo file to FormData:', selectedLogoData.file);
+          formDataMultipart.append('logo_file', selectedLogoData.file);
+        } else if (shouldRemoveLogo) {
+          // Signal to remove logo
+          console.log('Adding remove_logo flag to FormData');
+          formDataMultipart.append('remove_logo', 'true');
+        }
+        
+        // Debug FormData contents
+        console.log('FormData entries:');
+        for (let [key, value] of formDataMultipart.entries()) {
+          console.log(`${key}:`, value);
+        }
 
-        response = await fetch('/ads/api/create-user-brand/', {
-          method: 'POST',
+        // Use POST for multipart data (PUT can have issues with multipart)
+        const multipartEndpoint = isUpdating ? `/ads/api/update-user-brand/${createdBrandId}/` : '/ads/api/create-user-brand/';
+        
+        response = await fetch(multipartEndpoint, {
+          method: 'POST', // Always use POST for multipart data
           headers: {
             'X-CSRFToken': getCsrfToken(),
+            // Add a custom header to indicate this is an update
+            ...(isUpdating && { 'X-Update-Mode': 'true' })
           },
           body: formDataMultipart,
         });
       } else {
         // No logo file, use JSON
-        response = await fetch('/ads/api/create-user-brand/', {
-          method: 'POST',
+        response = await fetch(endpoint, {
+          method: isUpdating ? 'PUT' : 'POST',
           headers: {
             'Content-Type': 'application/json',
             'X-CSRFToken': getCsrfToken(),
@@ -376,6 +519,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
       setSelectedLogoData(null);
       setWebsiteUrl('');
       setAnalysisError('');
+      setCreatedBrandId(null);
       onBrandCreated(data.brand);
       onClose();
     } catch (err) {
@@ -389,11 +533,12 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
         <DialogHeader className="border-b border-gray-200 pb-4">
-          <DialogTitle>Create Brand</DialogTitle>
+          <DialogTitle>{editingBrand ? 'Edit Brand' : 'Create Brand'}</DialogTitle>
         </DialogHeader>
         <div className="py-4">
-          {/* Website Analysis Section - Full Width */}
-          <div className="space-y-3 mb-6">
+          {/* Website Analysis Section - Only show when creating new brand */}
+          {!editingBrand && (
+            <div className="space-y-3 mb-6">
             <p className="text-sm text-gray-600">
               Analyze your brand website to generate the fields below{' '}
               <span className="text-primary">(4 Credits)</span>
@@ -429,7 +574,8 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
                 {analysisError}
               </div>
             )}
-          </div>
+            </div>
+          )}
 
           {/* Two Column Layout */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -696,7 +842,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
             onClick={handleSubmit}
             disabled={isSubmitting}
           >
-            {isSubmitting ? t('common.saving', 'Saving...') : t('common.save', 'Save')}
+            {isSubmitting ? t('common.saving', 'Saving...') : (createdBrandId ? t('common.update', 'Update') : t('common.save', 'Save'))}
           </Button>
         </DialogFooter>
       </DialogContent>

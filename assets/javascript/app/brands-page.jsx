@@ -6,9 +6,9 @@ import { Building2, Plus, Search, Grid3x3, List } from 'lucide-react';
 import { Button } from '@/components/ui/button.tsx';
 import CreateBrandModal from './components/CreateBrandModal.jsx';
 
-function BrandCard({ brand }) {
+function BrandCard({ brand, onClick }) {
   return (
-    <Card className="hover:shadow-md transition-shadow cursor-pointer rounded-xl">
+    <Card className="hover:shadow-md transition-shadow cursor-pointer rounded-xl" onClick={() => onClick(brand)}>
       <CardContent className="p-6">
         <div className="flex flex-col items-center text-center space-y-4">
           {/* Logo */}
@@ -36,9 +36,9 @@ function BrandCard({ brand }) {
   );
 }
 
-function BrandListItem({ brand }) {
+function BrandListItem({ brand, onClick }) {
   return (
-    <Card className="hover:shadow-md transition-shadow cursor-pointer rounded-xl">
+    <Card className="hover:shadow-md transition-shadow cursor-pointer rounded-xl" onClick={() => onClick(brand)}>
       <CardContent className="p-4">
         <div className="flex items-center space-x-4">
           {/* Logo */}
@@ -123,6 +123,7 @@ function BrandsPage() {
 
   // Modal state
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editingBrand, setEditingBrand] = useState(null);
   const [brandsList, setBrandsList] = useState(brands);
 
   // Search state
@@ -171,12 +172,28 @@ function BrandsPage() {
   // Handle closing create brand modal
   const handleCloseCreateModal = () => {
     setIsCreateModalOpen(false);
+    setEditingBrand(null);
   };
 
   // Handle brand creation success
   const handleBrandCreated = (newBrand) => {
-    // Add the new brand to the list
-    setBrandsList(prevBrands => [...prevBrands, newBrand]);
+    if (editingBrand) {
+      // Update existing brand in the list
+      setBrandsList(prevBrands => 
+        prevBrands.map(brand => 
+          brand.id === editingBrand.id ? { ...brand, ...newBrand } : brand
+        )
+      );
+    } else {
+      // Add the new brand to the list
+      setBrandsList(prevBrands => [...prevBrands, newBrand]);
+    }
+  };
+
+  // Handle brand click for editing
+  const handleBrandClick = (brand) => {
+    setEditingBrand(brand);
+    setIsCreateModalOpen(true);
   };
 
   // Handle search input change
@@ -248,7 +265,7 @@ function BrandsPage() {
 
           {/* Existing Brands */}
           {filteredBrands.map((brand) => (
-            <BrandCard key={brand.id} brand={brand} />
+            <BrandCard key={brand.id} brand={brand} onClick={handleBrandClick} />
           ))}
         </div>
       ) : (
@@ -258,7 +275,7 @@ function BrandsPage() {
 
           {/* Existing Brands */}
           {filteredBrands.map((brand) => (
-            <BrandListItem key={brand.id} brand={brand} />
+            <BrandListItem key={brand.id} brand={brand} onClick={handleBrandClick} />
           ))}
         </div>
       )}
@@ -294,6 +311,7 @@ function BrandsPage() {
         isOpen={isCreateModalOpen}
         onClose={handleCloseCreateModal}
         onBrandCreated={handleBrandCreated}
+        editingBrand={editingBrand}
       />
     </div>
   );
