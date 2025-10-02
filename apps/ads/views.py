@@ -3091,11 +3091,11 @@ def create_user_brand(request):
                 'error': 'Brand name is required'
             }, status=400)
         
-        # Check if brand with this name already exists for this user
-        if UserBrand.objects.filter(user=request.user, brand_name=brand_name).exists():
+        # Check if brand with this name already exists globally (unique constraint)
+        if UserBrand.objects.filter(brand_name=brand_name).exists():
             return JsonResponse({
                 'success': False,
-                'error': 'A brand with this name already exists'
+                'error': 'A brand with this name already exists. Please choose a different name.'
             }, status=400)
         
         # Create the new brand (simple, just name)
@@ -3769,16 +3769,20 @@ def generated_ad_page(request, version_id):
 @require_http_methods(["POST"])
 def analyze_website_for_brand_assets(request):
     """
-    API endpoint to analyze a website and extract brand assets using OpenAI.
+    Analyze a website to extract brand assets using OpenAI.
     
-    Required POST data:
-    - website_url: The URL of the website to analyze
+    Expected POST data:
+    - website_url: URL of the website to analyze
+    - ad_request_id: Optional ID of AdRequest to associate with created brand
     
-    Returns:
-    - JSON response with extracted brand assets or error message
+    Returns: JSON with extracted brand assets
     """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Only POST method allowed'}, status=405)
+    
     try:
-        website_url = request.POST.get('website_url', '').strip()
+        website_url = request.POST.get('website_url')
+        ad_request_id = request.POST.get('ad_request_id')
         
         if not website_url:
             return JsonResponse({
@@ -3789,15 +3793,16 @@ def analyze_website_for_brand_assets(request):
         # Import here to avoid circular imports
         from .website_analysis import extract_brand_assets_from_website
         
-        # Perform the extraction
-        result = extract_brand_assets_from_website(request.user, website_url)
+        # Extract brand assets from website
+        result = extract_brand_assets_from_website(request.user, website_url, ad_request_id)
         
         if result['success']:
             return JsonResponse({
                 'success': True,
                 'extracted_assets': result['extracted_assets'],
-                'extraction_id': result['extraction_id'],
-                'cost': float(result['cost'])
+                'extraction_id': result.get('extraction_id'),
+                'brand_created': result.get('brand_created', False),
+                'brand': result.get('brand')
             })
         else:
             return JsonResponse({
@@ -3810,4 +3815,154 @@ def analyze_website_for_brand_assets(request):
         return JsonResponse({
             'success': False,
             'error': f'Unexpected error: {str(e)}'
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["PUT"])
+def update_user_brand(request, brand_id):
+    """
+    Update an existing user brand and its associated AdRequestAssets.
+    
+    Expected PUT data (JSON or FormData):
+    - brand_name: Name of the brand
+    - industry: Industry/Vertical
+    - company_website: Website URL
+    - product_description: Product/Service description
+    - target_audience: Target audience description
+    - functional_benefits: Functional benefits
+    - tone_of_voice: Brand tone of voice
+    - font_direction: Font direction preference
+    - core_features: Core features
+    - emotional_lifestyle_benefits: Emotional/lifestyle benefits
+    - proof_points: Proof points
+    - value_propositions: Value propositions
+    - brand_colors: Array of brand colors in hex format
+    - logo_file: Optional logo file upload
+    
+    Returns: JSON with updated brand information
+    """
+    try:
+        # Get the brand and verify ownership
+        try:
+            brand = UserBrand.objects.get(id=brand_id, user=request.user)
+        except UserBrand.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'Brand not found or you do not have permission to edit it'
+            }, status=404)
+        
+        # Get the associated AdRequestAssets
+        try:
+            ad_request_assets = AdRequestAssets.objects.get(brand=brand)
+        except AdRequestAssets.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'Associated brand assets not found'
+            }, status=404)
+        
+        # Parse data based on content type
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            # FormData (with file upload)
+            data = request.POST.dict()
+            logo_file = request.FILES.get('logo_file')
+        else:
+            # JSON data
+            import json
+            data = json.loads(request.body)
+            logo_file = None
+        
+        # Update brand name if provided
+        brand_name = data.get('brand_name', '').strip()
+        if brand_name:
+            # Check if another brand with this name exists (excluding current brand)
+            if UserBrand.objects.filter(brand_name=brand_name).exclude(id=brand_id).exists():
+                return JsonResponse({
+                    'success': False,
+                    'error': 'A brand with this name already exists. Please choose a different name.'
+                }, status=400)
+            brand.brand_name = brand_name
+            brand.save()
+        
+        # Update AdRequestAssets fields
+        if data.get('industry'):
+            ad_request_assets.industry = data['industry'].strip()
+        if data.get('company_website'):
+            ad_request_assets.company_website = data['company_website'].strip()
+        if data.get('product_description'):
+            ad_request_assets.product_description = data['product_description'].strip()
+        if data.get('target_audience'):
+            ad_request_assets.target_audience = data['target_audience'].strip()
+        if data.get('functional_benefits'):
+            ad_request_assets.functional_benefits = data['functional_benefits'].strip()
+        if data.get('tone_of_voice'):
+            ad_request_assets.tone_of_voice = data['tone_of_voice'].strip()
+        if data.get('font_direction'):
+            ad_request_assets.font_direction = data['font_direction'].strip()
+        if data.get('core_features'):
+            ad_request_assets.core_features = data['core_features'].strip()
+        if data.get('emotional_lifestyle_benefits'):
+            ad_request_assets.emotional_lifestyle_benefits = data['emotional_lifestyle_benefits'].strip()
+        if data.get('proof_points'):
+            ad_request_assets.proof_points = data['proof_points'].strip()
+        if data.get('value_propositions'):
+            ad_request_assets.value_propositions = data['value_propositions'].strip()
+        
+        # Handle brand colors
+        brand_colors = data.get('brand_colors')
+        if brand_colors:
+            if isinstance(brand_colors, str):
+                # Parse JSON string
+                import json
+                try:
+                    brand_colors = json.loads(brand_colors)
+                except json.JSONDecodeError:
+                    brand_colors = []
+            
+            if isinstance(brand_colors, list) and brand_colors:
+                # Filter valid hex colors
+                valid_colors = [color for color in brand_colors if color and isinstance(color, str) and color.startswith('#')]
+                if valid_colors:
+                    ad_request_assets.main_hex_color = json.dumps(valid_colors)
+        
+        # Handle logo upload if provided
+        if logo_file:
+            ad_request_assets.logo = logo_file
+        
+        ad_request_assets.save()
+        
+        # Prepare response data
+        brand_colors_list = []
+        if ad_request_assets.main_hex_color:
+            try:
+                brand_colors_list = json.loads(ad_request_assets.main_hex_color)
+            except (json.JSONDecodeError, TypeError):
+                brand_colors_list = []
+        
+        return JsonResponse({
+            'success': True,
+            'brand': {
+                'id': brand.id,
+                'name': brand.brand_name,
+                'industry': ad_request_assets.industry,
+                'website': ad_request_assets.company_website,
+                'product_description': ad_request_assets.product_description,
+                'target_audience': ad_request_assets.target_audience,
+                'functional_benefits': ad_request_assets.functional_benefits,
+                'brand_colors': brand_colors_list,
+                'tone_of_voice': ad_request_assets.tone_of_voice,
+                'font_direction': ad_request_assets.font_direction,
+                'core_features': ad_request_assets.core_features,
+                'emotional_lifestyle_benefits': ad_request_assets.emotional_lifestyle_benefits,
+                'proof_points': ad_request_assets.proof_points,
+                'value_propositions': ad_request_assets.value_propositions,
+                'logo_url': ad_request_assets.logo.url if ad_request_assets.logo else None,
+                'ad_request_assets_id': ad_request_assets.id
+            }
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
         }, status=500)

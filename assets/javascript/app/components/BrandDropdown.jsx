@@ -9,7 +9,7 @@ import CreateBrandModal from './CreateBrandModal.jsx';
  * Brand dropdown component for selecting a brand
  * Fetches brands from API and allows selection
  */
-const BrandDropdown = ({ initialBrandId, onBrandChange }) => {
+const BrandDropdown = ({ initialBrandId, onBrandChange, adRequestId = null }) => {
   const { t } = useTranslation();
   const [brands, setBrands] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -209,6 +209,7 @@ const BrandDropdown = ({ initialBrandId, onBrandChange }) => {
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         onBrandCreated={handleBrandCreated}
+        adRequestId={adRequestId}
       />
     </div>
   );

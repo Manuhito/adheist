@@ -8,7 +8,7 @@ import openai
 from django.conf import settings
 
 from apps.aiinterface.models import OpenAIConfiguration
-from apps.ads.models import BrandAssetExtraction, AppConfiguration
+from apps.ads.models import BrandAssetExtraction, AppConfiguration, UserBrand, AdRequestAssets
 from apps.ads.views import get_user_credits, deduct_user_credits
 
 log = logging.getLogger(__name__)
@@ -203,13 +203,117 @@ def deduct_extraction_credits(user) -> bool:
         return False
 
 
-def extract_brand_assets_from_website(user, website_url: str) -> Dict[str, Any]:
+def create_brand_from_extraction(user, extracted_assets: Dict[str, Any], website_url: str, ad_request_id: str = None) -> Dict[str, Any]:
+    """
+    Create UserBrand and AdRequestAssets from extracted website data.
+    
+    Args:
+        user: Django user object
+        extracted_assets: Dictionary with extracted brand data
+        website_url: Original website URL
+        ad_request_id: Optional ID of AdRequest to associate with created brand
+        
+    Returns:
+        Dict containing created brand information or error
+    """
+    try:
+        brand_name = extracted_assets.get('brand_name')
+        
+        if not brand_name:
+            raise Exception("No brand name was extracted from the website")
+        
+        # Check if brand with this name already exists globally (unique constraint)
+        if UserBrand.objects.filter(brand_name=brand_name).exists():
+            # Generate a unique name by appending a number
+            counter = 1
+            original_name = brand_name
+            while UserBrand.objects.filter(brand_name=brand_name).exists():
+                brand_name = f"{original_name} ({counter})"
+                counter += 1
+        
+        # Create the new brand
+        brand = UserBrand.objects.create(
+            user=user,
+            brand_name=brand_name
+        )
+        
+        # Prepare brand colors for storage
+        brand_colors = extracted_assets.get('brand_colors', [])
+        brand_colors_json = None
+        if brand_colors and isinstance(brand_colors, list):
+            # Filter valid hex colors
+            valid_colors = [color for color in brand_colors if color and isinstance(color, str) and color.startswith('#')]
+            if valid_colors:
+                brand_colors_json = json.dumps(valid_colors)
+        
+        # Create associated AdRequestAssets with all extracted data
+        ad_request_assets = AdRequestAssets.objects.create(
+            user=user,
+            brand=brand,
+            company_website=website_url,
+            main_hex_color=brand_colors_json,
+            industry=extracted_assets.get('industry'),
+            product_description=extracted_assets.get('product_description'),
+            target_audience=extracted_assets.get('target_audience'),
+            functional_benefits=extracted_assets.get('functional_benefits'),
+            tone_of_voice=extracted_assets.get('tone_of_voice'),
+            core_features=extracted_assets.get('core_features'),
+            emotional_lifestyle_benefits=extracted_assets.get('emotional_benefits'),
+            proof_points=extracted_assets.get('proof_points'),
+            value_propositions=extracted_assets.get('value_propositions')
+        )
+        
+        # Associate AdRequest with the created brand if ad_request_id is provided
+        if ad_request_id:
+            try:
+                from apps.ads.models import AdRequest
+                ad_request = AdRequest.objects.get(id=ad_request_id, user=user)
+                ad_request.base_assets = ad_request_assets
+                ad_request.save()
+                log.info(f"Associated AdRequest {ad_request_id} with brand '{brand_name}'")
+            except AdRequest.DoesNotExist:
+                log.warning(f"AdRequest {ad_request_id} not found for user {user.email}")
+            except Exception as e:
+                log.error(f"Error associating AdRequest {ad_request_id} with brand: {str(e)}")
+        
+        log.info(f"Successfully created brand '{brand_name}' and assets for user {user.email}")
+        
+        return {
+            'success': True,
+            'brand': {
+                'id': brand.id,
+                'name': brand.brand_name,
+                'industry': ad_request_assets.industry,
+                'website': ad_request_assets.company_website,
+                'product_description': ad_request_assets.product_description,
+                'target_audience': ad_request_assets.target_audience,
+                'functional_benefits': ad_request_assets.functional_benefits,
+                'brand_colors': brand_colors,
+                'tone_of_voice': ad_request_assets.tone_of_voice,
+                'core_features': ad_request_assets.core_features,
+                'emotional_lifestyle_benefits': ad_request_assets.emotional_lifestyle_benefits,
+                'proof_points': ad_request_assets.proof_points,
+                'value_propositions': ad_request_assets.value_propositions,
+                'ad_request_assets_id': ad_request_assets.id
+            }
+        }
+        
+    except Exception as e:
+        log.error(f"Error creating brand from extraction: {str(e)}")
+        return {
+            'success': False,
+            'error': str(e)
+        }
+
+
+def extract_brand_assets_from_website(user, website_url: str, ad_request_id: str = None) -> Dict[str, Any]:
     """
     Main function to extract brand assets from a website.
     
     Args:
         user: Django user object
         website_url: URL of the website to analyze
+        ad_request_id: Optional ID of AdRequest to associate with created brand
         
     Returns:
         Dict containing extraction results and metadata
@@ -254,14 +358,34 @@ def extract_brand_assets_from_website(user, website_url: str) -> Dict[str, Any]:
         if not deduct_extraction_credits(user):
             log.warning(f"Failed to deduct credits for user {user.email} after successful extraction")
         
+        # Automatically create brand and assets from extraction
+        brand_creation_result = create_brand_from_extraction(
+            user, 
+            analysis_result['extracted_assets'], 
+            website_url,
+            ad_request_id
+        )
+        
         log.info(f"Successfully completed brand asset extraction for user {user.email}")
         
-        return {
+        result = {
             'success': True,
             'extraction_id': extraction.id,
             'extracted_assets': analysis_result['extracted_assets'],
             'cost': analysis_result['total_cost_usd']
         }
+        
+        # Add brand creation info to result
+        if brand_creation_result['success']:
+            result['brand_created'] = True
+            result['brand'] = brand_creation_result['brand']
+            log.info(f"Automatically created brand '{brand_creation_result['brand']['name']}' for user {user.email}")
+        else:
+            result['brand_created'] = False
+            result['brand_creation_error'] = brand_creation_result['error']
+            log.warning(f"Failed to create brand automatically: {brand_creation_result['error']}")
+        
+        return result
         
     except Exception as e:
         error_message = str(e)

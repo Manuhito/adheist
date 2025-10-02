@@ -16,7 +16,7 @@ import ColorPickerModal from './ColorPickerModal.jsx';
 /**
  * Modal component for creating a new brand
  */
-const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
+const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, adRequestId = null }) => {
   const { t } = useTranslation();
   const fileInputRef = useRef(null);
   const [brandName, setBrandName] = useState('');
@@ -40,6 +40,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState('');
+  const [createdBrandId, setCreatedBrandId] = useState(null);
 
   const handleBrandNameChange = (e) => {
     setBrandName(e.target.value);
@@ -119,6 +120,9 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
     try {
       const formData = new FormData();
       formData.append('website_url', websiteUrl.trim());
+      if (adRequestId) {
+        formData.append('ad_request_id', adRequestId);
+      }
 
       const response = await fetch('/ads/api/analyze-website/', {
         method: 'POST',
@@ -160,7 +164,50 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
         // Set website field to the analyzed URL
         setWebsite(websiteUrl.trim());
 
-        console.log('Website analysis completed successfully');
+        // Check if a brand was automatically created
+        if (data.brand_created && data.brand) {
+          console.log('Website analysis completed and brand created automatically:', data.brand.name);
+          
+          // Notify parent component about the new brand
+          if (onBrandCreated) {
+            onBrandCreated(data.brand);
+          }
+          
+          // Show success message but keep modal open
+          // Create a temporary notification container
+          const notificationContainer = document.createElement('div');
+          document.body.appendChild(notificationContainer);
+          
+          // Import and render AlertNotification
+          import('@/components/ui/alert-notification.tsx').then(({ AlertNotification }) => {
+            const { createRoot } = require('react-dom/client');
+            const root = createRoot(notificationContainer);
+            
+            root.render(
+              React.createElement(AlertNotification, {
+                variant: 'success',
+                message: `Brand "${data.brand.name}" has been created and associated with your ad request. You can now edit the details below.`,
+                duration: 7000,
+                onClose: () => {
+                  root.unmount();
+                  document.body.removeChild(notificationContainer);
+                }
+              })
+            );
+          });
+          
+          // Store the created brand ID for later updates
+          setCreatedBrandId(data.brand.id);
+          
+          // Don't close modal - let user edit the created brand
+          console.log('Brand created successfully - modal remains open for editing');
+          return; // Exit early since brand was created
+        } else if (data.brand_created === false && data.brand_creation_error) {
+          console.warn('Brand creation failed:', data.brand_creation_error);
+          // Continue with form population even if brand creation failed
+        }
+
+        console.log('Website analysis completed successfully - form populated');
       } else {
         throw new Error('No data extracted from website');
       }
@@ -312,6 +359,10 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
 
       let response;
       
+      // Determine if we're creating or updating
+      const isUpdating = createdBrandId !== null;
+      const endpoint = isUpdating ? `/ads/api/update-user-brand/${createdBrandId}/` : '/ads/api/create-user-brand/';
+      
       // If there's a logo file, use FormData for multipart upload
       if (selectedLogoData && selectedLogoData.file) {
         const formDataMultipart = new FormData();
@@ -328,8 +379,8 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
         // Add logo file
         formDataMultipart.append('logo_file', selectedLogoData.file);
 
-        response = await fetch('/ads/api/create-user-brand/', {
-          method: 'POST',
+        response = await fetch(endpoint, {
+          method: isUpdating ? 'PUT' : 'POST',
           headers: {
             'X-CSRFToken': getCsrfToken(),
           },
@@ -337,8 +388,8 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
         });
       } else {
         // No logo file, use JSON
-        response = await fetch('/ads/api/create-user-brand/', {
-          method: 'POST',
+        response = await fetch(endpoint, {
+          method: isUpdating ? 'PUT' : 'POST',
           headers: {
             'Content-Type': 'application/json',
             'X-CSRFToken': getCsrfToken(),
@@ -376,6 +427,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
       setSelectedLogoData(null);
       setWebsiteUrl('');
       setAnalysisError('');
+      setCreatedBrandId(null);
       onBrandCreated(data.brand);
       onClose();
     } catch (err) {
@@ -696,7 +748,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated }) => {
             onClick={handleSubmit}
             disabled={isSubmitting}
           >
-            {isSubmitting ? t('common.saving', 'Saving...') : t('common.save', 'Save')}
+            {isSubmitting ? t('common.saving', 'Saving...') : (createdBrandId ? t('common.update', 'Update') : t('common.save', 'Save'))}
           </Button>
         </DialogFooter>
       </DialogContent>

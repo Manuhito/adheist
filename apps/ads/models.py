@@ -909,7 +909,7 @@ class UserBrand(BaseModel):
     Model to store user brands information.
     """
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="brands")
-    brand_name = models.CharField(max_length=255, help_text="Name of the brand")
+    brand_name = models.CharField(max_length=255, help_text="Name of the brand", unique=True)
     
     class Meta:
         verbose_name = "User Brand"
