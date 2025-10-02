@@ -19,28 +19,18 @@ import NoCreditsModal from './NoCreditsModal';
 const RevisionModal = ({ open, onOpenChange, imageUrl, canvasSize, versions = [], currentVersionId, adRequestId }) => {
   // State for the edit description textarea
   const [editDescription, setEditDescription] = useState('');
-  
-  // State for the currently selected version
-  const [selectedVersion, setSelectedVersion] = useState(null);
-  
+
+
   // State for generation process
   const [isGenerating, setIsGenerating] = useState(false);
-  
+
   // State for credits modal
   const [showNoCreditsDialog, setShowNoCreditsDialog] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  
-  // Initialize selected version when modal opens
-  React.useEffect(() => {
-    if (open && versions.length > 0) {
-      const current = versions.find(v => v.id === currentVersionId) || versions[0];
-      setSelectedVersion(current);
-    }
-  }, [open, versions, currentVersionId]);
-  
-  // Get the image URL and canvas size from selected version
-  const displayImageUrl = selectedVersion?.generated_image || imageUrl;
-  const displayCanvasSize = selectedVersion?.canvas_size || canvasSize;
+
+  // Use the image URL and canvas size passed as props
+  const displayImageUrl = imageUrl;
+  const displayCanvasSize = canvasSize;
 
   // Format canvas size for display (replace 'x' with ' x ')
   const formatCanvasSize = (size) => {
@@ -71,10 +61,10 @@ const RevisionModal = ({ open, onOpenChange, imageUrl, canvasSize, versions = []
     import('react-dom/client').then(({ createRoot }) => {
       // Clear the current page content
       const container = document.getElementById('sidebar-page-content') || document.body;
-      
+
       // Create a new container for the generating page
       container.innerHTML = '<div id="generating-page-root"></div>';
-      
+
       // Mount the GeneratingLoadingPage
       const generatingContainer = document.getElementById('generating-page-root');
       const root = createRoot(generatingContainer);
@@ -96,8 +86,8 @@ const RevisionModal = ({ open, onOpenChange, imageUrl, canvasSize, versions = []
       return;
     }
 
-    // Check if we have a selected version with an image
-    if (!selectedVersion || !selectedVersion.generated_image) {
+    // Check if we have an image URL for revision
+    if (!imageUrl) {
       console.error('No image available for revision');
       return;
     }
@@ -124,7 +114,7 @@ const RevisionModal = ({ open, onOpenChange, imageUrl, canvasSize, versions = []
       const revisionFormData = new FormData();
       revisionFormData.append('ad_request', adRequestId);
       revisionFormData.append('user_prompt', editDescription);
-      revisionFormData.append('url_image_revision', selectedVersion.generated_image);
+      revisionFormData.append('url_image_revision', imageUrl);
 
       const response = await fetch('/ads/adrequest/revision/create/', {
         method: 'POST',
@@ -148,11 +138,11 @@ const RevisionModal = ({ open, onOpenChange, imageUrl, canvasSize, versions = []
 
       // Close the modal
       onOpenChange(false);
-      
+
       // Show the generating page by replacing the entire page content
       showGeneratingPage(adRequestId);
       console.log('Generation started successfully - showing generating page');
-      
+
     } catch (error) {
       console.error('Error generating version:', error);
       setIsGenerating(false);
@@ -171,132 +161,100 @@ const RevisionModal = ({ open, onOpenChange, imageUrl, canvasSize, versions = []
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-5xl w-full p-0 border-0 bg-transparent shadow-none">
           <DialogTitle className="sr-only">Generated Ad Revision</DialogTitle>
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
-          <div className="flex gap-4">
-            {/* Left sidebar with version previews */}
-            {versions.length > 0 && (
-              <div className="flex flex-col gap-2 w-16">
-                {versions.map((version) => (
-                  <div
-                    key={version.id}
-                    onClick={() => setSelectedVersion(version)}
-                    className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
-                      selectedVersion?.id === version.id
-                        ? 'border-primary ring-2 ring-primary/20'
-                        : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
-                    }`}
-                  >
-                    {version.generated_image ? (
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+            {/* Main content */}
+            <div className="w-full">
+                {/* Image container with lighter gray background and border */}
+                <div className="bg-gray-100 dark:bg-gray-600 rounded-xl p-4 border border-gray-300 dark:border-gray-500 mb-4">
+                  {/* Header with title and canvas size inside container */}
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                      Generated Ad
+                    </h3>
+                    <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                      {formatCanvasSize(displayCanvasSize)}
+                    </span>
+                  </div>
+
+                  {/* Image */}
+                  <div className="flex items-center justify-center">
+                    {displayImageUrl ? (
                       <img
-                        src={version.generated_image}
-                        alt="Version preview"
-                        className="w-full h-16 object-cover"
+                        src={displayImageUrl}
+                        alt="Generated Ad for Revision"
+                        className="max-w-full max-h-[60vh] object-contain rounded-lg"
                       />
                     ) : (
-                      <div className="w-full h-16 bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
-                        <div className="w-4 h-4 bg-gray-400 dark:bg-gray-500 rounded"></div>
+                      <div className="w-full h-96 bg-gray-200 dark:bg-gray-500 rounded-lg flex items-center justify-center">
+                        <p className="text-gray-500 dark:text-gray-400">No image available</p>
                       </div>
                     )}
                   </div>
-                ))}
-              </div>
-            )}
-
-            {/* Main content */}
-            <div className="flex-1">
-              {/* Image container with lighter gray background and border */}
-              <div className="bg-gray-100 dark:bg-gray-600 rounded-xl p-4 border border-gray-300 dark:border-gray-500 mb-4">
-                {/* Header with title and canvas size inside container */}
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                    Generated Ad
-                  </h3>
-                  <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-                    {formatCanvasSize(displayCanvasSize)}
-                  </span>
                 </div>
 
-                {/* Image */}
-                <div className="flex items-center justify-center">
-                  {displayImageUrl ? (
-                    <img
-                      src={displayImageUrl}
-                      alt="Generated Ad for Revision"
-                      className="max-w-full max-h-[60vh] object-contain rounded-lg"
-                    />
-                  ) : (
-                    <div className="w-full h-96 bg-gray-200 dark:bg-gray-500 rounded-lg flex items-center justify-center">
-                      <p className="text-gray-500 dark:text-gray-400">No image available</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Edit description textarea */}
-              <div className="relative">
+                {/* Edit description textarea */}
                 <div className="relative">
-                  <WandSparkles className="absolute left-3 top-3 h-4 w-4 text-gray-500 dark:text-gray-400" />
-                  <textarea
-                    value={editDescription}
-                    onChange={(e) => setEditDescription(e.target.value)}
-                    placeholder="Describe your edits (e.g. Make it more vibrant and colorful)"
-                    className="w-full pl-10 pr-20 min-h-[80px] resize-none rounded-2xl border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  />
-                  <Button
-                    disabled={!editDescription.trim() || isGenerating}
-                    onClick={handleGenerateVersion}
-                    className={`absolute bottom-3 right-3 h-8 px-3 text-xs rounded-full ${
-                      !editDescription.trim() || isGenerating
-                        ? 'bg-gray-400 hover:bg-gray-400 text-white cursor-not-allowed' 
-                        : ''
-                    }`}
-                    size="sm"
-                  >
-                    <ArrowUp className={`h-3 w-3 mr-1 ${isGenerating ? 'animate-spin' : ''}`} />
-                    {isGenerating ? 'Generating...' : 'Generate'}
-                  </Button>
+                  <div className="relative">
+                    <WandSparkles className="absolute left-3 top-3 h-4 w-4 text-gray-500 dark:text-gray-400" />
+                    <textarea
+                      value={editDescription}
+                      onChange={(e) => setEditDescription(e.target.value)}
+                      placeholder="Describe your edits (e.g. Make it more vibrant and colorful)"
+                      className="w-full pl-10 pr-20 min-h-[80px] resize-none rounded-2xl border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    />
+                    <Button
+                      disabled={!editDescription.trim() || isGenerating}
+                      onClick={handleGenerateVersion}
+                      className={`absolute bottom-3 right-3 h-8 px-3 text-xs rounded-full ${!editDescription.trim() || isGenerating
+                          ? 'bg-gray-400 hover:bg-gray-400 text-white cursor-not-allowed'
+                          : ''
+                        }`}
+                      size="sm"
+                    >
+                      <ArrowUp className={`h-3 w-3 mr-1 ${isGenerating ? 'animate-spin' : ''}`} />
+                      {isGenerating ? 'Generating...' : 'Generate'}
+                    </Button>
+                  </div>
                 </div>
-              </div>
 
-              {/* Tips cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-4">
-                <div 
-                  onClick={() => setEditDescription('Make it more vibrant and colorful')}
-                  className="flex items-center gap-2 px-3 py-2 border border-primary/20 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <Zap className="h-3 w-3 text-primary flex-shrink-0" />
-                  <span className="text-xs text-gray-700 dark:text-gray-300 truncate">Make it more vibrant and colorful</span>
+                {/* Tips cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-4">
+                  <div
+                    onClick={() => setEditDescription('Make it more vibrant and colorful')}
+                    className="flex items-center gap-2 px-3 py-2 border border-primary/20 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <Zap className="h-3 w-3 text-primary flex-shrink-0" />
+                    <span className="text-xs text-gray-700 dark:text-gray-300 truncate">Make it more vibrant and colorful</span>
+                  </div>
+
+                  <div
+                    onClick={() => setEditDescription('Add a modern minimalist style')}
+                    className="flex items-center gap-2 px-3 py-2 border border-primary/20 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <Zap className="h-3 w-3 text-primary flex-shrink-0" />
+                    <span className="text-xs text-gray-700 dark:text-gray-300 truncate">Add a modern minimalist style</span>
+                  </div>
+
+                  <div
+                    onClick={() => setEditDescription('Enhance the overall quality')}
+                    className="flex items-center gap-2 px-3 py-2 border border-primary/20 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <Zap className="h-3 w-3 text-primary flex-shrink-0" />
+                    <span className="text-xs text-gray-700 dark:text-gray-300 truncate">Enhance the overall quality</span>
+                  </div>
+
+                  <div
+                    onClick={() => setEditDescription('Apply a professional business look')}
+                    className="flex items-center gap-2 px-3 py-2 border border-primary/20 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <Zap className="h-3 w-3 text-primary flex-shrink-0" />
+                    <span className="text-xs text-gray-700 dark:text-gray-300 truncate">Apply a professional business look</span>
+                  </div>
                 </div>
-                
-                <div 
-                  onClick={() => setEditDescription('Add a modern minimalist style')}
-                  className="flex items-center gap-2 px-3 py-2 border border-primary/20 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <Zap className="h-3 w-3 text-primary flex-shrink-0" />
-                  <span className="text-xs text-gray-700 dark:text-gray-300 truncate">Add a modern minimalist style</span>
-                </div>
-                
-                <div 
-                  onClick={() => setEditDescription('Enhance the overall quality')}
-                  className="flex items-center gap-2 px-3 py-2 border border-primary/20 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <Zap className="h-3 w-3 text-primary flex-shrink-0" />
-                  <span className="text-xs text-gray-700 dark:text-gray-300 truncate">Enhance the overall quality</span>
-                </div>
-                
-                <div 
-                  onClick={() => setEditDescription('Apply a professional business look')}
-                  className="flex items-center gap-2 px-3 py-2 border border-primary/20 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <Zap className="h-3 w-3 text-primary flex-shrink-0" />
-                  <span className="text-xs text-gray-700 dark:text-gray-300 truncate">Apply a professional business look</span>
-                </div>
-              </div>
             </div>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

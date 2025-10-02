@@ -39,7 +39,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const websiteUrlId = useId();
   const keyBenefitsId = useId();
   const brandColorId = useId();
-  
+
   // IDs for new text fields
   const targetAudienceId = useId();
   const toneOfVoiceId = useId();
@@ -72,32 +72,32 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
   const [colorError, setColorError] = useState(false);
   const [selectedBrand, setSelectedBrand] = useState(initialData.brand || null);
-  
+
   // New text fields state variables
   const [targetAudience, setTargetAudience] = useState(
     initialData.asset_overrides?.target_audience || ''
   );
-  
+
   const [toneOfVoice, setToneOfVoice] = useState(
     initialData.asset_overrides?.tone_of_voice || ''
   );
-  
+
   const [fontDirection, setFontDirection] = useState(
     initialData.asset_overrides?.font_direction || ''
   );
-  
+
   const [coreFeatures, setCoreFeatures] = useState(
     initialData.asset_overrides?.core_features || ''
   );
-  
+
   const [emotionalLifestyleBenefits, setEmotionalLifestyleBenefits] = useState(
     initialData.asset_overrides?.emotional_lifestyle_benefits || ''
   );
-  
+
   const [proofPoints, setProofPoints] = useState(
     initialData.asset_overrides?.proof_points || ''
   );
-  
+
   const [valuePropositions, setValuePropositions] = useState(
     initialData.asset_overrides?.value_propositions || ''
   );
@@ -108,7 +108,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   const keyBenefitsUpdateTimer = useRef(null);
   const colorUpdateTimer = useRef(null);
   const brandUpdateTimer = useRef(null);
-  
+
   // Debounce timers for new text fields
   const targetAudienceUpdateTimer = useRef(null);
   const toneOfVoiceUpdateTimer = useRef(null);
@@ -123,10 +123,10 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
   // Función auxiliar para procesar los datos devueltos por refreshData y actualizar todos los campos
   const processRefreshedData = async () => {
     if (!refreshData) return;
-    
+
     try {
       const freshData = await refreshData();
-      
+
       if (freshData && freshData.asset_overrides !== undefined) {
         // Update website URL (force update even if empty)
         setWebsiteUrl(freshData.asset_overrides.company_website || '');
@@ -136,25 +136,25 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
         // Update brand color (force update even if empty)
         setSelectedColor(freshData.asset_overrides.main_hex_color || '');
-        
+
         // Update target audience (force update even if empty)
         setTargetAudience(freshData.asset_overrides.target_audience || '');
-        
+
         // Update tone of voice (force update even if empty)
         setToneOfVoice(freshData.asset_overrides.tone_of_voice || '');
-        
+
         // Update font direction (force update even if empty)
         setFontDirection(freshData.asset_overrides.font_direction || '');
-        
+
         // Update core features (force update even if empty)
         setCoreFeatures(freshData.asset_overrides.core_features || '');
-        
+
         // Update emotional/lifestyle benefits (force update even if empty)
         setEmotionalLifestyleBenefits(freshData.asset_overrides.emotional_lifestyle_benefits || '');
-        
+
         // Update proof points (force update even if empty)
         setProofPoints(freshData.asset_overrides.proof_points || '');
-        
+
         // Update value propositions (force update even if empty)
         setValuePropositions(freshData.asset_overrides.value_propositions || '');
       }
@@ -162,7 +162,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
       console.error('Error refreshing data:', error);
     }
   };
-  
+
   useEffect(() => {
     // Comprobamos si venimos de una recarga de página o navegación directa
     const isDirectNavigation = !document.referrer.includes(window.location.host);
@@ -248,7 +248,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
       // Check for logo image in initialData
       const logoImage = initialData.logo_override;
-      
+
       // Update state with existing logo image
       setLogoLibraryImage(logoImage || null);
     }
@@ -681,7 +681,7 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
 
     console.log('Core Features updated locally:', newValue);
   };
-  
+
   const handleEmotionalLifestyleBenefitsChange = (e) => {
     const newValue = e.target.value;
     setEmotionalLifestyleBenefits(newValue);
@@ -733,25 +733,25 @@ const StepTwoComponent = ({ onComplete, initialData = {}, refreshData }) => {
     console.log('Value Propositions updated locally:', newValue);
   };
 
-// Function to update website URL in the database
-const updateWebsiteUrl = async (url) => {
-  // Only proceed if we have an ID
-  if (!initialData.id) return;
+  // Function to update website URL in the database
+  const updateWebsiteUrl = async (url) => {
+    // Only proceed if we have an ID
+    if (!initialData.id) return;
 
-  try {
-    // Get CSRF token from cookies
-    const csrfToken = document.cookie
-      .split('; ')
-      .find(row => row.startsWith('csrftoken='))
-      ?.split('=')[1];
+    try {
+      // Get CSRF token from cookies
+      const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken='))
+        ?.split('=')[1];
 
-    if (!csrfToken) {
-      console.error('CSRF token not found');
-      return;
-    }
+      if (!csrfToken) {
+        console.error('CSRF token not found');
+        return;
+      }
 
-    // Create a FormData object for the request
-    const formData = new FormData();
+      // Create a FormData object for the request
+      const formData = new FormData();
 
       // Add the company_website field directly
       formData.append('company_website', url);
@@ -791,7 +791,7 @@ const updateWebsiteUrl = async (url) => {
 
     try {
       console.log(`Saving product library image for field ${fieldName}:`, imageData);
-      
+
       // Get CSRF token from cookies
       const csrfToken = document.cookie
         .split('; ')
@@ -802,7 +802,7 @@ const updateWebsiteUrl = async (url) => {
         console.error('CSRF token not found in cookies');
         return;
       }
-      
+
       const formData = new FormData();
 
       // If we have image data with URL and ID (from image library)
@@ -811,7 +811,7 @@ const updateWebsiteUrl = async (url) => {
         formData.append(`${fieldName}_asset_id`, imageData.id);
         // Include the field name with empty value to indicate we want to update this field
         formData.append(fieldName, '');
-      } 
+      }
       // If we have a null value, we're deleting the image
       else if (imageData === null) {
         // Include the field name with empty value to indicate deletion
@@ -825,7 +825,7 @@ const updateWebsiteUrl = async (url) => {
           const blob = await response.blob();
           const file = new File([blob], 'image.png', { type: 'image/png' });
           formData.append(fieldName, file);
-        } 
+        }
         // If it's already a File object
         else if (imageData instanceof File) {
           formData.append(fieldName, imageData);
@@ -863,7 +863,7 @@ const updateWebsiteUrl = async (url) => {
 
     try {
       console.log(`Saving logo library image:`, imageData);
-      
+
       // Get CSRF token from cookies
       const csrfToken = document.cookie
         .split('; ')
@@ -874,7 +874,7 @@ const updateWebsiteUrl = async (url) => {
         console.error('CSRF token not found in cookies');
         return;
       }
-      
+
       const formData = new FormData();
 
       // If we have image data with URL and ID (from image library)
@@ -883,7 +883,7 @@ const updateWebsiteUrl = async (url) => {
         formData.append('logo_asset_id', imageData.id);
         // Include the field name with empty value to indicate we want to update this field
         formData.append('logo', '');
-      } 
+      }
       // If we have a null value, we're deleting the image
       else if (imageData === null) {
         // Include the field name with empty value to indicate deletion
@@ -897,7 +897,7 @@ const updateWebsiteUrl = async (url) => {
           const blob = await response.blob();
           const file = new File([blob], 'logo.png', { type: 'image/png' });
           formData.append('logo', file);
-        } 
+        }
         // If it's already a File object
         else if (imageData instanceof File) {
           formData.append('logo', imageData);
@@ -1047,7 +1047,7 @@ const updateWebsiteUrl = async (url) => {
       console.log('Brand color updated locally:', newValue);
     }
   };
-  
+
   // Function to update brand color in the database
   const updateBrandColor = async (color) => {
     // Only proceed if we have an ID
@@ -1091,7 +1091,7 @@ const updateWebsiteUrl = async (url) => {
       console.error('Error saving brand color:', error);
     }
   };
-  
+
   // Update functions for new text fields
   const updateTargetAudience = async (value) => {
     // Only proceed if we have an ID
@@ -1135,7 +1135,7 @@ const updateWebsiteUrl = async (url) => {
       console.error('Error saving target audience:', error);
     }
   };
-  
+
   const updateToneOfVoice = async (value) => {
     // Only proceed if we have an ID
     if (!initialData.id) return;
@@ -1178,7 +1178,7 @@ const updateWebsiteUrl = async (url) => {
       console.error('Error saving tone of voice:', error);
     }
   };
-  
+
   const updateFontDirection = async (value) => {
     // Only proceed if we have an ID
     if (!initialData.id) return;
@@ -1221,7 +1221,7 @@ const updateWebsiteUrl = async (url) => {
       console.error('Error saving font direction:', error);
     }
   };
-  
+
   const updateCoreFeatures = async (value) => {
     // Only proceed if we have an ID
     if (!initialData.id) return;
@@ -1264,7 +1264,7 @@ const updateWebsiteUrl = async (url) => {
       console.error('Error saving core features:', error);
     }
   };
-  
+
   const updateEmotionalLifestyleBenefits = async (value) => {
     // Only proceed if we have an ID
     if (!initialData.id) return;
@@ -1307,7 +1307,7 @@ const updateWebsiteUrl = async (url) => {
       console.error('Error saving emotional/lifestyle benefits:', error);
     }
   };
-  
+
   const updateProofPoints = async (value) => {
     // Only proceed if we have an ID
     if (!initialData.id) return;
@@ -1350,7 +1350,7 @@ const updateWebsiteUrl = async (url) => {
       console.error('Error saving proof points:', error);
     }
   };
-  
+
   const updateValuePropositions = async (value) => {
     // Only proceed if we have an ID
     if (!initialData.id) return;
@@ -1482,7 +1482,7 @@ const updateWebsiteUrl = async (url) => {
     // Store the field name and source
     window.currentImageSelectionSource = 'product_library';
     window.currentImageField = imageData.field;
-    
+
     // Store the brand ID directly from initialData
     if (initialData.brand && initialData.brand.id) {
       window.selectedBrandId = initialData.brand.id;
@@ -1499,7 +1499,7 @@ const updateWebsiteUrl = async (url) => {
     // Store the field name and source
     window.currentImageSelectionSource = 'app_library';
     window.currentImageField = imageData.field;
-    
+
     // Store the brand ID directly from initialData
     if (initialData.brand && initialData.brand.id) {
       window.selectedBrandId = initialData.brand.id;
@@ -1516,7 +1516,7 @@ const updateWebsiteUrl = async (url) => {
     // Store the field name and source
     window.currentImageSelectionSource = 'logo_library';
     window.currentImageField = imageData.field;
-    
+
     // Store the brand ID directly from initialData
     if (initialData.brand && initialData.brand.id) {
       window.selectedBrandId = initialData.brand.id;
@@ -1759,7 +1759,7 @@ const updateWebsiteUrl = async (url) => {
             <div className="flex flex-row w-full">
               {/* Company Branding (izquierda) */}
               <div className="bg-card rounded-xl flex flex-col items-start">
-                <LogoImageSection 
+                <LogoImageSection
                   onSelectImage={handleLogoImageLibrarySelect}
                   onDeleteImage={handleLogoImageDelete}
                   selectedImage={logoLibraryImage || initialData.logo_override}
@@ -1832,7 +1832,7 @@ const updateWebsiteUrl = async (url) => {
                     />
                   </div>
                 </div>
-                
+
                 {/* Target Audience */}
                 <div className="w-full mb-6">
                   <h3 className="text-sm font-medium mb-2">{t('step_two.target_audience', 'Target Audience')}</h3>
@@ -1849,7 +1849,7 @@ const updateWebsiteUrl = async (url) => {
                     />
                   </div>
                 </div>
-                
+
                 {/* Tone of Voice */}
                 <div className="w-full mb-6">
                   <h3 className="text-sm font-medium mb-2">{t('step_two.tone_of_voice', 'Tone of Voice')}</h3>
@@ -1866,7 +1866,7 @@ const updateWebsiteUrl = async (url) => {
                     />
                   </div>
                 </div>
-                
+
                 {/* Font Direction */}
                 <div className="w-full mb-6">
                   <h3 className="text-sm font-medium mb-2">{t('step_two.font_direction', 'Font Direction')}</h3>
@@ -1883,7 +1883,7 @@ const updateWebsiteUrl = async (url) => {
                     />
                   </div>
                 </div>
-                
+
                 {/* Core Features */}
                 <div className="w-full mb-6">
                   <h3 className="text-sm font-medium mb-2">{t('step_two.core_features', 'Core Features')}</h3>
@@ -1900,7 +1900,7 @@ const updateWebsiteUrl = async (url) => {
                     />
                   </div>
                 </div>
-                
+
                 {/* Emotional/Lifestyle Benefits */}
                 <div className="w-full mb-6">
                   <h3 className="text-sm font-medium mb-2">{t('step_two.emotional_lifestyle_benefits', 'Emotional/Lifestyle Benefits')}</h3>
@@ -1917,7 +1917,7 @@ const updateWebsiteUrl = async (url) => {
                     />
                   </div>
                 </div>
-                
+
                 {/* Proof Points */}
                 <div className="w-full mb-6">
                   <h3 className="text-sm font-medium mb-2">{t('step_two.proof_points', 'Proof Points')}</h3>
@@ -1934,7 +1934,7 @@ const updateWebsiteUrl = async (url) => {
                     />
                   </div>
                 </div>
-                
+
                 {/* Value Propositions */}
                 <div className="w-full">
                   <h3 className="text-sm font-medium mb-2">{t('step_two.value_propositions', 'Value Propositions')}</h3>
@@ -1958,7 +1958,7 @@ const updateWebsiteUrl = async (url) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Product Image Section */}
               <div className="mb-6">
-                <ProductImageSection 
+                <ProductImageSection
                   onSelectImage={handleProductImageLibrarySelect}
                   onDeleteImage={handleProductImageDelete}
                   selectedImages={productLibraryImages}
@@ -1967,7 +1967,7 @@ const updateWebsiteUrl = async (url) => {
 
               {/* App Image Section */}
               <div className="mb-6">
-                <AppImageSection 
+                <AppImageSection
                   onSelectImage={handleAppImageLibrarySelect}
                   onDeleteImage={handleAppImageDelete}
                   selectedImages={appLibraryImages}

@@ -217,6 +217,10 @@ class AppConfiguration(BaseModel):
         default=0,
         help_text="Number of credits required to create a new version/revision"
     )
+    brand_assets_generation_cost = models.PositiveIntegerField(
+        default=4,
+        help_text="Number of credits required to generate brand assets from website analysis"
+    )
     
     class Meta:
         verbose_name = "Application Configuration"
@@ -905,7 +909,7 @@ class UserBrand(BaseModel):
     Model to store user brands information.
     """
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="brands")
-    brand_name = models.CharField(max_length=255, help_text="Name of the brand")
+    brand_name = models.CharField(max_length=255, help_text="Name of the brand", unique=True)
     
     class Meta:
         verbose_name = "User Brand"
@@ -1122,3 +1126,99 @@ class FAQ(BaseModel):
     
     def __str__(self):
         return self.question
+
+
+class BrandAssetExtraction(BaseModel):
+    """
+    Model to store brand asset extraction results from website analysis.
+    """
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        help_text="User who requested the extraction"
+    )
+    brand = models.ForeignKey(
+        'UserBrand',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="Brand created from this extraction (if any)"
+    )
+    website_url = models.URLField(
+        help_text="The website URL that was analyzed"
+    )
+    
+    # OpenAI API details
+    model_used = models.CharField(
+        max_length=50,
+        help_text="The OpenAI model that was used for extraction"
+    )
+    raw_response = models.TextField(
+        help_text="Raw response from OpenAI API"
+    )
+    
+    # Extracted brand assets
+    extracted_assets = JSONField(
+        default=dict,
+        help_text="JSON object containing the extracted brand assets"
+    )
+    
+    # Cost tracking
+    input_tokens = models.PositiveIntegerField(
+        default=0,
+        help_text="Number of input tokens used"
+    )
+    output_tokens = models.PositiveIntegerField(
+        default=0,
+        help_text="Number of output tokens generated"
+    )
+    input_cost_usd = models.DecimalField(
+        max_digits=10,
+        decimal_places=6,
+        default=0.000000,
+        help_text="Cost of input tokens in USD"
+    )
+    output_cost_usd = models.DecimalField(
+        max_digits=10,
+        decimal_places=6,
+        default=0.000000,
+        help_text="Cost of output tokens in USD"
+    )
+    total_cost_usd = models.DecimalField(
+        max_digits=10,
+        decimal_places=6,
+        default=0.000000,
+        help_text="Total cost in USD"
+    )
+    
+    # Status and error handling
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+    ]
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='pending',
+        help_text="Status of the extraction process"
+    )
+    error_log = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Error messages if extraction failed"
+    )
+    
+    class Meta:
+        verbose_name = "Brand Asset Extraction"
+        verbose_name_plural = "Brand Asset Extractions"
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.user.email} - {self.website_url} ({self.status})"
+    
+    def save(self, *args, **kwargs):
+        # Calculate total cost
+        self.total_cost_usd = self.input_cost_usd + self.output_cost_usd
+        super().save(*args, **kwargs)

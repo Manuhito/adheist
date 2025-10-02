@@ -23,6 +23,7 @@ from .models import (
     UserBrand,
     UserFolder,
     UserBrandAssets,
+    BrandAssetExtraction,
 )
 
 
@@ -297,12 +298,12 @@ class AppConfigurationAdmin(admin.ModelAdmin):
         "pro_general_credits", "pro_version_credits", 
         "package1_general_credits", "package1_version_credits",
         "package2_general_credits", "package2_version_credits",
-        "ad_generation_credit_cost", "version_creation_credit_cost",
+        "ad_generation_credit_cost", "version_creation_credit_cost", "brand_assets_generation_cost",
         "updated_at"
     ]
     fieldsets = [
         ("Credit Costs Configuration", {
-            "fields": ["ad_generation_credit_cost", "version_creation_credit_cost"],
+            "fields": ["ad_generation_credit_cost", "version_creation_credit_cost", "brand_assets_generation_cost"],
             "description": "Configure how many credits each operation costs",
             "classes": ["wide"]
         }),
@@ -495,3 +496,53 @@ class UserBrandAssetsAdmin(admin.ModelAdmin):
     def container_type(self, obj):
         return obj.container_type.title()
     container_type.short_description = "Type"
+
+
+@admin.register(BrandAssetExtraction)
+class BrandAssetExtractionAdmin(admin.ModelAdmin):
+    list_display = [
+        "user", "brand", "website_url", "status", "model_used", 
+        "input_tokens", "output_tokens", "total_cost_usd", "created_at"
+    ]
+    list_filter = ["status", "model_used", "created_at"]
+    search_fields = ["user__email", "website_url"]
+    readonly_fields = [
+        "user", "website_url", "model_used", "raw_response", 
+        "input_tokens", "output_tokens", "input_cost_usd", 
+        "output_cost_usd", "total_cost_usd", "created_at", "updated_at"
+    ]
+    
+    fieldsets = [
+        ("Request Information", {
+            "fields": ["user", "website_url", "status", "created_at", "updated_at"],
+            "classes": ["wide"]
+        }),
+        ("OpenAI Details", {
+            "fields": ["model_used", "input_tokens", "output_tokens"],
+            "classes": ["wide"]
+        }),
+        ("Cost Information", {
+            "fields": ["input_cost_usd", "output_cost_usd", "total_cost_usd"],
+            "classes": ["wide"]
+        }),
+        ("Response Data", {
+            "fields": ["raw_response", "extracted_assets"],
+            "classes": ["wide", "collapse"]
+        }),
+        ("Error Information", {
+            "fields": ["error_log"],
+            "classes": ["wide", "collapse"]
+        })
+    ]
+    
+    def has_add_permission(self, request):
+        # Don't allow manual creation of extractions
+        return False
+    
+    def has_change_permission(self, request, obj=None):
+        # Allow viewing but not editing
+        return True
+    
+    def has_delete_permission(self, request, obj=None):
+        # Allow deletion for cleanup
+        return True

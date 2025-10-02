@@ -2179,6 +2179,65 @@ def get_user_credits(user):
     }
 
 
+def deduct_user_credits(user, general_credits_to_deduct):
+    """
+    Deduct general credits from user's account.
+    First deducts from regular credits, then from extra credits if needed.
+    
+    Args:
+        user: The user to deduct credits from
+        general_credits_to_deduct: Number of general credits to deduct
+        
+    Returns:
+        bool: True if successful, False if insufficient credits
+    """
+    try:
+        from .models import AdRequestUsage, ExtraCredit
+        
+        # Get current usage record
+        if user.has_active_subscription():
+            usage = AdRequestUsage.get_current_usage(user)
+        else:
+            usage = AdRequestUsage.objects.filter(user=user, is_free_tier=True).first()
+            if not usage:
+                return False  # No credits available
+        
+        # Check if user has enough credits
+        current_general = getattr(usage, 'general_credits', 0)
+        extra_credit_obj = ExtraCredit.objects.filter(user=user).first()
+        extra_general = getattr(extra_credit_obj, 'general_credits', 0) if extra_credit_obj else 0
+        
+        total_available = current_general + extra_general
+        
+        if total_available < general_credits_to_deduct:
+            return False  # Insufficient credits
+        
+        # Deduct from regular credits first
+        remaining_to_deduct = general_credits_to_deduct
+        
+        if current_general >= remaining_to_deduct:
+            # Can deduct entirely from regular credits
+            usage.general_credits = current_general - remaining_to_deduct
+            usage.save()
+        else:
+            # Need to use extra credits too
+            usage.general_credits = 0
+            usage.save()
+            
+            remaining_to_deduct -= current_general
+            
+            # Deduct remaining from extra credits
+            if extra_credit_obj and remaining_to_deduct > 0:
+                extra_credit_obj.general_credits = max(0, extra_general - remaining_to_deduct)
+                extra_credit_obj.save()
+        
+        return True
+        
+    except Exception as e:
+        print(f"Error deducting user credits: {str(e)}")
+        return False
+
+
 def reward_user_for_rating(user):
     """
     Reward a user with credits for submitting a rating.
@@ -2935,10 +2994,11 @@ def get_user_containers(request):
     try:
         containers_data = []
         
-        # Get all unique brands that have assets for the current user
+        # Get all brands for the current user
+        # Note: This shows all user's brands, even if they don't have uploaded assets yet
         user_brands = UserBrand.objects.filter(
-            brand_assets__user=request.user
-        ).distinct().order_by('brand_name')
+            user=request.user
+        ).order_by('brand_name')
         
         # Add brands
         for brand in user_brands:
@@ -3032,11 +3092,11 @@ def create_user_brand(request):
                 'error': 'Brand name is required'
             }, status=400)
         
-        # Check if brand with this name already exists for this user
-        if UserBrand.objects.filter(user=request.user, brand_name=brand_name).exists():
+        # Check if brand with this name already exists globally (unique constraint)
+        if UserBrand.objects.filter(brand_name=brand_name).exists():
             return JsonResponse({
                 'success': False,
-                'error': 'A brand with this name already exists'
+                'error': 'A brand with this name already exists. Please choose a different name.'
             }, status=400)
         
         # Create the new brand (simple, just name)
@@ -3200,80 +3260,52 @@ def discover_clone_adrequest_page(request, pk):
 def my_ads_page(request):
     """
     Render the My Ads page with React components.
-    Shows all AdRequestVersions created by the current user as individual cards,
-    plus DRAFT AdRequests without versions as cards that allow navigation to discover clone.
+    Shows all AdRequests created by the current user as individual cards,
+    using the generated_image from the most recent AdRequestVersion as the card image.
     """
     # Get all AdRequests for the current user with their versions
     ad_requests = AdRequest.objects.filter(user=request.user).prefetch_related(
         'versions'
     ).order_by('-updated_at')
     
-    # Prepare data for frontend - one card per version + draft cards
+    # Prepare data for frontend - one card per AdRequest
     my_ads_data = []
     for ad_request in ad_requests:
-        # Get brand information once per AdRequest
+        # Get brand information
         brand_name = None
         if hasattr(ad_request, 'base_assets') and ad_request.base_assets and ad_request.base_assets.brand:
             brand_name = ad_request.base_assets.brand.brand_name
         
-        # Check if this AdRequest has versions
-        versions = ad_request.versions.all()
+        # Get the most recent version for this AdRequest
+        latest_version = ad_request.versions.order_by('-created_at').first()
         
-        if versions.exists():
-            # Create a card for each version
-            for version in versions:
-                version_card_data = {
-                    # Version-specific data
-                    'version_id': version.id,
-                    'version_status': version.status,
-                    'image_url': version.generated_image.url if version.generated_image else None,
-                    'version_created_at': version.created_at.isoformat() if version.created_at else None,
-                    'user_prompt': version.user_prompt,
-                    'rating': version.rating,
-                    'review': version.review,
-                    
-                    # AdRequest data (inherited by each version card)
-                    'ad_request_id': ad_request.id,
-                    'ad_request_status': ad_request.status,
-                    'canvas_size': ad_request.canvas_size,
-                    'ad_request_created_at': ad_request.created_at.isoformat() if ad_request.created_at else None,
-                    'ad_request_updated_at': ad_request.updated_at.isoformat() if ad_request.updated_at else None,
-                    'brand_name': brand_name,
-                    'ad_library_name': ad_request.ad_library.facebook_page.page_name if ad_request.ad_library else None,
-                    
-                    # Card type identifier
-                    'card_type': 'version',
-                }
-                my_ads_data.append(version_card_data)
-        
-        elif ad_request.status == AdRequest.STATUS_DRAFT:
-            # Create a card for DRAFT AdRequests without versions
-            draft_card_data = {
-                # No version-specific data
-                'version_id': None,
-                'version_status': None,
-                'image_url': None,
-                'version_created_at': None,
-                'user_prompt': None,
-                'rating': None,
-                'review': None,
-                
-                # AdRequest data
-                'ad_request_id': ad_request.id,
-                'ad_request_status': ad_request.status,
-                'canvas_size': ad_request.canvas_size,
-                'ad_request_created_at': ad_request.created_at.isoformat() if ad_request.created_at else None,
-                'ad_request_updated_at': ad_request.updated_at.isoformat() if ad_request.updated_at else None,
-                'brand_name': brand_name,
-                'ad_library_name': ad_request.ad_library.facebook_page.page_name if ad_request.ad_library else None,
-                
-                # Card type identifier
-                'card_type': 'draft',
-            }
-            my_ads_data.append(draft_card_data)
+        # Prepare card data for this AdRequest
+        ad_request_card_data = {
+            # AdRequest data
+            'ad_request_id': ad_request.id,
+            'ad_request_status': ad_request.status,
+            'canvas_size': ad_request.canvas_size,
+            'ad_request_created_at': ad_request.created_at.isoformat() if ad_request.created_at else None,
+            'ad_request_updated_at': ad_request.updated_at.isoformat() if ad_request.updated_at else None,
+            'brand_name': brand_name,
+            'ad_library_name': ad_request.ad_library.facebook_page.page_name if ad_request.ad_library else None,
+            
+            # Version data from most recent version (if exists)
+            'version_id': latest_version.id if latest_version else None,
+            'version_status': latest_version.status if latest_version else None,
+            'image_url': latest_version.generated_image.url if latest_version and latest_version.generated_image else None,
+            'version_created_at': latest_version.created_at.isoformat() if latest_version and latest_version.created_at else None,
+            'user_prompt': latest_version.user_prompt if latest_version else None,
+            'rating': latest_version.rating if latest_version else None,
+            'review': latest_version.review if latest_version else None,
+            
+            # Card type identifier - now all are adrequest cards
+            'card_type': 'adrequest',
+        }
+        my_ads_data.append(ad_request_card_data)
     
-    # Sort by most recent activity (version creation date for versions, ad_request updated_at for drafts)
-    my_ads_data.sort(key=lambda x: x['version_created_at'] or x['ad_request_updated_at'] or '', reverse=True)
+    # Sort by most recent activity (ad_request updated_at)
+    my_ads_data.sort(key=lambda x: x['ad_request_updated_at'] or '', reverse=True)
     
     # Convert to JSON for frontend
     my_ads_json = json.dumps(my_ads_data, cls=DjangoJSONEncoder)
@@ -3293,10 +3325,11 @@ def assets_page(request):
     Render the Assets page with React components.
     Shows all UserBrands and UserFolders for the current user as containers.
     """
-    # Get all unique brands that have assets for the current user
+    # Get all brands for the current user
+    # Note: This shows all user's brands, even if they don't have uploaded assets yet
     user_brands = UserBrand.objects.filter(
-        brand_assets__user=request.user
-    ).distinct().order_by('brand_name')
+        user=request.user
+    ).order_by('brand_name')
     
     # Get all root folders (folders without parent and without brand) for the current user
     user_folders = UserFolder.objects.filter(
@@ -3696,6 +3729,9 @@ def generated_ad_page(request, version_id):
         if not version.generated_image:
             return redirect('ads:my_ads_page')
         
+        # Pre-fetch and order versions to ensure correct ordering in template
+        version.ad_request.ordered_versions = version.ad_request.versions.order_by('-created_at')
+        
         context = {
             'version': version,
         }
@@ -3704,3 +3740,308 @@ def generated_ad_page(request, version_id):
         
     except AdRequestVersion.DoesNotExist:
         return redirect('ads:my_ads_page')
+
+
+@login_required
+@require_http_methods(["POST"])
+def analyze_website_for_brand_assets(request):
+    """
+    Analyze a website to extract brand assets using OpenAI.
+    
+    Expected POST data:
+    - website_url: URL of the website to analyze
+    - ad_request_id: Optional ID of AdRequest to associate with created brand
+    
+    Returns: JSON with extracted brand assets
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Only POST method allowed'}, status=405)
+    
+    try:
+        website_url = request.POST.get('website_url')
+        ad_request_id = request.POST.get('ad_request_id')
+        
+        if not website_url:
+            return JsonResponse({
+                'success': False,
+                'error': 'Website URL is required'
+            }, status=400)
+        
+        # Import here to avoid circular imports
+        from .website_analysis import extract_brand_assets_from_website
+        
+        # Extract brand assets from website
+        result = extract_brand_assets_from_website(request.user, website_url, ad_request_id)
+        
+        if result['success']:
+            return JsonResponse({
+                'success': True,
+                'extracted_assets': result['extracted_assets'],
+                'extraction_id': result.get('extraction_id'),
+                'brand_created': result.get('brand_created', False),
+                'brand': result.get('brand')
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': result['error'],
+                'extraction_id': result.get('extraction_id')
+            }, status=400)
+            
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Unexpected error: {str(e)}'
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["PUT", "POST"])  # Allow POST for multipart data
+def update_user_brand(request, brand_id):
+    """
+    Update an existing user brand and its associated AdRequestAssets.
+    
+    Expected PUT data (JSON or FormData):
+    - brand_name: Name of the brand
+    - industry: Industry/Vertical
+    - company_website: Website URL
+    - product_description: Product/Service description
+    - target_audience: Target audience description
+    - functional_benefits: Functional benefits
+    - tone_of_voice: Brand tone of voice
+    - font_direction: Font direction preference
+    - core_features: Core features
+    - emotional_lifestyle_benefits: Emotional/lifestyle benefits
+    - proof_points: Proof points
+    - value_propositions: Value propositions
+    - brand_colors: Array of brand colors in hex format
+    - logo_file: Optional logo file upload
+    
+    Returns: JSON with updated brand information
+    """
+    try:
+        import json  # Import json at the beginning of the function
+        
+        # Check if this is an update request (could be POST with multipart data)
+        is_update_request = request.method == 'PUT' or request.headers.get('X-Update-Mode') == 'true'
+        print(f"=== REQUEST TYPE DEBUG ===")
+        print(f"Method: {request.method}")
+        print(f"X-Update-Mode header: {request.headers.get('X-Update-Mode')}")
+        print(f"Is update request: {is_update_request}")
+        
+        # Get the brand and verify ownership
+        try:
+            brand = UserBrand.objects.get(id=brand_id, user=request.user)
+        except UserBrand.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'Brand not found or you do not have permission to edit it'
+            }, status=404)
+        
+        # Get the associated AdRequestAssets
+        try:
+            ad_request_assets = AdRequestAssets.objects.get(brand=brand)
+        except AdRequestAssets.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'Associated brand assets not found'
+            }, status=404)
+        
+        # Parse data based on content type
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            # FormData (with file upload)
+            data = request.POST.dict()
+            logo_file = request.FILES.get('logo_file')
+            remove_logo = data.get('remove_logo') == 'true'
+            
+            # Debug logs
+            print(f"=== BACKEND LOGO DEBUG ===")
+            print(f"Content-Type: {request.content_type}")
+            print(f"Request method: {request.method}")
+            print(f"POST data: {dict(request.POST)}")
+            print(f"POST data keys: {list(data.keys())}")
+            print(f"FILES data: {dict(request.FILES)}")
+            print(f"FILES keys: {list(request.FILES.keys())}")
+            print(f"logo_file: {logo_file}")
+            print(f"remove_logo: {remove_logo}")
+        else:
+            # JSON data
+            print(f"=== JSON REQUEST DEBUG ===")
+            print(f"Content-Type: {request.content_type}")
+            print(f"Request method: {request.method}")
+            data = json.loads(request.body)
+            logo_file = None
+            remove_logo = False
+        
+        # Update brand name if provided
+        brand_name = data.get('brand_name', '').strip()
+        if brand_name:
+            # Check if another brand with this name exists (excluding current brand)
+            if UserBrand.objects.filter(brand_name=brand_name).exclude(id=brand_id).exists():
+                return JsonResponse({
+                    'success': False,
+                    'error': 'A brand with this name already exists. Please choose a different name.'
+                }, status=400)
+            brand.brand_name = brand_name
+            brand.save()
+        
+        # Update AdRequestAssets fields
+        if data.get('industry'):
+            ad_request_assets.industry = data['industry'].strip()
+        if data.get('company_website'):
+            ad_request_assets.company_website = data['company_website'].strip()
+        if data.get('product_description'):
+            ad_request_assets.product_description = data['product_description'].strip()
+        if data.get('target_audience'):
+            ad_request_assets.target_audience = data['target_audience'].strip()
+        if data.get('functional_benefits'):
+            ad_request_assets.functional_benefits = data['functional_benefits'].strip()
+        if data.get('tone_of_voice'):
+            ad_request_assets.tone_of_voice = data['tone_of_voice'].strip()
+        if data.get('font_direction'):
+            ad_request_assets.font_direction = data['font_direction'].strip()
+        if data.get('core_features'):
+            ad_request_assets.core_features = data['core_features'].strip()
+        if data.get('emotional_lifestyle_benefits'):
+            ad_request_assets.emotional_lifestyle_benefits = data['emotional_lifestyle_benefits'].strip()
+        if data.get('proof_points'):
+            ad_request_assets.proof_points = data['proof_points'].strip()
+        if data.get('value_propositions'):
+            ad_request_assets.value_propositions = data['value_propositions'].strip()
+        
+        # Handle brand colors
+        brand_colors = data.get('brand_colors')
+        if brand_colors:
+            if isinstance(brand_colors, str):
+                # Parse JSON string
+                try:
+                    brand_colors = json.loads(brand_colors)
+                except json.JSONDecodeError:
+                    brand_colors = []
+            
+            if isinstance(brand_colors, list) and brand_colors:
+                # Filter valid hex colors
+                valid_colors = [color for color in brand_colors if color and isinstance(color, str) and color.startswith('#')]
+                if valid_colors:
+                    ad_request_assets.main_hex_color = json.dumps(valid_colors)
+        
+        # Handle logo changes
+        print(f"=== LOGO UPDATE LOGIC ===")
+        print(f"logo_file exists: {bool(logo_file)}")
+        print(f"remove_logo flag: {remove_logo}")
+        print(f"Current logo: {ad_request_assets.logo}")
+        
+        if logo_file:
+            # New logo file uploaded
+            print(f"Updating logo with new file: {logo_file}")
+            ad_request_assets.logo = logo_file
+        elif remove_logo:
+            # Remove existing logo
+            print(f"Removing existing logo")
+            ad_request_assets.logo = None
+        else:
+            print(f"No logo changes, preserving existing logo")
+        
+        ad_request_assets.save()
+        
+        # Prepare response data
+        brand_colors_list = []
+        if ad_request_assets.main_hex_color:
+            try:
+                brand_colors_list = json.loads(ad_request_assets.main_hex_color)
+            except (json.JSONDecodeError, TypeError):
+                brand_colors_list = []
+        
+        return JsonResponse({
+            'success': True,
+            'brand': {
+                'id': brand.id,
+                'name': brand.brand_name,
+                'industry': ad_request_assets.industry,
+                'website': ad_request_assets.company_website,
+                'product_description': ad_request_assets.product_description,
+                'target_audience': ad_request_assets.target_audience,
+                'functional_benefits': ad_request_assets.functional_benefits,
+                'brand_colors': brand_colors_list,
+                'tone_of_voice': ad_request_assets.tone_of_voice,
+                'font_direction': ad_request_assets.font_direction,
+                'core_features': ad_request_assets.core_features,
+                'emotional_lifestyle_benefits': ad_request_assets.emotional_lifestyle_benefits,
+                'proof_points': ad_request_assets.proof_points,
+                'value_propositions': ad_request_assets.value_propositions,
+                'logo_url': ad_request_assets.logo.url if ad_request_assets.logo else None,
+                'ad_request_assets_id': ad_request_assets.id
+            }
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["GET"])
+def get_brand_details(request, brand_id):
+    """
+    Get complete brand details including AdRequestAssets data.
+    
+    Returns: JSON with complete brand information for editing
+    """
+    try:
+        # Get the brand and verify ownership
+        try:
+            brand = UserBrand.objects.get(id=brand_id, user=request.user)
+        except UserBrand.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'Brand not found or you do not have permission to view it'
+            }, status=404)
+        
+        # Get the associated AdRequestAssets
+        try:
+            ad_request_assets = AdRequestAssets.objects.get(brand=brand)
+        except AdRequestAssets.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'Associated brand assets not found'
+            }, status=404)
+        
+        # Prepare brand colors
+        brand_colors_list = []
+        if ad_request_assets.main_hex_color:
+            try:
+                import json
+                brand_colors_list = json.loads(ad_request_assets.main_hex_color)
+            except (json.JSONDecodeError, TypeError):
+                brand_colors_list = []
+        
+        return JsonResponse({
+            'success': True,
+            'brand': {
+                'id': brand.id,
+                'name': brand.brand_name,
+                'industry': ad_request_assets.industry,
+                'website': ad_request_assets.company_website,
+                'product_description': ad_request_assets.product_description,
+                'target_audience': ad_request_assets.target_audience,
+                'functional_benefits': ad_request_assets.functional_benefits,
+                'brand_colors': brand_colors_list,
+                'tone_of_voice': ad_request_assets.tone_of_voice,
+                'font_direction': ad_request_assets.font_direction,
+                'core_features': ad_request_assets.core_features,
+                'emotional_lifestyle_benefits': ad_request_assets.emotional_lifestyle_benefits,
+                'proof_points': ad_request_assets.proof_points,
+                'value_propositions': ad_request_assets.value_propositions,
+                'key_benefits': ad_request_assets.key_benefits,
+                'logo_url': ad_request_assets.logo.url if ad_request_assets.logo else None,
+                'ad_request_assets_id': ad_request_assets.id
+            }
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
