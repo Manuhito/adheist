@@ -3260,80 +3260,52 @@ def discover_clone_adrequest_page(request, pk):
 def my_ads_page(request):
     """
     Render the My Ads page with React components.
-    Shows all AdRequestVersions created by the current user as individual cards,
-    plus DRAFT AdRequests without versions as cards that allow navigation to discover clone.
+    Shows all AdRequests created by the current user as individual cards,
+    using the generated_image from the most recent AdRequestVersion as the card image.
     """
     # Get all AdRequests for the current user with their versions
     ad_requests = AdRequest.objects.filter(user=request.user).prefetch_related(
         'versions'
     ).order_by('-updated_at')
     
-    # Prepare data for frontend - one card per version + draft cards
+    # Prepare data for frontend - one card per AdRequest
     my_ads_data = []
     for ad_request in ad_requests:
-        # Get brand information once per AdRequest
+        # Get brand information
         brand_name = None
         if hasattr(ad_request, 'base_assets') and ad_request.base_assets and ad_request.base_assets.brand:
             brand_name = ad_request.base_assets.brand.brand_name
         
-        # Check if this AdRequest has versions
-        versions = ad_request.versions.all()
+        # Get the most recent version for this AdRequest
+        latest_version = ad_request.versions.order_by('-created_at').first()
         
-        if versions.exists():
-            # Create a card for each version
-            for version in versions:
-                version_card_data = {
-                    # Version-specific data
-                    'version_id': version.id,
-                    'version_status': version.status,
-                    'image_url': version.generated_image.url if version.generated_image else None,
-                    'version_created_at': version.created_at.isoformat() if version.created_at else None,
-                    'user_prompt': version.user_prompt,
-                    'rating': version.rating,
-                    'review': version.review,
-                    
-                    # AdRequest data (inherited by each version card)
-                    'ad_request_id': ad_request.id,
-                    'ad_request_status': ad_request.status,
-                    'canvas_size': ad_request.canvas_size,
-                    'ad_request_created_at': ad_request.created_at.isoformat() if ad_request.created_at else None,
-                    'ad_request_updated_at': ad_request.updated_at.isoformat() if ad_request.updated_at else None,
-                    'brand_name': brand_name,
-                    'ad_library_name': ad_request.ad_library.facebook_page.page_name if ad_request.ad_library else None,
-                    
-                    # Card type identifier
-                    'card_type': 'version',
-                }
-                my_ads_data.append(version_card_data)
-        
-        elif ad_request.status == AdRequest.STATUS_DRAFT:
-            # Create a card for DRAFT AdRequests without versions
-            draft_card_data = {
-                # No version-specific data
-                'version_id': None,
-                'version_status': None,
-                'image_url': None,
-                'version_created_at': None,
-                'user_prompt': None,
-                'rating': None,
-                'review': None,
-                
-                # AdRequest data
-                'ad_request_id': ad_request.id,
-                'ad_request_status': ad_request.status,
-                'canvas_size': ad_request.canvas_size,
-                'ad_request_created_at': ad_request.created_at.isoformat() if ad_request.created_at else None,
-                'ad_request_updated_at': ad_request.updated_at.isoformat() if ad_request.updated_at else None,
-                'brand_name': brand_name,
-                'ad_library_name': ad_request.ad_library.facebook_page.page_name if ad_request.ad_library else None,
-                
-                # Card type identifier
-                'card_type': 'draft',
-            }
-            my_ads_data.append(draft_card_data)
+        # Prepare card data for this AdRequest
+        ad_request_card_data = {
+            # AdRequest data
+            'ad_request_id': ad_request.id,
+            'ad_request_status': ad_request.status,
+            'canvas_size': ad_request.canvas_size,
+            'ad_request_created_at': ad_request.created_at.isoformat() if ad_request.created_at else None,
+            'ad_request_updated_at': ad_request.updated_at.isoformat() if ad_request.updated_at else None,
+            'brand_name': brand_name,
+            'ad_library_name': ad_request.ad_library.facebook_page.page_name if ad_request.ad_library else None,
+            
+            # Version data from most recent version (if exists)
+            'version_id': latest_version.id if latest_version else None,
+            'version_status': latest_version.status if latest_version else None,
+            'image_url': latest_version.generated_image.url if latest_version and latest_version.generated_image else None,
+            'version_created_at': latest_version.created_at.isoformat() if latest_version and latest_version.created_at else None,
+            'user_prompt': latest_version.user_prompt if latest_version else None,
+            'rating': latest_version.rating if latest_version else None,
+            'review': latest_version.review if latest_version else None,
+            
+            # Card type identifier - now all are adrequest cards
+            'card_type': 'adrequest',
+        }
+        my_ads_data.append(ad_request_card_data)
     
-    # Sort by most recent activity (version creation date for versions, ad_request updated_at for drafts)
-    my_ads_data.sort(key=lambda x: x['version_created_at'] or x['ad_request_updated_at'] or '', reverse=True)
+    # Sort by most recent activity (ad_request updated_at)
+    my_ads_data.sort(key=lambda x: x['ad_request_updated_at'] or '', reverse=True)
     
     # Convert to JSON for frontend
     my_ads_json = json.dumps(my_ads_data, cls=DjangoJSONEncoder)

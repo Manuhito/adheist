@@ -63,18 +63,20 @@ function VersionCard({ versionData, onDeleteDraft }) {
   };
 
   const handleCardClick = () => {
-    if (versionData.card_type === 'version' && versionData.version_status === 'COMPLETED') {
+    if (versionData.version_id && versionData.version_status === 'COMPLETED') {
+      // If has a completed version, go to generated ad page
       window.location.href = `/ads/generated/${versionData.version_id}/`;
-    } else if (versionData.card_type === 'draft' || versionData.ad_request_status === 'DRAFT') {
+    } else if (versionData.ad_request_status === 'DRAFT') {
+      // If it's a draft, go to discover clone page
       window.location.href = `/ads/discover/${versionData.ad_request_id}/create/`;
     }
     // No action for other states
   };
 
   // Determine the status to display and if the card is clickable
-  const displayStatus = versionData.card_type === 'draft' ? versionData.ad_request_status : versionData.version_status;
-  const isClickable = (versionData.card_type === 'version' && versionData.version_status === 'COMPLETED') || 
-                     (versionData.card_type === 'draft');
+  const displayStatus = versionData.version_status || versionData.ad_request_status;
+  const isClickable = (versionData.version_id && versionData.version_status === 'COMPLETED') || 
+                     (versionData.ad_request_status === 'DRAFT');
 
   return (
     <Card 
@@ -97,7 +99,7 @@ function VersionCard({ versionData, onDeleteDraft }) {
                 {displayStatus}
               </Badge>
               {/* Dropdown menu for DRAFT cards */}
-              {versionData.card_type === 'draft' && (
+              {versionData.ad_request_status === 'DRAFT' && (
                 <div className="relative">
                   <button
                     onClick={(e) => {
@@ -198,9 +200,11 @@ function VersionListItem({ versionData, onDeleteDraft }) {
   };
 
   const handleCardClick = () => {
-    if (versionData.card_type === 'version' && versionData.version_status === 'COMPLETED') {
+    if (versionData.version_id && versionData.version_status === 'COMPLETED') {
+      // If has a completed version, go to generated ad page
       window.location.href = `/ads/generated/${versionData.version_id}/`;
-    } else if (versionData.card_type === 'draft' || versionData.ad_request_status === 'DRAFT') {
+    } else if (versionData.ad_request_status === 'DRAFT') {
+      // If it's a draft, go to discover clone page
       window.location.href = `/ads/discover/${versionData.ad_request_id}/create/`;
     }
     // No action for other states
@@ -208,9 +212,9 @@ function VersionListItem({ versionData, onDeleteDraft }) {
 
   const handleViewDetailsClick = (e) => {
     e.stopPropagation(); // Prevent card click
-    if (versionData.card_type === 'version' && versionData.version_status === 'COMPLETED') {
+    if (versionData.version_id && versionData.version_status === 'COMPLETED') {
       window.location.href = `/ads/generated/${versionData.version_id}/`;
-    } else if (versionData.card_type === 'draft' || versionData.ad_request_status === 'DRAFT') {
+    } else if (versionData.ad_request_status === 'DRAFT') {
       window.location.href = `/ads/discover/${versionData.ad_request_id}/create/`;
     } else {
       window.location.href = `/ads/${versionData.ad_request_id}/details/`;
@@ -218,9 +222,9 @@ function VersionListItem({ versionData, onDeleteDraft }) {
   };
 
   // Determine the status to display and if the card is clickable
-  const displayStatus = versionData.card_type === 'draft' ? versionData.ad_request_status : versionData.version_status;
-  const isClickable = (versionData.card_type === 'version' && versionData.version_status === 'COMPLETED') || 
-                     (versionData.card_type === 'draft');
+  const displayStatus = versionData.version_status || versionData.ad_request_status;
+  const isClickable = (versionData.version_id && versionData.version_status === 'COMPLETED') || 
+                     (versionData.ad_request_status === 'DRAFT');
 
   return (
     <Card 
@@ -259,7 +263,7 @@ function VersionListItem({ versionData, onDeleteDraft }) {
               </div>
               <p className="text-xs text-gray-500 truncate">
                 {versionData.canvas_size} • 
-                {versionData.card_type === 'draft' ? 'Draft' : `Version #${versionData.version_id}`} • 
+                {versionData.ad_request_status === 'DRAFT' ? 'Draft' : (versionData.version_id ? `Version #${versionData.version_id}` : 'No versions')} • 
                 {formatDate(versionData.version_created_at || versionData.ad_request_created_at)}
               </p>
             </div>
@@ -284,7 +288,7 @@ function VersionListItem({ versionData, onDeleteDraft }) {
               </Button>
             )}
             {/* Dropdown menu for DRAFT cards */}
-            {versionData.card_type === 'draft' && (
+            {versionData.ad_request_status === 'DRAFT' && (
               <div className="relative">
                 <button
                   onClick={(e) => {
@@ -517,7 +521,7 @@ function MyAdsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {filteredVersions.map((versionData) => (
             <VersionCard 
-              key={versionData.card_type === 'draft' ? `draft-${versionData.ad_request_id}` : `version-${versionData.version_id}`} 
+              key={`adrequest-${versionData.ad_request_id}`} 
               versionData={versionData} 
               onDeleteDraft={handleDeleteDraft}
             />
@@ -527,7 +531,7 @@ function MyAdsPage() {
         <div className="space-y-3">
           {filteredVersions.map((versionData) => (
             <VersionListItem 
-              key={versionData.card_type === 'draft' ? `draft-${versionData.ad_request_id}` : `version-${versionData.version_id}`} 
+              key={`adrequest-${versionData.ad_request_id}`} 
               versionData={versionData} 
               onDeleteDraft={handleDeleteDraft}
             />
