@@ -3729,6 +3729,9 @@ def generated_ad_page(request, version_id):
         if not version.generated_image:
             return redirect('ads:my_ads_page')
         
+        # Pre-fetch and order versions to ensure correct ordering in template
+        version.ad_request.ordered_versions = version.ad_request.versions.order_by('-created_at')
+        
         context = {
             'version': version,
         }

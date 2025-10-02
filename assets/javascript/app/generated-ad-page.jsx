@@ -58,16 +58,31 @@ const GeneratedAdPage = () => {
   // Revision modal state
   const [revisionModalOpen, setRevisionModalOpen] = useState(false);
 
+  // Version selection state
+  const [selectedVersion, setSelectedVersion] = useState(null);
+
+  // Initialize selected version when component mounts
+  React.useEffect(() => {
+    if (generatedAdData.versions && generatedAdData.versions.length > 0) {
+      const current = generatedAdData.versions.find(v => v.id === generatedAdData.version_id) || generatedAdData.versions[0];
+      setSelectedVersion(current);
+    }
+  }, [generatedAdData.versions, generatedAdData.version_id]);
+
+  // Get current display data (either selected version or default)
+  const currentImageUrl = selectedVersion?.generated_image || generatedAdData.generated_image;
+  const currentVersionId = selectedVersion?.id || generatedAdData.version_id;
+
   const handleDownload = async () => {
-    if (!generatedAdData.generated_image) return;
+    if (!currentImageUrl) return;
     
     try {
       // Use the same proxy endpoint as AnimatedDownloadButton
-      const proxyUrl = `/ads/proxy-image/?url=${encodeURIComponent(generatedAdData.generated_image)}&filename=${encodeURIComponent(`ad-image-${generatedAdData.version_index || 1}.jpg`)}`;
+      const proxyUrl = `/ads/proxy-image/?url=${encodeURIComponent(currentImageUrl)}&filename=${encodeURIComponent(`ad-image-${currentVersionId || 1}.jpg`)}`;
       
       const link = document.createElement('a');
       link.href = proxyUrl;
-      link.setAttribute('download', `ad-image-${generatedAdData.version_index || 1}.jpg`);
+      link.setAttribute('download', `ad-image-${currentVersionId || 1}.jpg`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -77,8 +92,8 @@ const GeneratedAdPage = () => {
   };
 
   const handleExpand = () => {
-    if (!generatedAdData.generated_image) return;
-    window.open(generatedAdData.generated_image, '_blank');
+    if (!currentImageUrl) return;
+    window.open(currentImageUrl, '_blank');
   };
 
   const handleOpenRating = (type) => {
@@ -106,7 +121,7 @@ const GeneratedAdPage = () => {
 
     // Create form data for submission
     const formData = new FormData();
-    formData.append('version_id', generatedAdData.version_id);
+    formData.append('version_id', currentVersionId);
     formData.append('rating', rating);
     formData.append('review', ratingComment);
 
@@ -199,20 +214,54 @@ const GeneratedAdPage = () => {
 
   return (
     <div className="h-full flex items-center justify-center p-2">
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 max-w-4xl w-full">
-        {/* Image container */}
-        <div className="flex items-center justify-center mb-6">
-          {generatedAdData.generated_image ? (
-            <img
-              src={generatedAdData.generated_image}
-              alt="Generated Ad"
-              className="max-w-full max-h-[calc(100vh-300px)] object-contain rounded-lg shadow-md"
-            />
-          ) : (
-            <div className="w-full h-96 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-              <p className="text-gray-500 dark:text-gray-400">No image available</p>
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 max-w-5xl w-full">
+        <div className="flex gap-4">
+          {/* Left sidebar with version previews */}
+          {generatedAdData.versions && generatedAdData.versions.length > 1 && (
+            <div className="flex flex-col gap-2 w-16">
+              {generatedAdData.versions.map((version) => (
+                <div
+                  key={version.id}
+                  onClick={() => setSelectedVersion(version)}
+                  className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
+                    selectedVersion?.id === version.id
+                      ? 'border-primary ring-2 ring-primary/20'
+                      : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+                  }`}
+                >
+                  {version.generated_image ? (
+                    <img
+                      src={version.generated_image}
+                      alt="Version preview"
+                      className="w-full h-16 object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-16 bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
+                      <div className="w-4 h-4 bg-gray-400 dark:bg-gray-500 rounded"></div>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           )}
+
+          {/* Main content */}
+          <div className="flex-1">
+            {/* Image container */}
+            <div className="flex items-center justify-center mb-6">
+              {currentImageUrl ? (
+                <img
+                  src={currentImageUrl}
+                  alt="Generated Ad"
+                  className="max-w-full max-h-[calc(100vh-300px)] object-contain rounded-lg shadow-md"
+                />
+              ) : (
+                <div className="w-full h-96 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
+                  <p className="text-gray-500 dark:text-gray-400">No image available</p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Action buttons */}
@@ -316,10 +365,10 @@ const GeneratedAdPage = () => {
       <RevisionModal
         open={revisionModalOpen}
         onOpenChange={setRevisionModalOpen}
-        imageUrl={generatedAdData.generated_image}
+        imageUrl={currentImageUrl}
         canvasSize={generatedAdData.canvas_size}
         versions={generatedAdData.versions || []}
-        currentVersionId={generatedAdData.version_id}
+        currentVersionId={currentVersionId}
         adRequestId={generatedAdData.ad_request_id}
       />
     </div>

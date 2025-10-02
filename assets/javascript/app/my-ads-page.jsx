@@ -4,11 +4,11 @@ import { Card, CardContent } from '@/components/ui/card.tsx';
 import { Input } from '@/components/ui/input.tsx';
 import { Badge } from '@/components/ui/badge.jsx';
 import { Button } from '@/components/ui/button.tsx';
-import { 
-  Zap, 
-  Search, 
-  Grid3x3, 
-  List, 
+import {
+  Zap,
+  Search,
+  Grid3x3,
+  List,
   Calendar,
   Eye,
   Star,
@@ -75,16 +75,15 @@ function VersionCard({ versionData, onDeleteDraft }) {
 
   // Determine the status to display and if the card is clickable
   const displayStatus = versionData.version_status || versionData.ad_request_status;
-  const isClickable = (versionData.version_id && versionData.version_status === 'COMPLETED') || 
-                     (versionData.ad_request_status === 'DRAFT');
+  const isClickable = (versionData.version_id && versionData.version_status === 'COMPLETED') ||
+    (versionData.ad_request_status === 'DRAFT');
 
   return (
-    <Card 
-      className={`transition-colors rounded-xl ${
-        isClickable 
-          ? 'hover:bg-gray-50 cursor-pointer' 
+    <Card
+      className={`transition-colors rounded-xl ${isClickable
+          ? 'hover:bg-gray-50 cursor-pointer'
           : 'cursor-default'
-      }`}
+        }`}
       onClick={isClickable ? handleCardClick : undefined}
     >
       <CardContent className="p-4">
@@ -223,16 +222,15 @@ function VersionListItem({ versionData, onDeleteDraft }) {
 
   // Determine the status to display and if the card is clickable
   const displayStatus = versionData.version_status || versionData.ad_request_status;
-  const isClickable = (versionData.version_id && versionData.version_status === 'COMPLETED') || 
-                     (versionData.ad_request_status === 'DRAFT');
+  const isClickable = (versionData.version_id && versionData.version_status === 'COMPLETED') ||
+    (versionData.ad_request_status === 'DRAFT');
 
   return (
-    <Card 
-      className={`transition-shadow rounded-xl ${
-        isClickable 
-          ? 'hover:shadow-md cursor-pointer' 
+    <Card
+      className={`transition-shadow rounded-xl ${isClickable
+          ? 'hover:shadow-md cursor-pointer'
           : 'cursor-default'
-      }`}
+        }`}
       onClick={isClickable ? handleCardClick : undefined}
     >
       <CardContent className="p-4">
@@ -241,8 +239,8 @@ function VersionListItem({ versionData, onDeleteDraft }) {
             {/* Thumbnail */}
             <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
               {versionData.image_url ? (
-                <img 
-                  src={versionData.image_url} 
+                <img
+                  src={versionData.image_url}
                   alt="Ad version preview"
                   className="w-full h-full object-cover"
                 />
@@ -250,7 +248,7 @@ function VersionListItem({ versionData, onDeleteDraft }) {
                 <Zap className="w-6 h-6 text-gray-400" />
               )}
             </div>
-            
+
             {/* Version Info */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
@@ -262,8 +260,8 @@ function VersionListItem({ versionData, onDeleteDraft }) {
                 </Badge>
               </div>
               <p className="text-xs text-gray-500 truncate">
-                {versionData.canvas_size} • 
-                {versionData.ad_request_status === 'DRAFT' ? 'Draft' : (versionData.version_id ? `Version #${versionData.version_id}` : 'No versions')} • 
+                {versionData.canvas_size} •
+                {versionData.ad_request_status === 'DRAFT' ? 'Draft' : (versionData.version_id ? `Version #${versionData.version_id}` : 'No versions')} •
                 {formatDate(versionData.version_created_at || versionData.ad_request_created_at)}
               </p>
             </div>
@@ -271,22 +269,22 @@ function VersionListItem({ versionData, onDeleteDraft }) {
 
           {/* Actions */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            {(displayStatus === 'COMPLETED' || 
-              displayStatus === 'DRAFT' || 
+            {(displayStatus === 'COMPLETED' ||
+              displayStatus === 'DRAFT' ||
               (!isClickable && displayStatus !== 'COMPLETED' && displayStatus !== 'DRAFT')) && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleViewDetailsClick}
-                className="text-primary hover:text-primary/80"
-              >
-                {displayStatus === 'COMPLETED' 
-                  ? 'View Generated' 
-                  : displayStatus === 'DRAFT' 
-                  ? 'Edit Draft' 
-                  : 'View Details'}
-              </Button>
-            )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleViewDetailsClick}
+                  className="text-primary hover:text-primary/80"
+                >
+                  {displayStatus === 'COMPLETED'
+                    ? 'View Generated'
+                    : displayStatus === 'DRAFT'
+                      ? 'Edit Draft'
+                      : 'View Details'}
+                </Button>
+              )}
             {/* Dropdown menu for DRAFT cards */}
             {versionData.ad_request_status === 'DRAFT' && (
               <div className="relative">
@@ -328,13 +326,13 @@ function MyAdsPage() {
   const myAdsData = window.__MY_ADS_DATA__ || {};
   const user = myAdsData.user || {};
   const [myVersions, setMyVersions] = useState(myAdsData.myAds || []); // Now this contains version data, not ad request data
-  
+
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // View mode state
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
-  
+
   // Delete confirmation state
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [adRequestToDelete, setAdRequestToDelete] = useState(null);
@@ -352,7 +350,7 @@ function MyAdsPage() {
               All your ad requests and generated versions
             </p>
           </div>
-          <Button 
+          <Button
             onClick={() => window.location.href = '/ads/discover/'}
             className="bg-primary hover:bg-primary/90 text-white"
           >
@@ -420,7 +418,7 @@ function MyAdsPage() {
           source: 'my_ads_page'
         });
       }
-      
+
       // Call the delete endpoint
       const response = await fetch(`/ads/adrequest/${adRequestToDelete.ad_request_id}/delete/`, {
         method: 'DELETE',
@@ -436,7 +434,7 @@ function MyAdsPage() {
       }
 
       // Remove the deleted item from the list
-      setMyVersions(prevVersions => 
+      setMyVersions(prevVersions =>
         prevVersions.filter(version => version.ad_request_id !== adRequestToDelete.ad_request_id)
       );
 
@@ -456,7 +454,7 @@ function MyAdsPage() {
     if (!searchQuery.trim()) {
       return myVersions;
     }
-    
+
     return myVersions.filter(version => {
       const searchTerm = searchQuery.toLowerCase().trim();
       return (
@@ -493,22 +491,20 @@ function MyAdsPage() {
         <div className="flex items-center space-x-1 bg-muted rounded-lg p-1 flex-shrink-0">
           <button
             onClick={() => setViewMode('grid')}
-            className={`p-2 rounded-md transition-colors ${
-              viewMode === 'grid'
+            className={`p-2 rounded-md transition-colors ${viewMode === 'grid'
                 ? 'bg-background text-primary shadow-sm'
                 : 'text-muted-foreground hover:text-primary'
-            }`}
+              }`}
             title="Grid view"
           >
             <Grid3x3 className="h-4 w-4" />
           </button>
           <button
             onClick={() => setViewMode('list')}
-            className={`p-2 rounded-md transition-colors ${
-              viewMode === 'list'
+            className={`p-2 rounded-md transition-colors ${viewMode === 'list'
                 ? 'bg-background text-primary shadow-sm'
                 : 'text-muted-foreground hover:text-primary'
-            }`}
+              }`}
             title="List view"
           >
             <List className="h-4 w-4" />
@@ -520,9 +516,9 @@ function MyAdsPage() {
       {viewMode === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {filteredVersions.map((versionData) => (
-            <VersionCard 
-              key={`adrequest-${versionData.ad_request_id}`} 
-              versionData={versionData} 
+            <VersionCard
+              key={`adrequest-${versionData.ad_request_id}`}
+              versionData={versionData}
               onDeleteDraft={handleDeleteDraft}
             />
           ))}
@@ -530,9 +526,9 @@ function MyAdsPage() {
       ) : (
         <div className="space-y-3">
           {filteredVersions.map((versionData) => (
-            <VersionListItem 
-              key={`adrequest-${versionData.ad_request_id}`} 
-              versionData={versionData} 
+            <VersionListItem
+              key={`adrequest-${versionData.ad_request_id}`}
+              versionData={versionData}
               onDeleteDraft={handleDeleteDraft}
             />
           ))}
@@ -549,7 +545,7 @@ function MyAdsPage() {
           <p className="text-gray-500 mb-6">
             Create your first ad to get started with your campaigns.
           </p>
-          <Button 
+          <Button
             onClick={() => window.location.href = '/ads/discover/'}
             className="bg-primary hover:bg-primary/90 text-white"
           >
@@ -624,7 +620,7 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(checkAndMount, 50);
     }
   }
-  
+
   checkAndMount();
 });
 
