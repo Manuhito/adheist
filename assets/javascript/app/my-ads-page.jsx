@@ -80,8 +80,8 @@ function VersionCard({ versionData, onDeleteDraft }) {
 
   return (
     <Card
-      className={`transition-colors rounded-xl ${isClickable
-          ? 'hover:bg-gray-50 cursor-pointer'
+      className={`transition-colors rounded-xl bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 ${isClickable
+          ? 'hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer'
           : 'cursor-default'
         }`}
       onClick={isClickable ? handleCardClick : undefined}
@@ -90,7 +90,7 @@ function VersionCard({ versionData, onDeleteDraft }) {
         <div className="space-y-3">
           {/* Header - Brand name + Version Status */}
           <div className="flex items-center justify-between">
-            <h3 className="text-gray-900 truncate">
+            <h3 className="text-gray-900 dark:text-gray-100 truncate">
               {versionData.brand_name || versionData.ad_library_name || `Ad Request #${versionData.ad_request_id}`}
             </h3>
             <div className="flex items-center gap-2">
@@ -105,19 +105,19 @@ function VersionCard({ versionData, onDeleteDraft }) {
                       e.stopPropagation();
                       setShowDropdown(!showDropdown);
                     }}
-                    className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                    className="p-1 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full transition-colors"
                   >
-                    <EllipsisVertical className="w-4 h-4 text-gray-500" />
+                    <EllipsisVertical className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                   </button>
                   {showDropdown && (
-                    <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-10 whitespace-nowrap">
+                    <div className="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-10 whitespace-nowrap">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           setShowDropdown(false);
                           onDeleteDraft(versionData);
                         }}
-                        className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
                         Delete Draft
@@ -130,7 +130,7 @@ function VersionCard({ versionData, onDeleteDraft }) {
           </div>
 
           {/* Large Centered Image */}
-          <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
+          <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
             {versionData.image_url ? (
               <img
                 src={versionData.image_url}
@@ -138,13 +138,13 @@ function VersionCard({ versionData, onDeleteDraft }) {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <ImageIcon className="w-12 h-12 text-gray-400" />
+              <ImageIcon className="w-12 h-12 text-gray-400 dark:text-gray-500" />
             )}
           </div>
 
           {/* Footer - Creation date */}
           <div className="text-left">
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               {formatDate(versionData.version_created_at || versionData.ad_request_created_at)}
             </p>
           </div>
@@ -176,15 +176,15 @@ function VersionListItem({ versionData, onDeleteDraft }) {
   const getStatusColor = (status) => {
     switch (status) {
       case 'COMPLETED':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300';
       case 'IN_PROGRESS':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300';
       case 'DRAFT':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300';
       case 'FAILED':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300';
     }
   };
 
@@ -227,7 +227,7 @@ function VersionListItem({ versionData, onDeleteDraft }) {
 
   return (
     <Card
-      className={`transition-shadow rounded-xl ${isClickable
+      className={`transition-shadow rounded-xl bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 ${isClickable
           ? 'hover:shadow-md cursor-pointer'
           : 'cursor-default'
         }`}
@@ -237,7 +237,7 @@ function VersionListItem({ versionData, onDeleteDraft }) {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4 flex-1">
             {/* Thumbnail */}
-            <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+            <div className="w-16 h-16 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
               {versionData.image_url ? (
                 <img
                   src={versionData.image_url}
@@ -245,21 +245,21 @@ function VersionListItem({ versionData, onDeleteDraft }) {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <Zap className="w-6 h-6 text-gray-400" />
+                <Zap className="w-6 h-6 text-gray-400 dark:text-gray-500" />
               )}
             </div>
 
             {/* Version Info */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <p className="text-sm font-medium text-gray-900 truncate">
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                   {versionData.brand_name || versionData.ad_library_name || `Ad Request #${versionData.ad_request_id}`}
                 </p>
                 <Badge className={getStatusColor(displayStatus)}>
                   {displayStatus}
                 </Badge>
               </div>
-              <p className="text-xs text-gray-500 truncate">
+              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                 {versionData.canvas_size} •
                 {versionData.ad_request_status === 'DRAFT' ? 'Draft' : (versionData.version_id ? `Version #${versionData.version_id}` : 'No versions')} •
                 {formatDate(versionData.version_created_at || versionData.ad_request_created_at)}
@@ -293,19 +293,19 @@ function VersionListItem({ versionData, onDeleteDraft }) {
                     e.stopPropagation();
                     setShowDropdown(!showDropdown);
                   }}
-                  className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                  className="p-1 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full transition-colors"
                 >
-                  <EllipsisVertical className="w-4 h-4 text-gray-500" />
+                  <EllipsisVertical className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                 </button>
                 {showDropdown && (
-                  <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-10 whitespace-nowrap">
+                  <div className="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-10 whitespace-nowrap">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         setShowDropdown(false);
                         onDeleteDraft(versionData);
                       }}
-                      className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
                       Delete Draft
@@ -346,7 +346,7 @@ function MyAdsPage() {
             <h1 className="text-xl font-bold text-primary">
               My Ads
             </h1>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
               All your ad requests and generated versions
             </p>
           </div>
@@ -538,11 +538,11 @@ function MyAdsPage() {
       {/* Empty State - No versions at all */}
       {myVersions.length === 0 && (
         <div className="mt-12 text-center">
-          <Zap className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <Zap className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500 mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
             No ads yet
           </h3>
-          <p className="text-gray-500 mb-6">
+          <p className="text-gray-500 dark:text-gray-400 mb-6">
             Create your first ad to get started with your campaigns.
           </p>
           <Button
@@ -558,11 +558,11 @@ function MyAdsPage() {
       {/* No search results */}
       {myVersions.length > 0 && filteredVersions.length === 0 && searchQuery.trim() && (
         <div className="mt-12 text-center">
-          <Search className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <Search className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500 mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
             No versions found
           </h3>
-          <p className="text-gray-500">
+          <p className="text-gray-500 dark:text-gray-400">
             No ad versions match your search for "{searchQuery}". Try a different search term.
           </p>
         </div>
@@ -579,21 +579,21 @@ function MyAdsPage() {
             className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-md w-full mx-4"
             onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal
           >
-            <h2 className="text-xl font-semibold mb-4">Delete Draft</h2>
+            <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Delete Draft</h2>
             <p className="text-gray-600 dark:text-gray-300 mb-6">
               Are you sure you want to permanently delete this draft ad request? This action cannot be undone.
             </p>
             <div className="flex justify-end gap-3">
               <button
                 type="button"
-                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md transition-colors"
                 onClick={() => setShowDeleteConfirmation(false)}
               >
                 Cancel
               </button>
               <button
                 type="button"
-                className="px-4 py-2 text-white bg-red-500 hover:bg-red-600 rounded-md transition-colors"
+                className="px-4 py-2 text-white bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 rounded-md transition-colors"
                 onClick={confirmDelete}
               >
                 Delete

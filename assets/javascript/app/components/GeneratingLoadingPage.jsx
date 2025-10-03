@@ -100,30 +100,30 @@ const GeneratingLoadingPage = ({ adRequestId }) => {
   useSSEListener(handleSSEEvent);
 
   return (
-    <div className="flex flex-col items-center justify-between min-h-[calc(100vh-4rem)] bg-white py-16">
+    <div className="flex flex-col items-center justify-between min-h-[calc(100vh-4rem)] bg-white dark:bg-gray-900 py-16">
       {/* Sparkles Animation */}
       <div className="relative">
         <div className="flex items-center justify-center w-24 h-16">
           {/* Main sparkle - center-left */}
-          <Sparkles className="w-20 h-20 text-primary animate-pulse" />
+          <Sparkles className="w-20 h-20 text-primary dark:text-primary animate-pulse" />
         </div>
       </div>
 
       {/* Text Container */}
       <div className="text-center max-w-md">
         {/* Main text */}
-        <h1 className="text-xl font-semibold text-primary mb-4">
+        <h1 className="text-xl font-semibold text-primary dark:text-primary mb-4">
           Generating scroll-stopping ads...
         </h1>
         
         {/* Subtitle */}
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-gray-400 dark:text-gray-500">
           Our AI is crafting high-performing ads tailored to your brand and optimized for results.
         </p>
       </div>
 
       {/* Loading spinner */}
-      <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+      <div className="w-8 h-8 border-4 border-primary/20 dark:border-primary/30 border-t-primary dark:border-t-primary rounded-full animate-spin"></div>
     </div>
   );
 };
