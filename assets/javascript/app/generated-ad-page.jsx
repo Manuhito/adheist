@@ -4,9 +4,10 @@ import { Button } from '../components/ui/button.tsx';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '../components/ui/dialog.tsx';
 import { AlertNotification } from '../components/ui/alert-notification';
 import { useTranslation } from '../lib/useTranslation';
-import { WandSparkles, ThumbsUp, ThumbsDown, Download, Expand, Star } from 'lucide-react';
+import { WandSparkles, ThumbsUp, ThumbsDown, Download, Expand, Star, Info } from 'lucide-react';
 import * as ReactDOM from "react-dom";
 import RevisionModal from './components/RevisionModal';
+import AdDetailsModal from './components/AdDetailsModal';
 
 // Custom header component for Generated Ad page
 const GeneratedAdHeader = ({ brandName }) => {
@@ -57,6 +58,9 @@ const GeneratedAdPage = () => {
   
   // Revision modal state
   const [revisionModalOpen, setRevisionModalOpen] = useState(false);
+  
+  // Ad details modal state
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
 
   // Version selection state
   const [selectedVersion, setSelectedVersion] = useState(null);
@@ -275,6 +279,14 @@ const GeneratedAdPage = () => {
           </button>
 
           <button
+            className="flex items-center gap-2 px-4 py-3 rounded-full transition-colors hover:text-primary"
+            onClick={() => setDetailsModalOpen(true)}
+          >
+            <Info className="h-6 w-6" />
+            <span className="text-sm font-medium">More Details</span>
+          </button>
+
+          <button
             className="p-3 rounded-full transition-colors hover:text-primary"
             onClick={() => handleOpenRating('positive')}
           >
@@ -369,6 +381,13 @@ const GeneratedAdPage = () => {
         canvasSize={generatedAdData.canvas_size}
         versions={generatedAdData.versions || []}
         currentVersionId={currentVersionId}
+        adRequestId={generatedAdData.ad_request_id}
+      />
+
+      {/* Ad Details Modal */}
+      <AdDetailsModal
+        isOpen={detailsModalOpen}
+        onClose={() => setDetailsModalOpen(false)}
         adRequestId={generatedAdData.ad_request_id}
       />
     </div>
