@@ -278,16 +278,18 @@ class AdRequestVersionAdmin(admin.ModelAdmin):
 
 @admin.register(AdRequestUsage)
 class AdRequestUsageAdmin(admin.ModelAdmin):
-    list_display = ["user", "general_credits", "version_credits", "is_free_tier", "plan_type", "billing_period_start", "billing_period_end", "created_at"]
+    list_display = ["user", "general_credits", "is_free_tier", "plan_type", "billing_period_start", "billing_period_end", "created_at"]
     search_fields = ["user__email", "plan_type"]
     list_filter = ["is_free_tier", "plan_type"]
     readonly_fields = ["user", "billing_period_start", "billing_period_end", "is_free_tier"]
+    exclude = ["version_credits"]
 
 
 @admin.register(ExtraCredit)
 class ExtraCreditAdmin(admin.ModelAdmin):
-    list_display = ["user", "general_credits", "version_credits", "created_at", "updated_at"]
+    list_display = ["user", "general_credits", "created_at", "updated_at"]
     search_fields = ["user__email"]
+    exclude = ["version_credits"]
 
 
 @admin.register(AppConfiguration)
