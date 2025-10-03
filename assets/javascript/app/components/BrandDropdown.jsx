@@ -114,6 +114,24 @@ const BrandDropdown = ({ initialBrandId, onBrandChange, adRequestId = null }) =>
     }
   };
 
+  // Handle brand update success
+  const handleBrandUpdated = (updatedBrand) => {
+    // Update the brand in the existing list instead of adding it
+    setBrands(prevBrands => 
+      prevBrands.map(brand => 
+        brand.id === updatedBrand.id ? updatedBrand : brand
+      )
+    );
+    
+    // Keep the same brand selected (no need to change selection)
+    // The brand data has been updated in place
+    
+    if (onBrandChange) {
+      // Call onBrandChange with the updated brand object to refresh the UI
+      onBrandChange(updatedBrand);
+    }
+  };
+
   // Handle brand edit
   const handleEditBrand = (brand, e) => {
     e.stopPropagation(); // Prevent dropdown from closing
@@ -235,6 +253,7 @@ const BrandDropdown = ({ initialBrandId, onBrandChange, adRequestId = null }) =>
         isOpen={isModalOpen} 
         onClose={handleModalClose} 
         onBrandCreated={handleBrandCreated}
+        onBrandUpdated={handleBrandUpdated}
         adRequestId={adRequestId}
         editingBrand={editingBrand}
       />

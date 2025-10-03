@@ -16,7 +16,7 @@ import ColorPickerModal from './ColorPickerModal.jsx';
 /**
  * Modal component for creating a new brand
  */
-const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, adRequestId = null, editingBrand = null }) => {
+const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adRequestId = null, editingBrand = null }) => {
   const { t } = useTranslation();
   const fileInputRef = useRef(null);
   const [brandName, setBrandName] = useState('');
@@ -520,7 +520,14 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, adRequestId = null,
       setWebsiteUrl('');
       setAnalysisError('');
       setCreatedBrandId(null);
-      onBrandCreated(data.brand);
+      
+      // Call appropriate callback based on operation type
+      if (isUpdating && onBrandUpdated) {
+        onBrandUpdated(data.brand);
+      } else if (!isUpdating && onBrandCreated) {
+        onBrandCreated(data.brand);
+      }
+      
       onClose();
     } catch (err) {
       setError(err.message);
