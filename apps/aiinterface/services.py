@@ -197,7 +197,21 @@ class ImageGenerationService:
                 # Extraer la información de uso si está disponible en la respuesta
                 usage_data = {}
                 if hasattr(response, 'usage'):
-                    usage_data = response.usage
+                    # Convertir el objeto Usage a diccionario para serialización
+                    usage_obj = response.usage
+                    usage_data = {
+                        'input_tokens': usage_obj.input_tokens if hasattr(usage_obj, 'input_tokens') else 0,
+                        'output_tokens': usage_obj.output_tokens if hasattr(usage_obj, 'output_tokens') else 0,
+                        'total_tokens': usage_obj.total_tokens if hasattr(usage_obj, 'total_tokens') else 0,
+                    }
+                    
+                    # Añadir detalles de tokens de entrada si están disponibles
+                    if hasattr(usage_obj, 'input_tokens_details') and usage_obj.input_tokens_details:
+                        details = usage_obj.input_tokens_details
+                        usage_data['input_tokens_details'] = {
+                            'text_tokens': details.text_tokens if hasattr(details, 'text_tokens') else 0,
+                            'image_tokens': details.image_tokens if hasattr(details, 'image_tokens') else 0,
+                        }
                 
                 formatted_response = {
                     # Incluimos los bytes de la imagen para que adrequest_version_create
@@ -211,7 +225,7 @@ class ImageGenerationService:
                     # Incluir metadatos incluyendo la información de uso
                     "response_metadata": {
                         "model": openai_config.openai_image_model,
-                        # Añadir toda la información de uso de la API
+                        # Añadir toda la información de uso de la API (ahora como dict)
                         "usage": usage_data
                     }
                 }
