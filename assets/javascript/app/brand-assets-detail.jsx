@@ -105,17 +105,17 @@ function BrandAssetsDetailPage() {
               <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             </button>
             <div>
-              <h1 className="text-xl font-bold text-primary">
+              <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                 {brandName} Assets
               </h1>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 {assets.length} assets available
               </p>
             </div>
           </div>
           <Button 
             onClick={() => setShowUploadModal(true)}
-            className="bg-primary hover:bg-primary/90 text-white"
+            className="text-sm"
           >
             Upload Assets
           </Button>

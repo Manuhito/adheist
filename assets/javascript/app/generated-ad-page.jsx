@@ -4,23 +4,35 @@ import { Button } from '../components/ui/button.tsx';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '../components/ui/dialog.tsx';
 import { AlertNotification } from '../components/ui/alert-notification';
 import { useTranslation } from '../lib/useTranslation';
-import { WandSparkles, ThumbsUp, ThumbsDown, Download, Expand, Star, Info } from 'lucide-react';
+import { WandSparkles, ThumbsUp, ThumbsDown, Download, Expand, Star, Info, ArrowLeft } from 'lucide-react';
 import * as ReactDOM from "react-dom";
 import RevisionModal from './components/RevisionModal';
 import AdDetailsModal from './components/AdDetailsModal';
 
 // Custom header component for Generated Ad page
-const GeneratedAdHeader = ({ brandName }) => {
+const GeneratedAdHeader = ({ brandName, backUrl }) => {
   const handleContinueToLibrary = () => {
     window.location.href = '/ads/discover/';
   };
 
+  const handleBack = () => {
+    window.location.href = backUrl;
+  };
+
   return (
     <div className="flex items-center justify-between w-full">
-      <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-        {brandName}
-      </h1>
-      <Button 
+      <div className="flex items-center gap-4">
+        <button
+          onClick={handleBack}
+          className="flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-full transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+        </button>
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+          {brandName}
+        </h1>
+      </div>
+      <Button
         onClick={handleContinueToLibrary}
         className="text-sm"
       >
@@ -33,32 +45,33 @@ const GeneratedAdHeader = ({ brandName }) => {
 const GeneratedAdPage = () => {
   const { t } = useTranslation();
   const generatedAdData = window.__GENERATED_AD_DATA__ || {};
-  
+
   // Set custom header when component mounts
   useEffect(() => {
     if (window.setAppHeader) {
       const brandName = generatedAdData.brand_name || 'Generated Ad';
-      window.setAppHeader(<GeneratedAdHeader brandName={brandName} />);
+      const backUrl = generatedAdData.back_url || '/ads/discover/';
+      window.setAppHeader(<GeneratedAdHeader brandName={brandName} backUrl={backUrl} />);
     }
-    
+
     // Cleanup header when component unmounts
     return () => {
       if (window.clearAppHeader) {
         window.clearAppHeader();
       }
     };
-  }, [generatedAdData.brand_name]);
-  
+  }, [generatedAdData.brand_name, generatedAdData.back_url]);
+
   // Rating states
   const [ratingOpen, setRatingOpen] = useState(false);
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
   const [ratingComment, setRatingComment] = useState('');
   const [ratingType, setRatingType] = useState('positive'); // 'positive' or 'negative'
-  
+
   // Revision modal state
   const [revisionModalOpen, setRevisionModalOpen] = useState(false);
-  
+
   // Ad details modal state
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
 
@@ -79,11 +92,11 @@ const GeneratedAdPage = () => {
 
   const handleDownload = async () => {
     if (!currentImageUrl) return;
-    
+
     try {
       // Use the same proxy endpoint as AnimatedDownloadButton
       const proxyUrl = `/ads/proxy-image/?url=${encodeURIComponent(currentImageUrl)}&filename=${encodeURIComponent(`ad-image-${currentVersionId || 1}.jpg`)}`;
-      
+
       const link = document.createElement('a');
       link.href = proxyUrl;
       link.setAttribute('download', `ad-image-${currentVersionId || 1}.jpg`);
@@ -227,11 +240,10 @@ const GeneratedAdPage = () => {
                 <div
                   key={version.id}
                   onClick={() => setSelectedVersion(version)}
-                  className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
-                    selectedVersion?.id === version.id
-                      ? 'border-primary ring-2 ring-primary/20'
-                      : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
-                  }`}
+                  className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${selectedVersion?.id === version.id
+                    ? 'border-primary ring-2 ring-primary/20'
+                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+                    }`}
                 >
                   {version.generated_image ? (
                     <img

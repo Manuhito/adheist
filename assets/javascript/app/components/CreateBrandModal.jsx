@@ -276,7 +276,8 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
 
     } catch (err) {
       console.error('Website analysis error:', err);
-      setAnalysisError(err.message);
+      // Always show a generic error message to users
+      setAnalysisError('generic');
     } finally {
       setIsAnalyzing(false);
     }
@@ -578,7 +579,13 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
             {/* Analysis Error Display */}
             {analysisError && (
               <div className="text-sm text-red-500 dark:text-red-400 mt-2">
-                {analysisError}
+                Failed to download website content. Please try with a different website or{' '}
+                <a 
+                  href="mailto:hey@adheist.ai" 
+                  className="underline hover:text-red-600 dark:hover:text-red-300"
+                >
+                  contact us
+                </a>
               </div>
             )}
             </div>

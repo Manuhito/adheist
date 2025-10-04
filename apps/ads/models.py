@@ -236,9 +236,19 @@ class AppConfiguration(BaseModel):
             return AppConfiguration.objects.first()
         
         # Clear cache when saving
-        cache.delete('app_configuration')
+        self.clear_cache()
         
         return super().save(*args, **kwargs)
+    
+    def delete(self, *args, **kwargs):
+        # Clear cache when deleting
+        self.clear_cache()
+        return super().delete(*args, **kwargs)
+    
+    @classmethod
+    def clear_cache(cls):
+        """Clear the configuration cache."""
+        cache.delete('app_configuration')
     
     @classmethod
     def get_limits(cls):
@@ -290,8 +300,8 @@ class AppConfiguration(BaseModel):
                 # If no configuration exists, create one with default values
                 config = cls.objects.create()
             
-            # Save in cache for 1 hour (3600 seconds)
-            cache.set('app_configuration', config, 3600)
+            # Save in cache indefinitely (will be cleared on model changes)
+            cache.set('app_configuration', config, None)
         
         return config
     

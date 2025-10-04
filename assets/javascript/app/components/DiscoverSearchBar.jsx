@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { ActionSearchBar } from '../../components/ui/action-search-bar.jsx';
-import { Building, X } from 'lucide-react';
+import { Building, X, Lightbulb } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import DiscoverFilterModal from './DiscoverFilterModal.jsx';
+import RequestBrandModal from './RequestBrandModal.jsx';
 
 /**
  * Componente de búsqueda personalizado para la página Discover
@@ -16,6 +17,9 @@ function DiscoverSearchBar({ onSearch, onFiltersApply }) {
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [keywordSearch, setKeywordSearch] = useState(null);
   const [shouldClearInput, setShouldClearInput] = useState(false);
+  
+  // State for the request brand modal
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
 
   // Cargar la lista de empresas al montar el componente
   useEffect(() => {
@@ -157,7 +161,20 @@ function DiscoverSearchBar({ onSearch, onFiltersApply }) {
           selectedCompany={selectedCompany}
           onFiltersApply={onFiltersApply}
         />
+        {/* Request Brand Button */}
+        <button
+          onClick={() => setIsRequestModalOpen(true)}
+          className="ml-2 p-2 rounded-md transition-colors"
+        >
+          <Lightbulb className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
+        </button>
       </div>
+      
+      {/* Modal para solicitar una nueva marca */}
+      <RequestBrandModal 
+        isOpen={isRequestModalOpen}
+        onOpenChange={setIsRequestModalOpen}
+      />
     </div>
   );
 }
