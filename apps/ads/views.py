@@ -29,7 +29,7 @@ from django.contrib.auth import get_user_model
 
 from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion, AdRequestUsage, ExtraCredit, UserBrand, UserBrandAssets, UserFolder
 from .forms import AdLibraryForm
-from .services import can_create_ad_request, use_credit, can_create_ad_request_version, get_ad_request_version_limit, use_general_credit, use_version_credit, can_create_ad_version, use_credits_for_operation
+from .services import can_create_ad_request, use_credit, can_create_ad_request_version, get_ad_request_version_limit, use_general_credit, use_version_credit, can_create_ad_version
 import boto3
 
 # A reasonable value for pagination would be 10 or 20 entries per page.
@@ -1765,8 +1765,7 @@ def adrequest_version_create(request):
             task_id = task.id
             print(f"Image generation task (ID: {task_id}) started for AdRequestVersion {version.id}")
             
-            # Use credits for new ad generation
-            use_credits_for_operation(request.user, 'generation')
+            # Credits will be deducted in the task after successful image generation
             
         except Exception as img_error:
             print(f"Error starting image generation task: {str(img_error)}")
@@ -1886,8 +1885,7 @@ def adrequest_revision_create(request):
             task_id = task.id
             print(f"Image revision task (ID: {task_id}) started for AdRequestVersion {version.id}")
             
-            # Use credits for version creation
-            use_credits_for_operation(request.user, 'version')
+            # Credits will be deducted in the task after successful image generation
             
         except Exception as img_error:
             print(f"Error starting image revision task: {str(img_error)}")

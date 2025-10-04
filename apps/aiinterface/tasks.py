@@ -320,6 +320,26 @@ def generate_image_task(
                     version.status = AdRequestVersion.STATUS_COMPLETED
                     version.save(update_fields=['status'])
                     
+                    # Deduct credits after successful image generation
+                    try:
+                        from apps.ads.services import use_credits_for_operation
+                        
+                        # Determine operation type based on version_type
+                        operation_type = 'generation' if version_type == 'initial' else 'version'
+                        
+                        # Deduct credits from user
+                        user = version.ad_request.user
+                        credit_result = use_credits_for_operation(user, operation_type)
+                        
+                        if credit_result is None:
+                            logger.warning(f"Failed to deduct credits for user {user.id} after successful generation")
+                        else:
+                            logger.info(f"Credits deducted successfully for user {user.id}, operation: {operation_type}")
+                            
+                    except Exception as credit_error:
+                        logger.exception(f"Error deducting credits for AdRequestVersion {version_id}: {str(credit_error)}")
+                        # Don't fail the task due to credit errors, image was generated successfully
+                    
                     # Save the OpenAI responses in the new fields
                     update_fields = []
                     
