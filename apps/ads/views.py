@@ -3730,8 +3730,24 @@ def generated_ad_page(request, version_id):
         # Pre-fetch and order versions to ensure correct ordering in template
         version.ad_request.ordered_versions = version.ad_request.versions.order_by('-created_at')
         
+        # Determine back URL based on referrer
+        referer = request.META.get('HTTP_REFERER', '')
+        back_url = '/ads/discover/'  # Default
+        
+        if referer:
+            # Parse the referrer to determine origin
+            if '/ads/my-ads/' in referer:
+                back_url = '/ads/my-ads/'
+            elif '/ads/discover/' in referer and '/create/' not in referer:
+                # If coming from discover page (not discover-clone)
+                back_url = '/ads/discover/'
+            elif '/ads/discover/' in referer and '/create/' in referer:
+                # If coming from discover-clone (after generation), go to discover
+                back_url = '/ads/discover/'
+        
         context = {
             'version': version,
+            'back_url': back_url,
         }
         
         return render(request, 'ads/generated_ad.html', context)

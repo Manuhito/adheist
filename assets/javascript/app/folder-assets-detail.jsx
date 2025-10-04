@@ -66,26 +66,21 @@ function FolderAssetsDetailPage() {
     if (window.setAppHeader) {
       const headerComponent = (
         <div className="flex items-center justify-between w-full">
-          <div className="flex items-center space-x-4">
-            <Button 
-              variant="ghost" 
-              size="sm"
+          <div className="flex items-center gap-4">
+            <button
               onClick={() => window.location.href = '/ads/assets/'}
-              className="flex items-center space-x-2"
+              className="flex items-center justify-center w-10 h-10 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-full transition-colors"
             >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Back to Assets</span>
-            </Button>
-            <div>
-              <h1 className="text-xl font-bold text-primary flex items-center gap-2">
-                <Folder className="w-5 h-5" />
-                {folder.name || 'Folder'}
-              </h1>
-            </div>
+              <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            </button>
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+              <Folder className="w-5 h-5" />
+              {folder.name || 'Folder'}
+            </h1>
           </div>
           <Button 
             onClick={() => setShowUploadModal(true)}
-            className="bg-primary hover:bg-primary/90 text-white"
+            className="text-sm"
           >
             Upload Assets
           </Button>
