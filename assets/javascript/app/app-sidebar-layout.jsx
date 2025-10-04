@@ -26,6 +26,40 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { ThemeSwitch } from "@/components/theme-switch"
 import { PanelLeftClose, Menu, Compass, Bookmark, Zap, Library, Folders, User2, ChevronUp, CreditCard, Settings, LogOut, Sparkles } from "lucide-react"
+import * as ProgressPrimitive from "@radix-ui/react-progress"
+
+function CreditsProgressBar() {
+  const creditsData = window.__USER_CREDITS__;
+  
+  if (!creditsData || creditsData.max_general_credits === 0) {
+    return null;
+  }
+
+  const totalCredits = creditsData.general_credits + (creditsData.extra_general_credits || 0);
+  const maxCredits = creditsData.max_general_credits;
+  const usedCredits = maxCredits - creditsData.general_credits;
+  const usagePercentage = maxCredits > 0 ? (usedCredits / maxCredits) * 100 : 0;
+
+  return (
+    <div className="px-3 py-3">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-primary">Credits</span>
+          <span className="text-sm font-semibold text-primary">{totalCredits}</span>
+        </div>
+        <ProgressPrimitive.Root
+          className="relative h-2 w-full overflow-hidden rounded-full bg-primary/20"
+          value={usagePercentage}
+        >
+          <ProgressPrimitive.Indicator
+            className="h-full w-full flex-1 bg-primary transition-all"
+            style={{ transform: `translateX(-${100 - usagePercentage}%)` }}
+          />
+        </ProgressPrimitive.Root>
+      </div>
+    </div>
+  );
+}
 
 function AppSidebar({ activeTab, sidebarComponent }) {
   const menuItems = [
@@ -92,6 +126,7 @@ function AppSidebar({ activeTab, sidebarComponent }) {
       </SidebarContent>
 
       <SidebarFooter>
+        <CreditsProgressBar />
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>

@@ -20,6 +20,18 @@
     activeTab: "{{ active_tab|default:'' }}"
   };
 </script>
+<script>
+  // Pass user credits to sidebar
+  {% if user_credits %}
+  window.__USER_CREDITS__ = {
+    general_credits: {{ user_credits.general_credits|default:0 }},
+    max_general_credits: {{ user_credits.max_general_credits|default:0 }},
+    extra_general_credits: {{ user_credits.extra_general_credits|default:0 }}
+  };
+  {% else %}
+  window.__USER_CREDITS__ = null;
+  {% endif %}
+</script>
 <script src="{% static 'js/app-sidebar-layout-bundle.js' %}" defer></script>
 {% endblock %}
 

@@ -598,3 +598,18 @@ def robot_index(request):
         "is_private_page": is_private_page,
         "force_noindex": force_noindex,
     }
+
+
+def user_credits(request):
+    """
+    Makes user credits available to all templates for authenticated users
+    """
+    if request.user.is_authenticated:
+        from apps.ads.views import get_user_credits
+        credits_data = get_user_credits(request.user)
+        return {
+            "user_credits": credits_data
+        }
+    return {
+        "user_credits": None
+    }

@@ -159,6 +159,7 @@ TEMPLATES = [
                 # translations for i18n in React components
                 "apps.web.context_processors.translations",
                 "apps.web.context_processors.posthog_settings",
+                "apps.web.context_processors.user_credits",
             ],
             "loaders": _DEFAULT_LOADERS if DEBUG else _CACHED_LOADERS,
         },
