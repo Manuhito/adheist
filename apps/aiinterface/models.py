@@ -104,9 +104,19 @@ class OpenAIConfiguration(models.Model):
             self.pk = existing.pk
         
         # Clear cache when configuration is updated
-        cache.delete('openai_config')
+        self.clear_cache()
         
         super().save(*args, **kwargs)
+    
+    def delete(self, *args, **kwargs):
+        # Clear cache when deleting
+        self.clear_cache()
+        return super().delete(*args, **kwargs)
+    
+    @classmethod
+    def clear_cache(cls):
+        """Clear the OpenAI configuration cache."""
+        cache.delete('openai_config')
     
     @classmethod
     def get_config(cls):
@@ -119,7 +129,8 @@ class OpenAIConfiguration(models.Model):
         config = cache.get('openai_config')
         if not config:
             config, created = cls.objects.get_or_create(pk=1)
-            cache.set('openai_config', config, 3600)  # Cache for 1 hour
+            # Save in cache indefinitely (will be cleared on model changes)
+            cache.set('openai_config', config, None)
         return config
     
     @classmethod
