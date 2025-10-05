@@ -34,6 +34,7 @@ module.exports = {
     'folder-assets-detail': './assets/javascript/app/folder-assets-detail.jsx',  // entry point for the folder assets detail page
     'app-sidebar-layout': './assets/javascript/app/app-sidebar-layout.jsx',  // entry point for the sidebar layout
     'generated-ad': './assets/javascript/app/generated-ad-page.jsx',  // entry point for the generated ad page
+    'landing-page': './assets/javascript/landing/landing_page.js', // entry point for the new landing page
   },
   output: {
     path: path.resolve(__dirname, './static'),
