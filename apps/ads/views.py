@@ -3762,15 +3762,12 @@ def analyze_website_for_brand_assets(request):
     """
     Analyze a website to extract brand assets using OpenAI.
     
-    Expected POST data:
-    - website_url: URL of the website to analyze
-    - ad_request_id: Optional ID of AdRequest to associate with created brand
-    
-    Returns: JSON with extracted brand assets
+    Args:
+        request: Django request object with 'website_url' in POST data
+        
+    Returns:
+        JsonResponse with extracted assets or error
     """
-    if request.method != 'POST':
-        return JsonResponse({'success': False, 'error': 'Only POST method allowed'}, status=405)
-    
     try:
         website_url = request.POST.get('website_url')
         ad_request_id = request.POST.get('ad_request_id')
@@ -3781,33 +3778,32 @@ def analyze_website_for_brand_assets(request):
                 'error': 'Website URL is required'
             }, status=400)
         
-        # Import here to avoid circular imports
         from .website_analysis import extract_brand_assets_from_website
         
-        # Extract brand assets from website
         result = extract_brand_assets_from_website(request.user, website_url, ad_request_id)
         
-        if result['success']:
+        if result.get('success'):
             return JsonResponse({
                 'success': True,
-                'extracted_assets': result['extracted_assets'],
-                'extraction_id': result.get('extraction_id'),
+                'extracted_assets': result.get('extracted_assets'),
                 'brand_created': result.get('brand_created', False),
-                'brand': result.get('brand')
+                'brand': result.get('brand'),
+                'cost': result.get('cost')
             })
         else:
-            return JsonResponse({
-                'success': False,
-                'error': result['error'],
-                'extraction_id': result.get('extraction_id')
-            }, status=400)
+            error_message = result.get('error', 'An unknown error occurred')
+            if 'insufficient credits' in error_message.lower():
+                return JsonResponse({'error': error_message}, status=402)
+            return JsonResponse({'error': error_message}, status=400)
             
     except Exception as e:
+        error_message = str(e)
+        if 'insufficient credits' in error_message.lower():
+            return JsonResponse({'error': error_message}, status=402)
         return JsonResponse({
             'success': False,
             'error': f'Unexpected error: {str(e)}'
         }, status=500)
-
 
 @login_required
 @require_http_methods(["PUT", "POST"])  # Allow POST for multipart data

@@ -14,7 +14,7 @@ from apps.ads.views import get_user_credits, deduct_user_credits
 log = logging.getLogger(__name__)
 
 
-def extract_text_from_html(html_content: str) -> str:
+def extract_text_from_html(html_content: bytes) -> str:
     """
     Extract visible text from HTML content, removing scripts, styles, and navigation elements.
     """
@@ -62,14 +62,25 @@ def download_website_content(url: str) -> str:
             raise ValueError("Invalid URL format")
         
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Upgrade-Insecure-Requests': '1',
+            'Connection': 'keep-alive',
         }
         
-        response = requests.get(url, timeout=10, headers=headers)
+        response = requests.get(url, timeout=15, headers=headers, allow_redirects=True)
         response.raise_for_status()
+
+        # Explicitly set encoding from headers, fallback to UTF-8
+        detected_encoding = response.apparent_encoding
+        final_encoding = detected_encoding or 'utf-8'
+        log.info(f"Detected encoding: {detected_encoding}. Using: {final_encoding}")
+        response.encoding = final_encoding
         
         # Extract text from HTML
-        text_content = extract_text_from_html(response.text)
+        text_content = extract_text_from_html(response.content)
         
         log.info(f"Successfully downloaded content from {url}, extracted {len(text_content)} characters")
         return text_content
@@ -352,6 +363,7 @@ def extract_brand_assets_from_website(user, website_url: str, ad_request_id: str
         
         # Download website content
         website_content = download_website_content(website_url)
+        log.info(f"Downloaded content preview: {website_content[:500]}...")
         
         # Analyze with OpenAI
         analysis_result = analyze_website_with_openai(website_content, website_url)
@@ -365,23 +377,17 @@ def extract_brand_assets_from_website(user, website_url: str, ad_request_id: str
         extraction.input_cost_usd = analysis_result['input_cost_usd']
         extraction.output_cost_usd = analysis_result['output_cost_usd']
         extraction.total_cost_usd = analysis_result['total_cost_usd']
-        extraction.status = 'completed'
+        extraction.status = 'processing'  # Keep as processing until brand is created
         extraction.save()
-        
-        # Deduct credits from user
-        if not deduct_extraction_credits(user):
-            log.warning(f"Failed to deduct credits for user {user.email} after successful extraction")
         
         # Automatically create brand and assets from extraction
         brand_creation_result = create_brand_from_extraction(
-            user, 
-            analysis_result['extracted_assets'], 
+            user,
+            analysis_result['extracted_assets'],
             website_url,
             ad_request_id,
             extraction.id
         )
-        
-        log.info(f"Successfully completed brand asset extraction for user {user.email}")
         
         result = {
             'success': True,
@@ -390,15 +396,25 @@ def extract_brand_assets_from_website(user, website_url: str, ad_request_id: str
             'cost': analysis_result['total_cost_usd']
         }
         
-        # Add brand creation info to result
+        # Finalize based on brand creation success
         if brand_creation_result['success']:
+            # Deduct credits ONLY after successful brand creation
+            if not deduct_extraction_credits(user):
+                log.warning(f"Failed to deduct credits for user {user.email} after successful extraction and brand creation")
+            
+            extraction.status = 'completed'
             result['brand_created'] = True
             result['brand'] = brand_creation_result['brand']
-            log.info(f"Automatically created brand '{brand_creation_result['brand']['name']}' for user {user.email}")
+            log.info(f"Successfully created brand '{brand_creation_result['brand']['name']}' and completed extraction for user {user.email}")
         else:
+            extraction.status = 'failed'
+            extraction.error_log = brand_creation_result.get('error', 'Brand creation failed without specific error')
+            result['success'] = False
             result['brand_created'] = False
-            result['brand_creation_error'] = brand_creation_result['error']
-            log.warning(f"Failed to create brand automatically: {brand_creation_result['error']}")
+            result['brand_creation_error'] = brand_creation_result.get('error')
+            log.warning(f"Failed to create brand automatically: {brand_creation_result.get('error')}")
+
+        extraction.save()
         
         return result
         

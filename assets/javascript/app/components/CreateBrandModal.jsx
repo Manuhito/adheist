@@ -50,7 +50,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
         try {
           const response = await fetch(`/ads/api/brand-details/${editingBrand.id}/`);
           const data = await response.json();
-          
+
           if (data.success && data.brand) {
             const brand = data.brand;
             setBrandName(brand.name || '');
@@ -66,10 +66,10 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
             setProofPoints(brand.proof_points || '');
             setValuePropositions(brand.value_propositions || '');
             setBrandColors(brand.brand_colors || []);
-            
+
             // Set the created brand ID for update mode
             setCreatedBrandId(editingBrand.id);
-            
+
             // Set logo if available
             if (brand.logo_url) {
               setSelectedLogoData({
@@ -82,7 +82,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
           console.error('Error fetching brand data:', error);
         }
       };
-      
+
       fetchBrandData();
     } else {
       // Reset form when not editing
@@ -194,15 +194,20 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
         body: formData,
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to analyze website');
+        if (response.status === 402) {
+          setAnalysisError('credits');
+        } else {
+          setAnalysisError('generic');
+        }
+        return; // Stop execution on error
       }
+
+      const data = await response.json();
 
       if (data.success && data.extracted_assets) {
         const assets = data.extracted_assets;
-        
+
         // Populate form fields with extracted data
         if (assets.brand_name) setBrandName(assets.brand_name);
         if (assets.industry) setIndustry(assets.industry);
@@ -214,10 +219,10 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
         if (assets.emotional_benefits) setEmotionalBenefits(assets.emotional_benefits);
         if (assets.proof_points) setProofPoints(assets.proof_points);
         if (assets.value_propositions) setValuePropositions(assets.value_propositions);
-        
+
         // Handle brand colors if they exist
         if (assets.brand_colors && Array.isArray(assets.brand_colors)) {
-          const validColors = assets.brand_colors.filter(color => 
+          const validColors = assets.brand_colors.filter(color =>
             color && typeof color === 'string' && color.startsWith('#')
           );
           setBrandColors(validColors);
@@ -229,22 +234,22 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
         // Check if a brand was automatically created
         if (data.brand_created && data.brand) {
           console.log('Website analysis completed and brand created automatically:', data.brand.name);
-          
+
           // Notify parent component about the new brand
           if (onBrandCreated) {
             onBrandCreated(data.brand);
           }
-          
+
           // Show success message but keep modal open
           // Create a temporary notification container
           const notificationContainer = document.createElement('div');
           document.body.appendChild(notificationContainer);
-          
+
           // Import and render AlertNotification
           import('@/components/ui/alert-notification.tsx').then(({ AlertNotification }) => {
             const { createRoot } = require('react-dom/client');
             const root = createRoot(notificationContainer);
-            
+
             root.render(
               React.createElement(AlertNotification, {
                 variant: 'success',
@@ -257,10 +262,10 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
               })
             );
           });
-          
+
           // Store the created brand ID for later updates
           setCreatedBrandId(data.brand.id);
-          
+
           // Don't close modal - let user edit the created brand
           console.log('Brand created successfully - modal remains open for editing');
           return; // Exit early since brand was created
@@ -276,8 +281,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
 
     } catch (err) {
       console.error('Website analysis error:', err);
-      // Always show a generic error message to users
-      setAnalysisError('generic');
+      setAnalysisError('generic'); // Catch any other unexpected errors
     } finally {
       setIsAnalyzing(false);
     }
@@ -421,26 +425,26 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
       };
 
       let response;
-      
+
       // Determine if we're creating or updating
       const isUpdating = createdBrandId !== null;
       const endpoint = isUpdating ? `/ads/api/update-user-brand/${createdBrandId}/` : '/ads/api/create-user-brand/';
-      
+
       // Check if we need to handle logo changes
       const hasNewLogoFile = selectedLogoData && selectedLogoData.file;
       const shouldRemoveLogo = isUpdating && !selectedLogoData; // In edit mode, null means remove logo
-      
+
       // Debug logs
       console.log('=== LOGO DEBUG ===');
       console.log('isUpdating:', isUpdating);
       console.log('selectedLogoData:', selectedLogoData);
       console.log('hasNewLogoFile:', hasNewLogoFile);
       console.log('shouldRemoveLogo:', shouldRemoveLogo);
-      
+
       // If there's a logo file or we need to remove logo, use FormData for multipart upload
       if (hasNewLogoFile || shouldRemoveLogo) {
         const formDataMultipart = new FormData();
-        
+
         // Add all text fields
         Object.keys(formData).forEach(key => {
           if (key === 'brand_colors') {
@@ -449,7 +453,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
             formDataMultipart.append(key, formData[key]);
           }
         });
-        
+
         // Handle logo changes
         if (hasNewLogoFile) {
           // Add new logo file
@@ -460,7 +464,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
           console.log('Adding remove_logo flag to FormData');
           formDataMultipart.append('remove_logo', 'true');
         }
-        
+
         // Debug FormData contents
         console.log('FormData entries:');
         for (let [key, value] of formDataMultipart.entries()) {
@@ -469,7 +473,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
 
         // Use POST for multipart data (PUT can have issues with multipart)
         const multipartEndpoint = isUpdating ? `/ads/api/update-user-brand/${createdBrandId}/` : '/ads/api/create-user-brand/';
-        
+
         response = await fetch(multipartEndpoint, {
           method: 'POST', // Always use POST for multipart data
           headers: {
@@ -521,14 +525,14 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
       setWebsiteUrl('');
       setAnalysisError('');
       setCreatedBrandId(null);
-      
+
       // Call appropriate callback based on operation type
       if (isUpdating && onBrandUpdated) {
         onBrandUpdated(data.brand);
       } else if (!isUpdating && onBrandCreated) {
         onBrandCreated(data.brand);
       }
-      
+
       onClose();
     } catch (err) {
       setError(err.message);
@@ -547,47 +551,62 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
           {/* Website Analysis Section - Only show when creating new brand */}
           {!editingBrand && (
             <div className="space-y-3 mb-6">
-            <p className="text-sm text-gray-600 dark:text-gray-300">
-              Analyze your brand website to generate the fields below{' '}
-              <span className="text-primary dark:text-primary">(4 Credits)</span>
-            </p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                Analyze your brand website to generate the fields below{' '}
+                <span className="text-primary dark:text-primary">(4 Credits)</span>
+              </p>
 
-            {/* Website URL Input with Generate Button */}
-            <div className="flex gap-2">
-              <div className="flex-1 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Globe className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+              {/* Website URL Input with Generate Button */}
+              <div className="flex gap-2">
+                <div className="flex-1 relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Globe className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                  </div>
+                  <Input
+                    placeholder="Website URL"
+                    className="pl-9 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
+                    value={websiteUrl}
+                    onChange={handleWebsiteUrlChange}
+                    disabled={isSubmitting || isAnalyzing}
+                  />
                 </div>
-                <Input
-                  placeholder="Website URL"
-                  className="pl-9 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
-                  value={websiteUrl}
-                  onChange={handleWebsiteUrlChange}
-                  disabled={isSubmitting || isAnalyzing}
-                />
-              </div>
-              <Button
-                variant="default"
-                className="px-6"
-                onClick={handleAnalyzeWebsite}
-                disabled={isSubmitting || isAnalyzing || !websiteUrl.trim()}
-              >
-                {isAnalyzing ? 'Analyzing...' : 'Generate'}
-              </Button>
-            </div>
-            
-            {/* Analysis Error Display */}
-            {analysisError && (
-              <div className="text-sm text-red-500 dark:text-red-400 mt-2">
-                Failed to download website content. Please try with a different website or{' '}
-                <a 
-                  href="mailto:hey@adheist.ai" 
-                  className="underline hover:text-red-600 dark:hover:text-red-300"
+                <Button
+                  variant="default"
+                  className="px-6"
+                  onClick={handleAnalyzeWebsite}
+                  disabled={isSubmitting || isAnalyzing || !websiteUrl.trim()}
                 >
-                  contact us
-                </a>
+                  {isAnalyzing ? 'Analyzing...' : 'Generate'}
+                </Button>
               </div>
-            )}
+
+              {/* Analysis Error Display */}
+              {analysisError && (
+                <div className="text-sm text-red-500 dark:text-red-400 mt-2">
+                  {analysisError === 'credits' ? (
+                    <span>
+                      You do not have enough credits to perform this action. Please{' '}
+                      <a 
+                        href="/ads/billing/"
+                        className="underline hover:text-red-600 dark:hover:text-red-300"
+                      >
+                        upgrade your plan
+                      </a>
+                      {' '}or purchase more credits.
+                    </span>
+                  ) : (
+                    <span>
+                      Failed to download website content. Please try with a different website or{' '}
+                      <a 
+                        href="mailto:hey@adheist.ai" 
+                        className="underline hover:text-red-600 dark:hover:text-red-300"
+                      >
+                        contact us
+                      </a>
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
