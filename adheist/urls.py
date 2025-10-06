@@ -31,7 +31,7 @@ from wagtail.images.api.v2.views import ImagesAPIViewSet
 from wagtail.api.v2.router import WagtailAPIRouter
 from wagtail.contrib.sitemaps import Sitemap
 from wagtail.documents import urls as wagtaildocs_urls
-from apps.web.sitemaps import StaticViewSitemap
+from apps.web.sitemaps import StaticViewSitemap, MarketingPagesSitemap
 from apps.termspages import views as termspages_views
 from apps.ads import views as ads_views
 
@@ -48,6 +48,7 @@ PagesAPIViewSet.schema = None  # hacky workaround for https://github.com/wagtail
 sitemaps = {
     "wagtail": Sitemap(),
     "static": StaticViewSitemap(),
+    "marketing_pages": MarketingPagesSitemap(),
 }
 
 urlpatterns = [
