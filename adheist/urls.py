@@ -31,8 +31,9 @@ from wagtail.images.api.v2.views import ImagesAPIViewSet
 from wagtail.api.v2.router import WagtailAPIRouter
 from wagtail.contrib.sitemaps import Sitemap
 from wagtail.documents import urls as wagtaildocs_urls
-from apps.web.sitemaps import StaticViewSitemap
+from apps.web.sitemaps import StaticViewSitemap, MarketingPagesSitemap
 from apps.termspages import views as termspages_views
+from apps.ads import views as ads_views
 
 # Create the API router
 api_router = WagtailAPIRouter('wagtailapi')
@@ -47,6 +48,7 @@ PagesAPIViewSet.schema = None  # hacky workaround for https://github.com/wagtail
 sitemaps = {
     "wagtail": Sitemap(),
     "static": StaticViewSitemap(),
+    "marketing_pages": MarketingPagesSitemap(),
 }
 
 urlpatterns = [
@@ -85,5 +87,7 @@ urlpatterns = [
     # This will automatically handle:
     # - /blog/ -> blog index page
     # - /blog/post-slug/ -> individual blog posts
+    # Dynamic marketing pages URL - MUST be before Wagtail's catch-all
+    path("<slug:slug>/", ads_views.marketing_page_view, name="marketing_page_view"),
     path('', include(wagtail_urls)),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

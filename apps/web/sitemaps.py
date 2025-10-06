@@ -2,6 +2,7 @@ from django.contrib import sitemaps
 from django.urls import reverse
 
 from .meta import get_protocol
+from apps.ads.models import MarketingPagesRouter, AdAgencyTemplate
 
 
 class StaticViewSitemap(sitemaps.Sitemap):
@@ -23,3 +24,29 @@ class StaticViewSitemap(sitemaps.Sitemap):
 
     def location(self, item):
         return reverse(item)
+
+
+class MarketingPagesSitemap(sitemaps.Sitemap):
+    """
+    Sitemap for dynamic marketing pages created via MarketingPagesRouter.
+    """
+    @property
+    def protocol(self):
+        return get_protocol()
+
+    def items(self):
+        """
+        Returns a queryset of MarketingPagesRouter objects that point to published content.
+        """
+        published_pages = []
+        for router in MarketingPagesRouter.objects.all():
+            # Check if the related content object has a 'status' attribute
+            if hasattr(router.content_object, 'status') and router.content_object.status == AdAgencyTemplate.STATUS_PUBLISHED:
+                published_pages.append(router)
+        return published_pages
+
+    def location(self, item):
+        """
+        Returns the URL for a given item.
+        """
+        return reverse('marketing_page_view', kwargs={'slug': item.slug})
