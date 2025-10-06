@@ -1,0 +1,99 @@
+{% extends "web/base.html" %}
+{% load static %}
+
+{% block extra_head %}
+    <title>{{ page_data.meta_title }}</title>
+    <meta name="description" content="{{ page_data.meta_description }}">
+    <style>
+        /* You can add page-specific styles here if needed */
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+
+    <!-- Hero Section -->
+    <section class="py-20 text-center">
+        <div class="container mx-auto px-4">
+            <h1 class="text-4xl md:text-6xl font-bold mb-4">{{ page_data.hero_title }}</h1>
+            <p class="text-lg md:text-xl max-w-3xl mx-auto">{{ page_data.hero_description }}</p>
+            <a href="#" class="mt-8 inline-block bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition-colors">Get Started</a>
+        </div>
+    </section>
+
+    <!-- Claim Section -->
+    <section class="py-16 bg-white dark:bg-gray-800">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-3xl font-bold mb-2">{{ page_data.claim }}</h2>
+            <p class="text-gray-600 dark:text-gray-400">{{ page_data.claim_subheading }}</p>
+        </div>
+    </section>
+
+    <!-- Problems Section -->
+    <section class="py-20">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12">The Challenge</h2>
+            <div class="grid md:grid-cols-3 gap-8 text-center">
+                <div class="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                    <div class="text-blue-500 mb-4">{% comment %} ICON: {{ page_data.problem_1_icon }} {% endcomment %}</div>
+                    <h3 class="text-xl font-bold mb-2">{{ page_data.problem_1_title }}</h3>
+                    <p class="text-gray-600 dark:text-gray-400">{{ page_data.problem_1_subtext }}</p>
+                </div>
+                <div class="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                    <div class="text-blue-500 mb-4">{% comment %} ICON: {{ page_data.problem_2_icon }} {% endcomment %}</div>
+                    <h3 class="text-xl font-bold mb-2">{{ page_data.problem_2_title }}</h3>
+                    <p class="text-gray-600 dark:text-gray-400">{{ page_data.problem_2_subtext }}</p>
+                </div>
+                <div class="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                    <div class="text-blue-500 mb-4">{% comment %} ICON: {{ page_data.problem_3_icon }} {% endcomment %}</div>
+                    <h3 class="text-xl font-bold mb-2">{{ page_data.problem_3_title }}</h3>
+                    <p class="text-gray-600 dark:text-gray-400">{{ page_data.problem_3_subtext }}</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature 1 Section -->
+    <section class="py-20 bg-white dark:bg-gray-800">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold">{{ page_data.feature_1_title }}</h2>
+                <p class="mt-2 text-lg text-gray-600 dark:text-gray-400">{{ page_data.feature_1_title_desc }}</p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <h4 class="text-xl font-semibold mb-2">{{ page_data.feature_1_subtit_1_title }}</h4>
+                    <p class="text-gray-600 dark:text-gray-400 mb-6">{{ page_data.feature_1_subtit_1_desc }}</p>
+                    <h4 class="text-xl font-semibold mb-2">{{ page_data.feature_1_subtit_2_title }}</h4>
+                    <p class="text-gray-600 dark:text-gray-400">{{ page_data.feature_1_subtit_2_desc }}</p>
+                </div>
+                <div class="bg-gray-200 dark:bg-gray-700 h-64 rounded-lg flex items-center justify-center">
+                    <span class="text-gray-500">Image Placeholder</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature 2 Section -->
+    <section class="py-20">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold">{{ page_data.feature_2_title }}</h2>
+                <p class="mt-2 text-lg text-gray-600 dark:text-gray-400">{{ page_data.feature_2_title_desc }}</p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="bg-gray-200 dark:bg-gray-700 h-64 rounded-lg flex items-center justify-center order-last md:order-first">
+                    <span class="text-gray-500">Image Placeholder</span>
+                </div>
+                <div>
+                    <h4 class="text-xl font-semibold mb-2">{{ page_data.feature_2_subtit_1_title }}</h4>
+                    <p class="text-gray-600 dark:text-gray-400 mb-6">{{ page_data.feature_2_subtit_1_desc }}</p>
+                    <h4 class="text-xl font-semibold mb-2">{{ page_data.feature_2_subtit_2_title }}</h4>
+                    <p class="text-gray-600 dark:text-gray-400">{{ page_data.feature_2_subtit_2_desc }}</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</div>
+{% endblock %}

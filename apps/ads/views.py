@@ -27,7 +27,7 @@ from django.utils import timezone
 from apps.aiinterface.tasks import send_slack_notification
 from django.contrib.auth import get_user_model
 
-from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion, AdRequestUsage, ExtraCredit, UserBrand, UserBrandAssets, UserFolder
+from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion, AdRequestUsage, ExtraCredit, UserBrand, UserBrandAssets, UserFolder, MarketingPagesRouter
 from .forms import AdLibraryForm
 from .services import can_create_ad_request, use_credit, can_create_ad_request_version, get_ad_request_version_limit, use_general_credit, use_version_credit, can_create_ad_version
 import boto3
@@ -4055,3 +4055,25 @@ def get_brand_details(request, brand_id):
             'success': False,
             'error': str(e)
         }, status=500)
+
+def marketing_page_view(request, slug):
+    """
+    Renders a dynamic marketing page based on the slug.
+    """
+    # Find the router entry for the given slug.
+    router_entry = get_object_or_404(MarketingPagesRouter, slug=slug)
+    
+    page_data = router_entry.content_object
+    
+    # Check if the page is published
+    if not hasattr(page_data, 'status') or page_data.status != 'PUBLISHED':
+        from django.http import Http404
+        raise Http404("Page not found")
+
+    template_name = page_data.html_template
+    context = {
+        'page_data': page_data
+    }
+    
+    return render(request, template_name, context)
+
