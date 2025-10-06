@@ -1,13 +1,17 @@
 {% extends "web/base.html" %}
 {% load static socialaccount %}
 
-{% block extra_head %}
-    <title>{{ page_data.meta_title }}</title>
-    <meta name="description" content="{{ page_data.meta_description }}">
+{% block page_title %}{{ page_data.meta_title }}{% endblock page_title %}
+
+{% block meta_description %}
+<meta name="description" content="{{ page_data.meta_description }}">
+{% endblock meta_description %}
+
+{% block page_head %}
     <style>
         /* You can add page-specific styles here if needed */
     </style>
-{% endblock %}
+{% endblock page_head %}
 
 {% block content %}
 <div class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">

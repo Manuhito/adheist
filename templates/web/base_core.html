@@ -18,7 +18,7 @@
   {% with project_meta|get_description:page_description as description %}
   {% with project_meta|get_image_url:page_image as image %}
   <title>{% block page_title %}{{ title }}{% endblock %}</title>
-  <meta name="description" content="{{ description }}">
+  {% block meta_description %}<meta name="description" content="{{ description }}">{% endblock meta_description %}
   <meta name="keywords" content="{{ project_meta.KEYWORDS }}">
   <!-- Twitter Card data -->
   <meta name="twitter:card" content="summary_large_image">
