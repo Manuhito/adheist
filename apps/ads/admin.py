@@ -563,7 +563,7 @@ class AdAgencyTemplateAdmin(admin.ModelAdmin):
             'fields': ('status', 'slug', 'meta_title', 'meta_description')
         }),
         ('Hero Section', {
-            'fields': ('hero_title', 'hero_description')
+            'fields': ('hero_title', 'hero_description', 'hero_image')
         }),
         ('Claim Section', {
             'fields': ('claim', 'claim_subheading')
@@ -582,23 +582,23 @@ class AdAgencyTemplateAdmin(admin.ModelAdmin):
             'fields': (
                 'feature_1_title',
                 'feature_1_title_desc',
-                ('feature_1_subtit_1_icon', 'feature_1_subtit_1_title'),
+                'feature_1_image',
+                ('feature_1_subtit_1_title', 'feature_1_subtit_1_icon'),
                 'feature_1_subtit_1_desc',
-                ('feature_1_subtit_2_icon', 'feature_1_subtit_2_title'),
+                ('feature_1_subtit_2_title', 'feature_1_subtit_2_icon'),
                 'feature_1_subtit_2_desc',
-            ),
-            'classes': ('collapse',)
+            )
         }),
         ('Feature 2 Section', {
             'fields': (
                 'feature_2_title',
                 'feature_2_title_desc',
-                ('feature_2_subtit_1_icon', 'feature_2_subtit_1_title'),
+                'feature_2_image',
+                ('feature_2_subtit_1_title', 'feature_2_subtit_1_icon'),
                 'feature_2_subtit_1_desc',
-                ('feature_2_subtit_2_icon', 'feature_2_subtit_2_title'),
+                ('feature_2_subtit_2_title', 'feature_2_subtit_2_icon'),
                 'feature_2_subtit_2_desc',
-            ),
-            'classes': ('collapse',)
+            )
         }),
     )
 

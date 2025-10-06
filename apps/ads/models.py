@@ -1272,6 +1272,7 @@ class AdAgencyTemplate(BaseModel):
     # Hero Section
     hero_title = models.CharField(max_length=255)
     hero_description = models.TextField(blank=True)
+    hero_image = models.ImageField(upload_to='marketing_pages/hero_images/', blank=True, null=True, help_text="Imagen principal para la sección hero.")
     
     # Claim Section
     claim = models.CharField(max_length=255)
@@ -1290,23 +1291,26 @@ class AdAgencyTemplate(BaseModel):
     problem_3_subtext = models.TextField(blank=True)
     problem_3_icon = models.CharField(max_length=100, blank=True)
 
-    # Features Section
-    feature_1_title = models.CharField(max_length=255)
+    # Feature 1 Section
+    feature_1_title = models.CharField(max_length=255, blank=True)
     feature_1_title_desc = models.TextField(blank=True)
-    feature_1_subtit_1_icon = models.CharField(max_length=100, blank=True)
-    feature_1_subtit_1_title = models.CharField(max_length=255)
+    feature_1_image = models.ImageField(upload_to='marketing_pages/feature_images/', blank=True, null=True)
+    feature_1_subtit_1_title = models.CharField(max_length=255, blank=True)
+    feature_1_subtit_1_icon = models.CharField(max_length=100, blank=True, help_text="e.g., 'globe'")
     feature_1_subtit_1_desc = models.TextField(blank=True)
-    feature_1_subtit_2_icon = models.CharField(max_length=100, blank=True)
-    feature_1_subtit_2_title = models.CharField(max_length=255)
+    feature_1_subtit_2_title = models.CharField(max_length=255, blank=True)
+    feature_1_subtit_2_icon = models.CharField(max_length=100, blank=True, help_text="e.g., 'message-square'")
     feature_1_subtit_2_desc = models.TextField(blank=True)
 
-    feature_2_title = models.CharField(max_length=255)
+    # Feature 2 Section
+    feature_2_title = models.CharField(max_length=255, blank=True)
     feature_2_title_desc = models.TextField(blank=True)
-    feature_2_subtit_1_icon = models.CharField(max_length=100, blank=True)
-    feature_2_subtit_1_title = models.CharField(max_length=255)
+    feature_2_image = models.ImageField(upload_to='marketing_pages/feature_images/', blank=True, null=True)
+    feature_2_subtit_1_title = models.CharField(max_length=255, blank=True)
+    feature_2_subtit_1_icon = models.CharField(max_length=100, blank=True, help_text="e.g., 'sparkles'")
     feature_2_subtit_1_desc = models.TextField(blank=True)
-    feature_2_subtit_2_icon = models.CharField(max_length=100, blank=True)
-    feature_2_subtit_2_title = models.CharField(max_length=255)
+    feature_2_subtit_2_title = models.CharField(max_length=255, blank=True)
+    feature_2_subtit_2_icon = models.CharField(max_length=100, blank=True, help_text="e.g., 'layout-template'")
     feature_2_subtit_2_desc = models.TextField(blank=True)
 
     def __str__(self):

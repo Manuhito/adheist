@@ -1,5 +1,5 @@
 {% extends "web/base.html" %}
-{% load static %}
+{% load static socialaccount %}
 
 {% block extra_head %}
     <title>{{ page_data.meta_title }}</title>
@@ -13,84 +13,213 @@
 <div class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
 
     <!-- Hero Section -->
-    <section class="py-20 text-center">
-        <div class="container mx-auto px-4">
-            <h1 class="text-4xl md:text-6xl font-bold mb-4">{{ page_data.hero_title }}</h1>
-            <p class="text-lg md:text-xl max-w-3xl mx-auto">{{ page_data.hero_description }}</p>
-            <a href="#" class="mt-8 inline-block bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition-colors">Get Started</a>
+    <section class="container mx-auto py-12 px-4 md:px-6">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-12 items-center">
+            <!-- Left Column: Text Content -->
+            <div class="md:col-span-3 text-left">
+                <h1 class="text-5xl lg:text-6xl font-bold tracking-tight text-neutral-800 dark:text-white leading-tight lg:leading-snug">
+                    {{ page_data.hero_title|safe }}
+                </h1>
+                <p class="mt-6 text-lg text-neutral-600 dark:text-neutral-300 max-w-2xl">
+                    {{ page_data.hero_description|safe }}
+                </p>
+                <div class="mt-8 flex flex-col sm:flex-row items-center justify-start gap-4">
+                    <a href="{% url 'account_signup' %}" class="inline-flex items-center justify-center rounded-lg px-6 py-3 text-base font-medium text-white shadow-sm" style="background-color: #5C67F2;">
+                        Start Free Trial
+                    </a>
+                    <form method="post" action="{% provider_login_url 'google' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="inline-flex items-center justify-center rounded-lg border border-neutral-300 bg-white px-6 py-3 text-base font-medium text-neutral-700 hover:bg-neutral-100 w-full sm:w-auto">
+                            <img src="{% static 'images/socialauth/google-logo.svg' %}" alt="Google" class="h-5 w-5 mr-3">
+                            Login with Google
+                        </button>
+                    </form>
+                </div>
+                <div class="mt-8 flex flex-col items-start">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path></svg>
+                        <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path></svg>
+                        <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path></svg>
+                        <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path></svg>
+                        <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path></svg>
+                        <span class="ml-2 text-base font-medium text-neutral-800 dark:text-white">5.0</span>
+                    </div>
+                    <p class="mt-2 text-sm text-neutral-500 dark:text-neutral-400">From 80+ reviews</p>
+                </div>
+            </div>
+            <!-- Right Column: Image -->
+            <div class="md:col-span-2">
+                {% if page_data.hero_image %}
+                    <img src="{{ page_data.hero_image.url }}" alt="{{ page_data.hero_title }}" class="rounded-lg shadow-xl w-full h-auto object-cover">
+                {% else %}
+                    <div class="bg-gray-200 dark:bg-gray-700 h-96 rounded-lg flex items-center justify-center">
+                        <span class="text-gray-500">Image Placeholder</span>
+                    </div>
+                {% endif %}
+            </div>
         </div>
     </section>
 
     <!-- Claim Section -->
-    <section class="py-16 bg-white dark:bg-gray-800">
-        <div class="container mx-auto px-4 text-center">
-            <h2 class="text-3xl font-bold mb-2">{{ page_data.claim }}</h2>
-            <p class="text-gray-600 dark:text-gray-400">{{ page_data.claim_subheading }}</p>
+    <section class="container mx-auto py-12 px-4 md:px-6 text-center">
+        <div class="max-w-3xl mx-auto">
+            <h2 class="text-4xl font-bold tracking-tight text-primary sm:text-5xl">
+                {{ page_data.claim }}
+            </h2>
+            <p class="mt-6 text-lg leading-8 text-neutral-600 dark:text-neutral-300">
+                {{ page_data.claim_subheading }}
+            </p>
         </div>
     </section>
 
     <!-- Problems Section -->
-    <section class="py-20">
-        <div class="container mx-auto px-4">
-            <h2 class="text-3xl font-bold text-center mb-12">The Challenge</h2>
-            <div class="grid md:grid-cols-3 gap-8 text-center">
-                <div class="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-                    <div class="text-blue-500 mb-4">{% comment %} ICON: {{ page_data.problem_1_icon }} {% endcomment %}</div>
-                    <h3 class="text-xl font-bold mb-2">{{ page_data.problem_1_title }}</h3>
-                    <p class="text-gray-600 dark:text-gray-400">{{ page_data.problem_1_subtext }}</p>
+    <section class="container mx-auto py-12 px-4 md:px-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Problem 1 Card -->
+            <div class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-3xl flex flex-col items-start space-y-4 aspect-square">
+                <div class="w-12 h-12 flex items-center justify-center text-primary">
+                    {% if page_data.problem_1_icon %}
+                        <i data-lucide="{{ page_data.problem_1_icon }}" class="w-8 h-8"></i>
+                    {% endif %}
                 </div>
-                <div class="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-                    <div class="text-blue-500 mb-4">{% comment %} ICON: {{ page_data.problem_2_icon }} {% endcomment %}</div>
-                    <h3 class="text-xl font-bold mb-2">{{ page_data.problem_2_title }}</h3>
-                    <p class="text-gray-600 dark:text-gray-400">{{ page_data.problem_2_subtext }}</p>
+                <h3 class="text-xl font-semibold text-primary pt-2">{{ page_data.problem_1_title }}</h3>
+                <p class="text-neutral-600 dark:text-neutral-300">{{ page_data.problem_1_subtext }}</p>
+            </div>
+            <!-- Problem 2 Card -->
+            <div class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-3xl flex flex-col items-start space-y-4 aspect-square">
+                <div class="w-12 h-12 flex items-center justify-center text-primary">
+                    {% if page_data.problem_2_icon %}
+                        <i data-lucide="{{ page_data.problem_2_icon }}" class="w-8 h-8"></i>
+                    {% endif %}
                 </div>
-                <div class="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-                    <div class="text-blue-500 mb-4">{% comment %} ICON: {{ page_data.problem_3_icon }} {% endcomment %}</div>
-                    <h3 class="text-xl font-bold mb-2">{{ page_data.problem_3_title }}</h3>
-                    <p class="text-gray-600 dark:text-gray-400">{{ page_data.problem_3_subtext }}</p>
+                <h3 class="text-xl font-semibold text-primary pt-2">{{ page_data.problem_2_title }}</h3>
+                <p class="text-neutral-600 dark:text-neutral-300">{{ page_data.problem_2_subtext }}</p>
+            </div>
+            <!-- Problem 3 Card -->
+            <div class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-3xl flex flex-col items-start space-y-4 aspect-square">
+                <div class="w-12 h-12 flex items-center justify-center text-primary">
+                    {% if page_data.problem_3_icon %}
+                        <i data-lucide="{{ page_data.problem_3_icon }}" class="w-8 h-8"></i>
+                    {% endif %}
                 </div>
+                <h3 class="text-xl font-semibold text-primary pt-2">{{ page_data.problem_3_title }}</h3>
+                <p class="text-neutral-600 dark:text-neutral-300">{{ page_data.problem_3_subtext }}</p>
             </div>
         </div>
     </section>
 
     <!-- Feature 1 Section -->
-    <section class="py-20 bg-white dark:bg-gray-800">
-        <div class="container mx-auto px-4">
-            <div class="text-center mb-12">
-                <h2 class="text-3xl font-bold">{{ page_data.feature_1_title }}</h2>
-                <p class="mt-2 text-lg text-gray-600 dark:text-gray-400">{{ page_data.feature_1_title_desc }}</p>
-            </div>
-            <div class="grid md:grid-cols-2 gap-12 items-center">
+    <section class="container mx-auto py-16 px-4 md:px-6">
+        <div class="grid md:grid-cols-2 gap-24 items-center">
+            <!-- Text Content -->
+            <div class="space-y-12">
                 <div>
-                    <h4 class="text-xl font-semibold mb-2">{{ page_data.feature_1_subtit_1_title }}</h4>
-                    <p class="text-gray-600 dark:text-gray-400 mb-6">{{ page_data.feature_1_subtit_1_desc }}</p>
-                    <h4 class="text-xl font-semibold mb-2">{{ page_data.feature_1_subtit_2_title }}</h4>
-                    <p class="text-gray-600 dark:text-gray-400">{{ page_data.feature_1_subtit_2_desc }}</p>
+                    <h2 class="text-4xl font-bold text-primary leading-tight">{{ page_data.feature_1_title }}</h2>
+                    <p class="mt-4 text-lg text-neutral-600 dark:text-neutral-300">{{ page_data.feature_1_title_desc }}</p>
                 </div>
-                <div class="bg-gray-200 dark:bg-gray-700 h-64 rounded-lg flex items-center justify-center">
-                    <span class="text-gray-500">Image Placeholder</span>
+                <div class="space-y-8">
+                    <!-- Sub-feature 1 -->
+                    <div class="flex items-start gap-4">
+                        <div class="bg-primary/10 p-3 rounded-lg flex-shrink-0">
+                            {% if page_data.feature_1_subtit_1_icon %}
+                                <i data-lucide="{{ page_data.feature_1_subtit_1_icon }}" class="w-6 h-6 text-primary"></i>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-primary text-lg">{{ page_data.feature_1_subtit_1_title }}</h3>
+                            <p class="mt-2 text-neutral-600 dark:text-neutral-300">{{ page_data.feature_1_subtit_1_desc }}</p>
+                        </div>
+                    </div>
+                    <!-- Sub-feature 2 -->
+                    <div class="flex items-start gap-4">
+                        <div class="bg-primary/10 p-3 rounded-lg flex-shrink-0">
+                            {% if page_data.feature_1_subtit_2_icon %}
+                                <i data-lucide="{{ page_data.feature_1_subtit_2_icon }}" class="w-6 h-6 text-primary"></i>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-primary text-lg">{{ page_data.feature_1_subtit_2_title }}</h3>
+                            <p class="mt-2 text-neutral-600 dark:text-neutral-300">{{ page_data.feature_1_subtit_2_desc }}</p>
+                        </div>
+                    </div>
                 </div>
+            </div>
+            <!-- Image -->
+            <div>
+                {% if page_data.feature_1_image %}
+                    <img src="{{ page_data.feature_1_image.url }}" alt="{{ page_data.feature_1_title }}" class="rounded-3xl aspect-square w-full object-cover">
+                {% else %}
+                    <div class="bg-neutral-100 dark:bg-neutral-800/50 rounded-3xl aspect-square w-full"></div>
+                {% endif %}
             </div>
         </div>
     </section>
 
     <!-- Feature 2 Section -->
-    <section class="py-20">
-        <div class="container mx-auto px-4">
-            <div class="text-center mb-12">
-                <h2 class="text-3xl font-bold">{{ page_data.feature_2_title }}</h2>
-                <p class="mt-2 text-lg text-gray-600 dark:text-gray-400">{{ page_data.feature_2_title_desc }}</p>
+    <section class="container mx-auto py-16 px-4 md:px-6">
+        <div class="grid md:grid-cols-2 gap-24 items-center">
+            <!-- Image -->
+            <div class="order-last md:order-first">
+                {% if page_data.feature_2_image %}
+                    <img src="{{ page_data.feature_2_image.url }}" alt="{{ page_data.feature_2_title }}" class="rounded-3xl aspect-square w-full object-cover">
+                {% else %}
+                    <div class="bg-neutral-100 dark:bg-neutral-800/50 rounded-3xl aspect-square w-full"></div>
+                {% endif %}
             </div>
-            <div class="grid md:grid-cols-2 gap-12 items-center">
-                <div class="bg-gray-200 dark:bg-gray-700 h-64 rounded-lg flex items-center justify-center order-last md:order-first">
-                    <span class="text-gray-500">Image Placeholder</span>
-                </div>
+            <!-- Text Content -->
+            <div class="space-y-12">
                 <div>
-                    <h4 class="text-xl font-semibold mb-2">{{ page_data.feature_2_subtit_1_title }}</h4>
-                    <p class="text-gray-600 dark:text-gray-400 mb-6">{{ page_data.feature_2_subtit_1_desc }}</p>
-                    <h4 class="text-xl font-semibold mb-2">{{ page_data.feature_2_subtit_2_title }}</h4>
-                    <p class="text-gray-600 dark:text-gray-400">{{ page_data.feature_2_subtit_2_desc }}</p>
+                    <h2 class="text-4xl font-bold text-primary leading-tight">{{ page_data.feature_2_title }}</h2>
+                    <p class="mt-4 text-lg text-neutral-600 dark:text-neutral-300">{{ page_data.feature_2_title_desc }}</p>
                 </div>
+                <div class="space-y-8">
+                    <!-- Sub-feature 1 -->
+                    <div class="flex items-start gap-4">
+                        <div class="bg-primary/10 p-3 rounded-lg flex-shrink-0">
+                            {% if page_data.feature_2_subtit_1_icon %}
+                                <i data-lucide="{{ page_data.feature_2_subtit_1_icon }}" class="w-6 h-6 text-primary"></i>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-primary text-lg">{{ page_data.feature_2_subtit_1_title }}</h3>
+                            <p class="mt-2 text-neutral-600 dark:text-neutral-300">{{ page_data.feature_2_subtit_1_desc }}</p>
+                        </div>
+                    </div>
+                    <!-- Sub-feature 2 -->
+                    <div class="flex items-start gap-4">
+                        <div class="bg-primary/10 p-3 rounded-lg flex-shrink-0">
+                            {% if page_data.feature_2_subtit_2_icon %}
+                                <i data-lucide="{{ page_data.feature_2_subtit_2_icon }}" class="w-6 h-6 text-primary"></i>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-primary text-lg">{{ page_data.feature_2_subtit_2_title }}</h3>
+                            <p class="mt-2 text-neutral-600 dark:text-neutral-300">{{ page_data.feature_2_subtit_2_desc }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA Section -->
+    <section class="container mx-auto py-16 px-4 md:px-6">
+        <div class="bg-primary/10 dark:bg-primary/20 rounded-3xl p-8 md:p-16 text-center">
+            <h2 class="text-4xl font-bold text-primary">Ready to transform your advertising?</h2>
+            <p class="mt-4 text-lg text-neutral-600 dark:text-neutral-300 max-w-2xl mx-auto">
+                Join thousands of marketers who are creating high-converting ads with AI. Start your free trial today.
+            </p>
+            <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a href="{% url 'account_signup' %}" class="inline-flex items-center justify-center rounded-lg px-8 py-4 text-lg font-medium text-white shadow-sm" style="background-color: #5C67F2;">
+                    Start Free Trial
+                </a>
+                <form method="post" action="{% provider_login_url 'google' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="inline-flex items-center justify-center rounded-lg border border-neutral-300 bg-white px-8 py-4 text-lg font-medium text-neutral-700 hover:bg-neutral-100 w-full sm:w-auto">
+                        <img src="{% static 'images/socialauth/google-logo.svg' %}" alt="Google" class="h-5 w-5 mr-3">
+                        Login with Google
+                    </button>
+                </form>
             </div>
         </div>
     </section>
