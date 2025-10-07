@@ -224,6 +224,18 @@ function AppSidebarLayout() {
     window.setSidebarComponent = setSidebarComponent;
     window.clearSidebarComponent = () => setSidebarComponent(null);
 
+    // Move Django HTML content to sidebar-page-content (same pattern as base/index.jsx)
+    const djangoContent = document.getElementById('page-content');
+    const mountPoint = document.getElementById('sidebar-page-content');
+
+    if (djangoContent && mountPoint && djangoContent.innerHTML.trim()) {
+      // Solo mover si es contenido Django (no React)
+      if (!window.isReactPage) {
+        mountPoint.innerHTML = djangoContent.innerHTML;
+        djangoContent.style.display = 'none';
+      }
+    }
+
     return () => {
       delete window.setAppHeader;
       delete window.clearAppHeader;
