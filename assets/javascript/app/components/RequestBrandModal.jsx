@@ -80,9 +80,9 @@ function RequestBrandModal({ isOpen, onOpenChange }) {
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Submit a new brand</DialogTitle>
+          <DialogTitle>Request a new Advertiser</DialogTitle>
           <DialogDescription>
-            Submit an Ad that's not in our library and we'll add it
+            Request a new Advertiser that's not in our library. We'll add it for you.
           </DialogDescription>
         </DialogHeader>
         
@@ -102,7 +102,7 @@ function RequestBrandModal({ isOpen, onOpenChange }) {
               disabled={requestStatus.loading || requestStatus.success}
             />
             <p className="text-xs text-muted-foreground">
-              To get Ad URLs, open the ad in{' '}
+              To get an Advertiser's Ads, find it in the{' '}
               <a 
                 href="https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=ALL&is_targeted_country=false&media_type=image_and_meme"
                 target="_blank"
@@ -111,20 +111,20 @@ function RequestBrandModal({ isOpen, onOpenChange }) {
               >
                 Facebook Ad Library
               </a>
-              , TikTok Creative Center, or Google Ads Transparency Center and copy the link from the address bar.
+              , and copy the URL from the address bar.
             </p>
           </div>
           
           {/* Status messages */}
           {requestStatus.error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm">
+            <div className="p-3 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-md text-red-600 dark:text-red-400 text-sm">
               {requestStatus.error}
             </div>
           )}
           
           {requestStatus.success && (
-            <div className="p-3 bg-green-50 border border-green-200 rounded-md text-green-600 text-sm">
-              {t('request_brand.success', 'Your request has been submitted successfully. We will add this brand to our library soon.')}
+            <div className="p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-md text-green-600 dark:text-green-400 text-sm">
+              {t('request_brand.success', 'Your request has been submitted successfully. We will add this advertiser to our library soon.')}
             </div>
           )}
         </div>
