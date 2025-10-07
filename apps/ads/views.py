@@ -4059,28 +4059,40 @@ def get_brand_details(request, brand_id):
 def marketing_page_view(request, slug, path_prefix=''):
     """
     Renders a dynamic marketing page based on the slug and optional path prefix.
+    If not found, delegates to Wagtail.
     Supports URLs like:
     - /slug/ (no prefix)
     - /services/slug/ (with prefix)
     """
+    try:
+        router_entry = MarketingPagesRouter.objects.get(slug=slug, path_prefix=path_prefix)
+        page_data = router_entry.content_object
+        
+        # Check if the page is published
+        if hasattr(page_data, 'status') and page_data.status == 'PUBLISHED':
+            template_name = page_data.html_template
+            context = {
+                'page_data': page_data,
+                'full_path': router_entry.get_full_path()
+            }
+            return render(request, template_name, context)
+    except MarketingPagesRouter.DoesNotExist:
+        pass
+    
+    # If marketing page not found or not published, try Wagtail
+    from wagtail.views import serve as wagtail_serve
     from django.http import Http404
     
     try:
-        router_entry = MarketingPagesRouter.objects.get(slug=slug, path_prefix=path_prefix)
-    except MarketingPagesRouter.DoesNotExist:
-        raise Http404("Marketing page not found")
-    
-    page_data = router_entry.content_object
-    
-    # Check if the page is published
-    if not hasattr(page_data, 'status') or page_data.status != 'PUBLISHED':
+        # Reconstruct the path for Wagtail
+        if path_prefix:
+            wagtail_path = f"{path_prefix}/{slug}/"
+        else:
+            wagtail_path = f"{slug}/"
+        
+        # Call Wagtail's serve view
+        return wagtail_serve(request, wagtail_path)
+    except Http404:
+        # Neither marketing page nor Wagtail page found
         raise Http404("Page not found")
-
-    template_name = page_data.html_template
-    context = {
-        'page_data': page_data,
-        'full_path': router_entry.get_full_path()
-    }
-    
-    return render(request, template_name, context)
 
