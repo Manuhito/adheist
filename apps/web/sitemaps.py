@@ -49,4 +49,9 @@ class MarketingPagesSitemap(sitemaps.Sitemap):
         """
         Returns the URL for a given item.
         """
+        if item.path_prefix:
+            return reverse('marketing_page_view_with_prefix', kwargs={
+                'path_prefix': item.path_prefix,
+                'slug': item.slug
+            })
         return reverse('marketing_page_view', kwargs={'slug': item.slug})

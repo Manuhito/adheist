@@ -4056,23 +4056,30 @@ def get_brand_details(request, brand_id):
             'error': str(e)
         }, status=500)
 
-def marketing_page_view(request, slug):
+def marketing_page_view(request, slug, path_prefix=''):
     """
-    Renders a dynamic marketing page based on the slug.
+    Renders a dynamic marketing page based on the slug and optional path prefix.
+    Supports URLs like:
+    - /slug/ (no prefix)
+    - /services/slug/ (with prefix)
     """
-    # Find the router entry for the given slug.
-    router_entry = get_object_or_404(MarketingPagesRouter, slug=slug)
+    from django.http import Http404
+    
+    try:
+        router_entry = MarketingPagesRouter.objects.get(slug=slug, path_prefix=path_prefix)
+    except MarketingPagesRouter.DoesNotExist:
+        raise Http404("Marketing page not found")
     
     page_data = router_entry.content_object
     
     # Check if the page is published
     if not hasattr(page_data, 'status') or page_data.status != 'PUBLISHED':
-        from django.http import Http404
         raise Http404("Page not found")
 
     template_name = page_data.html_template
     context = {
-        'page_data': page_data
+        'page_data': page_data,
+        'full_path': router_entry.get_full_path()
     }
     
     return render(request, template_name, context)

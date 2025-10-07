@@ -553,14 +553,22 @@ class BrandAssetExtractionAdmin(admin.ModelAdmin):
 
 @admin.register(AdAgencyTemplate)
 class AdAgencyTemplateAdmin(admin.ModelAdmin):
-    list_display = ('hero_title', 'slug', 'status', 'created_at', 'updated_at')
-    list_filter = ('status',)
+    list_display = ('hero_title', 'get_full_url', 'status', 'created_at', 'updated_at')
+    list_filter = ('status', 'path_prefix')
     search_fields = ('hero_title', 'slug', 'meta_title')
     prepopulated_fields = {'slug': ('hero_title',)}
 
+    def get_full_url(self, obj):
+        """Display the full URL path in the admin list"""
+        if obj.path_prefix:
+            return f"/{obj.path_prefix}/{obj.slug}/"
+        return f"/{obj.slug}/"
+    get_full_url.short_description = 'URL Path'
+
     fieldsets = (
         ('Page Control & SEO', {
-            'fields': ('status', 'slug', 'meta_title', 'meta_description')
+            'fields': ('status', 'path_prefix', 'slug', 'meta_title', 'meta_description'),
+            'description': 'Path prefix is optional. Examples: "services", "products", "solutions". Leave empty for root level.'
         }),
         ('Hero Section', {
             'fields': ('hero_title', 'hero_description', 'hero_image')

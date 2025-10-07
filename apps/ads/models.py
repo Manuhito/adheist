@@ -1246,13 +1246,28 @@ class MarketingPagesRouter(BaseModel):
     It holds a unique slug and a generic foreign key to the actual page content model.
     This allows having different page templates/models under a single URL structure.
     """
-    slug = models.SlugField(unique=True, max_length=255)
+    path_prefix = models.SlugField(
+        max_length=100,
+        default='',
+        blank=True,
+        help_text="Optional path prefix for the URL (e.g., 'services', 'products'). Leave empty for root level."
+    )
+    slug = models.SlugField(max_length=255)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
 
+    class Meta:
+        unique_together = [['path_prefix', 'slug']]
+        
+    def get_full_path(self):
+        """Returns the complete URL path"""
+        if self.path_prefix:
+            return f"{self.path_prefix}/{self.slug}/"
+        return f"{self.slug}/"
+
     def __str__(self):
-        return self.slug
+        return self.get_full_path()
 
 class AdAgencyTemplate(BaseModel):
     STATUS_DRAFT = 'DRAFT'
@@ -1263,7 +1278,13 @@ class AdAgencyTemplate(BaseModel):
     ]
 
     # Meta and control fields
-    slug = models.SlugField(max_length=255, help_text="URL-friendly identifier. Must be unique.")
+    path_prefix = models.SlugField(
+        max_length=100,
+        default='',
+        blank=True,
+        help_text="Optional URL path prefix (e.g., 'services' for /services/slug/). Leave empty for root level."
+    )
+    slug = models.SlugField(max_length=255, help_text="URL-friendly identifier. Must be unique within the same path prefix.")
     meta_title = models.CharField(max_length=255)
     meta_description = models.TextField(blank=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=STATUS_DRAFT)
@@ -1321,14 +1342,22 @@ class AdAgencyTemplate(BaseModel):
         # This is wrapped in a transaction to ensure atomicity
         from django.db import transaction
         with transaction.atomic():
-            # If the slug is being changed, we need to check for uniqueness before saving.
+            # Check for uniqueness of path_prefix + slug combination
             if self.pk is not None:
                 original = AdAgencyTemplate.objects.get(pk=self.pk)
-                if original.slug != self.slug:
-                    if MarketingPagesRouter.objects.filter(slug=self.slug).exclude(object_id=self.pk, content_type=ContentType.objects.get_for_model(self)).exists():
-                        raise ValidationError(f"The slug '{self.slug}' is already in use. Please choose a different one.")
-            elif MarketingPagesRouter.objects.filter(slug=self.slug).exists():
-                 raise ValidationError(f"The slug '{self.slug}' is already in use. Please choose a different one.")
+                if original.slug != self.slug or original.path_prefix != self.path_prefix:
+                    if MarketingPagesRouter.objects.filter(
+                        slug=self.slug, 
+                        path_prefix=self.path_prefix
+                    ).exclude(
+                        object_id=self.pk, 
+                        content_type=ContentType.objects.get_for_model(self)
+                    ).exists():
+                        full_path = f"{self.path_prefix}/{self.slug}" if self.path_prefix else self.slug
+                        raise ValidationError(f"The path '{full_path}' is already in use. Please choose a different slug or path prefix.")
+            elif MarketingPagesRouter.objects.filter(slug=self.slug, path_prefix=self.path_prefix).exists():
+                full_path = f"{self.path_prefix}/{self.slug}" if self.path_prefix else self.slug
+                raise ValidationError(f"The path '{full_path}' is already in use. Please choose a different slug or path prefix.")
 
             super().save(*args, **kwargs)
 
@@ -1336,11 +1365,12 @@ class AdAgencyTemplate(BaseModel):
             router_entry, created = MarketingPagesRouter.objects.get_or_create(
                 content_type=content_type,
                 object_id=self.pk,
-                defaults={'slug': self.slug}
+                defaults={'slug': self.slug, 'path_prefix': self.path_prefix}
             )
 
-            if not created and router_entry.slug != self.slug:
+            if not created and (router_entry.slug != self.slug or router_entry.path_prefix != self.path_prefix):
                 router_entry.slug = self.slug
+                router_entry.path_prefix = self.path_prefix
                 router_entry.save()
 
     def delete(self, *args, **kwargs):

@@ -87,7 +87,9 @@ urlpatterns = [
     # This will automatically handle:
     # - /blog/ -> blog index page
     # - /blog/post-slug/ -> individual blog posts
-    # Dynamic marketing pages URL - MUST be before Wagtail's catch-all
+    # Dynamic marketing pages URLs - MUST be before Wagtail's catch-all
+    # With optional path prefix (e.g., /services/slug/, /products/slug/, or just /slug/)
     path("<slug:slug>/", ads_views.marketing_page_view, name="marketing_page_view"),
+    path("<str:path_prefix>/<slug:slug>/", ads_views.marketing_page_view, name="marketing_page_view_with_prefix"),
     path('', include(wagtail_urls)),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
