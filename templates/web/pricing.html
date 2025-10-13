@@ -9,7 +9,7 @@
   // Pass pricing data to the React component
   window.__PRICING_DATA__ = {{ pricing_data | safe }};
 </script>
-<script src="{% static 'js/pricing-bundle.js' %}"></script>
+<script src="{% static 'js/pricing-bundle.js' %}?v={{ STATIC_VERSION }}"></script>
 {% endblock %}
 
 {% block content %}

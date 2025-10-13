@@ -21,7 +21,7 @@
     brands: {{ brands_data|safe }}
   };
 </script>
-<script src="{% static 'js/brands-page-bundle.js' %}"></script>
+<script src="{% static 'js/brands-page-bundle.js' %}?v={{ STATIC_VERSION }}"></script>
 {% endblock %}
 
 {% block app %}

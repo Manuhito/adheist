@@ -10,7 +10,7 @@
   window.__BLOG_DATA__ = {{ blog_posts|serialize_blog_posts|safe }};
 </script>
 {% endwith %}
-<script src="{% static 'js/blog-bundle.js' %}"></script>
+<script src="{% static 'js/blog-bundle.js' %}?v={{ STATIC_VERSION }}"></script>
 {% endblock %}
 
 {% block content %}

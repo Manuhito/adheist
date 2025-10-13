@@ -21,7 +21,7 @@
     myAds: {{ my_ads_data|safe }}
   };
 </script>
-<script src="{% static 'js/my-ads-page-bundle.js' %}"></script>
+<script src="{% static 'js/my-ads-page-bundle.js' %}?v={{ STATIC_VERSION }}"></script>
 {% endblock %}
 
 {% block app %}

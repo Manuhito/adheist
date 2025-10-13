@@ -5,6 +5,6 @@
 
 {% block content %}
 <div id="error-404-root"></div>
-<script src="{% static 'js/error-pages/404-bundle.js' %}"></script>
+<script src="{% static 'js/error-pages/404-bundle.js' %}?v={{ STATIC_VERSION }}"></script>
 {% endblock %}
 

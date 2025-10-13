@@ -10,7 +10,7 @@
 </section>
 {% endblock %}
 {% block page_js %}
-<script src="{% static 'js/app-bundle.js' %}" defer></script>
+<script src="{% static 'js/app-bundle.js' %}?v={{ STATIC_VERSION }}" defer></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     const App = SiteJS.app;

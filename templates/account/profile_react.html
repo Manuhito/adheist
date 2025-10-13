@@ -15,7 +15,7 @@
   // Pass data to React component
   window.__PROFILE_DATA__ = JSON.parse('{{ profile_data|escapejs }}');
 </script>
-<script src="{% static 'js/profile-bundle.js' %}"></script>
+<script src="{% static 'js/profile-bundle.js' %}?v={{ STATIC_VERSION }}"></script>
 {% endblock %}
 
 {% block app %}

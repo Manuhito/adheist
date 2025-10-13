@@ -10,5 +10,5 @@
   // Pass FAQ data to the React component
   window.__FAQ_DATA__ = {{ faq_data|safe }};
 </script>
-<script src="{% static 'js/landing-bundle.js' %}"></script>
+<script src="{% static 'js/landing-bundle.js' %}?v={{ STATIC_VERSION }}"></script>
 {% endblock %}

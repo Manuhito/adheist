@@ -32,7 +32,7 @@
   window.__USER_CREDITS__ = null;
   {% endif %}
 </script>
-<script src="{% static 'js/app-sidebar-layout-bundle.js' %}" defer></script>
+<script src="{% static 'js/app-sidebar-layout-bundle.js' %}?v={{ STATIC_VERSION }}" defer></script>
 {% endblock %}
 
 {% block body %}

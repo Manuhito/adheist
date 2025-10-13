@@ -613,3 +613,11 @@ def user_credits(request):
     return {
         "user_credits": None
     }
+
+
+def static_version(request):
+    """Add static version to context for cache busting"""
+    from django.conf import settings
+    return {
+        'STATIC_VERSION': settings.STATIC_VERSION
+    }

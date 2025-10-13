@@ -21,7 +21,7 @@
     containers: {{ containers_data|safe }}
   };
 </script>
-<script src="{% static 'js/assets-page-bundle.js' %}"></script>
+<script src="{% static 'js/assets-page-bundle.js' %}?v={{ STATIC_VERSION }}"></script>
 {% endblock %}
 
 {% block app %}

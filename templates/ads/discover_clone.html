@@ -41,7 +41,7 @@
     isStaff: {% if request.user.is_staff %}true{% else %}false{% endif %}
   };
 </script>
-<script src="{% static 'js/discover-clone-bundle.js' %}"></script>
+<script src="{% static 'js/discover-clone-bundle.js' %}?v={{ STATIC_VERSION }}"></script>
 {% endblock %}
 
 {% block app %}

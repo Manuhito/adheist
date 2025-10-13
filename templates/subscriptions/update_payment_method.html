@@ -11,7 +11,7 @@
     active_tab: "{{ active_tab }}"
   };
 </script>
-<script src="{% static 'js/update-payment-method-bundle.js' %}" defer></script>
+<script src="{% static 'js/update-payment-method-bundle.js' %}?v={{ STATIC_VERSION }}" defer></script>
 {% endblock %}
 
 {% block app %}

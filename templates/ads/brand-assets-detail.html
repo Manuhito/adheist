@@ -23,7 +23,7 @@
     brandName: "{{ brand_name }}"
   };
 </script>
-<script src="{% static 'js/brand-assets-detail-bundle.js' %}"></script>
+<script src="{% static 'js/brand-assets-detail-bundle.js' %}?v={{ STATIC_VERSION }}"></script>
 {% endblock %}
 
 {% block app %}
