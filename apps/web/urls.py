@@ -22,4 +22,5 @@ urlpatterns = [
         name="shadcn",
     ),
     path("pricing/", views.pricing_page, name="pricing_page"),
+    path("ngo/", TemplateView.as_view(template_name="marketing_pages/ngo.html"), name="ngo_page"),
 ]
