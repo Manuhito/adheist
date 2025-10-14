@@ -1,0 +1,308 @@
+{% extends "web/base.html" %}
+{% load static socialaccount %}
+
+{% block page_title %}AI Ad Generator for Law Firms | Ad Heist{% endblock page_title %}
+
+{% block meta_description %}
+<meta name="description" content="AI ad generator for law firms creates professional ads that attract quality clients and build trust. Generate compliant legal advertising in minutes.">
+{% endblock meta_description %}
+
+{% block page_head %}
+    <style>
+        /* Page-specific styles */
+    </style>
+{% endblock page_head %}
+
+{% block content %}
+<div class="text-gray-800 dark:text-gray-200">
+
+    <!-- Hero Section -->
+    <section class="container mx-auto py-12 px-4 md:px-6">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-12 items-center">
+            <!-- Left Column: Text Content -->
+            <div class="md:col-span-3 text-left">
+                <h1 class="text-5xl lg:text-6xl font-bold tracking-tight text-neutral-800 dark:text-white leading-tight lg:leading-snug">
+                    AI Ad Generator for Law Firms
+                </h1>
+                <p class="mt-6 text-lg text-neutral-600 dark:text-neutral-300 max-w-2xl">
+                    Create professional legal ads that attract quality clients and establish credibility.
+                </p>
+                <div class="mt-8 flex flex-col sm:flex-row items-center justify-start gap-4">
+                    <a href="{% url 'account_signup' %}" class="inline-flex items-center justify-center rounded-lg px-6 py-3 text-base font-medium text-white shadow-sm" style="background-color: #5C67F2;">
+                        Start Free Trial
+                    </a>
+                    <form method="post" action="{% provider_login_url 'google' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="inline-flex items-center justify-center rounded-lg border border-neutral-300 bg-white px-6 py-3 text-base font-medium text-neutral-700 hover:bg-neutral-100 w-full sm:w-auto">
+                            <img src="{% static 'images/socialauth/google-logo.svg' %}" alt="Google" class="h-5 w-5 mr-3">
+                            Login with Google
+                        </button>
+                    </form>
+                </div>
+                <div class="mt-8 flex flex-col items-start">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path></svg>
+                        <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path></svg>
+                        <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path></svg>
+                        <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path></svg>
+                        <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path></svg>
+                        <span class="ml-2 text-base font-medium text-neutral-800 dark:text-white">5.0</span>
+                    </div>
+                    <p class="mt-2 text-sm text-neutral-500 dark:text-neutral-400">From 80+ reviews</p>
+                </div>
+            </div>
+            <!-- Right Column: Image -->
+            <div class="md:col-span-2">
+                <div class="bg-gray-200 dark:bg-gray-700 h-96 rounded-lg flex items-center justify-center">
+                    <span class="text-gray-500">Image Placeholder</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Claim Section -->
+    <section class="container mx-auto py-12 px-4 md:px-6 text-center">
+        <div class="max-w-3xl mx-auto">
+            <h2 class="text-4xl font-bold tracking-tight text-primary sm:text-5xl">
+                Generic Ads Fail to Attract Quality Legal Clients
+            </h2>
+            <p class="mt-6 text-lg leading-8 text-neutral-600 dark:text-neutral-300">
+                Poor advertising wastes your marketing budget on unqualified leads. Ads that lack professionalism damage your reputation and reduce case intake.
+            </p>
+        </div>
+    </section>
+
+    <!-- Problems Section -->
+    <section class="container mx-auto py-12 px-4 md:px-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Problem 1 Card -->
+            <div class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-3xl flex flex-col items-start space-y-4 aspect-square">
+                <div class="w-12 h-12 flex items-center justify-center text-primary">
+                    <i data-lucide="users" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-primary pt-2">Attract Quality Clients</h3>
+                <p class="text-neutral-600 dark:text-neutral-300">Reach people who need your legal services and can afford representation.</p>
+            </div>
+            <!-- Problem 2 Card -->
+            <div class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-3xl flex flex-col items-start space-y-4 aspect-square">
+                <div class="w-12 h-12 flex items-center justify-center text-primary">
+                    <i data-lucide="shield-check" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-primary pt-2">Build Trust and Credibility</h3>
+                <p class="text-neutral-600 dark:text-neutral-300">Communicate expertise and professionalism in every campaign.</p>
+            </div>
+            <!-- Problem 3 Card -->
+            <div class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-3xl flex flex-col items-start space-y-4 aspect-square">
+                <div class="w-12 h-12 flex items-center justify-center text-primary">
+                    <i data-lucide="scale" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-primary pt-2">Maintain Ethical Compliance</h3>
+                <p class="text-neutral-600 dark:text-neutral-300">Create ads that follow bar association advertising rules.</p>
+            </div>
+            <!-- Problem 4 Card -->
+            <div class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-3xl flex flex-col items-start space-y-4 aspect-square">
+                <div class="w-12 h-12 flex items-center justify-center text-primary">
+                    <i data-lucide="briefcase" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-primary pt-2">Increase Case Intake</h3>
+                <p class="text-neutral-600 dark:text-neutral-300">Generate more consultations from prospects ready to hire counsel.</p>
+            </div>
+            <!-- Problem 5 Card -->
+            <div class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-3xl flex flex-col items-start space-y-4 aspect-square">
+                <div class="w-12 h-12 flex items-center justify-center text-primary">
+                    <i data-lucide="target" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-primary pt-2">Reach the Right Practice Areas</h3>
+                <p class="text-neutral-600 dark:text-neutral-300">Target specific legal needs with relevant messaging.</p>
+            </div>
+            <!-- Problem 6 Card -->
+            <div class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-3xl flex flex-col items-start space-y-4 aspect-square">
+                <div class="w-12 h-12 flex items-center justify-center text-primary">
+                    <i data-lucide="dollar-sign" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-primary pt-2">Reduce Cost Per Lead</h3>
+                <p class="text-neutral-600 dark:text-neutral-300">Lower acquisition costs while improving lead quality.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature 1 Section -->
+    <section class="container mx-auto py-16 px-4 md:px-6">
+        <div class="grid md:grid-cols-2 gap-24 items-center">
+            <!-- Text Content -->
+            <div class="space-y-12">
+                <div>
+                    <h2 class="text-4xl font-bold text-primary leading-tight">See What Works in Legal Advertising</h2>
+                    <p class="mt-4 text-lg text-neutral-600 dark:text-neutral-300">Study campaigns from successful law firms before creating your own professional ads.</p>
+                </div>
+                <div class="space-y-8">
+                    <!-- Sub-feature 1 -->
+                    <div class="flex items-start gap-4">
+                        <div class="bg-primary/10 p-3 rounded-lg flex-shrink-0">
+                            <i data-lucide="search" class="w-6 h-6 text-primary"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-primary text-lg">Search Ads by Practice Area</h3>
+                            <p class="mt-2 text-neutral-600 dark:text-neutral-300">Browse real ads from firms in personal injury, family law, criminal defense, and other specialties.</p>
+                        </div>
+                    </div>
+                    <!-- Sub-feature 2 -->
+                    <div class="flex items-start gap-4">
+                        <div class="bg-primary/10 p-3 rounded-lg flex-shrink-0">
+                            <i data-lucide="lightbulb" class="w-6 h-6 text-primary"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-primary text-lg">Learn Before You Launch</h3>
+                            <p class="mt-2 text-neutral-600 dark:text-neutral-300">See which messaging, imagery, and calls to action resonate with potential clients.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Image -->
+            <div>
+                <div class="bg-neutral-100 dark:bg-neutral-800/50 rounded-3xl aspect-square w-full"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature 2 Section -->
+    <section class="container mx-auto py-16 px-4 md:px-6">
+        <div class="grid md:grid-cols-2 gap-24 items-center">
+            <!-- Image -->
+            <div class="order-last md:order-first">
+                <div class="bg-neutral-100 dark:bg-neutral-800/50 rounded-3xl aspect-square w-full"></div>
+            </div>
+            <!-- Text Content -->
+            <div class="space-y-12">
+                <div>
+                    <h2 class="text-4xl font-bold text-primary leading-tight">Understands Your Firm</h2>
+                    <p class="mt-4 text-lg text-neutral-600 dark:text-neutral-300">Ad Heist learns your practice areas, tone, and values to create ads that reflect your legal expertise.</p>
+                </div>
+                <div class="space-y-8">
+                    <!-- Sub-feature 1 -->
+                    <div class="flex items-start gap-4">
+                        <div class="bg-primary/10 p-3 rounded-lg flex-shrink-0">
+                            <i data-lucide="scan" class="w-6 h-6 text-primary"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-primary text-lg">Smart Website Analysis</h3>
+                            <p class="mt-2 text-neutral-600 dark:text-neutral-300">Captures your professional tone, practice focus, and client testimonials.</p>
+                        </div>
+                    </div>
+                    <!-- Sub-feature 2 -->
+                    <div class="flex items-start gap-4">
+                        <div class="bg-primary/10 p-3 rounded-lg flex-shrink-0">
+                            <i data-lucide="message-circle" class="w-6 h-6 text-primary"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-primary text-lg">Voice Identification</h3>
+                            <p class="mt-2 text-neutral-600 dark:text-neutral-300">Applies your firm's unique voice to every ad, whether authoritative, compassionate, or aggressive.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature 3 Section -->
+    <section class="container mx-auto py-16 px-4 md:px-6">
+        <div class="grid md:grid-cols-2 gap-24 items-center">
+            <!-- Text Content -->
+            <div class="space-y-12">
+                <div>
+                    <h2 class="text-4xl font-bold text-primary leading-tight">Create Professional Ads Quickly</h2>
+                    <p class="mt-4 text-lg text-neutral-600 dark:text-neutral-300">Generate compliant ad variations and refine messaging to match different practice areas.</p>
+                </div>
+                <div class="space-y-8">
+                    <!-- Sub-feature 1 -->
+                    <div class="flex items-start gap-4">
+                        <div class="bg-primary/10 p-3 rounded-lg flex-shrink-0">
+                            <i data-lucide="zap" class="w-6 h-6 text-primary"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-primary text-lg">Instant Ad Generation</h3>
+                            <p class="mt-2 text-neutral-600 dark:text-neutral-300">Produce new ad concepts for case types, seasonal campaigns, or community outreach in seconds.</p>
+                        </div>
+                    </div>
+                    <!-- Sub-feature 2 -->
+                    <div class="flex items-start gap-4">
+                        <div class="bg-primary/10 p-3 rounded-lg flex-shrink-0">
+                            <i data-lucide="edit" class="w-6 h-6 text-primary"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-primary text-lg">Smart AI Editor</h3>
+                            <p class="mt-2 text-neutral-600 dark:text-neutral-300">Adjust visuals, copy, or calls to action instantly while maintaining professional standards.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Image -->
+            <div>
+                <div class="bg-neutral-100 dark:bg-neutral-800/50 rounded-3xl aspect-square w-full"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature 4 Section -->
+    <section class="container mx-auto py-16 px-4 md:px-6">
+        <div class="grid md:grid-cols-2 gap-24 items-center">
+            <!-- Image -->
+            <div class="order-last md:order-first">
+                <div class="bg-neutral-100 dark:bg-neutral-800/50 rounded-3xl aspect-square w-full"></div>
+            </div>
+            <!-- Text Content -->
+            <div class="space-y-12">
+                <div>
+                    <h2 class="text-4xl font-bold text-primary leading-tight">AI Built for Legal Practice Growth</h2>
+                    <p class="mt-4 text-lg text-neutral-600 dark:text-neutral-300">Ad Heist helps law firms attract quality clients while maintaining ethical standards and professional credibility.</p>
+                </div>
+                <div class="space-y-8">
+                    <!-- Sub-feature 1 -->
+                    <div class="flex items-start gap-4">
+                        <div class="bg-primary/10 p-3 rounded-lg flex-shrink-0">
+                            <i data-lucide="target" class="w-6 h-6 text-primary"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-primary text-lg">Optimized for Legal Services</h3>
+                            <p class="mt-2 text-neutral-600 dark:text-neutral-300">Generates ads designed to appeal to people seeking legal representation and counsel.</p>
+                        </div>
+                    </div>
+                    <!-- Sub-feature 2 -->
+                    <div class="flex items-start gap-4">
+                        <div class="bg-primary/10 p-3 rounded-lg flex-shrink-0">
+                            <i data-lucide="bar-chart" class="w-6 h-6 text-primary"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-primary text-lg">Smarter Insights</h3>
+                            <p class="mt-2 text-neutral-600 dark:text-neutral-300">Identifies what works in legal advertising and applies those insights to your campaigns.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA Section -->
+    <section class="container mx-auto py-16 px-4 md:px-6">
+        <div class="bg-primary/10 dark:bg-primary/20 rounded-3xl p-8 md:p-16 text-center">
+            <h2 class="text-4xl font-bold text-primary">Start Creating Better Ads Today</h2>
+            <p class="mt-4 text-lg text-neutral-600 dark:text-neutral-300 max-w-2xl mx-auto">
+                Join law firms using Ad Heist to attract quality clients and grow their practice.
+            </p>
+            <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a href="{% url 'account_signup' %}" class="inline-flex items-center justify-center rounded-lg px-8 py-4 text-lg font-medium text-white shadow-sm" style="background-color: #5C67F2;">
+                    Start Free Trial
+                </a>
+                <form method="post" action="{% provider_login_url 'google' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="inline-flex items-center justify-center rounded-lg border border-neutral-300 bg-white px-8 py-4 text-lg font-medium text-neutral-700 hover:bg-neutral-100 w-full sm:w-auto">
+                        <img src="{% static 'images/socialauth/google-logo.svg' %}" alt="Google" class="h-5 w-5 mr-3">
+                        Login with Google
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+</div>
+{% endblock %}

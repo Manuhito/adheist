@@ -26,4 +26,5 @@ urlpatterns = [
     path("pharmacy/", TemplateView.as_view(template_name="marketing_pages/pharmacy.html"), name="pharmacy_page"),
     path("saas/", TemplateView.as_view(template_name="marketing_pages/saas.html"), name="saas_page"),
     path("luxury/", TemplateView.as_view(template_name="marketing_pages/luxury.html"), name="luxury_page"),
+    path("lawyers/", TemplateView.as_view(template_name="marketing_pages/lawyers.html"), name="lawyers_page"),
 ]
