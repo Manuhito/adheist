@@ -24,4 +24,5 @@ urlpatterns = [
     path("pricing/", views.pricing_page, name="pricing_page"),
     path("ngo/", TemplateView.as_view(template_name="marketing_pages/ngo.html"), name="ngo_page"),
     path("pharmacy/", TemplateView.as_view(template_name="marketing_pages/pharmacy.html"), name="pharmacy_page"),
+    path("saas/", TemplateView.as_view(template_name="marketing_pages/saas.html"), name="saas_page"),
 ]
