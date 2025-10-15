@@ -64,12 +64,24 @@
     </div>
 
     <!-- Image Placeholders -->
-    <div class="relative mt-12 w-full max-w-6xl mx-auto">
+    <div class="relative w-full max-w-6xl mx-auto">
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 items-center">
-        <div class="bg-neutral-100 dark:bg-neutral-800/50 rounded-3xl h-64 md:h-80 transform md:-translate-y-1/4"></div>
-        <div class="bg-neutral-100 dark:bg-neutral-800/50 rounded-3xl h-64 md:h-80"></div>
-        <div class="bg-neutral-100 dark:bg-neutral-800/50 rounded-3xl h-64 md:h-80"></div>
-        <div class="bg-neutral-100 dark:bg-neutral-800/50 rounded-3xl h-64 md:h-80 transform md:-translate-y-1/4"></div>
+        <!-- Vertical image left -->
+        <div>
+          <img src="{% static 'images/landing/home-page-top-vertical-1.jpeg' %}" alt="Ad example 1" class="rounded-3xl w-full h-auto object-cover">
+        </div>
+        <!-- Square image 1 -->
+        <div>
+          <img src="{% static 'images/landing/home-page-top-square-1.jpeg' %}" alt="Ad example 2" class="rounded-3xl w-full h-auto object-cover">
+        </div>
+        <!-- Square image 2 -->
+        <div>
+          <img src="{% static 'images/landing/home-page-top-square-2.jpeg' %}" alt="Ad example 3" class="rounded-3xl w-full h-auto object-cover">
+        </div>
+        <!-- Vertical image right -->
+        <div>
+          <img src="{% static 'images/landing/home-page-top-vertical-2.jpeg' %}" alt="Ad example 4" class="rounded-3xl w-full h-auto object-cover">
+        </div>
       </div>
   </section>
 
@@ -188,7 +200,7 @@
       </div>
       <!-- Image Placeholder -->
       <div>
-        <div class="bg-neutral-100 dark:bg-neutral-800/50 rounded-3xl aspect-square w-full"></div>
+        <img src="{% static 'images/landing/2-brand-details.png' %}" alt="Brand Understanding" class="rounded-3xl w-full">
       </div>
     </div>
   </section>
@@ -198,7 +210,7 @@
     <div class="grid md:grid-cols-2 gap-24 items-center">
       <!-- Image Placeholder -->
       <div class="order-last md:order-first">
-        <div class="bg-neutral-100 dark:bg-neutral-800/50 rounded-3xl aspect-square w-full"></div>
+        <img src="{% static 'images/landing/3-creating-ads.jpg' %}" alt="Generate effective ads" class="rounded-3xl w-full">
       </div>
       <!-- Text Content -->
       <div class="space-y-12">
@@ -272,51 +284,11 @@
       </div>
       <!-- Image Placeholder -->
       <div>
-        <div class="bg-neutral-100 dark:bg-neutral-800/50 rounded-3xl aspect-square w-full"></div>
+        <img src="{% static 'images/landing/4-ad-details.png' %}" alt="Competitor Intelligence" class="rounded-3xl w-full">
       </div>
     </div>
   </section>
 
-  <!-- Scale Advertising Section -->
-  <section class="container mx-auto py-16 px-4 md:px-6">
-    <div class="grid md:grid-cols-2 gap-24 items-center">
-      <!-- Image Placeholder -->
-      <div class="order-last md:order-first">
-        <div class="bg-neutral-100 dark:bg-neutral-800/50 rounded-3xl aspect-square w-full"></div>
-      </div>
-      <!-- Text Content -->
-      <div class="space-y-12">
-        <div>
-          <h2 class="text-4xl font-bold text-primary leading-tight">Scale your advertising efforts effortlessly</h2>
-          <p class="mt-4 text-lg text-neutral-600 dark:text-neutral-300">No more bottlenecks in your creative team.
-            Create hundreds of high-converting ads to run A/B tests across different ad accounts and ad platforms in
-            minutes.</p>
-        </div>
-        <div class="space-y-8">
-          <div class="flex items-start gap-4">
-            <div class="bg-primary/10 p-3 rounded-lg flex-shrink-0">
-              <i data-lucide="zap" class="w-6 h-6 text-primary"></i>
-            </div>
-            <div>
-              <h3 class="font-semibold text-primary text-lg">Bulk Ad Generation</h3>
-              <p class="mt-2 text-neutral-600 dark:text-neutral-300">Generate hundreds of unique ads simultaneously for
-                A/B testing, custom dimensions, or entire product catalogs with our intuitive interface.</p>
-            </div>
-          </div>
-          <div class="flex items-start gap-4">
-            <div class="bg-primary/10 p-3 rounded-lg flex-shrink-0">
-              <i data-lucide="maximize-2" class="w-6 h-6 text-primary"></i>
-            </div>
-            <div>
-              <h3 class="font-semibold text-primary text-lg">Smart Adaptation Tool</h3>
-              <p class="mt-2 text-neutral-600 dark:text-neutral-300">Automatically resize and optimize your Meta Ads for
-                every platform with brand consistency and perfect formatting every time.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
   <!-- CTA Section -->
   <section class="container mx-auto py-12 px-4 md:px-6 text-center">
     <div class="flex flex-col items-center space-y-6">
