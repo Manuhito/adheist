@@ -51,12 +51,11 @@ def home(request):
         # Start with a hardcoded Free plan
         tiers = [{
             "name": "Free",
-            "description": "Basic features for individuals",
+            "description": "Perfect for testing Ad Heist with your first campaigns",
             "price": 0,
             "features": [
                 "Search 1M+ Ads Library",
-                "Unlimited Ads (With Feedback)",
-                "Unlimited Revisions (With Feedback)",
+                "Unlimited Ads (Providing Feedback)",
                 "20 BrandKits",
                 "5 GB of assets"
             ],
@@ -141,15 +140,14 @@ def pricing_page(request):
             "tiers": [
                 {
                     "name": free_plan_name,
-                    "description": "Basic features for individuals",
+                    "description": "Perfect for testing Ad Heist with your first campaigns",
                     "price": {
                         "monthly": 0,
                         "yearly": 0
                     },
                     "features": [
                         "Search 1M+ Ads Library",
-                        "Unlimited Ads (With Feedback)",
-                        "Unlimited Revisions (With Feedback)",
+                        "Unlimited Ads Generation (Providing Feedback)",
                         "20 BrandKits",
                         "5 GB of assets"
                     ],
