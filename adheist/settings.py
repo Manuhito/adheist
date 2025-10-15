@@ -602,4 +602,4 @@ PRICING_MODEL = env("PRICING_MODEL", default="STANDARD")
 
 # Static files versioning for cache busting
 # Increment this version number when deploying changes to force browser cache refresh
-STATIC_VERSION = env('STATIC_VERSION', default='1.0.0')
+STATIC_VERSION = env('STATIC_VERSION', default='1.0.2')
