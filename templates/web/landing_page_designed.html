@@ -64,23 +64,23 @@
     </div>
 
     <!-- Image Placeholders -->
-    <div class="relative w-full max-w-6xl mx-auto">
+    <div class="relative mt-12 w-full max-w-6xl mx-auto">
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 items-center">
-        <!-- Vertical image left -->
-        <div>
-          <img src="{% static 'images/landing/home-page-top-vertical-1.jpeg' %}" alt="Ad example 1" class="rounded-3xl w-full h-auto object-cover">
+        <!-- Vertical image left (full height) -->
+        <div class="transform md:-translate-y-1/4">
+          <img src="{% static 'images/landing/home-1.jpg' %}" alt="Ad example 1" class="rounded-3xl w-full h-auto object-cover">
         </div>
         <!-- Square image 1 -->
         <div>
-          <img src="{% static 'images/landing/home-page-top-square-1.jpeg' %}" alt="Ad example 2" class="rounded-3xl w-full h-auto object-cover">
+          <img src="{% static 'images/landing/home-page-top-square-1.jpeg' %}" alt="Ad example 2" class="rounded-3xl w-full aspect-square object-cover">
         </div>
         <!-- Square image 2 -->
         <div>
-          <img src="{% static 'images/landing/home-page-top-square-2.jpeg' %}" alt="Ad example 3" class="rounded-3xl w-full h-auto object-cover">
+          <img src="{% static 'images/landing/home-page-top-square-2.jpeg' %}" alt="Ad example 3" class="rounded-3xl w-full aspect-square object-cover">
         </div>
-        <!-- Vertical image right -->
-        <div>
-          <img src="{% static 'images/landing/home-page-top-vertical-2.jpeg' %}" alt="Ad example 4" class="rounded-3xl w-full h-auto object-cover">
+        <!-- Vertical image right (full height) -->
+        <div class="transform md:-translate-y-1/4">
+          <img src="{% static 'images/landing/home-4.jpg' %}" alt="Ad example 4" class="rounded-3xl w-full h-auto object-cover">
         </div>
       </div>
   </section>
