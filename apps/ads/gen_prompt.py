@@ -146,6 +146,7 @@ The Workflow below will guide you to identify all aspects on the ad and how to r
 ##  Key Requirement
 The final ad must:
 * **FIRST AND FOREMOST: Incorporate all requirements previously defined in the User Feedback section above**
+* You must include in the prompt "ensure all text is visible with sufficient margins to the size / top & bottom. If it is not possible, this is the only time you are allowed to adjust the layout to ensure nothing is cut off."
 * Use the **exact same layout, structure, and spacing** as the old ad (unless overridden by the User Feedback).
 * Replace copy with {{brand_name}} equivalents while matching word count tolerances (unless overridden by the User Feedback).
 * Preserve the **same emotional angle and format type** (unless overridden by the User Feedback).
