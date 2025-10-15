@@ -2421,14 +2421,13 @@ def billing_page(request):
         # Add Beta plan
         beta_plan = {
             "name": "Beta",
-            "description": "Basic features for individuals",
+            "description": "Perfect for testing Ad Heist with your first campaigns",
             "price": {
                 "monthly": 0
             },
             "features": [
                 "Search 1M+ Ads Library",
                 "Unlimited Ads (Providing Feedback)",
-                "Unlimited Revisions (With Feedback)",
                 "20 BrandKits",
                 "5 GB of assets"
             ],
