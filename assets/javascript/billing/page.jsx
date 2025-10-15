@@ -112,21 +112,11 @@ export function BillingPage({ pricingData, onSubscribe }) {
     })) : [],
     tiers: pricingData.tiers.map(tier => ({
       ...tier,
-      name: t(`pricing.${tier.name.toLowerCase()}`, tier.name),
-      description: t(`pricing.${tier.name.toLowerCase()}_description`, tier.description),
-      features: tier.features.map((feature, index) =>
-        t(`pricing.feature_${tier.name.toLowerCase()}_${index + 1}`, feature)
-      ),
-      cta: t(`pricing.${tier.cta.toLowerCase().replace(/ /g, '_')}`, tier.cta),
-      price: {
-        ...tier.price,
-        monthly: typeof tier.price.monthly === 'string' ?
-          t('pricing.custom', tier.price.monthly) :
-          tier.price.monthly,
-        yearly: typeof tier.price.yearly === 'string' ?
-          t('pricing.custom', tier.price.yearly) :
-          tier.price.yearly
-      }
+      name: tier.name,
+      description: tier.description,
+      features: tier.features,
+      cta: tier.cta,
+      price: tier.price
     }))
   };
 

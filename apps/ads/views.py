@@ -2427,7 +2427,7 @@ def billing_page(request):
             },
             "features": [
                 "Search 1M+ Ads Library",
-                "Unlimited Ads (With Feedback)",
+                "Unlimited Ads (Providing Feedback)",
                 "Unlimited Revisions (With Feedback)",
                 "20 BrandKits",
                 "5 GB of assets"
@@ -2466,7 +2466,7 @@ def billing_page(request):
                         "priceId": price.id,  # ID dinámico desde Stripe
                         "features": product.metadata.features,
                         "cta": "Buy Package",
-                        "highlighted": product.metadata.slug == "package-1",
+                        "highlighted": product.metadata.slug == "package-2",
                         "popular": product.metadata.slug == "package-2"
                     }
                     pricing_data["usagePackages"].append(package)
