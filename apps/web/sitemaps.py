@@ -19,7 +19,15 @@ class StaticViewSitemap(sitemaps.Sitemap):
         return [
             "terms",
             "privacy",
-            "web:pricing_page"
+            "web:pricing_page",
+            "web:ngo_page",
+            "web:pharmacy_page",
+            "web:saas_page",
+            "web:luxury_page",
+            "web:lawyers_page",
+            "web:retailers_page",
+            "web:restaurants_page",
+            "web:real_estate_page",
         ]
 
     def location(self, item):
