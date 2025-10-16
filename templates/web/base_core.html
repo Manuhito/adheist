@@ -18,7 +18,7 @@
   {% with project_meta|get_description:page_description as description %}
   {% with project_meta|get_image_url:page_image as image %}
   <title>{% block page_title %}{{ title }}{% endblock %}</title>
-  <meta name="description" content="{{ description }}">
+  {% block meta_description %}<meta name="description" content="{{ description }}">{% endblock meta_description %}
   <meta name="keywords" content="{{ project_meta.KEYWORDS }}">
   <!-- Twitter Card data -->
   <meta name="twitter:card" content="summary_large_image">
@@ -45,8 +45,8 @@
   <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
 
   {# Base Styles #}
-  <link rel="stylesheet" href="{% static 'css/site-base.css' %}">
-  <link rel="stylesheet" href="{% static 'css/site-tailwind.css' %}">
+  <link rel="stylesheet" href="{% static 'css/site-base.css' %}?v={{ STATIC_VERSION }}">
+  <link rel="stylesheet" href="{% static 'css/site-tailwind.css' %}?v={{ STATIC_VERSION }}">
 
   {# Icons #}
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"
@@ -70,9 +70,9 @@
 
   {# Base Scripts #}
   {% include 'web/components/messages-js.html' %}
-  <script src="{% static 'js/site-base-bundle.js' %}" defer></script>
-  <script src="{% static 'js/site-tailwind-bundle.js' %}" defer></script>
-  <script src="{% static 'js/site-bundle.js' %}" defer></script>
+  <script src="{% static 'js/site-base-bundle.js' %}?v={{ STATIC_VERSION }}" defer></script>
+  <script src="{% static 'js/site-tailwind-bundle.js' %}?v={{ STATIC_VERSION }}" defer></script>
+  <script src="{% static 'js/site-bundle.js' %}?v={{ STATIC_VERSION }}" defer></script>
   <script src="{% url 'javascript-catalog' %}" defer></script>
   <script>__cssFramework = 'tailwind';</script>
   

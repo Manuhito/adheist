@@ -52,13 +52,13 @@ export default function PricingPage() {
 
   // Obtener datos de precios del objeto window o usar el fallback con traducciones
   const defaultData = createDefaultPricingData(t);
-  
+
   // Get pricing data from window object and parse if needed
   let backendData;
   try {
     const rawData = window.__PRICING_DATA__;
     console.log('Raw pricing data:', typeof rawData, rawData);
-    
+
     // Parse the data if it's a string
     backendData = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
     console.log('Parsed backend data:', backendData);

@@ -1,8 +1,9 @@
-{% extends 'error_base.html' %}
-{% load i18n %}
-{% block error_details %}
-  <h1 class="pg-title">{% translate "Oops. You don't have permission to do that." %}</h1>
-  <h2 class="pg-subtitle">
-    {% translate "If you think this is a mistake, contact support." %}
-  </h2>
+{% extends "web/base.html" %}
+{% load static %}
+
+{% block title %}Access Forbidden - 403{% endblock %}
+
+{% block content %}
+<div id="error-403-root"></div>
+<script src="{% static 'js/error-pages/403-bundle.js' %}?v={{ STATIC_VERSION }}"></script>
 {% endblock %}

@@ -160,6 +160,7 @@ TEMPLATES = [
                 "apps.web.context_processors.translations",
                 "apps.web.context_processors.posthog_settings",
                 "apps.web.context_processors.user_credits",
+                "apps.web.context_processors.static_version",
             ],
             "loaders": _DEFAULT_LOADERS if DEBUG else _CACHED_LOADERS,
         },
@@ -598,3 +599,7 @@ OPENAI_API_KEY = env("OPENAI_API_KEY", default="")
 
 # Pricing model configuration
 PRICING_MODEL = env("PRICING_MODEL", default="STANDARD")
+
+# Static files versioning for cache busting
+# Increment this version number when deploying changes to force browser cache refresh
+STATIC_VERSION = env('STATIC_VERSION', default='1.0.3')

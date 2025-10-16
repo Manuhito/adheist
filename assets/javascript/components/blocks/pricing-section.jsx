@@ -75,33 +75,37 @@ export function PricingSection({
         </div>
       </div>
       <div className="w-full max-w-7xl mx-auto">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {/* Renderizar productos con columnas vacías al inicio para centrar */}
-          {(() => {
-            const products = renderProducts();
-            // Determinar el número total de columnas según la pestaña seleccionada
-            const totalCols = selectedFrequency === "usage" && usagePackages ? 
-              (usagePackages.length === 2 ? 2 : 4) : // Si hay 2 paquetes, usar 2 columnas, de lo contrario 4
-              (tiers.length === 3 ? 3 : 4); // Para planes de suscripción, usar 3 o 4 columnas
-            const productCount = products.length;
-            
-            // Si hay menos productos que columnas, agregar columnas vacías al inicio
-            if (productCount < totalCols) {
-              const emptyColsToAdd = Math.floor((totalCols - productCount) / 2);
-              const result = [];
-              
-              // Agregar columnas vacías al inicio
-              for (let i = 0; i < emptyColsToAdd; i++) {
-                result.push(<div key={`empty-${i}`} className="hidden xl:block"></div>);
-              }
-              
-              // Agregar los productos
-              return [...result, ...products];
+        {(() => {
+          const products = renderProducts();
+          const productCount = products.length;
+          
+          // Determinar las clases del grid según el número de productos
+          let gridClasses = "grid gap-4";
+          
+          if (selectedFrequency === "usage" && usagePackages) {
+            // Para usage packages, centrar si hay 2 o menos
+            if (productCount === 2) {
+              gridClasses = "grid gap-4 grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto";
+            } else {
+              gridClasses = "grid gap-4 sm:grid-cols-2 lg:grid-cols-4";
             }
-            
-            return products;
-          })()}
-        </div>
+          } else {
+            // Para subscription tiers
+            if (productCount === 2) {
+              gridClasses = "grid gap-4 grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto";
+            } else if (productCount === 3) {
+              gridClasses = "grid gap-4 grid-cols-1 md:grid-cols-3";
+            } else {
+              gridClasses = "grid gap-4 sm:grid-cols-2 lg:grid-cols-4";
+            }
+          }
+          
+          return (
+            <div className={gridClasses}>
+              {products}
+            </div>
+          );
+        })()}
       </div>
     </section>
   );

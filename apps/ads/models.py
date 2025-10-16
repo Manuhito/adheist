@@ -1232,3 +1232,150 @@ class BrandAssetExtraction(BaseModel):
         # Calculate total cost
         self.total_cost_usd = self.input_cost_usd + self.output_cost_usd
         super().save(*args, **kwargs)
+
+
+# Models for dynamic marketing pages
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+from django.db.utils import IntegrityError
+from django.core.exceptions import ValidationError
+
+class MarketingPagesRouter(BaseModel):
+    """
+    This model acts as a router for dynamic marketing pages.
+    It holds a unique slug and a generic foreign key to the actual page content model.
+    This allows having different page templates/models under a single URL structure.
+    """
+    path_prefix = models.SlugField(
+        max_length=100,
+        default='',
+        blank=True,
+        help_text="Optional path prefix for the URL (e.g., 'services', 'products'). Leave empty for root level."
+    )
+    slug = models.SlugField(max_length=255)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+
+    class Meta:
+        unique_together = [['path_prefix', 'slug']]
+        
+    def get_full_path(self):
+        """Returns the complete URL path"""
+        if self.path_prefix:
+            return f"{self.path_prefix}/{self.slug}/"
+        return f"{self.slug}/"
+
+    def __str__(self):
+        return self.get_full_path()
+
+class AdAgencyTemplate(BaseModel):
+    STATUS_DRAFT = 'DRAFT'
+    STATUS_PUBLISHED = 'PUBLISHED'
+    STATUS_CHOICES = [
+        (STATUS_DRAFT, 'Draft'),
+        (STATUS_PUBLISHED, 'Published'),
+    ]
+
+    # Meta and control fields
+    path_prefix = models.SlugField(
+        max_length=100,
+        default='',
+        blank=True,
+        help_text="Optional URL path prefix (e.g., 'services' for /services/slug/). Leave empty for root level."
+    )
+    slug = models.SlugField(max_length=255, help_text="URL-friendly identifier. Must be unique within the same path prefix.")
+    meta_title = models.CharField(max_length=255)
+    meta_description = models.TextField(blank=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=STATUS_DRAFT)
+    html_template = models.CharField(max_length=255, default='marketing_pages/ad_agency.html', editable=False)
+
+    # Hero Section
+    hero_title = models.CharField(max_length=255)
+    hero_description = models.TextField(blank=True)
+    hero_image = models.ImageField(upload_to='marketing_pages/hero_images/', blank=True, null=True, help_text="Imagen principal para la sección hero.")
+    
+    # Claim Section
+    claim = models.CharField(max_length=255)
+    claim_subheading = models.CharField(max_length=255, blank=True)
+
+    # Problems Section
+    problem_1_title = models.CharField(max_length=255)
+    problem_1_subtext = models.TextField(blank=True)
+    problem_1_icon = models.CharField(max_length=100, blank=True, help_text="e.g., 'icon-name' from an icon library")
+    
+    problem_2_title = models.CharField(max_length=255)
+    problem_2_subtext = models.TextField(blank=True)
+    problem_2_icon = models.CharField(max_length=100, blank=True)
+
+    problem_3_title = models.CharField(max_length=255)
+    problem_3_subtext = models.TextField(blank=True)
+    problem_3_icon = models.CharField(max_length=100, blank=True)
+
+    # Feature 1 Section
+    feature_1_title = models.CharField(max_length=255, blank=True)
+    feature_1_title_desc = models.TextField(blank=True)
+    feature_1_image = models.ImageField(upload_to='marketing_pages/feature_images/', blank=True, null=True)
+    feature_1_subtit_1_title = models.CharField(max_length=255, blank=True)
+    feature_1_subtit_1_icon = models.CharField(max_length=100, blank=True, help_text="e.g., 'globe'")
+    feature_1_subtit_1_desc = models.TextField(blank=True)
+    feature_1_subtit_2_title = models.CharField(max_length=255, blank=True)
+    feature_1_subtit_2_icon = models.CharField(max_length=100, blank=True, help_text="e.g., 'message-square'")
+    feature_1_subtit_2_desc = models.TextField(blank=True)
+
+    # Feature 2 Section
+    feature_2_title = models.CharField(max_length=255, blank=True)
+    feature_2_title_desc = models.TextField(blank=True)
+    feature_2_image = models.ImageField(upload_to='marketing_pages/feature_images/', blank=True, null=True)
+    feature_2_subtit_1_title = models.CharField(max_length=255, blank=True)
+    feature_2_subtit_1_icon = models.CharField(max_length=100, blank=True, help_text="e.g., 'sparkles'")
+    feature_2_subtit_1_desc = models.TextField(blank=True)
+    feature_2_subtit_2_title = models.CharField(max_length=255, blank=True)
+    feature_2_subtit_2_icon = models.CharField(max_length=100, blank=True, help_text="e.g., 'layout-template'")
+    feature_2_subtit_2_desc = models.TextField(blank=True)
+
+    def __str__(self):
+        return self.hero_title
+
+    def save(self, *args, **kwargs):
+        # First, save the instance to get a PK
+        # This is wrapped in a transaction to ensure atomicity
+        from django.db import transaction
+        with transaction.atomic():
+            # Check for uniqueness of path_prefix + slug combination
+            if self.pk is not None:
+                original = AdAgencyTemplate.objects.get(pk=self.pk)
+                if original.slug != self.slug or original.path_prefix != self.path_prefix:
+                    if MarketingPagesRouter.objects.filter(
+                        slug=self.slug, 
+                        path_prefix=self.path_prefix
+                    ).exclude(
+                        object_id=self.pk, 
+                        content_type=ContentType.objects.get_for_model(self)
+                    ).exists():
+                        full_path = f"{self.path_prefix}/{self.slug}" if self.path_prefix else self.slug
+                        raise ValidationError(f"The path '{full_path}' is already in use. Please choose a different slug or path prefix.")
+            elif MarketingPagesRouter.objects.filter(slug=self.slug, path_prefix=self.path_prefix).exists():
+                full_path = f"{self.path_prefix}/{self.slug}" if self.path_prefix else self.slug
+                raise ValidationError(f"The path '{full_path}' is already in use. Please choose a different slug or path prefix.")
+
+            super().save(*args, **kwargs)
+
+            content_type = ContentType.objects.get_for_model(self)
+            router_entry, created = MarketingPagesRouter.objects.get_or_create(
+                content_type=content_type,
+                object_id=self.pk,
+                defaults={'slug': self.slug, 'path_prefix': self.path_prefix}
+            )
+
+            if not created and (router_entry.slug != self.slug or router_entry.path_prefix != self.path_prefix):
+                router_entry.slug = self.slug
+                router_entry.path_prefix = self.path_prefix
+                router_entry.save()
+
+    def delete(self, *args, **kwargs):
+        # Also delete the router entry when this object is deleted
+        content_type = ContentType.objects.get_for_model(self)
+        MarketingPagesRouter.objects.filter(content_type=content_type, object_id=self.pk).delete()
+        super().delete(*args, **kwargs)
+

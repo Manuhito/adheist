@@ -216,18 +216,18 @@ ACTIVE_PRODUCTS = [
         stripe_id='prod_S6Cf3s6eD62XZQ', 
         slug='pro', 
         name='Pro', 
-        features=['Search 1M+ Ads Library', '50 Ads Creations', '50 Ad Revisions', '20 BrandKits', '10 GB of assets '],
+        features=['Search 1M+ Ads Library', '10,000 Credits', '100 BrandKits'],
         price_displays={}, 
-        description='The Pro plan', 
+        description='For growing businesses scaling their ad production', 
         is_default=False
     ),
     ProductMetadata(
         stripe_id='prod_S6CeGCh0HYEO4k', 
         slug='starter', 
         name='Starter', 
-        features=['Search 1M+ Ads Library', '30 Ads Creations', '30 Ad Revisions', '20 BrandKits'],
+        features=['Search 1M+ Ads Library', '4,000 Credits', '40 BrandKits', '5 GB of assets'],
         price_displays={}, 
-        description='The Starter plan', 
+        description='Perfect for small businesses starting their ad production', 
         is_default=False
     ),
 ]

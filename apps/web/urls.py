@@ -22,4 +22,12 @@ urlpatterns = [
         name="shadcn",
     ),
     path("pricing/", views.pricing_page, name="pricing_page"),
+    path("ngo/", TemplateView.as_view(template_name="marketing_pages/ngo.html"), name="ngo_page"),
+    path("pharmacy/", TemplateView.as_view(template_name="marketing_pages/pharmacy.html"), name="pharmacy_page"),
+    path("saas/", TemplateView.as_view(template_name="marketing_pages/saas.html"), name="saas_page"),
+    path("luxury/", TemplateView.as_view(template_name="marketing_pages/luxury.html"), name="luxury_page"),
+    path("lawyers/", TemplateView.as_view(template_name="marketing_pages/lawyers.html"), name="lawyers_page"),
+    path("retailers/", TemplateView.as_view(template_name="marketing_pages/retailers.html"), name="retailers_page"),
+    path("restaurants/", TemplateView.as_view(template_name="marketing_pages/restaurants.html"), name="restaurants_page"),
+    path("real-estate/", TemplateView.as_view(template_name="marketing_pages/real-estate.html"), name="real_estate_page"),
 ]

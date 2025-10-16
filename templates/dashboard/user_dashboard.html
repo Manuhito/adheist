@@ -33,7 +33,7 @@
 {% endblock %}
 {% block page_js %}
 {{ signup_data|json_script:'signup-data' }}
-<script src="{% static 'js/app-bundle.js' %}" defer></script>
+<script src="{% static 'js/app-bundle.js' %}?v={{ STATIC_VERSION }}" defer></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     const start = new Date("{{ start }}");

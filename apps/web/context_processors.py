@@ -139,8 +139,8 @@ def translations(request):
             'pricing.feature_free_4': _('20 BrandKits'),
             'pricing.feature_free_5': _('5 GB of assets'),
             'pricing.feature_pro_1': _('Search 1M+ Ads Library'),
-            'pricing.feature_pro_2': _('50 Ads Creations'),
-            'pricing.feature_pro_3': _('50 Ad Revisions'),
+            'pricing.feature_pro_2': _('10,000 Credits'),
+            'pricing.feature_pro_3': _('100 BrandKits'),
             'pricing.feature_pro_4': _('20 BrandKits'),
             'pricing.feature_pro_5': _('10 GB of assets'),
             'pricing.feature_team_1': _('50 ad requests per month'),
@@ -612,4 +612,12 @@ def user_credits(request):
         }
     return {
         "user_credits": None
+    }
+
+
+def static_version(request):
+    """Add static version to context for cache busting"""
+    from django.conf import settings
+    return {
+        'STATIC_VERSION': settings.STATIC_VERSION
     }

@@ -17,7 +17,7 @@
   window.__PAYMENT_METHOD_DATA__ = {{ payment_method_data|safe }};
   window.__USAGE_DATA__ = {{ usage_data|safe }};
 </script>
-<script src="{% static 'js/billing-bundle.js' %}"></script>
+<script src="{% static 'js/billing-bundle.js' %}?v={{ STATIC_VERSION }}"></script>
 {% endblock %}
 
 {% block app %}

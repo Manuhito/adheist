@@ -6,7 +6,7 @@
 <!-- Load Stripe.js -->
 <script src="https://js.stripe.com/v3/"></script>
 <!-- Load the payment bundle -->
-<script src="{% static 'js/payment-bundle.js' %}" defer></script>
+<script src="{% static 'js/payment-bundle.js' %}?v={{ STATIC_VERSION }}" defer></script>
 {% endblock %}
 
 {% block app %}

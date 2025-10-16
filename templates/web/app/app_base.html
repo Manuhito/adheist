@@ -14,7 +14,7 @@
     avatar: "{{ request.user.profile.avatar_url|default:'' }}"
   };
 </script>
-<script src="{% static 'js/app-header-bundle.js' %}" defer></script>
+<script src="{% static 'js/app-header-bundle.js' %}?v={{ STATIC_VERSION }}" defer></script>
 {% endblock %}
 
 {% block body %}

@@ -13,7 +13,7 @@
 </div>
 
 <div id="root"></div>
-<script src="{% static 'js/base-bundle.js' %}"></script>
+<script src="{% static 'js/base-bundle.js' %}?v={{ STATIC_VERSION }}"></script>
 <div id="page-content">
   {% block content %}{% endblock %}
 </div>
@@ -44,4 +44,11 @@
   document.addEventListener('DOMContentLoaded', handleInitialization);
   window.addEventListener('load', handleInitialization);
 </script>
+
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+  lucide.createIcons();
+</script>
+
 {% endblock %}

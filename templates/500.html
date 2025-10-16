@@ -1,8 +1,9 @@
-{% extends 'error_base.html' %}
-{% load i18n %}
-{% block error_details %}
-  <h1 class="pg-title">{% translate "Shucks. That's an error." %}</h1>
-  <h2 class="pg-subtitle">
-    {% translate "Please try again, and if you continue to get this message, contact support." %}
-  </h2>
+{% extends "web/base.html" %}
+{% load static %}
+
+{% block title %}Server Error - 500{% endblock %}
+
+{% block content %}
+<div id="error-500-root"></div>
+<script src="{% static 'js/error-pages/500-bundle.js' %}?v={{ STATIC_VERSION }}"></script>
 {% endblock %}

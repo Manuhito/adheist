@@ -27,7 +27,7 @@ from django.utils import timezone
 from apps.aiinterface.tasks import send_slack_notification
 from django.contrib.auth import get_user_model
 
-from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion, AdRequestUsage, ExtraCredit, UserBrand, UserBrandAssets, UserFolder
+from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion, AdRequestUsage, ExtraCredit, UserBrand, UserBrandAssets, UserFolder, MarketingPagesRouter
 from .forms import AdLibraryForm
 from .services import can_create_ad_request, use_credit, can_create_ad_request_version, get_ad_request_version_limit, use_general_credit, use_version_credit, can_create_ad_version
 import boto3
@@ -2421,14 +2421,13 @@ def billing_page(request):
         # Add Beta plan
         beta_plan = {
             "name": "Beta",
-            "description": "Basic features for individuals",
+            "description": "Perfect for testing Ad Heist with your first campaigns",
             "price": {
                 "monthly": 0
             },
             "features": [
                 "Search 1M+ Ads Library",
-                "Unlimited Ads (With Feedback)",
-                "Unlimited Revisions (With Feedback)",
+                "Unlimited Ads (Providing Feedback)",
                 "20 BrandKits",
                 "5 GB of assets"
             ],
@@ -2466,7 +2465,7 @@ def billing_page(request):
                         "priceId": price.id,  # ID dinámico desde Stripe
                         "features": product.metadata.features,
                         "cta": "Buy Package",
-                        "highlighted": product.metadata.slug == "package-1",
+                        "highlighted": product.metadata.slug == "package-2",
                         "popular": product.metadata.slug == "package-2"
                     }
                     pricing_data["usagePackages"].append(package)
@@ -3762,15 +3761,12 @@ def analyze_website_for_brand_assets(request):
     """
     Analyze a website to extract brand assets using OpenAI.
     
-    Expected POST data:
-    - website_url: URL of the website to analyze
-    - ad_request_id: Optional ID of AdRequest to associate with created brand
-    
-    Returns: JSON with extracted brand assets
+    Args:
+        request: Django request object with 'website_url' in POST data
+        
+    Returns:
+        JsonResponse with extracted assets or error
     """
-    if request.method != 'POST':
-        return JsonResponse({'success': False, 'error': 'Only POST method allowed'}, status=405)
-    
     try:
         website_url = request.POST.get('website_url')
         ad_request_id = request.POST.get('ad_request_id')
@@ -3781,33 +3777,32 @@ def analyze_website_for_brand_assets(request):
                 'error': 'Website URL is required'
             }, status=400)
         
-        # Import here to avoid circular imports
         from .website_analysis import extract_brand_assets_from_website
         
-        # Extract brand assets from website
         result = extract_brand_assets_from_website(request.user, website_url, ad_request_id)
         
-        if result['success']:
+        if result.get('success'):
             return JsonResponse({
                 'success': True,
-                'extracted_assets': result['extracted_assets'],
-                'extraction_id': result.get('extraction_id'),
+                'extracted_assets': result.get('extracted_assets'),
                 'brand_created': result.get('brand_created', False),
-                'brand': result.get('brand')
+                'brand': result.get('brand'),
+                'cost': result.get('cost')
             })
         else:
-            return JsonResponse({
-                'success': False,
-                'error': result['error'],
-                'extraction_id': result.get('extraction_id')
-            }, status=400)
+            error_message = result.get('error', 'An unknown error occurred')
+            if 'insufficient credits' in error_message.lower():
+                return JsonResponse({'error': error_message}, status=402)
+            return JsonResponse({'error': error_message}, status=400)
             
     except Exception as e:
+        error_message = str(e)
+        if 'insufficient credits' in error_message.lower():
+            return JsonResponse({'error': error_message}, status=402)
         return JsonResponse({
             'success': False,
             'error': f'Unexpected error: {str(e)}'
         }, status=500)
-
 
 @login_required
 @require_http_methods(["PUT", "POST"])  # Allow POST for multipart data
@@ -4059,3 +4054,44 @@ def get_brand_details(request, brand_id):
             'success': False,
             'error': str(e)
         }, status=500)
+
+def marketing_page_view(request, slug, path_prefix=''):
+    """
+    Renders a dynamic marketing page based on the slug and optional path prefix.
+    If not found, delegates to Wagtail.
+    Supports URLs like:
+    - /slug/ (no prefix)
+    - /services/slug/ (with prefix)
+    """
+    try:
+        router_entry = MarketingPagesRouter.objects.get(slug=slug, path_prefix=path_prefix)
+        page_data = router_entry.content_object
+        
+        # Check if the page is published
+        if hasattr(page_data, 'status') and page_data.status == 'PUBLISHED':
+            template_name = page_data.html_template
+            context = {
+                'page_data': page_data,
+                'full_path': router_entry.get_full_path()
+            }
+            return render(request, template_name, context)
+    except MarketingPagesRouter.DoesNotExist:
+        pass
+    
+    # If marketing page not found or not published, try Wagtail
+    from wagtail.views import serve as wagtail_serve
+    from django.http import Http404
+    
+    try:
+        # Reconstruct the path for Wagtail
+        if path_prefix:
+            wagtail_path = f"{path_prefix}/{slug}/"
+        else:
+            wagtail_path = f"{slug}/"
+        
+        # Call Wagtail's serve view
+        return wagtail_serve(request, wagtail_path)
+    except Http404:
+        # Neither marketing page nor Wagtail page found
+        raise Http404("Page not found")
+
