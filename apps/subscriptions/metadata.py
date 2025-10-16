@@ -193,27 +193,7 @@ ACTIVE_PLAN_INTERVALS = [
 # apps/subscriptions/metadata.py
 ACTIVE_PRODUCTS = [
     ProductMetadata(
-        stripe_id='prod_SNtXmUxTHcTfoe', 
-        slug='package-1', 
-        name='package 1', 
-        features=['Search 1M+ Ads Library', '40 Ads Creations', '40 Ad Revisions'], 
-        price_displays={}, 
-        description='The package 1 plan', 
-        is_default=True, 
-        limits={}
-    ),
-    ProductMetadata(
-        stripe_id='prod_SoSw2e3riRHPI2', 
-        slug='package-2', 
-        name='package 2', 
-        features=['Search 1M+ Ads Library', '100 Ads Creations', '100 Ad Revisions'], 
-        price_displays={}, 
-        description='The package 2 plan', 
-        is_default=False, 
-        limits={}
-    ),
-    ProductMetadata(
-        stripe_id='prod_S6Cf3s6eD62XZQ', 
+        stripe_id='prod_TFNClSPOl6DRkp', 
         slug='pro', 
         name='Pro', 
         features=['Search 1M+ Ads Library', '10,000 Credits', '100 BrandKits'],
@@ -222,7 +202,7 @@ ACTIVE_PRODUCTS = [
         is_default=False
     ),
     ProductMetadata(
-        stripe_id='prod_S6CeGCh0HYEO4k', 
+        stripe_id='prod_TFNBt3QEuLEjK5', 
         slug='starter', 
         name='Starter', 
         features=['Search 1M+ Ads Library', '4,000 Credits', '40 BrandKits', '5 GB of assets'],

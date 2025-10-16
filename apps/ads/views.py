@@ -2408,7 +2408,7 @@ def billing_page(request):
     pricing_data = {
         "title": "Pricing Plans",
         "subtitle": "Choose the perfect plan for your needs",
-        "frequencies": ["monthly"] if is_beta_pricing else ["monthly", "usage"],
+        "frequencies": [],  # Will be set after determining available products
         "tiers": [],
         "usagePackages": []
     }
@@ -2471,6 +2471,17 @@ def billing_page(request):
                     pricing_data["usagePackages"].append(package)
             except Exception as e:
                 logger.error(f"Error obteniendo precio para paquete {product.metadata.slug}: {str(e)}")
+    
+    # Configure frequencies based on available products
+    if is_beta_pricing:
+        pricing_data["frequencies"] = ["monthly"]
+    else:
+        # Always include monthly
+        pricing_data["frequencies"] = ["monthly"]
+        # Only add usage tab if there are usage packages available
+        if len(pricing_data["usagePackages"]) > 0:
+            pricing_data["frequencies"].append("usage")
+    
     # Get current user's subscription plan ID if available
     current_plan_id = None
     current_plan_name = None
