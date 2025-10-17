@@ -12,6 +12,43 @@ from apps.aiinterface.models import OpenAIConfiguration
 
 logger = logging.getLogger(__name__)
 
+def extract_image_dimensions(image_field):
+    """
+    Extract dimensions from an ImageField using PIL.
+    
+    Args:
+        image_field: Django ImageField instance
+        
+    Returns:
+        str: Dimensions in format "widthxheight" or None if extraction fails
+    """
+    try:
+        from PIL import Image
+        import io
+        import requests
+        from urllib.parse import urlparse
+        
+        image_source = image_field.url
+        image_data = None
+        
+        # Download or read the image
+        if urlparse(image_source).scheme in ("http", "https"):
+            resp = requests.get(image_source, stream=True)
+            resp.raise_for_status()
+            image_data = resp.content
+        else:
+            with open(image_field.path, "rb") as f:
+                image_data = f.read()
+        
+        # Get image dimensions
+        img = Image.open(io.BytesIO(image_data))
+        width, height = img.size
+        return f"{width}x{height}"
+        
+    except Exception as e:
+        logger.warning(f"Could not extract image dimensions: {e}")
+        return None
+
 def generate_version_prompt(version_data, image_urls=None, called_from=None):
     """
     Generate a prompt using GPT-5 for an AdRequestVersion based on its data.
@@ -118,6 +155,10 @@ The Workflow below will guide you to identify all aspects on the ad and how to r
 * **Lifestyle/Emotional** → Headline + subline + 1–2 benefits + proof + CTA
 → Rule: *Always detect and mirror the same format as the old ad. Never switch types.*
 ---
+## Canvas Information
+**Original Canvas Size:** {{original_canvas_size}}
+**New Canvas Size:** {{new_canvas_size}} Use these dimensions to calculate proportional positions, scaling factors, and text-size adjustments for all layout elements.
+---
 ##  Product Information 
 **Brand Name:** 
 * {{brand_name}}
@@ -200,6 +241,12 @@ The output must be in the form of a highly detailed image generation prompt for 
         formatted_system_prompt = formatted_system_prompt.replace('{{proof_points}}', proof_points or '[Not specified]')
         formatted_system_prompt = formatted_system_prompt.replace('{{value_propositions}}', value_propositions or '[Not specified]')
         formatted_system_prompt = formatted_system_prompt.replace('{{brand_color_hex}}', brand_color_hex or '[Not specified]')
+        
+        # Canvas size information
+        original_canvas_size = version_data.get('original_canvas_size', 'Unknown')
+        new_canvas_size = version_data.get('new_canvas_size', 'Unknown')
+        formatted_system_prompt = formatted_system_prompt.replace('{{original_canvas_size}}', original_canvas_size)
+        formatted_system_prompt = formatted_system_prompt.replace('{{new_canvas_size}}', new_canvas_size)
         
         # Format the user prompt with the version data
         formatted_user_prompt = user_prompt.format(
@@ -850,6 +897,13 @@ def generate_prompt(version):
     
     visual_requirements = "\n".join(visual_reqs)
     
+    # Extract original canvas size from AdLibrary image if available
+    original_canvas_size = None
+    if ad_request.ad_library and ad_request.ad_library.ad_image:
+        original_canvas_size = extract_image_dimensions(ad_request.ad_library.ad_image)
+        if original_canvas_size:
+            logger.info(f"Extracted original canvas size: {original_canvas_size}")
+    
     # Prepare data for GPT-5
     version_data = {
         'company_name': company_name,
@@ -859,6 +913,9 @@ def generate_prompt(version):
         'concepts_info': concepts_info,
         'visual_requirements': visual_requirements,
         'user_prompt': user_prompt or '',
+        # Canvas size information
+        'original_canvas_size': original_canvas_size or 'Unknown',
+        'new_canvas_size': canvas_size or 'Unknown',
         # Brand information fields from AdRequestAssets
         'industry': ad_request.get_asset_value('industry') or '',
         'product_description': ad_request.get_asset_value('product_description') or '',
@@ -874,6 +931,10 @@ def generate_prompt(version):
     
     # Collect image URLs for context
     image_urls = []
+    
+    # Add AdLibrary ad_image if available (canvas size already extracted above)
+    if ad_request.ad_library and ad_request.ad_library.ad_image:
+        image_urls.append(ad_request.ad_library.ad_image.url)
     
     # Add product images if available
     if product_image_1_override:
