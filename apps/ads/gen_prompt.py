@@ -834,6 +834,7 @@ def generate_prompt(version):
     # Get text fields from base_assets or overrides
     company_website = ad_request.get_company_website()
     main_hex_color = ad_request.get_main_hex_color()
+    logo_override = ad_request.get_logo()
     product_image_1_override = ad_request.get_product_image_1()
     product_image_2_override = ad_request.get_product_image_2()
     app_image_1_override = ad_request.get_app_image_1()
@@ -935,6 +936,10 @@ def generate_prompt(version):
     # Add AdLibrary ad_image if available (canvas size already extracted above)
     if ad_request.ad_library and ad_request.ad_library.ad_image:
         image_urls.append(ad_request.ad_library.ad_image.url)
+    
+    # Add logo if available
+    if logo_override:
+        image_urls.append(logo_override.url)
     
     # Add product images if available
     if product_image_1_override:
