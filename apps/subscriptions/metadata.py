@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, asdict, field
 
+from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
@@ -184,33 +185,72 @@ ACTIVE_PLAN_INTERVALS = [
 
 # These are the products that will be shown to users in the UI and allowed to be associated
 # with plans on your side
-# ACTIVE_PRODUCTS = [
-#     ProductMetadata(stripe_id='prod_S6Y9GHqE8v13lD', slug='enterprise', name='Enterprise', features=['Enterprise Feature 1', 'Enterprise Feature 2', 'Enterprise Feature 3'], price_displays={}, description='The Enterprise plan', is_default=True),
-#     ProductMetadata(stripe_id='prod_S6Cf3s6eD62XZQ', slug='pro', name='Pro', features=['Pro Feature 1', 'Pro Feature 2', 'Pro Feature 3'], price_displays={}, description='The Pro plan', is_default=False),
-#     ProductMetadata(stripe_id='prod_S6CeGCh0HYEO4k', slug='starter', name='Starter', features=['Starter Feature 1', 'Starter Feature 2', 'Starter Feature 3'], price_displays={}, description='The Starter plan', is_default=False),
-# ]
+# Products are configured based on STRIPE_LIVE_MODE setting
 
-# apps/subscriptions/metadata.py
-ACTIVE_PRODUCTS = [
-    ProductMetadata(
-        stripe_id='prod_TFNClSPOl6DRkp', 
-        slug='pro', 
-        name='Pro', 
-        features=['Search 1M+ Ads Library', '10,000 Credits', '100 BrandKits'],
-        price_displays={}, 
-        description='For growing businesses scaling their ad production', 
-        is_default=False
-    ),
-    ProductMetadata(
-        stripe_id='prod_TFNBt3QEuLEjK5', 
-        slug='starter', 
-        name='Starter', 
-        features=['Search 1M+ Ads Library', '4,000 Credits', '40 BrandKits', '5 GB of assets'],
-        price_displays={}, 
-        description='Perfect for small businesses starting their ad production', 
-        is_default=False
-    ),
-]
+if settings.STRIPE_LIVE_MODE:
+    # Live mode products
+    ACTIVE_PRODUCTS = [
+        ProductMetadata(
+            stripe_id='prod_TFNClSPOl6DRkp', 
+            slug='pro', 
+            name='Pro', 
+            features=['Search 1M+ Ads Library', '10,000 Credits', '100 BrandKits'],
+            price_displays={}, 
+            description='For growing businesses scaling their ad production', 
+            is_default=False
+        ),
+        ProductMetadata(
+            stripe_id='prod_TFNBt3QEuLEjK5', 
+            slug='starter', 
+            name='Starter', 
+            features=['Search 1M+ Ads Library', '4,000 Credits', '40 BrandKits', '5 GB of assets'],
+            price_displays={}, 
+            description='Perfect for small businesses starting their ad production', 
+            is_default=False
+        ),
+    ]
+else:
+    # Test mode products
+    ACTIVE_PRODUCTS = [
+        ProductMetadata(
+            stripe_id='prod_SNtXmUxTHcTfoe', 
+            slug='package-1', 
+            name='package 1', 
+            features=['Search 1M+ Ads Library', '40 Ads Creations', '40 Ad Revisions'], 
+            price_displays={}, 
+            description='The package 1 plan', 
+            is_default=True, 
+            limits={}
+        ),
+        ProductMetadata(
+            stripe_id='prod_SoSw2e3riRHPI2', 
+            slug='package-2', 
+            name='package 2', 
+            features=['Search 1M+ Ads Library', '100 Ads Creations', '100 Ad Revisions'], 
+            price_displays={}, 
+            description='The package 2 plan', 
+            is_default=False, 
+            limits={}
+        ),
+        ProductMetadata(
+            stripe_id='prod_S6Cf3s6eD62XZQ', 
+            slug='pro', 
+            name='Pro', 
+            features=['Search 1M+ Ads Library', '10,000 Credits', '100 BrandKits'],
+            price_displays={}, 
+            description='For growing businesses scaling their ad production', 
+            is_default=False
+        ),
+        ProductMetadata(
+            stripe_id='prod_S6CeGCh0HYEO4k', 
+            slug='starter', 
+            name='Starter', 
+            features=['Search 1M+ Ads Library', '4,000 Credits', '40 BrandKits', '5 GB of assets'],
+            price_displays={}, 
+            description='Perfect for small businesses starting their ad production', 
+            is_default=False
+        ),
+    ]
 
 # Create a dictionary mapping from product slug to product metadata for easier lookup
 ACTIVE_PRODUCTS_BY_SLUG = {p.slug: p for p in ACTIVE_PRODUCTS}
