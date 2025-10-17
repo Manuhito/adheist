@@ -141,6 +141,7 @@ When generating output:
   - Notes, commentary, or markdown syntax.  
 - The response must begin with the **Hero Headline** and end with the **Final CTA line.**  
 - Icon suggestions (emojis above) are for designers only and must **not** appear in the output.
+- The newly created page URL will have the following format: create-{{industry_name}}-ads. For example: create-ngo-ads, create-pharmacy-ads or create-saas-ads.
 
 ### **META Description Writing guide**
 
