@@ -72,6 +72,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
 
             // Set logo if available
             if (brand.logo_url) {
+              setSelectedLogo(brand.logo_url); // Set the URL for display
               setSelectedLogoData({
                 url: brand.logo_url,
                 file: null
