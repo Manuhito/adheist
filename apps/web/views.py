@@ -587,6 +587,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/ice-cream-shop.png",
             "description": "AI Ad Generator for Ice Cream Shops"
         },
+        {
+            "name": "Pizza Shop",
+            "url": "web:pizza_shop_page",
+            "image": "images/marketing-pages/pizza-shop.png",
+            "description": "AI Ad Generator for Pizza Shops"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
