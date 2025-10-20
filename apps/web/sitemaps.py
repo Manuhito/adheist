@@ -36,6 +36,7 @@ class StaticViewSitemap(sitemaps.Sitemap):
             "web:landscaper_page",
             "web:lawn_care_page",
             "web:house_cleaner_page",
+            "web:carpet_cleaner_page",
         ]
 
     def location(self, item):

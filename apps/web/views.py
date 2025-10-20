@@ -341,6 +341,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/house-cleaner.png",
             "description": "AI Ad Generator for House Cleaners"
         },
+        {
+            "name": "Carpet Cleaner",
+            "url": "web:carpet_cleaner_page",
+            "image": "images/marketing-pages/carpet-cleaner.png",
+            "description": "AI Ad Generator for Carpet Cleaners"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
