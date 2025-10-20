@@ -485,6 +485,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/medical-clinic.png",
             "description": "AI Ad Generator for Medical Clinics"
         },
+        {
+            "name": "Urgent Care Center",
+            "url": "web:urgent_care_center_page",
+            "image": "images/marketing-pages/urgent-care-center.png",
+            "description": "AI Ad Generator for Urgent Care Centers"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {

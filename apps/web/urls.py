@@ -62,4 +62,5 @@ urlpatterns = [
     path("create-dermatologist-ads/", TemplateView.as_view(template_name="marketing_pages/dermatologist.html"), name="dermatologist_page"),
     path("create-veterinarian-ads/", TemplateView.as_view(template_name="marketing_pages/veterinarian.html"), name="veterinarian_page"),
     path("create-medical-clinic-ads/", TemplateView.as_view(template_name="marketing_pages/medical-clinic.html"), name="medical_clinic_page"),
+    path("create-urgent-care-center-ads/", TemplateView.as_view(template_name="marketing_pages/urgent-care-center.html"), name="urgent_care_center_page"),
 ]
