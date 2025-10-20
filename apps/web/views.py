@@ -467,6 +467,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/mental-health-therapist.png",
             "description": "AI Ad Generator for Mental Health Therapists"
         },
+        {
+            "name": "Dermatologist",
+            "url": "web:dermatologist_page",
+            "image": "images/marketing-pages/dermatologist.png",
+            "description": "AI Ad Generator for Dermatologists"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
