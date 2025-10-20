@@ -599,6 +599,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/catering-service.png",
             "description": "AI Ad Generator for Catering Services"
         },
+        {
+            "name": "Juice Bar",
+            "url": "web:juice_bar_page",
+            "image": "images/marketing-pages/juice-bar.png",
+            "description": "AI Ad Generator for Juice Bars"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
