@@ -551,6 +551,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/restaurant.png",
             "description": "AI Ad Generator for Restaurants"
         },
+        {
+            "name": "Cafe",
+            "url": "web:cafe_page",
+            "image": "images/marketing-pages/cafe.png",
+            "description": "AI Ad Generator for Cafes"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
