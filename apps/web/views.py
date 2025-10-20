@@ -575,6 +575,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/bar.png",
             "description": "AI Ad Generator for Bars"
         },
+        {
+            "name": "Pub",
+            "url": "web:pub_page",
+            "image": "images/marketing-pages/pub.png",
+            "description": "AI Ad Generator for Pubs"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
