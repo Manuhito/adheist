@@ -533,6 +533,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/gym.png",
             "description": "AI Ad Generator for Gyms"
         },
+        {
+            "name": "Fitness Center",
+            "url": "web:fitness_center_page",
+            "image": "images/marketing-pages/fitness-center.png",
+            "description": "AI Ad Generator for Fitness Centers"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {

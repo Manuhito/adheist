@@ -70,4 +70,5 @@ urlpatterns = [
     path("create-martial-arts-studio-ads/", TemplateView.as_view(template_name="marketing_pages/martial-arts-studio.html"), name="martial_arts_studio_page"),
     path("create-dance-studio-ads/", TemplateView.as_view(template_name="marketing_pages/dance-studio.html"), name="dance_studio_page"),
     path("create-gym-ads/", TemplateView.as_view(template_name="marketing_pages/gym.html"), name="gym_page"),
+    path("create-fitness-center-ads/", TemplateView.as_view(template_name="marketing_pages/fitness-center.html"), name="fitness_center_page"),
 ]
