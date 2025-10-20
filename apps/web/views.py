@@ -299,6 +299,18 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/saas.png",
             "description": "AI Ad Generator for SaaS Companies"
         },
+        {
+            "name": "Plumber",
+            "url": "web:plumber_page",
+            "image": "images/marketing-pages/plumber.png",
+            "description": "AI Ad Generator for Plumbers"
+        },
+        {
+            "name": "Electrician",
+            "url": "web:electrician_page",
+            "image": "images/marketing-pages/electrician.png",
+            "description": "AI Ad Generator for Electricians"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {

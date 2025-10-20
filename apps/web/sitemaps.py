@@ -29,6 +29,8 @@ class StaticViewSitemap(sitemaps.Sitemap):
             "web:retailers_page",
             "web:restaurants_page",
             "web:real_estate_page",
+            "web:plumber_page",
+            "web:electrician_page",
         ]
 
     def location(self, item):
