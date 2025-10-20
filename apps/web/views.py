@@ -455,6 +455,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/physical-therapist.png",
             "description": "AI Ad Generator for Physical Therapists"
         },
+        {
+            "name": "Acupuncturist",
+            "url": "web:acupuncturist_page",
+            "image": "images/marketing-pages/acupuncturist.png",
+            "description": "AI Ad Generator for Acupuncturists"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
