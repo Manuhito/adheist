@@ -365,6 +365,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/general-contractor.png",
             "description": "AI Ad Generator for General Contractors"
         },
+        {
+            "name": "Handyman",
+            "url": "web:handyman_page",
+            "image": "images/marketing-pages/handyman.png",
+            "description": "AI Ad Generator for Handyman Services"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
