@@ -473,6 +473,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/dermatologist.png",
             "description": "AI Ad Generator for Dermatologists"
         },
+        {
+            "name": "Veterinarian",
+            "url": "web:veterinarian_page",
+            "image": "images/marketing-pages/veterinarian.png",
+            "description": "AI Ad Generator for Veterinarians"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
