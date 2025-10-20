@@ -389,6 +389,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/pressure-washing.png",
             "description": "AI Ad Generator for Pressure Washing Services"
         },
+        {
+            "name": "Tree Service",
+            "url": "web:tree_service_page",
+            "image": "images/marketing-pages/tree-service.png",
+            "description": "AI Ad Generator for Tree Service Companies"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
