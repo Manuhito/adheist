@@ -401,6 +401,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/locksmith.png",
             "description": "AI Ad Generator for Locksmith Services"
         },
+        {
+            "name": "Home Inspector",
+            "url": "web:home_inspector_page",
+            "image": "images/marketing-pages/home-inspector.png",
+            "description": "AI Ad Generator for Home Inspectors"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
