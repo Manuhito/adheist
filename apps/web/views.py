@@ -581,6 +581,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/pub.png",
             "description": "AI Ad Generator for Pubs"
         },
+        {
+            "name": "Ice Cream Shop",
+            "url": "web:ice_cream_shop_page",
+            "image": "images/marketing-pages/ice-cream-shop.png",
+            "description": "AI Ad Generator for Ice Cream Shops"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
