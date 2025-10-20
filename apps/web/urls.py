@@ -52,4 +52,5 @@ urlpatterns = [
     path("create-garage-door-repair-ads/", TemplateView.as_view(template_name="marketing_pages/garage-door-repair.html"), name="garage_door_repair_page"),
     path("create-appliance-repair-ads/", TemplateView.as_view(template_name="marketing_pages/appliance-repair.html"), name="appliance_repair_page"),
     path("create-flooring-contractor-ads/", TemplateView.as_view(template_name="marketing_pages/flooring-contractor.html"), name="flooring_contractor_page"),
+    path("create-chiropractor-ads/", TemplateView.as_view(template_name="marketing_pages/chiropractor.html"), name="chiropractor_page"),
 ]

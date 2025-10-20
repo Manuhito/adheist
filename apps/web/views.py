@@ -425,6 +425,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/flooring-contractor.png",
             "description": "AI Ad Generator for Flooring Contractors"
         },
+        {
+            "name": "Chiropractor",
+            "url": "web:chiropractor_page",
+            "image": "images/marketing-pages/chiropractor.png",
+            "description": "AI Ad Generator for Chiropractors"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
