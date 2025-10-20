@@ -72,6 +72,7 @@ class StaticViewSitemap(sitemaps.Sitemap):
             "web:crossfit_box_page",
             "web:restaurant_page",
             "web:cafe_page",
+            "web:bakery_page",
         ]
 
     def location(self, item):
