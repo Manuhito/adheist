@@ -449,6 +449,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/optometrist.png",
             "description": "AI Ad Generator for Optometrists"
         },
+        {
+            "name": "Physical Therapist",
+            "url": "web:physical_therapist_page",
+            "image": "images/marketing-pages/physical-therapist.png",
+            "description": "AI Ad Generator for Physical Therapists"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
