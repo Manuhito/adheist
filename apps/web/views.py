@@ -377,6 +377,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/pool-service.png",
             "description": "AI Ad Generator for Pool Service Companies"
         },
+        {
+            "name": "Window Cleaner",
+            "url": "web:window_cleaner_page",
+            "image": "images/marketing-pages/window-cleaner.png",
+            "description": "AI Ad Generator for Window Cleaning Services"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {

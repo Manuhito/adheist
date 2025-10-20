@@ -42,6 +42,7 @@ class StaticViewSitemap(sitemaps.Sitemap):
             "web:general_contractor_page",
             "web:handyman_page",
             "web:pool_service_page",
+            "web:window_cleaner_page",
         ]
 
     def location(self, item):
