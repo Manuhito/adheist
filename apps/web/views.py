@@ -329,6 +329,18 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/landscaper.png",
             "description": "AI Ad Generator for Landscapers"
         },
+        {
+            "name": "Lawn Care",
+            "url": "web:lawn_care_page",
+            "image": "images/marketing-pages/lawn-care.png",
+            "description": "AI Ad Generator for Lawn Care"
+        },
+        {
+            "name": "House Cleaner",
+            "url": "web:house_cleaner_page",
+            "image": "images/marketing-pages/house-cleaner.png",
+            "description": "AI Ad Generator for House Cleaners"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
