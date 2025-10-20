@@ -437,6 +437,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/massage-therapist.png",
             "description": "AI Ad Generator for Massage Therapists"
         },
+        {
+            "name": "Dentist",
+            "url": "web:dentist_page",
+            "image": "images/marketing-pages/dentist.png",
+            "description": "AI Ad Generator for Dentists"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
