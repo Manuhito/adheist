@@ -65,4 +65,5 @@ urlpatterns = [
     path("create-urgent-care-center-ads/", TemplateView.as_view(template_name="marketing_pages/urgent-care-center.html"), name="urgent_care_center_page"),
     path("create-personal-trainer-ads/", TemplateView.as_view(template_name="marketing_pages/personal-trainer.html"), name="personal_trainer_page"),
     path("create-nutritionist-ads/", TemplateView.as_view(template_name="marketing_pages/nutritionist.html"), name="nutritionist_page"),
+    path("create-yoga-studio-ads/", TemplateView.as_view(template_name="marketing_pages/yoga-studio.html"), name="yoga_studio_page"),
 ]

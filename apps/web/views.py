@@ -503,6 +503,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/nutritionist.png",
             "description": "AI Ad Generator for Nutritionists"
         },
+        {
+            "name": "Yoga Studio",
+            "url": "web:yoga_studio_page",
+            "image": "images/marketing-pages/yoga-studio.png",
+            "description": "AI Ad Generator for Yoga Studios"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {

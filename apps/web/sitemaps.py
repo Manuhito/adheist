@@ -63,6 +63,7 @@ class StaticViewSitemap(sitemaps.Sitemap):
             "web:urgent_care_center_page",
             "web:personal_trainer_page",
             "web:nutritionist_page",
+            "web:yoga_studio_page",
         ]
 
     def location(self, item):
