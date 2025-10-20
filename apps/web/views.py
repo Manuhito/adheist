@@ -569,6 +569,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/food-truck.png",
             "description": "AI Ad Generator for Food Trucks"
         },
+        {
+            "name": "Bar",
+            "url": "web:bar_page",
+            "image": "images/marketing-pages/bar.png",
+            "description": "AI Ad Generator for Bars"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {

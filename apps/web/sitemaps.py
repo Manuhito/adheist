@@ -74,6 +74,7 @@ class StaticViewSitemap(sitemaps.Sitemap):
             "web:cafe_page",
             "web:bakery_page",
             "web:food_truck_page",
+            "web:bar_page",
         ]
 
     def location(self, item):
