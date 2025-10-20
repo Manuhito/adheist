@@ -413,6 +413,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/garage-door-repair.png",
             "description": "AI Ad Generator for Garage Door Repair Services"
         },
+        {
+            "name": "Appliance Repair",
+            "url": "web:appliance_repair_page",
+            "image": "images/marketing-pages/appliance-repair.png",
+            "description": "AI Ad Generator for Appliance Repair Services"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
