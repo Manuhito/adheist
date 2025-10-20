@@ -419,6 +419,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/appliance-repair.png",
             "description": "AI Ad Generator for Appliance Repair Services"
         },
+        {
+            "name": "Flooring Contractor",
+            "url": "web:flooring_contractor_page",
+            "image": "images/marketing-pages/flooring-contractor.png",
+            "description": "AI Ad Generator for Flooring Contractors"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
