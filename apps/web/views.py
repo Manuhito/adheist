@@ -491,6 +491,18 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/urgent-care-center.png",
             "description": "AI Ad Generator for Urgent Care Centers"
         },
+        {
+            "name": "Personal Trainer",
+            "url": "web:personal_trainer_page",
+            "image": "images/marketing-pages/personal-trainer.png",
+            "description": "AI Ad Generator for Personal Trainers"
+        },
+        {
+            "name": "Nutritionist",
+            "url": "web:nutritionist_page",
+            "image": "images/marketing-pages/nutritionist.png",
+            "description": "AI Ad Generator for Nutritionists"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
