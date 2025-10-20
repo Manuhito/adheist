@@ -395,6 +395,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/tree-service.png",
             "description": "AI Ad Generator for Tree Service Companies"
         },
+        {
+            "name": "Locksmith",
+            "url": "web:locksmith_page",
+            "image": "images/marketing-pages/locksmith.png",
+            "description": "AI Ad Generator for Locksmith Services"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
