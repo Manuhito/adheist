@@ -359,6 +359,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/roofer.png",
             "description": "AI Ad Generator for Roofers"
         },
+        {
+            "name": "General Contractor",
+            "url": "web:general_contractor_page",
+            "image": "images/marketing-pages/general-contractor.png",
+            "description": "AI Ad Generator for General Contractors"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {

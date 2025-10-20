@@ -39,6 +39,7 @@ class StaticViewSitemap(sitemaps.Sitemap):
             "web:carpet_cleaner_page",
             "web:painter_page",
             "web:roofer_page",
+            "web:general_contractor_page",
         ]
 
     def location(self, item):
