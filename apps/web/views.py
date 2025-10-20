@@ -317,6 +317,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/hvac-contractor.png",
             "description": "AI Ad Generator for HVAC Contractors"
         },
+        {
+            "name": "Pest Control",
+            "url": "web:pest_control_page",
+            "image": "images/marketing-pages/pest-control.png",
+            "description": "AI Ad Generator for Pest Control"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
