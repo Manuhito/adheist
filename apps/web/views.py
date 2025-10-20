@@ -443,6 +443,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/dentist.png",
             "description": "AI Ad Generator for Dentists"
         },
+        {
+            "name": "Optometrist",
+            "url": "web:optometrist_page",
+            "image": "images/marketing-pages/optometrist.png",
+            "description": "AI Ad Generator for Optometrists"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
