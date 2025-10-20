@@ -431,6 +431,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/chiropractor.png",
             "description": "AI Ad Generator for Chiropractors"
         },
+        {
+            "name": "Massage Therapist",
+            "url": "web:massage_therapist_page",
+            "image": "images/marketing-pages/massage-therapist.png",
+            "description": "AI Ad Generator for Massage Therapists"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {

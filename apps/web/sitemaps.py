@@ -51,6 +51,7 @@ class StaticViewSitemap(sitemaps.Sitemap):
             "web:appliance_repair_page",
             "web:flooring_contractor_page",
             "web:chiropractor_page",
+            "web:massage_therapist_page",
         ]
 
     def location(self, item):
