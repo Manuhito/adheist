@@ -593,6 +593,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/pizza-shop.png",
             "description": "AI Ad Generator for Pizza Shops"
         },
+        {
+            "name": "Catering Service",
+            "url": "web:catering_service_page",
+            "image": "images/marketing-pages/catering-service.png",
+            "description": "AI Ad Generator for Catering Services"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
