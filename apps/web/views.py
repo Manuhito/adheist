@@ -539,6 +539,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/fitness-center.png",
             "description": "AI Ad Generator for Fitness Centers"
         },
+        {
+            "name": "CrossFit Box",
+            "url": "web:crossfit_box_page",
+            "image": "images/marketing-pages/crossfit-box.png",
+            "description": "AI Ad Generator for CrossFit Boxes"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
