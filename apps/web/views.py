@@ -323,6 +323,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/pest-control.png",
             "description": "AI Ad Generator for Pest Control"
         },
+        {
+            "name": "Landscaper",
+            "url": "web:landscaper_page",
+            "image": "images/marketing-pages/landscaper.png",
+            "description": "AI Ad Generator for Landscapers"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
