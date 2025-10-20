@@ -66,6 +66,7 @@ class StaticViewSitemap(sitemaps.Sitemap):
             "web:yoga_studio_page",
             "web:pilates_studio_page",
             "web:martial_arts_studio_page",
+            "web:dance_studio_page",
         ]
 
     def location(self, item):

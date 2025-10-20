@@ -521,6 +521,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/martial-arts-studio.png",
             "description": "AI Ad Generator for Martial Arts Studios"
         },
+        {
+            "name": "Dance Studio",
+            "url": "web:dance_studio_page",
+            "image": "images/marketing-pages/dance-studio.png",
+            "description": "AI Ad Generator for Dance Studios"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
