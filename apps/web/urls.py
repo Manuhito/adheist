@@ -45,4 +45,5 @@ urlpatterns = [
     path("create-handyman-ads/", TemplateView.as_view(template_name="marketing_pages/handyman.html"), name="handyman_page"),
     path("create-pool-service-ads/", TemplateView.as_view(template_name="marketing_pages/pool-service.html"), name="pool_service_page"),
     path("create-window-cleaner-ads/", TemplateView.as_view(template_name="marketing_pages/window-cleaner.html"), name="window_cleaner_page"),
+    path("create-pressure-washing-ads/", TemplateView.as_view(template_name="marketing_pages/pressure-washing.html"), name="pressure_washing_page"),
 ]

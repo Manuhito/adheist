@@ -383,6 +383,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/window-cleaner.png",
             "description": "AI Ad Generator for Window Cleaning Services"
         },
+        {
+            "name": "Pressure Washing",
+            "url": "web:pressure_washing_page",
+            "image": "images/marketing-pages/pressure-washing.png",
+            "description": "AI Ad Generator for Pressure Washing Services"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
