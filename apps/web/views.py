@@ -509,6 +509,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/yoga-studio.png",
             "description": "AI Ad Generator for Yoga Studios"
         },
+        {
+            "name": "Pilates Studio",
+            "url": "web:pilates_studio_page",
+            "image": "images/marketing-pages/pilates-studio.png",
+            "description": "AI Ad Generator for Pilates Studios"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
