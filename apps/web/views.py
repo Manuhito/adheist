@@ -311,6 +311,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/electrician.png",
             "description": "AI Ad Generator for Electricians"
         },
+        {
+            "name": "HVAC Contractor",
+            "url": "web:hvac_contractor_page",
+            "image": "images/marketing-pages/hvac-contractor.png",
+            "description": "AI Ad Generator for HVAC Contractors"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
