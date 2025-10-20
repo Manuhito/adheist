@@ -20,6 +20,7 @@ class StaticViewSitemap(sitemaps.Sitemap):
             "terms",
             "privacy",
             "web:pricing_page",
+            "web:marketing_pages_index",
             "web:ngo_page",
             "web:pharmacy_page",
             "web:saas_page",

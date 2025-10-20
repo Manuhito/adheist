@@ -245,3 +245,63 @@ def pricing_page(request):
         "is_beta_pricing": is_beta_pricing
     })
 
+
+def marketing_pages_index(request):
+    """
+    Index page showing all marketing pages as cards.
+    """
+    marketing_pages = [
+        {
+            "name": "Lawyers",
+            "url": "web:lawyers_page",
+            "image": "images/marketing-pages/lawyers.png",
+            "description": "AI Ad Generator for Law Firms"
+        },
+        {
+            "name": "Luxury",
+            "url": "web:luxury_page",
+            "image": "images/marketing-pages/luxury.png",
+            "description": "AI Ad Generator for Luxury Brands"
+        },
+        {
+            "name": "NGO",
+            "url": "web:ngo_page",
+            "image": "images/marketing-pages/ngo.png",
+            "description": "AI Ad Generator for Non-Profits"
+        },
+        {
+            "name": "Pharmacy",
+            "url": "web:pharmacy_page",
+            "image": "images/marketing-pages/pharmacy.png",
+            "description": "AI Ad Generator for Pharmacies"
+        },
+        {
+            "name": "Real Estate",
+            "url": "web:real_estate_page",
+            "image": "images/marketing-pages/real-estate.png",
+            "description": "AI Ad Generator for Real Estate"
+        },
+        {
+            "name": "Restaurants",
+            "url": "web:restaurants_page",
+            "image": "images/marketing-pages/restaurants.png",
+            "description": "AI Ad Generator for Restaurants"
+        },
+        {
+            "name": "Retailers",
+            "url": "web:retailers_page",
+            "image": "images/marketing-pages/retailers.png",
+            "description": "AI Ad Generator for Retailers"
+        },
+        {
+            "name": "SaaS",
+            "url": "web:saas_page",
+            "image": "images/marketing-pages/saas.png",
+            "description": "AI Ad Generator for SaaS Companies"
+        },
+    ]
+    
+    return render(request, 'marketing_pages/index.html', {
+        "marketing_pages": marketing_pages
+    })
+

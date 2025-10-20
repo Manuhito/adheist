@@ -22,6 +22,7 @@ urlpatterns = [
         name="shadcn",
     ),
     path("pricing/", views.pricing_page, name="pricing_page"),
+    path("industries/", views.marketing_pages_index, name="marketing_pages_index"),
     path("create-ngo-ads/", TemplateView.as_view(template_name="marketing_pages/ngo.html"), name="ngo_page"),
     path("create-pharmacy-ads/", TemplateView.as_view(template_name="marketing_pages/pharmacy.html"), name="pharmacy_page"),
     path("create-saas-ads/", TemplateView.as_view(template_name="marketing_pages/saas.html"), name="saas_page"),
