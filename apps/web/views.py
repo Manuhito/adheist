@@ -767,6 +767,12 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/auto-repair-shop.png",
             "description": "AI Ad Generator for Auto Repair Shops"
         },
+        {
+            "name": "Car Dealership",
+            "url": "web:car_dealership_page",
+            "image": "images/marketing-pages/car-dealership.png",
+            "description": "AI Ad Generator for Car Dealerships"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
