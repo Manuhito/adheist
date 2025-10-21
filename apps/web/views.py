@@ -749,6 +749,24 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/brow-bar.png",
             "description": "AI Ad Generator for Brow Bars"
         },
+        {
+            "name": "Waxing Salon",
+            "url": "web:waxing_salon_page",
+            "image": "images/marketing-pages/waxing-salon.png",
+            "description": "AI Ad Generator for Waxing Salons"
+        },
+        {
+            "name": "Blow Dry Bar",
+            "url": "web:blow_dry_bar_page",
+            "image": "images/marketing-pages/blow-dry-bar.png",
+            "description": "AI Ad Generator for Blow Dry Bars"
+        },
+        {
+            "name": "Auto Repair Shop",
+            "url": "web:auto_repair_shop_page",
+            "image": "images/marketing-pages/auto-repair-shop.png",
+            "description": "AI Ad Generator for Auto Repair Shops"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {

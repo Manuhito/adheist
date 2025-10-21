@@ -106,4 +106,7 @@ urlpatterns = [
     path("create-piercing-studio-ads/", TemplateView.as_view(template_name="marketing_pages/piercing-studio.html"), name="piercing_studio_page"),
     path("create-lash-extension-ads/", TemplateView.as_view(template_name="marketing_pages/lash-extension.html"), name="lash_extension_page"),
     path("create-brow-bar-ads/", TemplateView.as_view(template_name="marketing_pages/brow-bar.html"), name="brow_bar_page"),
+    path("create-waxing-salon-ads/", TemplateView.as_view(template_name="marketing_pages/waxing-salon.html"), name="waxing_salon_page"),
+    path("create-blow-dry-bar-ads/", TemplateView.as_view(template_name="marketing_pages/blow-dry-bar.html"), name="blow_dry_bar_page"),
+    path("create-auto-repair-shop-ads/", TemplateView.as_view(template_name="marketing_pages/auto-repair-shop.html"), name="auto_repair_shop_page"),
 ]
