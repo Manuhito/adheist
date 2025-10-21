@@ -92,6 +92,18 @@ class StaticViewSitemap(sitemaps.Sitemap):
             "web:bbq_restaurant_page",
             "web:sushi_bar_page",
             "web:food_delivery_service_page",
+            "web:hair_salon_page",
+            "web:barbershop_page",
+            "web:nail_salon_page",
+            "web:spa_page",
+            "web:med_spa_page",
+            "web:tanning_salon_page",
+            "web:makeup_artist_page",
+            "web:esthetician_page",
+            "web:tattoo_parlor_page",
+            "web:piercing_studio_page",
+            "web:lash_extension_page",
+            "web:brow_bar_page",
         ]
 
     def location(self, item):

@@ -677,6 +677,78 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/food-delivery-service.png",
             "description": "AI Ad Generator for Food Delivery Services"
         },
+        {
+            "name": "Hair Salon",
+            "url": "web:hair_salon_page",
+            "image": "images/marketing-pages/hair-salon.png",
+            "description": "AI Ad Generator for Hair Salons"
+        },
+        {
+            "name": "Barbershop",
+            "url": "web:barbershop_page",
+            "image": "images/marketing-pages/barbershop.png",
+            "description": "AI Ad Generator for Barbershops"
+        },
+        {
+            "name": "Nail Salon",
+            "url": "web:nail_salon_page",
+            "image": "images/marketing-pages/nail-salon.png",
+            "description": "AI Ad Generator for Nail Salons"
+        },
+        {
+            "name": "Spa",
+            "url": "web:spa_page",
+            "image": "images/marketing-pages/spa.png",
+            "description": "AI Ad Generator for Spas"
+        },
+        {
+            "name": "Med Spa",
+            "url": "web:med_spa_page",
+            "image": "images/marketing-pages/med-spa.png",
+            "description": "AI Ad Generator for Med Spas"
+        },
+        {
+            "name": "Tanning Salon",
+            "url": "web:tanning_salon_page",
+            "image": "images/marketing-pages/tanning-salon.png",
+            "description": "AI Ad Generator for Tanning Salons"
+        },
+        {
+            "name": "Makeup Artist",
+            "url": "web:makeup_artist_page",
+            "image": "images/marketing-pages/makeup-artist.png",
+            "description": "AI Ad Generator for Makeup Artists"
+        },
+        {
+            "name": "Esthetician",
+            "url": "web:esthetician_page",
+            "image": "images/marketing-pages/esthetician.png",
+            "description": "AI Ad Generator for Estheticians"
+        },
+        {
+            "name": "Tattoo Parlor",
+            "url": "web:tattoo_parlor_page",
+            "image": "images/marketing-pages/tattoo-parlor.png",
+            "description": "AI Ad Generator for Tattoo Parlors"
+        },
+        {
+            "name": "Piercing Studio",
+            "url": "web:piercing_studio_page",
+            "image": "images/marketing-pages/piercing-studio.png",
+            "description": "AI Ad Generator for Piercing Studios"
+        },
+        {
+            "name": "Lash Extension",
+            "url": "web:lash_extension_page",
+            "image": "images/marketing-pages/lash-extension.png",
+            "description": "AI Ad Generator for Lash Extensions"
+        },
+        {
+            "name": "Brow Bar",
+            "url": "web:brow_bar_page",
+            "image": "images/marketing-pages/brow-bar.png",
+            "description": "AI Ad Generator for Brow Bars"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
