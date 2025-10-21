@@ -97,4 +97,7 @@ urlpatterns = [
     path("create-hair-salon-ads/", TemplateView.as_view(template_name="marketing_pages/hair-salon.html"), name="hair_salon_page"),
     path("create-barbershop-ads/", TemplateView.as_view(template_name="marketing_pages/barbershop.html"), name="barbershop_page"),
     path("create-nail-salon-ads/", TemplateView.as_view(template_name="marketing_pages/nail-salon.html"), name="nail_salon_page"),
+    path("create-spa-ads/", TemplateView.as_view(template_name="marketing_pages/spa.html"), name="spa_page"),
+    path("create-med-spa-ads/", TemplateView.as_view(template_name="marketing_pages/med-spa.html"), name="med_spa_page"),
+    path("create-tanning-salon-ads/", TemplateView.as_view(template_name="marketing_pages/tanning-salon.html"), name="tanning_salon_page"),
 ]

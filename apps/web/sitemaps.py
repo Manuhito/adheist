@@ -95,6 +95,9 @@ class StaticViewSitemap(sitemaps.Sitemap):
             "web:hair_salon_page",
             "web:barbershop_page",
             "web:nail_salon_page",
+            "web:spa_page",
+            "web:med_spa_page",
+            "web:tanning_salon_page",
         ]
 
     def location(self, item):

@@ -695,6 +695,24 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/nail-salon.png",
             "description": "AI Ad Generator for Nail Salons"
         },
+        {
+            "name": "Spa",
+            "url": "web:spa_page",
+            "image": "images/marketing-pages/spa.png",
+            "description": "AI Ad Generator for Spas"
+        },
+        {
+            "name": "Med Spa",
+            "url": "web:med_spa_page",
+            "image": "images/marketing-pages/med-spa.png",
+            "description": "AI Ad Generator for Med Spas"
+        },
+        {
+            "name": "Tanning Salon",
+            "url": "web:tanning_salon_page",
+            "image": "images/marketing-pages/tanning-salon.png",
+            "description": "AI Ad Generator for Tanning Salons"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
