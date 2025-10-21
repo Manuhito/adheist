@@ -88,4 +88,7 @@ urlpatterns = [
     path("create-coffee-roaster-ads/", TemplateView.as_view(template_name="marketing_pages/coffee-roaster.html"), name="coffee_roaster_page"),
     path("create-tea-shop-ads/", TemplateView.as_view(template_name="marketing_pages/tea-shop.html"), name="tea_shop_page"),
     path("create-donut-shop-ads/", TemplateView.as_view(template_name="marketing_pages/donut-shop.html"), name="donut_shop_page"),
+    path("create-bagel-shop-ads/", TemplateView.as_view(template_name="marketing_pages/bagel-shop.html"), name="bagel_shop_page"),
+    path("create-sandwich-shop-ads/", TemplateView.as_view(template_name="marketing_pages/sandwich-shop.html"), name="sandwich_shop_page"),
+    path("create-deli-ads/", TemplateView.as_view(template_name="marketing_pages/deli.html"), name="deli_page"),
 ]

@@ -641,6 +641,24 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/donut-shop.png",
             "description": "AI Ad Generator for Donut Shops"
         },
+        {
+            "name": "Bagel Shop",
+            "url": "web:bagel_shop_page",
+            "image": "images/marketing-pages/bagel-shop.png",
+            "description": "AI Ad Generator for Bagel Shops"
+        },
+        {
+            "name": "Sandwich Shop",
+            "url": "web:sandwich_shop_page",
+            "image": "images/marketing-pages/sandwich-shop.png",
+            "description": "AI Ad Generator for Sandwich Shops"
+        },
+        {
+            "name": "Deli",
+            "url": "web:deli_page",
+            "image": "images/marketing-pages/deli.png",
+            "description": "AI Ad Generator for Delis"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
