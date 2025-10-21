@@ -605,6 +605,78 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/juice-bar.png",
             "description": "AI Ad Generator for Juice Bars"
         },
+        {
+            "name": "Smoothie Shop",
+            "url": "web:smoothie_shop_page",
+            "image": "images/marketing-pages/smoothie-shop.png",
+            "description": "AI Ad Generator for Smoothie Shops"
+        },
+        {
+            "name": "Brewery",
+            "url": "web:brewery_page",
+            "image": "images/marketing-pages/brewery.png",
+            "description": "AI Ad Generator for Breweries"
+        },
+        {
+            "name": "Wine Shop",
+            "url": "web:wine_shop_page",
+            "image": "images/marketing-pages/wine-shop.png",
+            "description": "AI Ad Generator for Wine Shops"
+        },
+        {
+            "name": "Coffee Roaster",
+            "url": "web:coffee_roaster_page",
+            "image": "images/marketing-pages/coffee-roaster.png",
+            "description": "AI Ad Generator for Coffee Roasters"
+        },
+        {
+            "name": "Tea Shop",
+            "url": "web:tea_shop_page",
+            "image": "images/marketing-pages/tea-shop.png",
+            "description": "AI Ad Generator for Tea Shops"
+        },
+        {
+            "name": "Donut Shop",
+            "url": "web:donut_shop_page",
+            "image": "images/marketing-pages/donut-shop.png",
+            "description": "AI Ad Generator for Donut Shops"
+        },
+        {
+            "name": "Bagel Shop",
+            "url": "web:bagel_shop_page",
+            "image": "images/marketing-pages/bagel-shop.png",
+            "description": "AI Ad Generator for Bagel Shops"
+        },
+        {
+            "name": "Sandwich Shop",
+            "url": "web:sandwich_shop_page",
+            "image": "images/marketing-pages/sandwich-shop.png",
+            "description": "AI Ad Generator for Sandwich Shops"
+        },
+        {
+            "name": "Deli",
+            "url": "web:deli_page",
+            "image": "images/marketing-pages/deli.png",
+            "description": "AI Ad Generator for Delis"
+        },
+        {
+            "name": "BBQ Restaurant",
+            "url": "web:bbq_restaurant_page",
+            "image": "images/marketing-pages/bbq-restaurant.png",
+            "description": "AI Ad Generator for BBQ Restaurants"
+        },
+        {
+            "name": "Sushi Bar",
+            "url": "web:sushi_bar_page",
+            "image": "images/marketing-pages/sushi-bar.png",
+            "description": "AI Ad Generator for Sushi Bars"
+        },
+        {
+            "name": "Food Delivery Service",
+            "url": "web:food_delivery_service_page",
+            "image": "images/marketing-pages/food-delivery-service.png",
+            "description": "AI Ad Generator for Food Delivery Services"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {

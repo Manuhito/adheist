@@ -80,6 +80,18 @@ class StaticViewSitemap(sitemaps.Sitemap):
             "web:pizza_shop_page",
             "web:catering_service_page",
             "web:juice_bar_page",
+            "web:smoothie_shop_page",
+            "web:brewery_page",
+            "web:wine_shop_page",
+            "web:coffee_roaster_page",
+            "web:tea_shop_page",
+            "web:donut_shop_page",
+            "web:bagel_shop_page",
+            "web:sandwich_shop_page",
+            "web:deli_page",
+            "web:bbq_restaurant_page",
+            "web:sushi_bar_page",
+            "web:food_delivery_service_page",
         ]
 
     def location(self, item):
