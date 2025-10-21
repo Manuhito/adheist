@@ -659,6 +659,24 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/deli.png",
             "description": "AI Ad Generator for Delis"
         },
+        {
+            "name": "BBQ Restaurant",
+            "url": "web:bbq_restaurant_page",
+            "image": "images/marketing-pages/bbq-restaurant.png",
+            "description": "AI Ad Generator for BBQ Restaurants"
+        },
+        {
+            "name": "Sushi Bar",
+            "url": "web:sushi_bar_page",
+            "image": "images/marketing-pages/sushi-bar.png",
+            "description": "AI Ad Generator for Sushi Bars"
+        },
+        {
+            "name": "Food Delivery Service",
+            "url": "web:food_delivery_service_page",
+            "image": "images/marketing-pages/food-delivery-service.png",
+            "description": "AI Ad Generator for Food Delivery Services"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {

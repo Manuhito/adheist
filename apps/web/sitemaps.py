@@ -89,6 +89,9 @@ class StaticViewSitemap(sitemaps.Sitemap):
             "web:bagel_shop_page",
             "web:sandwich_shop_page",
             "web:deli_page",
+            "web:bbq_restaurant_page",
+            "web:sushi_bar_page",
+            "web:food_delivery_service_page",
         ]
 
     def location(self, item):
