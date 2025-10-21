@@ -677,6 +677,24 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/food-delivery-service.png",
             "description": "AI Ad Generator for Food Delivery Services"
         },
+        {
+            "name": "Hair Salon",
+            "url": "web:hair_salon_page",
+            "image": "images/marketing-pages/hair-salon.png",
+            "description": "AI Ad Generator for Hair Salons"
+        },
+        {
+            "name": "Barbershop",
+            "url": "web:barbershop_page",
+            "image": "images/marketing-pages/barbershop.png",
+            "description": "AI Ad Generator for Barbershops"
+        },
+        {
+            "name": "Nail Salon",
+            "url": "web:nail_salon_page",
+            "image": "images/marketing-pages/nail-salon.png",
+            "description": "AI Ad Generator for Nail Salons"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
