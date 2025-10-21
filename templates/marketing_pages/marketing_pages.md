@@ -181,3 +181,5 @@ To adjust the icons, use Lucid icons https://lucide.dev/icons/
 Notes: 
 All pages should inherit the html base web 
 You need to create a new url, view and html for each diferent page
+You have to add the new url to apps/web/sitemaps.py as a new static url
+You have to add the new page to marketing_pages_index

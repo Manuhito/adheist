@@ -1,0 +1,173 @@
+{% extends "web/base.html" %}
+{% load static socialaccount %}
+
+{% block page_title %}Industries - AI Ad Generator | Ad Heist{% endblock page_title %}
+
+{% block meta_description %}
+<meta name="description" content="Discover AI-powered ad generation solutions tailored for your industry. From law firms to SaaS companies, create professional ads in minutes.">
+{% endblock meta_description %}
+
+{% block content %}
+<div class="text-gray-800 dark:text-gray-200">
+    <!-- Hero Section -->
+    <section class="container mx-auto py-12 px-4 md:px-6">
+        <div class="text-center mb-12">
+            <h1 class="text-5xl lg:text-6xl font-bold tracking-tight text-neutral-800 dark:text-white leading-tight lg:leading-snug">
+                <span class="text-primary">AI Ad Generator</span> for Every Industry
+            </h1>
+            <p class="mt-6 text-lg text-neutral-600 dark:text-neutral-300 max-w-3xl mx-auto">
+                Create professional, high-converting ads tailored to your industry in minutes. No design skills required.
+            </p>
+            
+            <!-- CTA Buttons and Reviews -->
+            <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a href="{% url 'account_signup' %}"
+                    class="inline-flex items-center justify-center rounded-lg px-6 py-3 text-base font-medium text-white shadow-sm"
+                    style="background-color: #5C67F2;">
+                    Start Free Trial
+                </a>
+                <form method="post" action="{% provider_login_url 'google' %}">
+                    {% csrf_token %}
+                    <button type="submit"
+                        class="inline-flex items-center justify-center rounded-lg border border-neutral-300 bg-white px-6 py-3 text-base font-medium text-neutral-700 hover:bg-neutral-100 w-full sm:w-auto">
+                        <img src="{% static 'images/socialauth/google-logo.svg' %}" alt="Google" class="h-5 w-5 mr-3">
+                        Login with Google
+                    </button>
+                </form>
+            </div>
+            <div class="mt-8 flex flex-col items-center">
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path>
+                    </svg>
+                    <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path>
+                    </svg>
+                    <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path>
+                    </svg>
+                    <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path>
+                    </svg>
+                    <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path>
+                    </svg>
+                    <span class="ml-2 text-base font-medium text-neutral-800 dark:text-white">5.0</span>
+                </div>
+                <p class="mt-2 text-sm text-neutral-500 dark:text-neutral-400">From 80+ reviews</p>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="mb-6 max-w-7xl mx-auto flex justify-center">
+            <div class="relative max-w-lg w-full">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.3-4.3"></path>
+                    </svg>
+                </div>
+                <input
+                    type="text"
+                    id="search-input"
+                    placeholder="Search industries..."
+                    class="pl-10 w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 text-sm text-neutral-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                />
+            </div>
+        </div>
+
+        <!-- Grid of Marketing Pages -->
+        <div id="marketing-pages-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+            {% for page in marketing_pages %}
+            <a href="{% url page.url %}" class="group marketing-page-card" data-name="{{ page.name|lower }}" data-description="{{ page.description|lower }}">
+                <div class="border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 bg-white dark:bg-neutral-900">
+                    <!-- Image Container -->
+                    <div class="aspect-square overflow-hidden bg-gray-100 dark:bg-neutral-800">
+                        <img 
+                            src="{% static page.image %}" 
+                            alt="{{ page.description }}"
+                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        >
+                    </div>
+                    
+                    <!-- Card Content -->
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold text-neutral-800 dark:text-white mb-2">
+                            {{ page.name }}
+                        </h3>
+                        <p class="text-sm text-neutral-600 dark:text-neutral-400">
+                            {{ page.description }}
+                        </p>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+
+    </section>
+
+    <!-- Final CTA Section -->
+    <section class="container mx-auto py-16 px-4 md:px-6">
+        <div class="bg-primary/10 dark:bg-primary/20 rounded-3xl p-8 md:p-16 text-center">
+            <h2 class="text-4xl font-bold text-primary">Start Creating Better Ads Today</h2>
+            <p class="mt-4 text-lg text-neutral-600 dark:text-neutral-300 max-w-2xl mx-auto">
+                Join thousands of businesses using Ad Heist to create professional ads in minutes.
+            </p>
+            <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a href="{% url 'account_signup' %}" class="inline-flex items-center justify-center rounded-lg px-8 py-4 text-lg font-medium text-white shadow-sm" style="background-color: #5C67F2;">
+                    Start Free Trial
+                </a>
+                <form method="post" action="{% provider_login_url 'google' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="inline-flex items-center justify-center rounded-lg border border-neutral-300 bg-white px-8 py-4 text-lg font-medium text-neutral-700 hover:bg-neutral-100 w-full sm:w-auto">
+                        <img src="{% static 'images/socialauth/google-logo.svg' %}" alt="Google" class="h-5 w-5 mr-3">
+                        Login with Google
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+    // Search functionality - wait for everything to load
+    function initSearch() {
+        const searchInput = document.getElementById('search-input');
+        const cards = document.querySelectorAll('.marketing-page-card');
+        
+        if (searchInput && cards.length > 0) {
+            searchInput.addEventListener('input', function(e) {
+                const searchTerm = e.target.value.toLowerCase().trim();
+                
+                cards.forEach(card => {
+                    const name = card.getAttribute('data-name');
+                    const description = card.getAttribute('data-description');
+                    
+                    if (searchTerm === '' || name.includes(searchTerm) || description.includes(searchTerm)) {
+                        card.style.display = '';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        } else {
+            setTimeout(initSearch, 100);
+        }
+    }
+    
+    // Try multiple times to ensure DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initSearch);
+    } else {
+        initSearch();
+    }
+    
+    // Also try after window load
+    window.addEventListener('load', function() {
+        setTimeout(initSearch, 100);
+    });
+</script>
+{% endblock extra_js %}
