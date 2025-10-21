@@ -623,6 +623,24 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/wine-shop.png",
             "description": "AI Ad Generator for Wine Shops"
         },
+        {
+            "name": "Coffee Roaster",
+            "url": "web:coffee_roaster_page",
+            "image": "images/marketing-pages/coffee-roaster.png",
+            "description": "AI Ad Generator for Coffee Roasters"
+        },
+        {
+            "name": "Tea Shop",
+            "url": "web:tea_shop_page",
+            "image": "images/marketing-pages/tea-shop.png",
+            "description": "AI Ad Generator for Tea Shops"
+        },
+        {
+            "name": "Donut Shop",
+            "url": "web:donut_shop_page",
+            "image": "images/marketing-pages/donut-shop.png",
+            "description": "AI Ad Generator for Donut Shops"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
