@@ -605,6 +605,24 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/juice-bar.png",
             "description": "AI Ad Generator for Juice Bars"
         },
+        {
+            "name": "Smoothie Shop",
+            "url": "web:smoothie_shop_page",
+            "image": "images/marketing-pages/smoothie-shop.png",
+            "description": "AI Ad Generator for Smoothie Shops"
+        },
+        {
+            "name": "Brewery",
+            "url": "web:brewery_page",
+            "image": "images/marketing-pages/brewery.png",
+            "description": "AI Ad Generator for Breweries"
+        },
+        {
+            "name": "Wine Shop",
+            "url": "web:wine_shop_page",
+            "image": "images/marketing-pages/wine-shop.png",
+            "description": "AI Ad Generator for Wine Shops"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
