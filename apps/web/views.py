@@ -713,6 +713,24 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/tanning-salon.png",
             "description": "AI Ad Generator for Tanning Salons"
         },
+        {
+            "name": "Makeup Artist",
+            "url": "web:makeup_artist_page",
+            "image": "images/marketing-pages/makeup-artist.png",
+            "description": "AI Ad Generator for Makeup Artists"
+        },
+        {
+            "name": "Esthetician",
+            "url": "web:esthetician_page",
+            "image": "images/marketing-pages/esthetician.png",
+            "description": "AI Ad Generator for Estheticians"
+        },
+        {
+            "name": "Tattoo Parlor",
+            "url": "web:tattoo_parlor_page",
+            "image": "images/marketing-pages/tattoo-parlor.png",
+            "description": "AI Ad Generator for Tattoo Parlors"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
