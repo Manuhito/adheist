@@ -773,6 +773,24 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/car-dealership.png",
             "description": "AI Ad Generator for Car Dealerships"
         },
+        {
+            "name": "Auto Detailing",
+            "url": "web:auto_detailing_page",
+            "image": "images/marketing-pages/auto-detailing.png",
+            "description": "AI Ad Generator for Auto Detailing"
+        },
+        {
+            "name": "Tire Shop",
+            "url": "web:tire_shop_page",
+            "image": "images/marketing-pages/tire-shop.png",
+            "description": "AI Ad Generator for Tire Shops"
+        },
+        {
+            "name": "Auto Body Shop",
+            "url": "web:auto_body_shop_page",
+            "image": "images/marketing-pages/auto-body-shop.png",
+            "description": "AI Ad Generator for Auto Body Shops"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {

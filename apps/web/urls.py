@@ -110,4 +110,7 @@ urlpatterns = [
     path("create-blow-dry-bar-ads/", TemplateView.as_view(template_name="marketing_pages/blow-dry-bar.html"), name="blow_dry_bar_page"),
     path("create-auto-repair-shop-ads/", TemplateView.as_view(template_name="marketing_pages/auto-repair-shop.html"), name="auto_repair_shop_page"),
     path("create-car-dealership-ads/", TemplateView.as_view(template_name="marketing_pages/car-dealership.html"), name="car_dealership_page"),
+    path("create-auto-detailing-ads/", TemplateView.as_view(template_name="marketing_pages/auto-detailing.html"), name="auto_detailing_page"),
+    path("create-tire-shop-ads/", TemplateView.as_view(template_name="marketing_pages/tire-shop.html"), name="tire_shop_page"),
+    path("create-auto-body-shop-ads/", TemplateView.as_view(template_name="marketing_pages/auto-body-shop.html"), name="auto_body_shop_page"),
 ]

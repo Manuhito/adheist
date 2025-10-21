@@ -108,6 +108,9 @@ class StaticViewSitemap(sitemaps.Sitemap):
             "web:blow_dry_bar_page",
             "web:auto_repair_shop_page",
             "web:car_dealership_page",
+            "web:auto_detailing_page",
+            "web:tire_shop_page",
+            "web:auto_body_shop_page",
         ]
 
     def location(self, item):
