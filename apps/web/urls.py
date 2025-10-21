@@ -103,4 +103,7 @@ urlpatterns = [
     path("create-makeup-artist-ads/", TemplateView.as_view(template_name="marketing_pages/makeup-artist.html"), name="makeup_artist_page"),
     path("create-esthetician-ads/", TemplateView.as_view(template_name="marketing_pages/esthetician.html"), name="esthetician_page"),
     path("create-tattoo-parlor-ads/", TemplateView.as_view(template_name="marketing_pages/tattoo-parlor.html"), name="tattoo_parlor_page"),
+    path("create-piercing-studio-ads/", TemplateView.as_view(template_name="marketing_pages/piercing-studio.html"), name="piercing_studio_page"),
+    path("create-lash-extension-ads/", TemplateView.as_view(template_name="marketing_pages/lash-extension.html"), name="lash_extension_page"),
+    path("create-brow-bar-ads/", TemplateView.as_view(template_name="marketing_pages/brow-bar.html"), name="brow_bar_page"),
 ]

@@ -101,6 +101,9 @@ class StaticViewSitemap(sitemaps.Sitemap):
             "web:makeup_artist_page",
             "web:esthetician_page",
             "web:tattoo_parlor_page",
+            "web:piercing_studio_page",
+            "web:lash_extension_page",
+            "web:brow_bar_page",
         ]
 
     def location(self, item):

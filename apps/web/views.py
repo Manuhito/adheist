@@ -731,6 +731,24 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/tattoo-parlor.png",
             "description": "AI Ad Generator for Tattoo Parlors"
         },
+        {
+            "name": "Piercing Studio",
+            "url": "web:piercing_studio_page",
+            "image": "images/marketing-pages/piercing-studio.png",
+            "description": "AI Ad Generator for Piercing Studios"
+        },
+        {
+            "name": "Lash Extension",
+            "url": "web:lash_extension_page",
+            "image": "images/marketing-pages/lash-extension.png",
+            "description": "AI Ad Generator for Lash Extensions"
+        },
+        {
+            "name": "Brow Bar",
+            "url": "web:brow_bar_page",
+            "image": "images/marketing-pages/brow-bar.png",
+            "description": "AI Ad Generator for Brow Bars"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
