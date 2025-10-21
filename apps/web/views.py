@@ -791,6 +791,18 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/auto-body-shop.png",
             "description": "AI Ad Generator for Auto Body Shops"
         },
+        {
+            "name": "Oil Change Service",
+            "url": "web:oil_change_service_page",
+            "image": "images/marketing-pages/oil-change-service.png",
+            "description": "AI Ad Generator for Oil Change Services"
+        },
+        {
+            "name": "Car Wash",
+            "url": "web:car_wash_page",
+            "image": "images/marketing-pages/car-wash.png",
+            "description": "AI Ad Generator for Car Washes"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
