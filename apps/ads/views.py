@@ -1767,6 +1767,24 @@ def adrequest_version_create(request):
             
             # Credits will be deducted in the task after successful image generation
             
+            # Create AdCopyVersion and start ad copy text generation task
+            try:
+                from apps.ads.models import AdCopyVersion
+                from apps.aiinterface.tasks import generate_ad_copy_text_task
+                
+                # Create AdCopyVersion instance
+                ad_copy_version = AdCopyVersion.objects.create(
+                    ad_request_version=version
+                )
+                print(f"AdCopyVersion created with ID: {ad_copy_version.id}")
+                
+                # Launch the ad copy text generation task
+                copy_task = generate_ad_copy_text_task.delay(ad_copy_version.id)
+                print(f"Ad copy text generation task (ID: {copy_task.id}) started for AdCopyVersion {ad_copy_version.id}")
+                
+            except Exception as copy_error:
+                print(f"Error starting ad copy text generation task: {str(copy_error)}")
+            
         except Exception as img_error:
             print(f"Error starting image generation task: {str(img_error)}")
         

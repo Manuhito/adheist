@@ -16,6 +16,7 @@ from .models import (
     AdRequest,
     AdRequestAssets,
     AdRequestVersion,
+    AdCopyVersion,
     AdRequestUsage,
     ExtraCredit,
     AppConfiguration,
@@ -275,6 +276,83 @@ class AdRequestVersionAdmin(admin.ModelAdmin):
         class Meta:
             model = AdRequestVersion
             fields = '__all__'
+
+
+@admin.register(AdCopyVersion)
+class AdCopyVersionAdmin(admin.ModelAdmin):
+    list_display = ["get_copy_id", "ad_request_version", "has_ad_copy_text", "has_error", "created_at", "updated_at"]
+    search_fields = ["ad_request_version__id", "ad_copy_text", "error_logs"]
+    list_filter = ["created_at"]
+    readonly_fields = ["ad_request_version", "ad_copy_text_display", "prompt_sent_display", "response_metadata_display", "error_logs_display", "created_at", "updated_at"]
+    
+    fieldsets = [
+        ("Basic Information", {
+            "fields": ["ad_request_version", "created_at", "updated_at"]
+        }),
+        ("Ad Copy Text", {
+            "fields": ["ad_copy_text_display"],
+            "classes": ["wide"]
+        }),
+        ("Prompt Sent", {
+            "fields": ["prompt_sent_display"],
+            "classes": ["wide", "collapse"]
+        }),
+        ("API Response Metadata", {
+            "fields": ["response_metadata_display"],
+            "classes": ["wide", "collapse"]
+        }),
+        ("Error Logs", {
+            "fields": ["error_logs_display"],
+            "classes": ["wide", "collapse"]
+        })
+    ]
+    
+    def get_copy_id(self, obj):
+        return f"Copy #{obj.id}"
+    get_copy_id.short_description = "Copy ID"
+    
+    def has_ad_copy_text(self, obj):
+        return bool(obj.ad_copy_text)
+    has_ad_copy_text.boolean = True
+    has_ad_copy_text.short_description = "Has Text"
+    
+    def has_error(self, obj):
+        return bool(obj.error_logs)
+    has_error.boolean = True
+    has_error.short_description = "Has Error"
+    
+    def ad_copy_text_display(self, obj):
+        if not obj.ad_copy_text:
+            return "-"
+        return mark_safe(f'<textarea readonly style="width: 100%; height: 200px; font-family: monospace;">{obj.ad_copy_text}</textarea>')
+    ad_copy_text_display.short_description = "Ad Copy Text"
+    
+    def prompt_sent_display(self, obj):
+        if not obj.prompt_sent:
+            return "-"
+        return mark_safe(f'<textarea readonly style="width: 100%; height: 200px; font-family: monospace;">{obj.prompt_sent}</textarea>')
+    prompt_sent_display.short_description = "Prompt Sent"
+    
+    def response_metadata_display(self, obj):
+        if not obj.response_metadata:
+            return "-"
+        formatted_json = json.dumps(obj.response_metadata, indent=2)
+        return mark_safe(f'<pre style="background: #f5f5f5; padding: 10px; border-radius: 5px; overflow-x: auto;">{formatted_json}</pre>')
+    response_metadata_display.short_description = "Response Metadata"
+    
+    def error_logs_display(self, obj):
+        if not obj.error_logs:
+            return "-"
+        return mark_safe(f'<textarea readonly style="width: 100%; height: 150px; font-family: monospace; color: red;">{obj.error_logs}</textarea>')
+    error_logs_display.short_description = "Error Logs"
+    
+    def has_add_permission(self, request):
+        # Don't allow manual creation
+        return False
+    
+    def has_change_permission(self, request, obj=None):
+        # Allow viewing but not editing
+        return True
 
 
 @admin.register(AdRequestUsage)

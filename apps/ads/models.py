@@ -690,6 +690,44 @@ class AdRequestVersion(BaseModel):
         send_mail(subject, message, from_email, [to_email], fail_silently=False)
 
 
+class AdCopyVersion(BaseModel):
+    """Model to store generated ad copy text for each AdRequestVersion"""
+    ad_request_version = models.ForeignKey(
+        AdRequestVersion, 
+        on_delete=models.CASCADE, 
+        related_name="ad_copies",
+        help_text="The AdRequestVersion this copy belongs to"
+    )
+    ad_copy_text = models.TextField(
+        null=True, 
+        blank=True,
+        help_text="The generated ad copy text"
+    )
+    response_metadata = models.JSONField(
+        null=True, 
+        blank=True, 
+        help_text="Metadata from OpenAI API responses including costs and tokens"
+    )
+    error_logs = models.TextField(
+        null=True, 
+        blank=True, 
+        help_text="Error logs when ad copy generation fails"
+    )
+    prompt_sent = models.TextField(
+        null=True, 
+        blank=True,
+        help_text="The prompt that was sent to OpenAI for generating this copy"
+    )
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Ad Copy Version"
+        verbose_name_plural = "Ad Copy Versions"
+    
+    def __str__(self):
+        return f"Ad Copy for Version #{self.ad_request_version.id} - {self.created_at.strftime('%Y-%m-%d %H:%M')}"
+
+
 # apps/ads/models.py
 class AdRequestUsage(BaseModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
