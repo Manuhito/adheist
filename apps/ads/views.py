@@ -3756,7 +3756,8 @@ def generated_ad_page(request, version_id):
             return redirect('ads:my_ads_page')
         
         # Pre-fetch and order versions to ensure correct ordering in template
-        version.ad_request.ordered_versions = version.ad_request.versions.order_by('-created_at')
+        # Also prefetch ad_copies to access ad_copy_text
+        version.ad_request.ordered_versions = version.ad_request.versions.prefetch_related('ad_copies').order_by('-created_at')
         
         # Determine back URL based on referrer
         referer = request.META.get('HTTP_REFERER', '')

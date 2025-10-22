@@ -9,6 +9,44 @@ import * as ReactDOM from "react-dom";
 import RevisionModal from './components/RevisionModal';
 import AdDetailsModal from './components/AdDetailsModal';
 
+// Ad Copy Text Display component with Read More/Less functionality
+const AdCopyTextDisplay = ({ text }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const CHAR_LIMIT = 150; // Character limit for collapsed state
+  
+  const shouldTruncate = text.length > CHAR_LIMIT;
+  const displayText = isExpanded || !shouldTruncate 
+    ? text 
+    : text.substring(0, CHAR_LIMIT).trim();
+
+  return (
+    <div className="mb-4 p-3 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+      <p className="text-xs text-gray-600 dark:text-gray-400 whitespace-pre-wrap leading-relaxed">
+        {displayText}
+        {shouldTruncate && !isExpanded && (
+          <>
+            ...{' '}
+            <button
+              onClick={() => setIsExpanded(true)}
+              className="text-xs text-primary hover:text-primary/80 font-medium transition-colors inline"
+            >
+              Read more
+            </button>
+          </>
+        )}
+      </p>
+      {shouldTruncate && isExpanded && (
+        <button
+          onClick={() => setIsExpanded(false)}
+          className="mt-1 text-xs text-primary hover:text-primary/80 font-medium transition-colors"
+        >
+          Read less
+        </button>
+      )}
+    </div>
+  );
+};
+
 // Custom header component for Generated Ad page
 const GeneratedAdHeader = ({ brandName, backUrl }) => {
   const handleContinueToLibrary = () => {
@@ -45,6 +83,9 @@ const GeneratedAdHeader = ({ brandName, backUrl }) => {
 const GeneratedAdPage = () => {
   const { t } = useTranslation();
   const generatedAdData = window.__GENERATED_AD_DATA__ || {};
+  
+  // Debug: Log all received data
+  console.log('Generated Ad Data:', generatedAdData);
 
   // Set custom header when component mounts
   useEffect(() => {
@@ -82,6 +123,8 @@ const GeneratedAdPage = () => {
   React.useEffect(() => {
     if (generatedAdData.versions && generatedAdData.versions.length > 0) {
       const current = generatedAdData.versions.find(v => v.id === generatedAdData.version_id) || generatedAdData.versions[0];
+      console.log('Selected version:', current);
+      console.log('Ad copy text:', current?.ad_copy_text);
       setSelectedVersion(current);
     }
   }, [generatedAdData.versions, generatedAdData.version_id]);
@@ -89,6 +132,7 @@ const GeneratedAdPage = () => {
   // Get current display data (either selected version or default)
   const currentImageUrl = selectedVersion?.generated_image || generatedAdData.generated_image;
   const currentVersionId = selectedVersion?.id || generatedAdData.version_id;
+  const currentAdCopyText = selectedVersion?.ad_copy_text || null;
 
   const handleDownload = async () => {
     if (!currentImageUrl) return;
@@ -230,8 +274,8 @@ const GeneratedAdPage = () => {
   };
 
   return (
-    <div className="h-full flex items-center justify-center p-2">
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 max-w-5xl w-full">
+    <div className="h-full flex items-center justify-center p-2 overflow-y-auto">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 max-w-5xl w-full my-4">
         <div className="flex gap-4">
           {/* Left sidebar with version previews */}
           {generatedAdData.versions && generatedAdData.versions.length > 1 && (
@@ -263,13 +307,18 @@ const GeneratedAdPage = () => {
 
           {/* Main content */}
           <div className="flex-1">
+            {/* Ad Copy Text */}
+            {currentAdCopyText && (
+              <AdCopyTextDisplay text={currentAdCopyText} />
+            )}
+            
             {/* Image container */}
             <div className="flex items-center justify-center mb-6">
               {currentImageUrl ? (
                 <img
                   src={currentImageUrl}
                   alt="Generated Ad"
-                  className="max-w-full max-h-[calc(100vh-300px)] object-contain rounded-lg shadow-md"
+                  className="max-w-full max-h-[calc(100vh-400px)] object-contain rounded-lg border border-gray-200 dark:border-gray-700"
                 />
               ) : (
                 <div className="w-full h-96 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">

@@ -664,6 +664,18 @@ One scoop of AG1 gives your body everything it's craving before the day even sta
         # Extract generated text
         generated_text = response.choices[0].message.content.strip()
         
+        # Clean up the response - remove common OpenAI formatting artifacts
+        # Remove [REWRITTEN ACCOMPANYING COPY]: prefix (case insensitive)
+        import re
+        generated_text = re.sub(r'^\[REWRITTEN ACCOMPANYING COPY\]:\s*', '', generated_text, flags=re.IGNORECASE)
+        
+        # Remove surrounding quotes if present
+        if generated_text.startswith('"') and generated_text.endswith('"'):
+            generated_text = generated_text[1:-1].strip()
+        
+        # Final cleanup - remove any leading/trailing whitespace
+        generated_text = generated_text.strip()
+        
         # Calculate costs
         input_tokens = response.usage.prompt_tokens
         output_tokens = response.usage.completion_tokens
