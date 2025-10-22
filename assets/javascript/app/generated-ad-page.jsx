@@ -83,9 +83,6 @@ const GeneratedAdHeader = ({ brandName, backUrl }) => {
 const GeneratedAdPage = () => {
   const { t } = useTranslation();
   const generatedAdData = window.__GENERATED_AD_DATA__ || {};
-  
-  // Debug: Log all received data
-  console.log('Generated Ad Data:', generatedAdData);
 
   // Set custom header when component mounts
   useEffect(() => {
@@ -128,6 +125,48 @@ const GeneratedAdPage = () => {
       setSelectedVersion(current);
     }
   }, [generatedAdData.versions, generatedAdData.version_id]);
+
+  // Poll for ad copy text if not available yet
+  React.useEffect(() => {
+    if (!currentAdCopyText && currentVersionId) {
+      console.log('Ad copy text not available yet, starting polling...');
+      
+      const pollInterval = setInterval(async () => {
+        try {
+          const response = await fetch(`/ads/api/version/${currentVersionId}/`);
+          const data = await response.json();
+          
+          // Check if ad_copy_text is now available
+          if (data.ad_copy_text) {
+            console.log('Ad copy text now available!');
+            
+            // Update the selected version with the new text
+            setSelectedVersion(prev => ({
+              ...prev,
+              ad_copy_text: data.ad_copy_text
+            }));
+            
+            // Stop polling
+            clearInterval(pollInterval);
+          }
+        } catch (error) {
+          console.error('Error polling for ad copy text:', error);
+        }
+      }, 3000); // Poll every 3 seconds
+      
+      // Stop polling after 60 seconds (20 attempts)
+      const timeout = setTimeout(() => {
+        console.log('Stopped polling for ad copy text after 60 seconds');
+        clearInterval(pollInterval);
+      }, 60000);
+      
+      // Cleanup
+      return () => {
+        clearInterval(pollInterval);
+        clearTimeout(timeout);
+      };
+    }
+  }, [currentAdCopyText, currentVersionId]);
 
   // Get current display data (either selected version or default)
   const currentImageUrl = selectedVersion?.generated_image || generatedAdData.generated_image;

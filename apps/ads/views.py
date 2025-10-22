@@ -1905,6 +1905,24 @@ def adrequest_revision_create(request):
             
             # Credits will be deducted in the task after successful image generation
             
+            # Create AdCopyVersion and start ad copy text generation task
+            try:
+                from apps.ads.models import AdCopyVersion
+                from apps.aiinterface.tasks import generate_ad_copy_text_task
+                
+                # Create AdCopyVersion instance
+                ad_copy_version = AdCopyVersion.objects.create(
+                    ad_request_version=version
+                )
+                print(f"AdCopyVersion created with ID: {ad_copy_version.id}")
+                
+                # Launch the ad copy text generation task
+                copy_task = generate_ad_copy_text_task.delay(ad_copy_version.id)
+                print(f"Ad copy text generation task (ID: {copy_task.id}) started for AdCopyVersion {ad_copy_version.id}")
+                
+            except Exception as copy_error:
+                print(f"Error starting ad copy text generation task: {str(copy_error)}")
+            
         except Exception as img_error:
             print(f"Error starting image revision task: {str(img_error)}")
         
@@ -2374,6 +2392,38 @@ def adrequest_version_rate(request):
         
     except ValueError:
         return JsonResponse({'error': 'Invalid rating format'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def adrequest_version_get(request, version_id):
+    """
+    Get details of an AdRequestVersion including ad_copy_text.
+    Used for polling to check if ad copy text is ready.
+    
+    Returns: JSON with version details
+    """
+    try:
+        # Get the AdRequestVersion instance
+        version = get_object_or_404(AdRequestVersion, id=version_id)
+        
+        # Check if the user has permission to view this version
+        if version.ad_request.user != request.user:
+            return JsonResponse({'error': 'You do not have permission to view this version'}, status=403)
+        
+        # Get the first AdCopyVersion if it exists
+        ad_copy_version = version.ad_copies.first()
+        ad_copy_text = ad_copy_version.ad_copy_text if ad_copy_version else None
+        
+        # Return version data
+        return JsonResponse({
+            'id': version.id,
+            'status': version.status,
+            'ad_copy_text': ad_copy_text,
+            'generated_image': version.generated_image.url if version.generated_image else None,
+        })
+        
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
