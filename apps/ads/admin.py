@@ -280,6 +280,13 @@ class AdRequestVersionAdmin(admin.ModelAdmin):
 
 @admin.register(AdCopyVersion)
 class AdCopyVersionAdmin(admin.ModelAdmin):
+    """
+    Admin interface for AdCopyVersion model.
+    
+    AdCopyVersion stores AI-generated ad copy text for each AdRequestVersion.
+    The text is generated asynchronously using OpenAI's API based on the brand's
+    assets and the original ad's copy.
+    """
     list_display = ["get_copy_id", "ad_request_version", "has_ad_copy_text", "has_error", "created_at", "updated_at"]
     search_fields = ["ad_request_version__id", "ad_copy_text", "error_logs"]
     list_filter = ["created_at"]

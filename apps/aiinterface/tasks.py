@@ -615,19 +615,19 @@ Rebuild the message according to the authentic stages:
 - Ensure clarity, authenticity, and psychological depth.
 ---
 ### Step 4: Output Format
-Output only the rewritten caption or body text — no analysis, no steps.
-Format exactly as follows:
-Do **not** include any commentary, explanation, or reasoning — only the final emotionally rewritten copy.
----
-### Example (for reference only; do not copy)
-**Input:**
-Brand: Athletic Greens
-Original: "The perfect breakfast doesn't exis... oh wait. Huel Black Edition gives you all the nutrition you need from a meal, with easy portion control to help you cut calories if you want to. :egg:40g protein"
-**Output:**
-[REWRITTEN ACCOMPANYING COPY]:
+Output ONLY the rewritten caption or body text.
+
+**Critical Instructions:**
+- Do NOT include any prefixes like "[REWRITTEN ACCOMPANYING COPY]:" or similar labels
+- Do NOT include any commentary, explanation, or reasoning
+- Do NOT include any analysis or steps
+- Output ONLY the final emotionally rewritten copy as plain text
+- The output should be ready to use directly as ad copy
+
+**Example of what to output:**
 "The perfect morning routine doesn't exis—oh wait.
 One scoop of AG1 gives your body everything it's craving before the day even starts — 75 vitamins, minerals, and whole-food nutrients in seconds.
-:sunny: More focus. Better gut health. Real energy that lasts."
+More focus. Better gut health. Real energy that lasts."
 """
         
         # Replace variables in prompt

@@ -723,6 +723,9 @@ class AdCopyVersion(BaseModel):
         ordering = ['-created_at']
         verbose_name = "Ad Copy Version"
         verbose_name_plural = "Ad Copy Versions"
+        indexes = [
+            models.Index(fields=['ad_request_version', '-created_at'], name='adcopy_version_created_idx'),
+        ]
     
     def __str__(self):
         return f"Ad Copy for Version #{self.ad_request_version.id} - {self.created_at.strftime('%Y-%m-%d %H:%M')}"

@@ -9,10 +9,15 @@ import * as ReactDOM from "react-dom";
 import RevisionModal from './components/RevisionModal';
 import AdDetailsModal from './components/AdDetailsModal';
 
+// Configuration constants
+const AD_COPY_CHAR_LIMIT = 150; // Character limit for collapsed ad copy text
+const AD_COPY_POLL_INTERVAL = 3000; // Poll every 3 seconds
+const AD_COPY_POLL_TIMEOUT = 60000; // Stop polling after 60 seconds
+
 // Ad Copy Text Display component with Read More/Less functionality
 const AdCopyTextDisplay = ({ text }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const CHAR_LIMIT = 150; // Character limit for collapsed state
+  const CHAR_LIMIT = AD_COPY_CHAR_LIMIT;
   
   const shouldTruncate = text.length > CHAR_LIMIT;
   const displayText = isExpanded || !shouldTruncate 
@@ -120,8 +125,6 @@ const GeneratedAdPage = () => {
   React.useEffect(() => {
     if (generatedAdData.versions && generatedAdData.versions.length > 0) {
       const current = generatedAdData.versions.find(v => v.id === generatedAdData.version_id) || generatedAdData.versions[0];
-      console.log('Selected version:', current);
-      console.log('Ad copy text:', current?.ad_copy_text);
       setSelectedVersion(current);
     }
   }, [generatedAdData.versions, generatedAdData.version_id]);
@@ -129,8 +132,6 @@ const GeneratedAdPage = () => {
   // Poll for ad copy text if not available yet
   React.useEffect(() => {
     if (!currentAdCopyText && currentVersionId) {
-      console.log('Ad copy text not available yet, starting polling...');
-      
       const pollInterval = setInterval(async () => {
         try {
           const response = await fetch(`/ads/api/version/${currentVersionId}/`);
@@ -138,8 +139,6 @@ const GeneratedAdPage = () => {
           
           // Check if ad_copy_text is now available
           if (data.ad_copy_text) {
-            console.log('Ad copy text now available!');
-            
             // Update the selected version with the new text
             setSelectedVersion(prev => ({
               ...prev,
@@ -150,15 +149,15 @@ const GeneratedAdPage = () => {
             clearInterval(pollInterval);
           }
         } catch (error) {
+          // Silently fail - ad copy text is optional
           console.error('Error polling for ad copy text:', error);
         }
-      }, 3000); // Poll every 3 seconds
+      }, AD_COPY_POLL_INTERVAL);
       
-      // Stop polling after 60 seconds (20 attempts)
+      // Stop polling after timeout
       const timeout = setTimeout(() => {
-        console.log('Stopped polling for ad copy text after 60 seconds');
         clearInterval(pollInterval);
-      }, 60000);
+      }, AD_COPY_POLL_TIMEOUT);
       
       // Cleanup
       return () => {
