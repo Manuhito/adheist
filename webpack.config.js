@@ -99,5 +99,6 @@ module.exports = {
       extractComments: false,  // disable generation of license.txt files
     })],
   },
-  devtool: "eval-cheap-source-map",
+  // Disable sourcemaps in production to save memory and speed up builds
+  devtool: process.env.NODE_ENV === 'production' ? false : "eval-cheap-source-map",
 };
