@@ -37,6 +37,7 @@ urlpatterns = [
     path("api/containers/", views.get_user_containers, name="get_user_containers"),
     path("api/create-user-brand/", views.create_user_brand, name="create_user_brand"),
     path("api/version/rate/", views.adrequest_version_rate, name="adrequest_version_rate"),
+    path("api/version/<int:version_id>/", views.adrequest_version_get, name="adrequest_version_get"),
     path("user-images/", views.user_images, name="user_images"),
     path("upload-brand-asset/", views.upload_brand_asset),
     path("discover/", views.discover_page, name="discover_page"),

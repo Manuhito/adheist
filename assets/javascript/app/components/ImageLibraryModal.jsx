@@ -8,7 +8,6 @@ import { BrandsContainer } from './BrandFolderComponents.jsx';
 import { AssetsContainer } from './AssetComponents.jsx';
 import { ViewModeToggle } from './ViewModeToggle.jsx';
 import { CreateFolderModal } from './CreateFolderModal.jsx';
-import { AlertNotification } from '@/components/ui/alert-notification.tsx';
 
 /**
  * Enhanced modal component for selecting user images with folder navigation
@@ -33,7 +32,6 @@ const ImageLibraryModal = ({ isOpen, onClose, onSelect }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [showCreateFolderModal, setShowCreateFolderModal] = useState(false);
-  const [notification, setNotification] = useState(null);
 
   // Reset state when modal opens
   useEffect(() => {
@@ -42,7 +40,6 @@ const ImageLibraryModal = ({ isOpen, onClose, onSelect }) => {
       setSelectedContainer(null);
       setSelectedAsset(null);
       setSearchQuery('');
-      setNotification(null);
       fetchContainers();
     }
   }, [isOpen]);
@@ -67,7 +64,6 @@ const ImageLibraryModal = ({ isOpen, onClose, onSelect }) => {
   // Fetch containers (brands + folders) from the API
   const fetchContainers = async () => {
     setLoading(true);
-    setNotification(null);
     
     try {
       const response = await fetch('/ads/api/containers/', {
@@ -90,10 +86,6 @@ const ImageLibraryModal = ({ isOpen, onClose, onSelect }) => {
       }
     } catch (error) {
       console.error('Error fetching containers:', error);
-      setNotification({
-        message: t('image_selection.error_fetching', 'Error fetching containers. Please try again.'),
-        variant: 'error'
-      });
     } finally {
       setLoading(false);
     }
@@ -102,7 +94,6 @@ const ImageLibraryModal = ({ isOpen, onClose, onSelect }) => {
   // Fetch assets for a specific container (brand or folder)
   const fetchContainerAssets = async (container) => {
     setLoading(true);
-    setNotification(null);
 
     try {
       let url;
@@ -131,10 +122,6 @@ const ImageLibraryModal = ({ isOpen, onClose, onSelect }) => {
       setFolders(data.folders || data.subfolders || []);
     } catch (error) {
       console.error('Error fetching container assets:', error);
-      setNotification({
-        message: t('image_selection.error_fetching_assets', 'Error fetching assets. Please try again.'),
-        variant: 'error'
-      });
     } finally {
       setLoading(false);
     }
@@ -198,7 +185,6 @@ const ImageLibraryModal = ({ isOpen, onClose, onSelect }) => {
     if (!file) return;
 
     setLoading(true);
-    setNotification(null);
 
     try {
       // Create FormData
@@ -228,10 +214,6 @@ const ImageLibraryModal = ({ isOpen, onClose, onSelect }) => {
         }
       } else {
         console.warn('No container selected for image upload');
-        setNotification({
-          message: t('image_selection.no_container_selected', 'Please select a brand or folder first.'),
-          variant: 'error'
-        });
         return;
       }
 
@@ -253,20 +235,11 @@ const ImageLibraryModal = ({ isOpen, onClose, onSelect }) => {
       if (data.success) {
         // Refresh the assets list for the current container
         await fetchContainerAssets(selectedContainer);
-        // Show success message
-        setNotification({
-          message: t('image_selection.upload_success', 'Image uploaded successfully!'),
-          variant: 'success'
-        });
       } else {
         throw new Error(data.error || 'Unknown error');
       }
     } catch (error) {
       console.error('Error uploading image:', error);
-      setNotification({
-        message: t('image_selection.upload_error', 'Error uploading image. Please try again.'),
-        variant: 'error'
-      });
     } finally {
       setLoading(false);
       // Reset file input
@@ -345,17 +318,9 @@ const ImageLibraryModal = ({ isOpen, onClose, onSelect }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <style>{scrollbarStyles}</style>
-      <DialogContent className="sm:max-w-[900px] max-h-[90vh] flex flex-col">
-        {notification && (
-          <AlertNotification
-            message={notification.message}
-            variant={notification.variant}
-            onClose={() => setNotification(null)}
-          />
-        )}
-
-        <DialogHeader className="flex-shrink-0">
+        <style>{scrollbarStyles}</style>
+        <DialogContent className="sm:max-w-[900px] max-h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
           <div className="flex items-center gap-3">
             {(currentView === 'brand_assets' || currentView === 'folder_assets') && (
               <Button

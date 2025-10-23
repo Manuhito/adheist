@@ -749,6 +749,60 @@ def marketing_pages_index(request):
             "image": "images/marketing-pages/brow-bar.png",
             "description": "AI Ad Generator for Brow Bars"
         },
+        {
+            "name": "Waxing Salon",
+            "url": "web:waxing_salon_page",
+            "image": "images/marketing-pages/waxing-salon.png",
+            "description": "AI Ad Generator for Waxing Salons"
+        },
+        {
+            "name": "Blow Dry Bar",
+            "url": "web:blow_dry_bar_page",
+            "image": "images/marketing-pages/blow-dry-bar.png",
+            "description": "AI Ad Generator for Blow Dry Bars"
+        },
+        {
+            "name": "Auto Repair Shop",
+            "url": "web:auto_repair_shop_page",
+            "image": "images/marketing-pages/auto-repair-shop.png",
+            "description": "AI Ad Generator for Auto Repair Shops"
+        },
+        {
+            "name": "Car Dealership",
+            "url": "web:car_dealership_page",
+            "image": "images/marketing-pages/car-dealership.png",
+            "description": "AI Ad Generator for Car Dealerships"
+        },
+        {
+            "name": "Auto Detailing",
+            "url": "web:auto_detailing_page",
+            "image": "images/marketing-pages/auto-detailing.png",
+            "description": "AI Ad Generator for Auto Detailing"
+        },
+        {
+            "name": "Tire Shop",
+            "url": "web:tire_shop_page",
+            "image": "images/marketing-pages/tire-shop.png",
+            "description": "AI Ad Generator for Tire Shops"
+        },
+        {
+            "name": "Auto Body Shop",
+            "url": "web:auto_body_shop_page",
+            "image": "images/marketing-pages/auto-body-shop.png",
+            "description": "AI Ad Generator for Auto Body Shops"
+        },
+        {
+            "name": "Oil Change Service",
+            "url": "web:oil_change_service_page",
+            "image": "images/marketing-pages/oil-change-service.png",
+            "description": "AI Ad Generator for Oil Change Services"
+        },
+        {
+            "name": "Car Wash",
+            "url": "web:car_wash_page",
+            "image": "images/marketing-pages/car-wash.png",
+            "description": "AI Ad Generator for Car Washes"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {

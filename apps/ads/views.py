@@ -1071,7 +1071,7 @@ def get_adlibrary_company_list(request):
     
     # If not in cache, get from database and cache it
     if company_data is None:
-        # Get FacebookPages with their ad counts
+        # Get FacebookPages with their ad counts (only those with active ads)
         facebook_pages = FacebookPage.objects.filter(
             is_active=True,
             page_name__isnull=False
@@ -1079,6 +1079,8 @@ def get_adlibrary_company_list(request):
             page_name=''
         ).annotate(
             ad_count=Count('adlibraries', filter=Q(adlibraries__is_active=True))
+        ).filter(
+            ad_count__gt=0
         ).values('id', 'page_name', 'ad_count', 'page_url').distinct().order_by('page_name')
         
         # Convert to list of dictionaries and clean page_url
@@ -1767,6 +1769,24 @@ def adrequest_version_create(request):
             
             # Credits will be deducted in the task after successful image generation
             
+            # Create AdCopyVersion and start ad copy text generation task
+            try:
+                from apps.ads.models import AdCopyVersion
+                from apps.aiinterface.tasks import generate_ad_copy_text_task
+                
+                # Create AdCopyVersion instance
+                ad_copy_version = AdCopyVersion.objects.create(
+                    ad_request_version=version
+                )
+                print(f"AdCopyVersion created with ID: {ad_copy_version.id}")
+                
+                # Launch the ad copy text generation task
+                copy_task = generate_ad_copy_text_task.delay(ad_copy_version.id)
+                print(f"Ad copy text generation task (ID: {copy_task.id}) started for AdCopyVersion {ad_copy_version.id}")
+                
+            except Exception as copy_error:
+                print(f"Error starting ad copy text generation task: {str(copy_error)}")
+            
         except Exception as img_error:
             print(f"Error starting image generation task: {str(img_error)}")
         
@@ -1886,6 +1906,24 @@ def adrequest_revision_create(request):
             print(f"Image revision task (ID: {task_id}) started for AdRequestVersion {version.id}")
             
             # Credits will be deducted in the task after successful image generation
+            
+            # Create AdCopyVersion and start ad copy text generation task
+            try:
+                from apps.ads.models import AdCopyVersion
+                from apps.aiinterface.tasks import generate_ad_copy_text_task
+                
+                # Create AdCopyVersion instance
+                ad_copy_version = AdCopyVersion.objects.create(
+                    ad_request_version=version
+                )
+                print(f"AdCopyVersion created with ID: {ad_copy_version.id}")
+                
+                # Launch the ad copy text generation task
+                copy_task = generate_ad_copy_text_task.delay(ad_copy_version.id)
+                print(f"Ad copy text generation task (ID: {copy_task.id}) started for AdCopyVersion {ad_copy_version.id}")
+                
+            except Exception as copy_error:
+                print(f"Error starting ad copy text generation task: {str(copy_error)}")
             
         except Exception as img_error:
             print(f"Error starting image revision task: {str(img_error)}")
@@ -2356,6 +2394,38 @@ def adrequest_version_rate(request):
         
     except ValueError:
         return JsonResponse({'error': 'Invalid rating format'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def adrequest_version_get(request, version_id):
+    """
+    Get details of an AdRequestVersion including ad_copy_text.
+    Used for polling to check if ad copy text is ready.
+    
+    Returns: JSON with version details
+    """
+    try:
+        # Get the AdRequestVersion instance
+        version = get_object_or_404(AdRequestVersion, id=version_id)
+        
+        # Check if the user has permission to view this version
+        if version.ad_request.user != request.user:
+            return JsonResponse({'error': 'You do not have permission to view this version'}, status=403)
+        
+        # Get the first AdCopyVersion if it exists
+        ad_copy_version = version.ad_copies.first()
+        ad_copy_text = ad_copy_version.ad_copy_text if ad_copy_version else None
+        
+        # Return version data
+        return JsonResponse({
+            'id': version.id,
+            'status': version.status,
+            'ad_copy_text': ad_copy_text,
+            'generated_image': version.generated_image.url if version.generated_image else None,
+        })
+        
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
@@ -3738,7 +3808,8 @@ def generated_ad_page(request, version_id):
             return redirect('ads:my_ads_page')
         
         # Pre-fetch and order versions to ensure correct ordering in template
-        version.ad_request.ordered_versions = version.ad_request.versions.order_by('-created_at')
+        # Also prefetch ad_copies to access ad_copy_text
+        version.ad_request.ordered_versions = version.ad_request.versions.prefetch_related('ad_copies').order_by('-created_at')
         
         # Determine back URL based on referrer
         referer = request.META.get('HTTP_REFERER', '')

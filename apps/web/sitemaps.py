@@ -104,6 +104,15 @@ class StaticViewSitemap(sitemaps.Sitemap):
             "web:piercing_studio_page",
             "web:lash_extension_page",
             "web:brow_bar_page",
+            "web:waxing_salon_page",
+            "web:blow_dry_bar_page",
+            "web:auto_repair_shop_page",
+            "web:car_dealership_page",
+            "web:auto_detailing_page",
+            "web:tire_shop_page",
+            "web:auto_body_shop_page",
+            "web:oil_change_service_page",
+            "web:car_wash_page",
         ]
 
     def location(self, item):

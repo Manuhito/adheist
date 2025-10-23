@@ -84,6 +84,27 @@ class OpenAIConfiguration(models.Model):
         help_text="Custom instructions for website analysis. This will be combined with the website content and fixed response format instructions."
     )
     
+    # Ad Copy Text Generation Configuration
+    openai_text_copy_model = models.CharField(
+        max_length=50,
+        default="gpt-4o",
+        help_text="OpenAI model to use for ad copy text generation"
+    )
+    
+    copy_text_input_price = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=2.50,
+        help_text="Price per 1M input tokens for ad copy generation (in USD)"
+    )
+    
+    copy_text_output_price = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=10.00,
+        help_text="Price per 1M output tokens for ad copy generation (in USD)"
+    )
+    
     class Meta:
         verbose_name = "OpenAI Configuration"
         verbose_name_plural = "OpenAI Configuration"
@@ -166,4 +187,19 @@ class OpenAIConfiguration(models.Model):
             'web_parsing_input_price': config.web_parsing_input_price,
             'web_parsing_output_price': config.web_parsing_output_price,
             'web_parsing_prompt': config.web_parsing_prompt,
+        }
+    
+    @classmethod
+    def get_copy_text_config(cls):
+        """
+        Get the ad copy text generation configuration settings.
+        
+        Returns:
+            dict: Ad copy text generation configuration settings
+        """
+        config = cls.get_config()
+        return {
+            'openai_text_copy_model': config.openai_text_copy_model,
+            'copy_text_input_price': config.copy_text_input_price,
+            'copy_text_output_price': config.copy_text_output_price,
         }

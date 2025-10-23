@@ -11,6 +11,7 @@ class OpenAIConfigurationAdmin(admin.ModelAdmin):
         'openai_image_model',
         'openai_prompt_model',
         'web_parsing_model',
+        'openai_text_copy_model',
         'text_input_price',
         'image_input_price',
         'image_output_price',
@@ -28,6 +29,10 @@ class OpenAIConfigurationAdmin(admin.ModelAdmin):
         ('Web Parsing Configuration', {
             'fields': ('web_parsing_model', 'web_parsing_input_price', 'web_parsing_output_price', 'web_parsing_prompt'),
             'description': 'Configure OpenAI settings for website content analysis. The prompt field contains custom extraction instructions that will be combined with the website content and hardcoded response format requirements.'
+        }),
+        ('Ad Copy Text Generation', {
+            'fields': ('openai_text_copy_model', 'copy_text_input_price', 'copy_text_output_price'),
+            'description': 'Configure OpenAI settings for ad copy text generation (in USD per 1M tokens)'
         }),
     )
     
