@@ -1071,7 +1071,7 @@ def get_adlibrary_company_list(request):
     
     # If not in cache, get from database and cache it
     if company_data is None:
-        # Get FacebookPages with their ad counts
+        # Get FacebookPages with their ad counts (only those with active ads)
         facebook_pages = FacebookPage.objects.filter(
             is_active=True,
             page_name__isnull=False
@@ -1079,6 +1079,8 @@ def get_adlibrary_company_list(request):
             page_name=''
         ).annotate(
             ad_count=Count('adlibraries', filter=Q(adlibraries__is_active=True))
+        ).filter(
+            ad_count__gt=0
         ).values('id', 'page_name', 'ad_count', 'page_url').distinct().order_by('page_name')
         
         # Convert to list of dictionaries and clean page_url
