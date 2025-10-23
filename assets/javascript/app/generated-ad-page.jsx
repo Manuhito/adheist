@@ -18,32 +18,38 @@ const AD_COPY_POLL_TIMEOUT = 60000; // Stop polling after 60 seconds
 const AdCopyTextDisplay = ({ text }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const CHAR_LIMIT = AD_COPY_CHAR_LIMIT;
-  
+
   const shouldTruncate = text.length > CHAR_LIMIT;
-  const displayText = isExpanded || !shouldTruncate 
-    ? text 
+  const displayText = isExpanded || !shouldTruncate
+    ? text
     : text.substring(0, CHAR_LIMIT).trim();
 
   return (
-    <div className="mb-4 p-3 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
-      <p className="text-xs text-gray-600 dark:text-gray-400 whitespace-pre-wrap leading-relaxed">
+    <div className="relative w-0 min-w-full">
+      <p className="text-xs text-gray-600 dark:text-gray-400 whitespace-pre-wrap leading-relaxed break-words">
         {displayText}
         {shouldTruncate && !isExpanded && (
           <>
             ...{' '}
             <button
-              onClick={() => setIsExpanded(true)}
-              className="text-xs text-primary hover:text-primary/80 font-medium transition-colors inline"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsExpanded(true);
+              }}
+              className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-xs underline inline"
             >
-              Read more
+              read more
             </button>
           </>
         )}
       </p>
       {shouldTruncate && isExpanded && (
         <button
-          onClick={() => setIsExpanded(false)}
-          className="mt-1 text-xs text-primary hover:text-primary/80 font-medium transition-colors"
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsExpanded(false);
+          }}
+          className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-xs underline mt-1"
         >
           Read less
         </button>
@@ -136,7 +142,7 @@ const GeneratedAdPage = () => {
         try {
           const response = await fetch(`/ads/api/version/${currentVersionId}/`);
           const data = await response.json();
-          
+
           // Check if ad_copy_text is now available
           if (data.ad_copy_text) {
             // Update the selected version with the new text
@@ -144,7 +150,7 @@ const GeneratedAdPage = () => {
               ...prev,
               ad_copy_text: data.ad_copy_text
             }));
-            
+
             // Stop polling
             clearInterval(pollInterval);
           }
@@ -153,12 +159,12 @@ const GeneratedAdPage = () => {
           console.error('Error polling for ad copy text:', error);
         }
       }, AD_COPY_POLL_INTERVAL);
-      
+
       // Stop polling after timeout
       const timeout = setTimeout(() => {
         clearInterval(pollInterval);
       }, AD_COPY_POLL_TIMEOUT);
-      
+
       // Cleanup
       return () => {
         clearInterval(pollInterval);
@@ -344,25 +350,39 @@ const GeneratedAdPage = () => {
           )}
 
           {/* Main content */}
-          <div className="flex-1">
-            {/* Ad Copy Text */}
-            {currentAdCopyText && (
-              <AdCopyTextDisplay text={currentAdCopyText} />
-            )}
-            
-            {/* Image container */}
-            <div className="flex items-center justify-center mb-6">
-              {currentImageUrl ? (
-                <img
-                  src={currentImageUrl}
-                  alt="Generated Ad"
-                  className="max-w-full max-h-[calc(100vh-400px)] object-contain rounded-lg border border-gray-200 dark:border-gray-700"
-                />
-              ) : (
-                <div className="w-full h-96 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-                  <p className="text-gray-500 dark:text-gray-400">No image available</p>
+          <div className="flex-1 flex items-center justify-center p-4">
+            {/* Background container */}
+            <div className="w-full max-w-md" style={{ height: 'calc(100vh - 280px)' }}>
+              {/* Unified card with aspect ratio */}
+              <div className="relative h-full w-full">
+                <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm absolute inset-0 flex flex-col p-3">
+                  {/* Card Header - Ad Copy Text */}
+                  {currentAdCopyText && (
+                    <div className="mb-2">
+                      <div className="relative w-0 min-w-full">
+                        <AdCopyTextDisplay text={currentAdCopyText} />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Card Body - Image */}
+                  <div className="flex-1 min-h-0">
+                    <div className="relative w-full h-full">
+                      {currentImageUrl ? (
+                        <img
+                          src={currentImageUrl}
+                          alt="Generated Ad"
+                          className="w-full h-full object-contain rounded-lg"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
+                          <p className="text-gray-500 dark:text-gray-400">No image available</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              )}
+              </div>
             </div>
           </div>
         </div>
