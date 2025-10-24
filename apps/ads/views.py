@@ -27,7 +27,7 @@ from django.utils import timezone
 from apps.aiinterface.tasks import send_slack_notification
 from django.contrib.auth import get_user_model
 
-from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion, AdRequestUsage, ExtraCredit, UserBrand, UserBrandAssets, UserFolder, MarketingPagesRouter, AppConfiguration
+from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion, AdRequestUsage, ExtraCredit, UserBrand, UserBrandAssets, UserFolder, AppConfiguration
 from .forms import AdLibraryForm
 from .services import can_create_ad_request, use_credit, can_create_ad_request_version, get_ad_request_version_limit, use_general_credit, use_version_credit, can_create_ad_version
 import boto3
@@ -4148,44 +4148,3 @@ def get_brand_details(request, brand_id):
             'success': False,
             'error': str(e)
         }, status=500)
-
-def marketing_page_view(request, slug, path_prefix=''):
-    """
-    Renders a dynamic marketing page based on the slug and optional path prefix.
-    If not found, delegates to Wagtail.
-    Supports URLs like:
-    - /slug/ (no prefix)
-    - /services/slug/ (with prefix)
-    """
-    try:
-        router_entry = MarketingPagesRouter.objects.get(slug=slug, path_prefix=path_prefix)
-        page_data = router_entry.content_object
-        
-        # Check if the page is published
-        if hasattr(page_data, 'status') and page_data.status == 'PUBLISHED':
-            template_name = page_data.html_template
-            context = {
-                'page_data': page_data,
-                'full_path': router_entry.get_full_path()
-            }
-            return render(request, template_name, context)
-    except MarketingPagesRouter.DoesNotExist:
-        pass
-    
-    # If marketing page not found or not published, try Wagtail
-    from wagtail.views import serve as wagtail_serve
-    from django.http import Http404
-    
-    try:
-        # Reconstruct the path for Wagtail
-        if path_prefix:
-            wagtail_path = f"{path_prefix}/{slug}/"
-        else:
-            wagtail_path = f"{slug}/"
-        
-        # Call Wagtail's serve view
-        return wagtail_serve(request, wagtail_path)
-    except Http404:
-        # Neither marketing page nor Wagtail page found
-        raise Http404("Page not found")
-
