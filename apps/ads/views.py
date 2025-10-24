@@ -3329,6 +3329,7 @@ def discover_clone_adrequest_page(request, pk):
         # Get brand assets generation cost from AppConfiguration
         app_config = AppConfiguration.get_config()
         brand_assets_cost = app_config.brand_assets_generation_cost if app_config else 4
+        ad_generation_cost = app_config.ad_generation_credit_cost if app_config else 1
         
         context = {
             'ad_request': ad_request,
@@ -3336,6 +3337,7 @@ def discover_clone_adrequest_page(request, pk):
             'page_description': 'New ads follow the style & composition of the ad reference on the left.',
             'back_url': back_url,
             'brand_assets_cost': brand_assets_cost,
+            'ad_generation_cost': ad_generation_cost,
         }
         
         return render(request, 'ads/discover_clone.html', context)

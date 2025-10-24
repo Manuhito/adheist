@@ -12,6 +12,7 @@ import { ArrowLeft, Check, Sparkles } from 'lucide-react';
 // Header component with back button, title and description
 const DiscoverCloneHeader = () => {
   const pageConfig = window.__PAGE_CONFIG__ || {};
+  const adGenerationCost = window.__AD_GENERATION_COST__ || 1;
 
   const handleBackClick = () => {
     window.location.href = pageConfig.backUrl || '/ads/discover/';
@@ -40,15 +41,23 @@ const DiscoverCloneHeader = () => {
         <p className="text-sm text-gray-600 dark:text-gray-400">Select brand assets and configure your ad</p>
       </div>
 
-      {/* Generate Ad Button */}
-      <Button
-        onClick={handleGenerateClick}
-        disabled={window.isDiscoverClonePromptModified}
-        className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-      >
-        <Sparkles className="w-4 h-4" />
-        Generate Ad
-      </Button>
+      {/* Generate Ad Button with Tooltip */}
+      <div className="relative group">
+        <Button
+          onClick={handleGenerateClick}
+          disabled={window.isDiscoverClonePromptModified}
+          className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+        >
+          <Sparkles className="w-4 h-4" />
+          Generate Ad
+        </Button>
+        {/* Custom tooltip below button to ensure visibility */}
+        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1.5 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-lg">
+          Use {adGenerationCost} {adGenerationCost === 1 ? 'credit' : 'credits'} to generate this ad
+          {/* Arrow pointing up */}
+          <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-gray-900 dark:border-b-gray-700"></div>
+        </div>
+      </div>
     </div>
   );
 };
