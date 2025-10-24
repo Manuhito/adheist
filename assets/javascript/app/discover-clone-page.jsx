@@ -727,6 +727,7 @@ const DiscoverClonePageContent = () => {
                 initialBrandId={selectedBrand?.id}
                 onBrandChange={handleBrandChange}
                 adRequestId={adRequestId}
+                brandAssetsCost={window.__BRAND_ASSETS_COST__ || 4}
               />
               {!selectedBrand && (
                 <p className="text-xs text-amber-500 mt-1">Please select a brand to add assets</p>

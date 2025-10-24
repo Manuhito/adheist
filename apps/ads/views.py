@@ -27,7 +27,7 @@ from django.utils import timezone
 from apps.aiinterface.tasks import send_slack_notification
 from django.contrib.auth import get_user_model
 
-from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion, AdRequestUsage, ExtraCredit, UserBrand, UserBrandAssets, UserFolder, MarketingPagesRouter
+from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion, AdRequestUsage, ExtraCredit, UserBrand, UserBrandAssets, UserFolder, MarketingPagesRouter, AppConfiguration
 from .forms import AdLibraryForm
 from .services import can_create_ad_request, use_credit, can_create_ad_request_version, get_ad_request_version_limit, use_general_credit, use_version_credit, can_create_ad_version
 import boto3
@@ -553,10 +553,15 @@ def brands_page(request):
     # Convert to JSON for frontend
     brands_json = json.dumps(brands_data, cls=DjangoJSONEncoder)
     
+    # Get brand assets generation cost from AppConfiguration
+    app_config = AppConfiguration.get_config()
+    brand_assets_cost = app_config.brand_assets_generation_cost if app_config else 4
+    
     template = "ads/brands.html"
     context = {
         "active_tab": "brands-library",
         "brands_data": brands_json,
+        "brand_assets_cost": brand_assets_cost,
     }
     
     return TemplateResponse(request, template, context)
@@ -3321,11 +3326,16 @@ def discover_clone_adrequest_page(request, pk):
                 if parsed_referer.path and parsed_referer.path.startswith('/ads/'):
                     back_url = parsed_referer.path
         
+        # Get brand assets generation cost from AppConfiguration
+        app_config = AppConfiguration.get_config()
+        brand_assets_cost = app_config.brand_assets_generation_cost if app_config else 4
+        
         context = {
             'ad_request': ad_request,
             'page_title': 'Clone Ad',
             'page_description': 'New ads follow the style & composition of the ad reference on the left.',
             'back_url': back_url,
+            'brand_assets_cost': brand_assets_cost,
         }
         
         return render(request, 'ads/discover_clone.html', context)
