@@ -66,3 +66,63 @@ class PublicMediaStorage(S3Boto3Storage):
             # Log the error and fall back to default implementation
             logger.error(f"Error generating pre-signed URL: {str(e)}")
             return super().url(name, parameters, expire, http_method)
+
+
+class MarketingStorage(S3Boto3Storage):
+    """
+    Storage for marketing page images in S3.
+    Public access for static marketing assets (images for landing pages, industries, etc.)
+    Location: media/marketing/ in S3 bucket
+    """
+    location = "media/marketing"
+    file_overwrite = False
+    default_acl = 'public-read'
+    querystring_auth = False  # No pre-signed URLs needed for public images
+    
+    def url(self, name, parameters=None, expire=None, http_method=None):
+        """
+        Generate a public URL for marketing images.
+        Since these are public, we don't need pre-signed URLs.
+        """
+        # Get AWS settings
+        bucket_name = getattr(settings, 'AWS_STORAGE_BUCKET_NAME', 'adheist-s3-prod')
+        region = getattr(settings, 'AWS_S3_REGION_NAME', 'us-east-2')
+        
+        # Construct the full key with location prefix
+        key = name.lstrip('/')
+        if self.location:
+            location = self.location.rstrip('/')
+            full_key = f"{location}/{key}"
+        else:
+            full_key = key
+        
+        # Return public S3 URL
+        return f"https://{bucket_name}.s3.{region}.amazonaws.com/{full_key}"
+
+
+class IndustriesStorage(S3Boto3Storage):
+    """
+    Storage for industry-specific images in S3.
+    Public access for static industry assets.
+    Location: media/marketing/industries/ in S3 bucket
+    """
+    location = "media/marketing/industries"
+    file_overwrite = False
+    default_acl = 'public-read'
+    querystring_auth = False
+    
+    def url(self, name, parameters=None, expire=None, http_method=None):
+        """
+        Generate a public URL for industry images.
+        """
+        bucket_name = getattr(settings, 'AWS_STORAGE_BUCKET_NAME', 'adheist-s3-prod')
+        region = getattr(settings, 'AWS_S3_REGION_NAME', 'us-east-2')
+        
+        key = name.lstrip('/')
+        if self.location:
+            location = self.location.rstrip('/')
+            full_key = f"{location}/{key}"
+        else:
+            full_key = key
+        
+        return f"https://{bucket_name}.s3.{region}.amazonaws.com/{full_key}"

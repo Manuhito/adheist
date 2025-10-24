@@ -254,553 +254,553 @@ def marketing_pages_index(request):
         {
             "name": "Lawyers",
             "url": "web:lawyers_page",
-            "image": "images/marketing-pages/lawyers.png",
+            "image_filename": "lawyers.webp",
             "description": "AI Ad Generator for Law Firms"
         },
         {
             "name": "Luxury",
             "url": "web:luxury_page",
-            "image": "images/marketing-pages/luxury.png",
+            "image_filename": "luxury.webp",
             "description": "AI Ad Generator for Luxury Brands"
         },
         {
             "name": "NGO",
             "url": "web:ngo_page",
-            "image": "images/marketing-pages/ngo.png",
+            "image_filename": "ngo.webp",
             "description": "AI Ad Generator for Non-Profits"
         },
         {
             "name": "Pharmacy",
             "url": "web:pharmacy_page",
-            "image": "images/marketing-pages/pharmacy.png",
+            "image_filename": "pharmacy.webp",
             "description": "AI Ad Generator for Pharmacies"
         },
         {
             "name": "Real Estate",
             "url": "web:real_estate_page",
-            "image": "images/marketing-pages/real-estate.png",
+            "image_filename": "real-estate.webp",
             "description": "AI Ad Generator for Real Estate"
         },
         {
             "name": "Restaurants",
             "url": "web:restaurants_page",
-            "image": "images/marketing-pages/restaurants.png",
+            "image_filename": "restaurants.webp",
             "description": "AI Ad Generator for Restaurants"
         },
         {
             "name": "Retailers",
             "url": "web:retailers_page",
-            "image": "images/marketing-pages/retailers.png",
+            "image_filename": "retailers.webp",
             "description": "AI Ad Generator for Retailers"
         },
         {
             "name": "SaaS",
             "url": "web:saas_page",
-            "image": "images/marketing-pages/saas.png",
+            "image_filename": "saas.webp",
             "description": "AI Ad Generator for SaaS Companies"
         },
         {
             "name": "Plumber",
             "url": "web:plumber_page",
-            "image": "images/marketing-pages/plumber.png",
+            "image_filename": "plumber.webp",
             "description": "AI Ad Generator for Plumbers"
         },
         {
             "name": "Electrician",
             "url": "web:electrician_page",
-            "image": "images/marketing-pages/electrician.png",
+            "image_filename": "electrician.webp",
             "description": "AI Ad Generator for Electricians"
         },
         {
             "name": "HVAC Contractor",
             "url": "web:hvac_contractor_page",
-            "image": "images/marketing-pages/hvac-contractor.png",
+            "image_filename": "hvac-contractor.webp",
             "description": "AI Ad Generator for HVAC Contractors"
         },
         {
             "name": "Pest Control",
             "url": "web:pest_control_page",
-            "image": "images/marketing-pages/pest-control.png",
+            "image_filename": "pest-control.webp",
             "description": "AI Ad Generator for Pest Control"
         },
         {
             "name": "Landscaper",
             "url": "web:landscaper_page",
-            "image": "images/marketing-pages/landscaper.png",
+            "image_filename": "landscaper.webp",
             "description": "AI Ad Generator for Landscapers"
         },
         {
             "name": "Lawn Care",
             "url": "web:lawn_care_page",
-            "image": "images/marketing-pages/lawn-care.png",
+            "image_filename": "lawn-care.webp",
             "description": "AI Ad Generator for Lawn Care"
         },
         {
             "name": "House Cleaner",
             "url": "web:house_cleaner_page",
-            "image": "images/marketing-pages/house-cleaner.png",
+            "image_filename": "house-cleaner.webp",
             "description": "AI Ad Generator for House Cleaners"
         },
         {
             "name": "Carpet Cleaner",
             "url": "web:carpet_cleaner_page",
-            "image": "images/marketing-pages/carpet-cleaner.png",
+            "image_filename": "carpet-cleaner.webp",
             "description": "AI Ad Generator for Carpet Cleaners"
         },
         {
             "name": "Painter",
             "url": "web:painter_page",
-            "image": "images/marketing-pages/painter.png",
+            "image_filename": "painter.webp",
             "description": "AI Ad Generator for Painters"
         },
         {
             "name": "Roofer",
             "url": "web:roofer_page",
-            "image": "images/marketing-pages/roofer.png",
+            "image_filename": "roofer.webp",
             "description": "AI Ad Generator for Roofers"
         },
         {
             "name": "General Contractor",
             "url": "web:general_contractor_page",
-            "image": "images/marketing-pages/general-contractor.png",
+            "image_filename": "general-contractor.webp",
             "description": "AI Ad Generator for General Contractors"
         },
         {
             "name": "Handyman",
             "url": "web:handyman_page",
-            "image": "images/marketing-pages/handyman.png",
+            "image_filename": "handyman.webp",
             "description": "AI Ad Generator for Handyman Services"
         },
         {
             "name": "Pool Service",
             "url": "web:pool_service_page",
-            "image": "images/marketing-pages/pool-service.png",
+            "image_filename": "pool-service.webp",
             "description": "AI Ad Generator for Pool Service Companies"
         },
         {
             "name": "Window Cleaner",
             "url": "web:window_cleaner_page",
-            "image": "images/marketing-pages/window-cleaner.png",
+            "image_filename": "window-cleaner.webp",
             "description": "AI Ad Generator for Window Cleaning Services"
         },
         {
             "name": "Pressure Washing",
             "url": "web:pressure_washing_page",
-            "image": "images/marketing-pages/pressure-washing.png",
+            "image_filename": "pressure-washing.webp",
             "description": "AI Ad Generator for Pressure Washing Services"
         },
         {
             "name": "Tree Service",
             "url": "web:tree_service_page",
-            "image": "images/marketing-pages/tree-service.png",
+            "image_filename": "tree-service.webp",
             "description": "AI Ad Generator for Tree Service Companies"
         },
         {
             "name": "Locksmith",
             "url": "web:locksmith_page",
-            "image": "images/marketing-pages/locksmith.png",
+            "image_filename": "locksmith.webp",
             "description": "AI Ad Generator for Locksmith Services"
         },
         {
             "name": "Home Inspector",
             "url": "web:home_inspector_page",
-            "image": "images/marketing-pages/home-inspector.png",
+            "image_filename": "home-inspector.webp",
             "description": "AI Ad Generator for Home Inspectors"
         },
         {
             "name": "Garage Door Repair",
             "url": "web:garage_door_repair_page",
-            "image": "images/marketing-pages/garage-door-repair.png",
+            "image_filename": "garage-door-repair.webp",
             "description": "AI Ad Generator for Garage Door Repair Services"
         },
         {
             "name": "Appliance Repair",
             "url": "web:appliance_repair_page",
-            "image": "images/marketing-pages/appliance-repair.png",
+            "image_filename": "appliance-repair.webp",
             "description": "AI Ad Generator for Appliance Repair Services"
         },
         {
             "name": "Flooring Contractor",
             "url": "web:flooring_contractor_page",
-            "image": "images/marketing-pages/flooring-contractor.png",
+            "image_filename": "flooring-contractor.webp",
             "description": "AI Ad Generator for Flooring Contractors"
         },
         {
             "name": "Chiropractor",
             "url": "web:chiropractor_page",
-            "image": "images/marketing-pages/chiropractor.png",
+            "image_filename": "chiropractor.webp",
             "description": "AI Ad Generator for Chiropractors"
         },
         {
             "name": "Massage Therapist",
             "url": "web:massage_therapist_page",
-            "image": "images/marketing-pages/massage-therapist.png",
+            "image_filename": "massage-therapist.webp",
             "description": "AI Ad Generator for Massage Therapists"
         },
         {
             "name": "Dentist",
             "url": "web:dentist_page",
-            "image": "images/marketing-pages/dentist.png",
+            "image_filename": "dentist.webp",
             "description": "AI Ad Generator for Dentists"
         },
         {
             "name": "Optometrist",
             "url": "web:optometrist_page",
-            "image": "images/marketing-pages/optometrist.png",
+            "image_filename": "optometrist.webp",
             "description": "AI Ad Generator for Optometrists"
         },
         {
             "name": "Physical Therapist",
             "url": "web:physical_therapist_page",
-            "image": "images/marketing-pages/physical-therapist.png",
+            "image_filename": "physical-therapist.webp",
             "description": "AI Ad Generator for Physical Therapists"
         },
         {
             "name": "Acupuncturist",
             "url": "web:acupuncturist_page",
-            "image": "images/marketing-pages/acupuncturist.png",
+            "image_filename": "acupuncturist.webp",
             "description": "AI Ad Generator for Acupuncturists"
         },
         {
             "name": "Mental Health Therapist",
             "url": "web:mental_health_therapist_page",
-            "image": "images/marketing-pages/mental-health-therapist.png",
+            "image_filename": "mental-health-therapist.webp",
             "description": "AI Ad Generator for Mental Health Therapists"
         },
         {
             "name": "Dermatologist",
             "url": "web:dermatologist_page",
-            "image": "images/marketing-pages/dermatologist.png",
+            "image_filename": "dermatologist.webp",
             "description": "AI Ad Generator for Dermatologists"
         },
         {
             "name": "Veterinarian",
             "url": "web:veterinarian_page",
-            "image": "images/marketing-pages/veterinarian.png",
+            "image_filename": "veterinarian.webp",
             "description": "AI Ad Generator for Veterinarians"
         },
         {
             "name": "Medical Clinic",
             "url": "web:medical_clinic_page",
-            "image": "images/marketing-pages/medical-clinic.png",
+            "image_filename": "medical-clinic.webp",
             "description": "AI Ad Generator for Medical Clinics"
         },
         {
             "name": "Urgent Care Center",
             "url": "web:urgent_care_center_page",
-            "image": "images/marketing-pages/urgent-care-center.png",
+            "image_filename": "urgent-care-center.webp",
             "description": "AI Ad Generator for Urgent Care Centers"
         },
         {
             "name": "Personal Trainer",
             "url": "web:personal_trainer_page",
-            "image": "images/marketing-pages/personal-trainer.png",
+            "image_filename": "personal-trainer.webp",
             "description": "AI Ad Generator for Personal Trainers"
         },
         {
             "name": "Nutritionist",
             "url": "web:nutritionist_page",
-            "image": "images/marketing-pages/nutritionist.png",
+            "image_filename": "nutritionist.webp",
             "description": "AI Ad Generator for Nutritionists"
         },
         {
             "name": "Yoga Studio",
             "url": "web:yoga_studio_page",
-            "image": "images/marketing-pages/yoga-studio.png",
+            "image_filename": "yoga-studio.webp",
             "description": "AI Ad Generator for Yoga Studios"
         },
         {
             "name": "Pilates Studio",
             "url": "web:pilates_studio_page",
-            "image": "images/marketing-pages/pilates-studio.png",
+            "image_filename": "pilates-studio.webp",
             "description": "AI Ad Generator for Pilates Studios"
         },
         {
             "name": "Martial Arts Studio",
             "url": "web:martial_arts_studio_page",
-            "image": "images/marketing-pages/martial-arts-studio.png",
+            "image_filename": "martial-arts-studio.webp",
             "description": "AI Ad Generator for Martial Arts Studios"
         },
         {
             "name": "Dance Studio",
             "url": "web:dance_studio_page",
-            "image": "images/marketing-pages/dance-studio.png",
+            "image_filename": "dance-studio.webp",
             "description": "AI Ad Generator for Dance Studios"
         },
         {
             "name": "Gym",
             "url": "web:gym_page",
-            "image": "images/marketing-pages/gym.png",
+            "image_filename": "gym.webp",
             "description": "AI Ad Generator for Gyms"
         },
         {
             "name": "Fitness Center",
             "url": "web:fitness_center_page",
-            "image": "images/marketing-pages/fitness-center.png",
+            "image_filename": "fitness-center.webp",
             "description": "AI Ad Generator for Fitness Centers"
         },
         {
             "name": "CrossFit Box",
             "url": "web:crossfit_box_page",
-            "image": "images/marketing-pages/crossfit-box.png",
+            "image_filename": "crossfit-box.webp",
             "description": "AI Ad Generator for CrossFit Boxes"
         },
         {
             "name": "Restaurant",
             "url": "web:restaurant_page",
-            "image": "images/marketing-pages/restaurant.png",
+            "image_filename": "restaurant.webp",
             "description": "AI Ad Generator for Restaurants"
         },
         {
             "name": "Cafe",
             "url": "web:cafe_page",
-            "image": "images/marketing-pages/cafe.png",
+            "image_filename": "cafe.webp",
             "description": "AI Ad Generator for Cafes"
         },
         {
             "name": "Bakery",
             "url": "web:bakery_page",
-            "image": "images/marketing-pages/bakery.png",
+            "image_filename": "bakery.webp",
             "description": "AI Ad Generator for Bakeries"
         },
         {
             "name": "Food Truck",
             "url": "web:food_truck_page",
-            "image": "images/marketing-pages/food-truck.png",
+            "image_filename": "food-truck.webp",
             "description": "AI Ad Generator for Food Trucks"
         },
         {
             "name": "Bar",
             "url": "web:bar_page",
-            "image": "images/marketing-pages/bar.png",
+            "image_filename": "bar.webp",
             "description": "AI Ad Generator for Bars"
         },
         {
             "name": "Pub",
             "url": "web:pub_page",
-            "image": "images/marketing-pages/pub.png",
+            "image_filename": "pub.webp",
             "description": "AI Ad Generator for Pubs"
         },
         {
             "name": "Ice Cream Shop",
             "url": "web:ice_cream_shop_page",
-            "image": "images/marketing-pages/ice-cream-shop.png",
+            "image_filename": "ice-cream-shop.webp",
             "description": "AI Ad Generator for Ice Cream Shops"
         },
         {
             "name": "Pizza Shop",
             "url": "web:pizza_shop_page",
-            "image": "images/marketing-pages/pizza-shop.png",
+            "image_filename": "pizza-shop.webp",
             "description": "AI Ad Generator for Pizza Shops"
         },
         {
             "name": "Catering Service",
             "url": "web:catering_service_page",
-            "image": "images/marketing-pages/catering-service.png",
+            "image_filename": "catering-service.webp",
             "description": "AI Ad Generator for Catering Services"
         },
         {
             "name": "Juice Bar",
             "url": "web:juice_bar_page",
-            "image": "images/marketing-pages/juice-bar.png",
+            "image_filename": "juice-bar.webp",
             "description": "AI Ad Generator for Juice Bars"
         },
         {
             "name": "Smoothie Shop",
             "url": "web:smoothie_shop_page",
-            "image": "images/marketing-pages/smoothie-shop.png",
+            "image_filename": "smoothie-shop.webp",
             "description": "AI Ad Generator for Smoothie Shops"
         },
         {
             "name": "Brewery",
             "url": "web:brewery_page",
-            "image": "images/marketing-pages/brewery.png",
+            "image_filename": "brewery.webp",
             "description": "AI Ad Generator for Breweries"
         },
         {
             "name": "Wine Shop",
             "url": "web:wine_shop_page",
-            "image": "images/marketing-pages/wine-shop.png",
+            "image_filename": "wine-shop.webp",
             "description": "AI Ad Generator for Wine Shops"
         },
         {
             "name": "Coffee Roaster",
             "url": "web:coffee_roaster_page",
-            "image": "images/marketing-pages/coffee-roaster.png",
+            "image_filename": "coffee-roaster.webp",
             "description": "AI Ad Generator for Coffee Roasters"
         },
         {
             "name": "Tea Shop",
             "url": "web:tea_shop_page",
-            "image": "images/marketing-pages/tea-shop.png",
+            "image_filename": "tea-shop.webp",
             "description": "AI Ad Generator for Tea Shops"
         },
         {
             "name": "Donut Shop",
             "url": "web:donut_shop_page",
-            "image": "images/marketing-pages/donut-shop.png",
+            "image_filename": "donut-shop.webp",
             "description": "AI Ad Generator for Donut Shops"
         },
         {
             "name": "Bagel Shop",
             "url": "web:bagel_shop_page",
-            "image": "images/marketing-pages/bagel-shop.png",
+            "image_filename": "bagel-shop.webp",
             "description": "AI Ad Generator for Bagel Shops"
         },
         {
             "name": "Sandwich Shop",
             "url": "web:sandwich_shop_page",
-            "image": "images/marketing-pages/sandwich-shop.png",
+            "image_filename": "sandwich-shop.webp",
             "description": "AI Ad Generator for Sandwich Shops"
         },
         {
             "name": "Deli",
             "url": "web:deli_page",
-            "image": "images/marketing-pages/deli.png",
+            "image_filename": "deli.webp",
             "description": "AI Ad Generator for Delis"
         },
         {
             "name": "BBQ Restaurant",
             "url": "web:bbq_restaurant_page",
-            "image": "images/marketing-pages/bbq-restaurant.png",
+            "image_filename": "bbq-restaurant.webp",
             "description": "AI Ad Generator for BBQ Restaurants"
         },
         {
             "name": "Sushi Bar",
             "url": "web:sushi_bar_page",
-            "image": "images/marketing-pages/sushi-bar.png",
+            "image_filename": "sushi-bar.webp",
             "description": "AI Ad Generator for Sushi Bars"
         },
         {
             "name": "Food Delivery Service",
             "url": "web:food_delivery_service_page",
-            "image": "images/marketing-pages/food-delivery-service.png",
+            "image_filename": "food-delivery-service.webp",
             "description": "AI Ad Generator for Food Delivery Services"
         },
         {
             "name": "Hair Salon",
             "url": "web:hair_salon_page",
-            "image": "images/marketing-pages/hair-salon.png",
+            "image_filename": "hair-salon.webp",
             "description": "AI Ad Generator for Hair Salons"
         },
         {
             "name": "Barbershop",
             "url": "web:barbershop_page",
-            "image": "images/marketing-pages/barbershop.png",
+            "image_filename": "barbershop.webp",
             "description": "AI Ad Generator for Barbershops"
         },
         {
             "name": "Nail Salon",
             "url": "web:nail_salon_page",
-            "image": "images/marketing-pages/nail-salon.png",
+            "image_filename": "nail-salon.webp",
             "description": "AI Ad Generator for Nail Salons"
         },
         {
             "name": "Spa",
             "url": "web:spa_page",
-            "image": "images/marketing-pages/spa.png",
+            "image_filename": "spa.webp",
             "description": "AI Ad Generator for Spas"
         },
         {
             "name": "Med Spa",
             "url": "web:med_spa_page",
-            "image": "images/marketing-pages/med-spa.png",
+            "image_filename": "med-spa.webp",
             "description": "AI Ad Generator for Med Spas"
         },
         {
             "name": "Tanning Salon",
             "url": "web:tanning_salon_page",
-            "image": "images/marketing-pages/tanning-salon.png",
+            "image_filename": "tanning-salon.webp",
             "description": "AI Ad Generator for Tanning Salons"
         },
         {
             "name": "Makeup Artist",
             "url": "web:makeup_artist_page",
-            "image": "images/marketing-pages/makeup-artist.png",
+            "image_filename": "makeup-artist.webp",
             "description": "AI Ad Generator for Makeup Artists"
         },
         {
             "name": "Esthetician",
             "url": "web:esthetician_page",
-            "image": "images/marketing-pages/esthetician.png",
+            "image_filename": "esthetician.webp",
             "description": "AI Ad Generator for Estheticians"
         },
         {
             "name": "Tattoo Parlor",
             "url": "web:tattoo_parlor_page",
-            "image": "images/marketing-pages/tattoo-parlor.png",
+            "image_filename": "tattoo-parlor.webp",
             "description": "AI Ad Generator for Tattoo Parlors"
         },
         {
             "name": "Piercing Studio",
             "url": "web:piercing_studio_page",
-            "image": "images/marketing-pages/piercing-studio.png",
+            "image_filename": "piercing-studio.webp",
             "description": "AI Ad Generator for Piercing Studios"
         },
         {
             "name": "Lash Extension",
             "url": "web:lash_extension_page",
-            "image": "images/marketing-pages/lash-extension.png",
+            "image_filename": "lash-extension.webp",
             "description": "AI Ad Generator for Lash Extensions"
         },
         {
             "name": "Brow Bar",
             "url": "web:brow_bar_page",
-            "image": "images/marketing-pages/brow-bar.png",
+            "image_filename": "brow-bar.webp",
             "description": "AI Ad Generator for Brow Bars"
         },
         {
             "name": "Waxing Salon",
             "url": "web:waxing_salon_page",
-            "image": "images/marketing-pages/waxing-salon.png",
+            "image_filename": "waxing-salon.webp",
             "description": "AI Ad Generator for Waxing Salons"
         },
         {
             "name": "Blow Dry Bar",
             "url": "web:blow_dry_bar_page",
-            "image": "images/marketing-pages/blow-dry-bar.png",
+            "image_filename": "blow-dry-bar.webp",
             "description": "AI Ad Generator for Blow Dry Bars"
         },
         {
             "name": "Auto Repair Shop",
             "url": "web:auto_repair_shop_page",
-            "image": "images/marketing-pages/auto-repair-shop.png",
+            "image_filename": "auto-repair-shop.webp",
             "description": "AI Ad Generator for Auto Repair Shops"
         },
         {
             "name": "Car Dealership",
             "url": "web:car_dealership_page",
-            "image": "images/marketing-pages/car-dealership.png",
+            "image_filename": "car-dealership.webp",
             "description": "AI Ad Generator for Car Dealerships"
         },
         {
             "name": "Auto Detailing",
             "url": "web:auto_detailing_page",
-            "image": "images/marketing-pages/auto-detailing.png",
+            "image_filename": "auto-detailing.webp",
             "description": "AI Ad Generator for Auto Detailing"
         },
         {
             "name": "Tire Shop",
             "url": "web:tire_shop_page",
-            "image": "images/marketing-pages/tire-shop.png",
+            "image_filename": "tire-shop.webp",
             "description": "AI Ad Generator for Tire Shops"
         },
         {
             "name": "Auto Body Shop",
             "url": "web:auto_body_shop_page",
-            "image": "images/marketing-pages/auto-body-shop.png",
+            "image_filename": "auto-body-shop.webp",
             "description": "AI Ad Generator for Auto Body Shops"
         },
         {
             "name": "Oil Change Service",
             "url": "web:oil_change_service_page",
-            "image": "images/marketing-pages/oil-change-service.png",
+            "image_filename": "oil-change-service.webp",
             "description": "AI Ad Generator for Oil Change Services"
         },
         {
             "name": "Car Wash",
             "url": "web:car_wash_page",
-            "image": "images/marketing-pages/car-wash.png",
+            "image_filename": "car-wash.webp",
             "description": "AI Ad Generator for Car Washes"
         },
     ]
