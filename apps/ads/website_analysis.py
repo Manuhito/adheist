@@ -64,10 +64,8 @@ def download_website_content(url: str) -> str:
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-            'Accept-Encoding': 'gzip, deflate, br',
             'Accept-Language': 'en-US,en;q=0.9',
             'Upgrade-Insecure-Requests': '1',
-            'Connection': 'keep-alive',
         }
         
         response = requests.get(url, timeout=15, headers=headers, allow_redirects=True)
@@ -79,8 +77,8 @@ def download_website_content(url: str) -> str:
         log.info(f"Detected encoding: {detected_encoding}. Using: {final_encoding}")
         response.encoding = final_encoding
         
-        # Extract text from HTML
-        text_content = extract_text_from_html(response.content)
+        # Use response.text to get properly decoded content (requests handles decompression)
+        text_content = extract_text_from_html(response.text.encode(final_encoding))
         
         log.info(f"Successfully downloaded content from {url}, extracted {len(text_content)} characters")
         return text_content
