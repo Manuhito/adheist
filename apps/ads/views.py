@@ -62,8 +62,8 @@ def create_payment_intent(request):
         # Ensure the user has a customer before creating a payment intent
         customer_kwargs = {}
         if hasattr(request.user, 'customer') and request.user.customer:
-            # User already has a customer, use it
-            customer_kwargs["customer"] = request.user.customer.id
+            # User already has a customer, use the Stripe customer ID (not the local DB ID)
+            customer_kwargs["customer"] = request.user.customer.id  # djstripe Customer.id is the Stripe ID
         else:
             # Create a new customer for the user
             try:
@@ -3687,9 +3687,17 @@ def generated_ad_page(request, version_id):
                 # If coming from discover-clone (after generation), go to discover
                 back_url = '/ads/discover/'
         
+        # Check if user is on free tier (no active subscription)
+        is_free_tier = not hasattr(request.user, 'subscription') or request.user.subscription is None or request.user.subscription.status != 'active'
+        
+        # Check if user has already rated this version
+        has_rated = version.rating is not None and version.review
+        
         context = {
             'version': version,
             'back_url': back_url,
+            'is_free_tier': is_free_tier,
+            'has_rated': has_rated,
         }
         
         return render(request, 'ads/generated_ad.html', context)

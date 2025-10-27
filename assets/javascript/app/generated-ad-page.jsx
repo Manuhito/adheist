@@ -4,7 +4,7 @@ import { Button } from '../components/ui/button.tsx';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '../components/ui/dialog.tsx';
 import { AlertNotification } from '../components/ui/alert-notification';
 import { useTranslation } from '../lib/useTranslation';
-import { WandSparkles, ThumbsUp, ThumbsDown, Download, Expand, Star, Info, ArrowLeft } from 'lucide-react';
+import { WandSparkles, ThumbsUp, ThumbsDown, Download, Expand, Star, Info, ArrowLeft, X } from 'lucide-react';
 import * as ReactDOM from "react-dom";
 import RevisionModal from './components/RevisionModal';
 import AdDetailsModal from './components/AdDetailsModal';
@@ -127,6 +127,13 @@ const GeneratedAdPage = () => {
   // Version selection state
   const [selectedVersion, setSelectedVersion] = useState(null);
 
+  // Tooltip state - only show if user is on free tier and hasn't rated yet
+  const shouldShowTooltip = generatedAdData.is_free_tier && !generatedAdData.has_rated;
+  const [showTooltip, setShowTooltip] = useState(shouldShowTooltip);
+
+  // Feedback buttons disabled if user has already rated
+  const feedbackDisabled = generatedAdData.has_rated;
+
   // Initialize selected version when component mounts
   React.useEffect(() => {
     if (generatedAdData.versions && generatedAdData.versions.length > 0) {
@@ -245,6 +252,9 @@ const GeneratedAdPage = () => {
       .then(response => response.json())
       .then(data => {
         if (data.success) {
+          // Hide tooltip after successful feedback
+          setShowTooltip(false);
+          
           // Crear contenedor para la notificación
           const notificationContainer = document.createElement('div');
           notificationContainer.id = 'rating-notification-container';
@@ -405,16 +415,39 @@ const GeneratedAdPage = () => {
             <span className="text-sm font-medium">More Details</span>
           </button>
 
-          <button
-            className="p-3 rounded-full transition-colors hover:text-primary"
-            onClick={() => handleOpenRating('positive')}
-          >
-            <ThumbsUp className="h-6 w-6" />
-          </button>
+          <div className="relative">
+            <button
+              className={`p-3 rounded-full transition-colors ${feedbackDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:text-primary'}`}
+              onClick={() => !feedbackDisabled && handleOpenRating('positive')}
+              disabled={feedbackDisabled}
+            >
+              <ThumbsUp className="h-6 w-6" />
+            </button>
+
+            {/* Tooltip */}
+            {showTooltip && (
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50">
+                <div className="bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-sm rounded-lg px-4 py-3 shadow-lg whitespace-nowrap flex items-center gap-3">
+                  <span>Provide feedback on this ad to get free credits</span>
+                  <button
+                    onClick={() => setShowTooltip(false)}
+                    className="hover:bg-gray-800 dark:hover:bg-gray-200 rounded p-1 transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                {/* Arrow */}
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
+                  <div className="border-8 border-transparent border-t-gray-900 dark:border-t-gray-100"></div>
+                </div>
+              </div>
+            )}
+          </div>
 
           <button
-            className="p-3 rounded-full transition-colors hover:text-primary"
-            onClick={() => handleOpenRating('negative')}
+            className={`p-3 rounded-full transition-colors ${feedbackDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:text-primary'}`}
+            onClick={() => !feedbackDisabled && handleOpenRating('negative')}
+            disabled={feedbackDisabled}
           >
             <ThumbsDown className="h-6 w-6" />
           </button>
