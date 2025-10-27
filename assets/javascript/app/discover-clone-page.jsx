@@ -52,10 +52,10 @@ const DiscoverCloneHeader = () => {
           Generate Ad
         </Button>
         {/* Custom tooltip below button to ensure visibility */}
-        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1.5 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-lg">
+        <div className="absolute top-full right-0 mt-2 px-3 py-1.5 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-lg">
           Use {adGenerationCost} {adGenerationCost === 1 ? 'credit' : 'credits'} to generate this ad
           {/* Arrow pointing up */}
-          <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-gray-900 dark:border-b-gray-700"></div>
+          <div className="absolute bottom-full right-4 border-4 border-transparent border-b-gray-900 dark:border-b-gray-700"></div>
         </div>
       </div>
     </div>
