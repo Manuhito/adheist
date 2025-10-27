@@ -426,19 +426,19 @@ const GeneratedAdPage = () => {
 
             {/* Tooltip */}
             {showTooltip && (
-              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50">
-                <div className="bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-sm rounded-lg px-4 py-3 shadow-lg whitespace-nowrap flex items-center gap-3">
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 w-max max-w-xs z-50">
+                <div className="relative bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900 text-sm rounded-lg px-4 py-3 shadow-2xl flex items-center gap-4 border border-gray-700 dark:border-gray-400">
                   <span>Provide feedback on this ad to get free credits</span>
                   <button
                     onClick={() => setShowTooltip(false)}
-                    className="hover:bg-gray-800 dark:hover:bg-gray-200 rounded p-1 transition-colors"
+                    className="text-gray-400 hover:text-white dark:text-gray-600 dark:hover:text-gray-900 transition-colors"
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-5 w-5" />
                   </button>
-                </div>
-                {/* Arrow */}
-                <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
-                  <div className="border-8 border-transparent border-t-gray-900 dark:border-t-gray-100"></div>
+                  {/* Arrow */}
+                  <div 
+                    className="absolute left-1/2 transform -translate-x-1/2 top-full h-0 w-0 border-x-8 border-x-transparent border-t-8 border-t-gray-800 dark:border-t-gray-200"
+                  ></div>
                 </div>
               </div>
             )}
