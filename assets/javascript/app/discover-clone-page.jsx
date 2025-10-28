@@ -833,9 +833,6 @@ const DiscoverClonePageContent = () => {
                 </div>
               )}
               <h2 className="text-lg text-primary">Advanced AI Copywriting</h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Additional context/instructions
-              </p>
               <textarea
                 className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-input dark:border-gray-600 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                 placeholder="Outline the product range and services provided by the brand."

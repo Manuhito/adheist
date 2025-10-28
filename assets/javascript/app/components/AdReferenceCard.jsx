@@ -17,7 +17,7 @@ const AdReferenceCard = ({ item }) => {
 
   return (
     <div className="w-full flex justify-center">
-      <div className="w-5/6 max-w-sm">
+      <div className="w-5/6 w-[18rem]">
         <div className="bg-card rounded-xl overflow-hidden shadow-sm border border-border flex flex-col p-3">
           {/* Card Header */}
           <div>
