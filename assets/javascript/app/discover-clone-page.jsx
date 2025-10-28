@@ -829,7 +829,7 @@ const DiscoverClonePageContent = () => {
                 <img
                   src={adLibraryData.ad_image}
                   alt={adLibraryData.company_name || 'Ad reference'}
-                  className="w-5/6 h-auto object-contain rounded-lg"
+                  className="w-5/6 h-auto object-contain rounded-lg max-h-[400px]"
                 />
               </div>
             ) : (
