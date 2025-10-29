@@ -772,3 +772,11 @@ More focus. Better gut health. Real energy that lasts."
             "status": "error",
             "error": str(e)
         }
+
+@shared_task
+def generate_ugc_video_task(text: str):
+    """
+    A Celery task to generate a UGC video. For now, it just logs the text.
+    """
+    logger.info(f"[UGC Video Task] Received text: {text}")
+    return {"status": "success", "message": "Task started for UGC video generation."}

@@ -4017,3 +4017,27 @@ def get_brand_details(request, brand_id):
             'success': False,
             'error': str(e)
         }, status=500)
+
+
+@require_POST
+@login_required
+def generate_ugc_video(request):
+    """
+    API endpoint to trigger the UGC video generation task.
+    """
+    try:
+        data = json.loads(request.body)
+        text = data.get('text')
+
+        if not text:
+            return JsonResponse({'error': 'Text is required'}, status=400)
+
+        from apps.aiinterface.tasks import generate_ugc_video_task
+        generate_ugc_video_task.delay(text=text)
+
+        return JsonResponse({'status': 'success', 'message': 'UGC video generation task has been queued.'})
+
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

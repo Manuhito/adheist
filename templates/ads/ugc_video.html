@@ -2,17 +2,14 @@
 {% load static %}
 
 {% block extra_js %}
-{{ block.super }}
-<script>
-  // Pass user permissions to JavaScript
-  window.__USER_PERMISSIONS__ = {
-    isStaff: {% if request.user.is_staff %}true{% else %}false{% endif %}
-  };
-</script>
-<script src="{% static 'js/ugc-video-page-bundle.js' %}?v={{ STATIC_VERSION }}"></script>
+  {{ block.super }}
+  <script src="{% static 'js/ugc-video-page-bundle.js' %}?v={{ STATIC_VERSION }}"></script>
 {% endblock %}
 
 {% block app %}
-<!-- Contenedor para el componente React -->
-<div id="ugc-video-page-container" class="w-full h-full p-6"></div>
+  {# This block is intentionally left empty because the content is rendered by React #}
+{% endblock %}
+
+{% block content %}
+  {# This block is intentionally left empty because the content is rendered by React #}
 {% endblock %}

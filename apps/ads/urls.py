@@ -53,4 +53,5 @@ urlpatterns = [
     path("api/analyze-website/", views.analyze_website_for_brand_assets, name="analyze_website_for_brand_assets"),
     path("api/update-user-brand/<int:brand_id>/", views.update_user_brand, name="update_user_brand"),
     path("api/brand-details/<int:brand_id>/", views.get_brand_details, name="get_brand_details"),
+    path("api/generate-ugc-video/", views.generate_ugc_video, name="generate_ugc_video"),
 ]
