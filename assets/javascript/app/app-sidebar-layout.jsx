@@ -65,6 +65,7 @@ function AppSidebar({ activeTab, sidebarComponent }) {
   const menuItems = [
     { id: 'discover', label: 'Discover', href: '/ads/discover/', icon: <Compass className="h-5 w-5" /> },
     { id: 'my-ads', label: 'My Ads', href: '/ads/my-ads/', icon: <Zap className="h-5 w-5" /> },
+    { id: 'ugc-video', label: 'UGC Video', href: '/ads/ugc-video/', icon: <Sparkles className="h-5 w-5" /> },
     { id: 'brands-library', label: 'Brands Library', href: '/ads/brands/', icon: <Library className="h-5 w-5" /> },
     { id: 'assets', label: 'Assets', href: '/ads/assets/', icon: <Folders className="h-5 w-5" /> },
   ];

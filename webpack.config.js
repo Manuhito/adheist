@@ -31,6 +31,7 @@ module.exports = {
     'folder-assets-detail': './assets/javascript/app/folder-assets-detail.jsx',  // entry point for the folder assets detail page
     'app-sidebar-layout': './assets/javascript/app/app-sidebar-layout.jsx',  // entry point for the sidebar layout
     'generated-ad': './assets/javascript/app/generated-ad-page.jsx',  // entry point for the generated ad page
+    'ugc-video-page': './assets/javascript/app/ugc-video-page.jsx', // entry point for the ugc video page
     'landing-page': './assets/javascript/landing/landing_page.js', // entry point for the new landing page
     'error-pages/404': './assets/javascript/error-pages/404/index.tsx',  // 404 error page
     'error-pages/400': './assets/javascript/error-pages/400/index.tsx',  // 400 error page

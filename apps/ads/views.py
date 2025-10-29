@@ -525,6 +525,18 @@ def discover_page(request):
 
 
 @login_required
+def ugc_video_page(request):
+    """
+    Render the UGC Video page.
+    """
+    template = "ads/ugc_video.html"
+    context = {
+        "active_tab": "ugc-video",
+    }
+    return TemplateResponse(request, template, context)
+
+
+@login_required
 def brands_page(request):
     """
     Render the brands library page with React components.
