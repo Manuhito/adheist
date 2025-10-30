@@ -19,6 +19,8 @@
     brand_name: {% if version.ad_request.base_assets and version.ad_request.base_assets.brand %}"{{ version.ad_request.base_assets.brand.brand_name|escapejs }}"{% else %}"Generated Ad"{% endif %},
     canvas_size: "{{ version.ad_request.canvas_size|default:'1024x1024' }}",
     back_url: "{{ back_url|escapejs }}",
+    is_free_tier: {% if is_free_tier %}true{% else %}false{% endif %},
+    has_rated: {% if has_rated %}true{% else %}false{% endif %},
     versions: [
       {% for v in version.ad_request.ordered_versions %}
       {

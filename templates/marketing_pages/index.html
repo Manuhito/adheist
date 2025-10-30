@@ -1,5 +1,5 @@
 {% extends "web/base.html" %}
-{% load static socialaccount %}
+{% load static socialaccount marketing_tags %}
 
 {% block page_title %}Industries - AI Ad Generator | Ad Heist{% endblock page_title %}
 
@@ -84,7 +84,7 @@
                     <!-- Image Container -->
                     <div class="aspect-square overflow-hidden bg-gray-100 dark:bg-neutral-800">
                         <img 
-                            src="{% static page.image %}" 
+                            src="{% industry_image page.image_filename %}" 
                             alt="{{ page.description }}"
                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         >

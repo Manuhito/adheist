@@ -120,6 +120,7 @@ function BrandsPage() {
   const brandsData = window.__BRANDS_DATA__ || {};
   const user = brandsData.user || {};
   const brands = brandsData.brands || [];
+  const brandAssetsCost = brandsData.brandAssetsCost || 4;
 
   // Modal state
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -312,6 +313,7 @@ function BrandsPage() {
         onClose={handleCloseCreateModal}
         onBrandCreated={handleBrandCreated}
         editingBrand={editingBrand}
+        brandAssetsCost={brandAssetsCost}
       />
     </div>
   );

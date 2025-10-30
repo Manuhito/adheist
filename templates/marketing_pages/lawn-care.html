@@ -1,5 +1,5 @@
 {% extends "web/base.html" %}
-{% load static socialaccount %}
+{% load static socialaccount marketing_tags %}
 
 {% block page_title %}AI Ad Generator for Lawn Care | Ad Heist{% endblock page_title %}
 
@@ -53,7 +53,7 @@
             </div>
             <!-- Right Column: Image -->
             <div class="md:col-span-2">
-                <img src="{% static 'images/marketing-pages/lawn-care.png' %}" alt="AI Ad Generator for Lawn Care" class="rounded-3xl w-full">
+                <img src="{% industry_image 'lawn-care.webp' %}" alt="AI Ad Generator for Lawn Care" class="rounded-3xl w-full">
             </div>
         </div>
     </section>
@@ -158,7 +158,7 @@
             </div>
             <!-- Image -->
             <div>
-                <img src="{% static 'images/marketing-pages/1-Search.jpg' %}" alt="Search Ads" class="rounded-3xl w-full">
+                <img src="{% marketing_image '1-Search.webp' %}" alt="Search Ads" class="rounded-3xl w-full">
             </div>
         </div>
     </section>
@@ -168,7 +168,7 @@
         <div class="grid md:grid-cols-2 gap-24 items-center">
             <!-- Image -->
             <div class="order-last md:order-first">
-                <img src="{% static 'images/marketing-pages/2-brand-details.png' %}" alt="Brand Details" class="rounded-3xl w-full">
+                <img src="{% marketing_image '2-brand-details.webp' %}" alt="Brand Details" class="rounded-3xl w-full">
             </div>
             <!-- Text Content -->
             <div class="space-y-12">
@@ -236,7 +236,7 @@
             </div>
             <!-- Image -->
             <div>
-                <img src="{% static 'images/marketing-pages/3-creating-ads.jpg' %}" alt="Creating Ads" class="rounded-3xl w-full">
+                <img src="{% marketing_image '3-creating-ads.webp' %}" alt="Creating Ads" class="rounded-3xl w-full">
             </div>
         </div>
     </section>
@@ -246,7 +246,7 @@
         <div class="grid md:grid-cols-2 gap-24 items-center">
             <!-- Image -->
             <div class="order-last md:order-first">
-                <img src="{% static 'images/marketing-pages/4-ad-details.png' %}" alt="Ad Details" class="rounded-3xl w-full">
+                <img src="{% marketing_image '4-ad-details.webp' %}" alt="Ad Details" class="rounded-3xl w-full">
             </div>
             <!-- Text Content -->
             <div class="space-y-12">

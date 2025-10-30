@@ -16,7 +16,7 @@ import ColorPickerModal from './ColorPickerModal.jsx';
 /**
  * Modal component for creating a new brand
  */
-const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adRequestId = null, editingBrand = null }) => {
+const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adRequestId = null, editingBrand = null, brandAssetsCost = 4 }) => {
   const { t } = useTranslation();
   const fileInputRef = useRef(null);
   const [brandName, setBrandName] = useState('');
@@ -554,7 +554,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
             <div className="space-y-3 mb-6">
               <p className="text-sm text-gray-600 dark:text-gray-300">
                 Analyze your brand website to generate the fields below{' '}
-                <span className="text-primary dark:text-primary">(4 Credits)</span>
+                <span className="text-primary dark:text-primary">({brandAssetsCost} Credits)</span>
               </p>
 
               {/* Website URL Input with Generate Button */}

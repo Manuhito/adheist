@@ -25,7 +25,6 @@ from .models import (
     UserFolder,
     UserBrandAssets,
     BrandAssetExtraction,
-    AdAgencyTemplate,
 )
 
 
@@ -634,64 +633,3 @@ class BrandAssetExtractionAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         # Allow deletion for cleanup
         return True
-
-
-@admin.register(AdAgencyTemplate)
-class AdAgencyTemplateAdmin(admin.ModelAdmin):
-    list_display = ('hero_title', 'get_full_url', 'status', 'created_at', 'updated_at')
-    list_filter = ('status', 'path_prefix')
-    search_fields = ('hero_title', 'slug', 'meta_title')
-    prepopulated_fields = {'slug': ('hero_title',)}
-
-    def get_full_url(self, obj):
-        """Display the full URL path in the admin list"""
-        if obj.path_prefix:
-            return f"/{obj.path_prefix}/{obj.slug}/"
-        return f"/{obj.slug}/"
-    get_full_url.short_description = 'URL Path'
-
-    fieldsets = (
-        ('Page Control & SEO', {
-            'fields': ('status', 'path_prefix', 'slug', 'meta_title', 'meta_description'),
-            'description': 'Path prefix is optional. Examples: "services", "products", "solutions". Leave empty for root level.'
-        }),
-        ('Hero Section', {
-            'fields': ('hero_title', 'hero_description', 'hero_image')
-        }),
-        ('Claim Section', {
-            'fields': ('claim', 'claim_subheading')
-        }),
-        ('Problems Section', {
-            'fields': (
-                ('problem_1_title', 'problem_1_icon'), 
-                'problem_1_subtext',
-                ('problem_2_title', 'problem_2_icon'),
-                'problem_2_subtext',
-                ('problem_3_title', 'problem_3_icon'),
-                'problem_3_subtext',
-            )
-        }),
-        ('Feature 1 Section', {
-            'fields': (
-                'feature_1_title',
-                'feature_1_title_desc',
-                'feature_1_image',
-                ('feature_1_subtit_1_title', 'feature_1_subtit_1_icon'),
-                'feature_1_subtit_1_desc',
-                ('feature_1_subtit_2_title', 'feature_1_subtit_2_icon'),
-                'feature_1_subtit_2_desc',
-            )
-        }),
-        ('Feature 2 Section', {
-            'fields': (
-                'feature_2_title',
-                'feature_2_title_desc',
-                'feature_2_image',
-                ('feature_2_subtit_1_title', 'feature_2_subtit_1_icon'),
-                'feature_2_subtit_1_desc',
-                ('feature_2_subtit_2_title', 'feature_2_subtit_2_icon'),
-                'feature_2_subtit_2_desc',
-            )
-        }),
-    )
-

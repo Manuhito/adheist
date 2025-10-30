@@ -8,10 +8,12 @@ import ImageLibraryModal from './components/ImageLibraryModal.jsx';
 import GeneratingLoadingPage from './components/GeneratingLoadingPage.jsx';
 import NoCreditsModal from './components/NoCreditsModal.jsx';
 import { ArrowLeft, Check, Sparkles } from 'lucide-react';
+import AdReferenceCard from './components/AdReferenceCard.jsx';
 
 // Header component with back button, title and description
 const DiscoverCloneHeader = () => {
   const pageConfig = window.__PAGE_CONFIG__ || {};
+  const adGenerationCost = window.__AD_GENERATION_COST__ || 1;
 
   const handleBackClick = () => {
     window.location.href = pageConfig.backUrl || '/ads/discover/';
@@ -40,15 +42,23 @@ const DiscoverCloneHeader = () => {
         <p className="text-sm text-gray-600 dark:text-gray-400">Select brand assets and configure your ad</p>
       </div>
 
-      {/* Generate Ad Button */}
-      <Button
-        onClick={handleGenerateClick}
-        disabled={window.isDiscoverClonePromptModified}
-        className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-      >
-        <Sparkles className="w-4 h-4" />
-        Generate Ad
-      </Button>
+      {/* Generate Ad Button with Tooltip */}
+      <div className="relative group">
+        <Button
+          onClick={handleGenerateClick}
+          disabled={window.isDiscoverClonePromptModified}
+          className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+        >
+          <Sparkles className="w-4 h-4" />
+          Generate Ad
+        </Button>
+        {/* Custom tooltip below button to ensure visibility */}
+        <div className="absolute top-full right-0 mt-2 px-3 py-1.5 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-lg">
+          Use {adGenerationCost} {adGenerationCost === 1 ? 'credit' : 'credits'} to generate this ad
+          {/* Arrow pointing up */}
+          <div className="absolute bottom-full right-4 border-4 border-transparent border-b-gray-900 dark:border-b-gray-700"></div>
+        </div>
+      </div>
     </div>
   );
 };
@@ -102,15 +112,15 @@ const DiscoverClonePageContent = () => {
   const [selectedCanvasSize, setSelectedCanvasSize] = useState(null);
   const [adLibraryData, setAdLibraryData] = useState(null);
   const [isAdLibraryLoading, setIsAdLibraryLoading] = useState(false);
-  
+
   // User prompt state and modification tracking
   const [userPrompt, setUserPrompt] = useState('');
   const [isPromptModified, setIsPromptModified] = useState(false);
   const promptUpdateTimer = useRef(null);
-  
+
   // Generation state
   const [isGenerating, setIsGenerating] = useState(false);
-  
+
   // State for credits modal
   const [showNoCreditsDialog, setShowNoCreditsDialog] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -579,7 +589,7 @@ const DiscoverClonePageContent = () => {
     try {
       // Get CSRF token
       const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
-                       document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
+        document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
 
       if (!csrfToken) {
         console.error('CSRF token not found in cookies');
@@ -588,7 +598,7 @@ const DiscoverClonePageContent = () => {
 
       // Create a FormData object for the request
       const formData = new FormData();
-      
+
       // Add the user_prompt field directly
       formData.append('user_prompt', prompt);
 
@@ -607,7 +617,7 @@ const DiscoverClonePageContent = () => {
 
       const data = await response.json();
       console.log('User prompt updated in database:', data);
-      
+
       // Reset modification flag since we successfully saved
       setIsPromptModified(false);
 
@@ -690,7 +700,7 @@ const DiscoverClonePageContent = () => {
   useEffect(() => {
     window.handleDiscoverCloneGenerate = handleGenerateAd;
     window.isDiscoverClonePromptModified = isPromptModified;
-    
+
     return () => {
       delete window.handleDiscoverCloneGenerate;
       delete window.isDiscoverClonePromptModified;
@@ -713,141 +723,133 @@ const DiscoverClonePageContent = () => {
 
       <div className="p-8">
         <div className="max-w-7xl mx-auto">
-        {/* Two Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-          {/* Left Column - Current Content (60%) */}
-          <div className="lg:col-span-3 space-y-4">
-            {/* Brand Selection Section */}
-            <h2 className="text-lg text-primary">Brand</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Which brand do you want to create ads for?
-            </p>
-            <div className="space-y-2">
-              <BrandDropdown
-                initialBrandId={selectedBrand?.id}
-                onBrandChange={handleBrandChange}
-                adRequestId={adRequestId}
-              />
-              {!selectedBrand && (
-                <p className="text-xs text-amber-500 mt-1">Please select a brand to add assets</p>
-              )}
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Brand changes not allowed after concept creation.
+          {/* Two Column Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+            {/* Left Column - Current Content (60%) */}
+            <div className="lg:col-span-3 space-y-4">
+              {/* Brand Selection Section */}
+              <h2 className="text-lg text-primary">Brand</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Which brand do you want to create ads for?
               </p>
-            </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Product image
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Pick an image for your ad — upload one or choose from suggestions. We'll clean up the background for you!
-            </p>
-            {/* Image Upload Section - 4 images in a row using original components */}
-            <div className="grid grid-cols-2 gap-4 mt-0">
-              {/* Product Image 1 */}
-              <div>
-                <ImageLibrarySelect
-                  onSelectImage={handleProductImageSelect}
-                  onDeleteImage={handleProductImageDelete}
-                  selectedImages={{ primary: productImages.primary, secondary: productImages.secondary }}
-                  disabled={!selectedBrand}
+              <div className="space-y-2">
+                <BrandDropdown
+                  initialBrandId={selectedBrand?.id}
+                  onBrandChange={handleBrandChange}
+                  adRequestId={adRequestId}
+                  brandAssetsCost={window.__BRAND_ASSETS_COST__ || 4}
                 />
+                {!selectedBrand && (
+                  <p className="text-xs text-amber-500 mt-1">Please select a brand to add assets</p>
+                )}
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Brand changes not allowed after concept creation.
+                </p>
               </div>
-
-              {/* App Image 1 */}
-              <div>
-                <AppImageLibrarySelect
-                  onSelectImage={handleAppImageSelect}
-                  onDeleteImage={handleAppImageDelete}
-                  selectedImages={{ primary: appImages.primary, secondary: appImages.secondary }}
-                  disabled={!selectedBrand}
-                />
-              </div>
-            </div>
-            <h2 className="text-lg text-primary">Context</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Platform Presets
-            </p>
-
-            {/* Canvas Size Selection - same as StepOneComponent */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4">
-              {canvasSizes.map((item) => (
-                <div
-                  key={item.id}
-                  className={`relative cursor-pointer rounded-xl p-6 flex flex-col items-center justify-center transition-all ${selectedCanvasSize === item.id
-                    ? "bg-primary/10 border-2 border-primary"
-                    : "bg-gray-100 dark:bg-gray-800 border-2 border-transparent hover:bg-gray-200 dark:hover:bg-gray-700"
-                    }`}
-                  onClick={() => handleCanvasSizeChange(item.id)}
-                >
-                  {/* Check icon in top-right corner when selected */}
-                  {selectedCanvasSize === item.id && (
-                    <div className="absolute top-2 right-2 w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-                      <Check className="w-4 h-4 text-white" />
-                    </div>
-                  )}
-
-                  {/* Shape preview that matches the aspect ratio */}
-                  {item.id === "1024x1024" && (
-                    <div className="w-16 h-16 bg-primary rounded-lg mb-3"></div>
-                  )}
-                  {item.id === "1536x1024" && (
-                    <div className="w-20 h-12 bg-primary rounded-lg mb-3"></div>
-                  )}
-                  {item.id === "1024x1536" && (
-                    <div className="w-12 h-20 bg-primary rounded-lg mb-3"></div>
-                  )}
-
-                  <div className="text-center">
-                    <div className="font-medium text-sm text-gray-900 dark:text-gray-100">{item.label}</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{item.size}</div>
-                  </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Product image
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Pick an image for your ad — upload one or choose from suggestions. We'll clean up the background for you!
+              </p>
+              {/* Image Upload Section - 4 images in a row using original components */}
+              <div className="grid grid-cols-2 gap-4 mt-0">
+                {/* Product Image 1 */}
+                <div>
+                  <ImageLibrarySelect
+                    onSelectImage={handleProductImageSelect}
+                    onDeleteImage={handleProductImageDelete}
+                    selectedImages={{ primary: productImages.primary, secondary: productImages.secondary }}
+                    disabled={!selectedBrand}
+                  />
                 </div>
-              ))}
-            </div>
-          </div>
 
-          {/* Right Column - Ad Reference (40%) */}
-          <div className="lg:col-span-2 space-y-4">
-            <h2 className="text-lg text-primary">Ad reference</h2>
-            {/* Ad Library Image */}
-            {isAdLibraryLoading ? (
-              <div className="w-full h-64 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
-                <p className="text-gray-500 dark:text-gray-400 animate-pulse">Loading ad reference...</p>
+                {/* App Image 1 */}
+                <div>
+                  <AppImageLibrarySelect
+                    onSelectImage={handleAppImageSelect}
+                    onDeleteImage={handleAppImageDelete}
+                    selectedImages={{ primary: appImages.primary, secondary: appImages.secondary }}
+                    disabled={!selectedBrand}
+                  />
+                </div>
               </div>
-            ) : adLibraryData?.ad_image ? (
-              <div className="w-full flex justify-center">
-                <img
-                  src={adLibraryData.ad_image}
-                  alt={adLibraryData.company_name || 'Ad reference'}
-                  className="w-5/6 h-auto object-contain rounded-lg"
-                />
+              <h2 className="text-lg text-primary">Context</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Platform Presets
+              </p>
+
+              {/* Canvas Size Selection - same as StepOneComponent */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+                {canvasSizes.map((item) => (
+                  <div
+                    key={item.id}
+                    className={`relative cursor-pointer rounded-xl p-6 flex flex-col items-center justify-center transition-all ${selectedCanvasSize === item.id
+                      ? "bg-primary/10 border-2 border-primary"
+                      : "bg-gray-100 dark:bg-gray-800 border-2 border-transparent hover:bg-gray-200 dark:hover:bg-gray-700"
+                      }`}
+                    onClick={() => handleCanvasSizeChange(item.id)}
+                  >
+                    {/* Check icon in top-right corner when selected */}
+                    {selectedCanvasSize === item.id && (
+                      <div className="absolute top-2 right-2 w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                        <Check className="w-4 h-4 text-white" />
+                      </div>
+                    )}
+
+                    {/* Shape preview that matches the aspect ratio */}
+                    {item.id === "1024x1024" && (
+                      <div className="w-16 h-16 bg-primary rounded-lg mb-3"></div>
+                    )}
+                    {item.id === "1536x1024" && (
+                      <div className="w-20 h-12 bg-primary rounded-lg mb-3"></div>
+                    )}
+                    {item.id === "1024x1536" && (
+                      <div className="w-12 h-20 bg-primary rounded-lg mb-3"></div>
+                    )}
+
+                    <div className="text-center">
+                      <div className="font-medium text-sm text-gray-900 dark:text-gray-100">{item.label}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{item.size}</div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ) : (
-              <div className="w-full h-64 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
-                <p className="text-gray-500 dark:text-gray-400">No ad reference available</p>
-              </div>
-            )}
-            <h2 className="text-lg text-primary">Advanced AI Copywriting</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Additional context/instructions
-            </p>
-            <textarea
-              className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-input dark:border-gray-600 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-              placeholder="Outline the product range and services provided by the brand."
-              value={userPrompt}
-              onChange={handlePromptChange}
-              rows={4}
-            />
+            </div>
+
+            {/* Right Column - Ad Reference (40%) */}
+            <div className="lg:col-span-2 space-y-4">
+              <h2 className="text-lg text-primary">Ad reference</h2>
+              {/* Ad Library Image */}
+              {isAdLibraryLoading ? (
+                <div className="w-full h-64 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+                  <p className="text-gray-500 dark:text-gray-400 animate-pulse">Loading ad reference...</p>
+                </div>
+              ) : adLibraryData?.ad_image ? (
+                <AdReferenceCard item={adLibraryData} />
+              ) : (
+                <div className="w-full h-64 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+                  <p className="text-gray-500 dark:text-gray-400">No ad reference available</p>
+                </div>
+              )}
+              <h2 className="text-lg text-primary">Advanced AI Copywriting</h2>
+              <textarea
+                className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-input dark:border-gray-600 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                placeholder="Outline the product range and services provided by the brand."
+                value={userPrompt}
+                onChange={handlePromptChange}
+                rows={4}
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Image Selection Modal */}
-      <ImageLibraryModal
-        isOpen={isImageModalOpen}
-        onClose={toggleImageModal}
-        onSelect={handleImageSelect}
-      />
+        {/* Image Selection Modal */}
+        <ImageLibraryModal
+          isOpen={isImageModalOpen}
+          onClose={toggleImageModal}
+          onSelect={handleImageSelect}
+        />
       </div>
     </>
   );

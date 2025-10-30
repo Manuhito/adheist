@@ -4,7 +4,7 @@ import { Button } from '../components/ui/button.tsx';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '../components/ui/dialog.tsx';
 import { AlertNotification } from '../components/ui/alert-notification';
 import { useTranslation } from '../lib/useTranslation';
-import { WandSparkles, ThumbsUp, ThumbsDown, Download, Expand, Star, Info, ArrowLeft } from 'lucide-react';
+import { WandSparkles, ThumbsUp, ThumbsDown, Download, Expand, Star, Info, ArrowLeft, X } from 'lucide-react';
 import * as ReactDOM from "react-dom";
 import RevisionModal from './components/RevisionModal';
 import AdDetailsModal from './components/AdDetailsModal';
@@ -127,6 +127,13 @@ const GeneratedAdPage = () => {
   // Version selection state
   const [selectedVersion, setSelectedVersion] = useState(null);
 
+  // Tooltip state - only show if user is on free tier and hasn't rated yet
+  const shouldShowTooltip = generatedAdData.is_free_tier && !generatedAdData.has_rated;
+  const [showTooltip, setShowTooltip] = useState(shouldShowTooltip);
+
+  // Feedback buttons disabled if user has already rated
+  const feedbackDisabled = generatedAdData.has_rated;
+
   // Initialize selected version when component mounts
   React.useEffect(() => {
     if (generatedAdData.versions && generatedAdData.versions.length > 0) {
@@ -245,6 +252,9 @@ const GeneratedAdPage = () => {
       .then(response => response.json())
       .then(data => {
         if (data.success) {
+          // Hide tooltip after successful feedback
+          setShowTooltip(false);
+          
           // Crear contenedor para la notificación
           const notificationContainer = document.createElement('div');
           notificationContainer.id = 'rating-notification-container';
@@ -405,16 +415,39 @@ const GeneratedAdPage = () => {
             <span className="text-sm font-medium">More Details</span>
           </button>
 
-          <button
-            className="p-3 rounded-full transition-colors hover:text-primary"
-            onClick={() => handleOpenRating('positive')}
-          >
-            <ThumbsUp className="h-6 w-6" />
-          </button>
+          <div className="relative">
+            <button
+              className={`p-3 rounded-full transition-colors ${feedbackDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:text-primary'}`}
+              onClick={() => !feedbackDisabled && handleOpenRating('positive')}
+              disabled={feedbackDisabled}
+            >
+              <ThumbsUp className="h-6 w-6" />
+            </button>
+
+            {/* Tooltip */}
+            {showTooltip && (
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-max max-w-xs z-50">
+                <div className="relative bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900 text-sm rounded-lg px-4 py-3 shadow-2xl flex items-center gap-4 border border-gray-700 dark:border-gray-400">
+                  <span>Provide feedback on this ad to get free credits</span>
+                  <button
+                    onClick={() => setShowTooltip(false)}
+                    className="text-gray-400 hover:text-white dark:text-gray-600 dark:hover:text-gray-900 transition-colors"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                  {/* Arrow */}
+                  <div 
+                    className="absolute left-1/2 transform -translate-x-1/2 top-full h-0 w-0 border-x-[12px] border-x-transparent border-t-[12px] border-t-gray-800 dark:border-t-gray-200"
+                  ></div>
+                </div>
+              </div>
+            )}
+          </div>
 
           <button
-            className="p-3 rounded-full transition-colors hover:text-primary"
-            onClick={() => handleOpenRating('negative')}
+            className={`p-3 rounded-full transition-colors ${feedbackDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:text-primary'}`}
+            onClick={() => !feedbackDisabled && handleOpenRating('negative')}
+            disabled={feedbackDisabled}
           >
             <ThumbsDown className="h-6 w-6" />
           </button>

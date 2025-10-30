@@ -18,9 +18,6 @@ module.exports = {
     blog: './assets/javascript/blog/index.jsx',  // entry point para el blog
     'blog-post': './assets/javascript/blog/post/index.jsx',  // entry point para el post individual
     'app-header': './assets/javascript/app-header.js',
-    //'create-adrequest': './assets/javascript/app/create-adrequest.jsx',
-    //'ad-requests': './assets/javascript/app/ad-requests.tsx',  // entry point para la página de ad_requests
-    //'revision-adrequest': './assets/javascript/app/revision-adrequest.jsx',  // entry point para la página de detalles de adrequest
     'billing': './assets/javascript/billing/index.js',  // entry point for the app billing page
     'payment': './assets/javascript/payment.js',  // entry point for the payment page
     'update-payment-method': './assets/javascript/update-payment-method.js',  // entry point for the payment method update page

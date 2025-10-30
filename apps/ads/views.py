@@ -27,7 +27,7 @@ from django.utils import timezone
 from apps.aiinterface.tasks import send_slack_notification
 from django.contrib.auth import get_user_model
 
-from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion, AdRequestUsage, ExtraCredit, UserBrand, UserBrandAssets, UserFolder, MarketingPagesRouter
+from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets, AdRequestVersion, AdRequestUsage, ExtraCredit, UserBrand, UserBrandAssets, UserFolder, AppConfiguration
 from .forms import AdLibraryForm
 from .services import can_create_ad_request, use_credit, can_create_ad_request_version, get_ad_request_version_limit, use_general_credit, use_version_credit, can_create_ad_version
 import boto3
@@ -62,8 +62,8 @@ def create_payment_intent(request):
         # Ensure the user has a customer before creating a payment intent
         customer_kwargs = {}
         if hasattr(request.user, 'customer') and request.user.customer:
-            # User already has a customer, use it
-            customer_kwargs["customer"] = request.user.customer.id
+            # User already has a customer, use the Stripe customer ID (not the local DB ID)
+            customer_kwargs["customer"] = request.user.customer.id  # djstripe Customer.id is the Stripe ID
         else:
             # Create a new customer for the user
             try:
@@ -553,10 +553,15 @@ def brands_page(request):
     # Convert to JSON for frontend
     brands_json = json.dumps(brands_data, cls=DjangoJSONEncoder)
     
+    # Get brand assets generation cost from AppConfiguration
+    app_config = AppConfiguration.get_config()
+    brand_assets_cost = app_config.brand_assets_generation_cost if app_config else 4
+    
     template = "ads/brands.html"
     context = {
         "active_tab": "brands-library",
         "brands_data": brands_json,
+        "brand_assets_cost": brand_assets_cost,
     }
     
     return TemplateResponse(request, template, context)
@@ -1946,47 +1951,6 @@ def adrequest_revision_create(request):
         print(f"Error in adrequest_revision_create: {str(e)}")
         return JsonResponse({'error': str(e)}, status=500)
 
-@ensure_csrf_cookie
-@login_required
-def create_adrequest_page(request, adrequest_id=None):
-    """
-    Render the create ad request page with React components.
-    If adrequest_id is provided, it will be passed to the template for editing.
-    """
-    template = "ads/create_adrequest_page.html"
-    context = {
-        "active_tab": "create_adrequest",
-        "adrequest_id": adrequest_id
-    }
-    
-    # If adrequest_id is provided, get the AdRequest information
-    if adrequest_id:
-        # Get the AdRequest and check permissions
-        result = _get_user_adrequest(request, adrequest_id)
-
-        # If result is not a JsonResponse (error), it's the ad_request object
-        if not isinstance(result, JsonResponse):
-            ad_request = result
-            
-            # Create a dictionary with the AdRequest data (similar to what adrequest_get would return)
-            adrequest_data = {
-                'id': ad_request.id,
-                'user_id': ad_request.user.id,
-                'ad_library_id': ad_request.ad_library.id if ad_request.ad_library else None,
-                'ad_library_name': ad_request.ad_library.facebook_page.page_name if ad_request.ad_library else None,
-                'canvas_size': ad_request.canvas_size,
-                'status': ad_request.status,
-                'created_at': ad_request.created_at.isoformat() if ad_request.created_at else None,
-                'updated_at': ad_request.updated_at.isoformat() if ad_request.updated_at else None,
-                'asset_overrides': ad_request.asset_overrides
-            }
-            
-            # Add the AdRequest data to the context
-            context["adrequest_data"] = adrequest_data
-    
-    return TemplateResponse(request, template, context)
-
-
 @login_required
 @require_http_methods(["DELETE"])
 def adrequest_delete(request, pk):
@@ -2033,116 +1997,6 @@ def adrequest_delete(request, pk):
         return JsonResponse({
             'error': f'Failed to delete ad request: {str(e)}'
         }, status=500)
-
-@ensure_csrf_cookie
-def adrequest_details_page(request, adrequest_id):
-    """
-    Render the adrequest details page for completed ad requests.
-    This view is used for ad requests with status COMPLETE.
-    """
-    # Get the AdRequest and check permissions
-    result = _get_user_adrequest(request, adrequest_id)
-        
-    # If result is a JsonResponse, it's an error
-    if isinstance(result, JsonResponse):
-        return result
-    
-    ad_request = result
-    
-    # Get all versions for this ad request
-    versions = ad_request.versions.all().order_by('created_at')
-    
-    # Prepare versions data for the template
-    versions_data = []
-    
-    # Log for debugging
-    print(f"{versions=}")
-    
-    # Get the available version credits for this user (regular + extra credits)
-    available_version_credits = get_ad_request_version_limit(ad_request)
-    
-    # Get all versions for display
-    for i, version in enumerate(versions):
-        versions_data.append({
-            'id': version.id,
-            'generated_image': version.generated_image.url if version.generated_image else None,
-            'created_at': version.created_at.isoformat() if version.created_at else None,
-            'version_index': i + 1,  # 1-based index
-        })
-    
-    # Ordenar versions_data por version_index en orden descendente (índice más alto primero)
-    versions_data = sorted(versions_data, key=lambda x: x['version_index'], reverse=True)
-    
-    print(f"{versions_data=}")
-    
-    # Prepare complete adrequest data for frontend
-    import json
-    
-    # Prepare the complete data object
-    adrequest_data = {
-        'id': ad_request.id,
-        'status': ad_request.status,
-        'created_at': ad_request.created_at.isoformat() if ad_request.created_at else None,
-        'updated_at': ad_request.updated_at.isoformat() if ad_request.updated_at else None,
-        'versions': versions_data,
-        'available_version_credits': available_version_credits,
-        'canvas_size': ad_request.canvas_size or '1024x1024'
-    }
-    
-    # Add ad_library data if available
-    if ad_request.ad_library:
-        ad_library = ad_request.ad_library
-        adrequest_data.update({
-            'ad_library_id': ad_library.id,
-            'ad_library_name': str(ad_library.facebook_page.page_name),
-            'ad_image': ad_library.ad_image.url if ad_library.ad_image else None,
-            'industries': [industry.name for industry in ad_library.facebook_page.industries.all()] if hasattr(ad_library.facebook_page, 'industries') and ad_library.facebook_page.industries.exists() else []
-        })
-    
-    # Add user uploaded image if available
-    if ad_request.user_uploaded_image:
-        adrequest_data['user_uploaded_image'] = ad_request.user_uploaded_image.url
-    
-    # Add asset overrides if available
-    if ad_request.asset_overrides:
-        # Create a copy of asset_overrides to avoid modifying the original
-        asset_overrides = dict(ad_request.asset_overrides)
-        
-        # Add image URLs to asset_overrides
-        if ad_request.logo_override and hasattr(ad_request.logo_override, 'url'):
-            asset_overrides['logo_url'] = ad_request.logo_override.url
-            
-        # Add product images URLs
-        if ad_request.product_image_1_override and hasattr(ad_request.product_image_1_override, 'url'):
-            asset_overrides['product_image_1_url'] = ad_request.product_image_1_override.url
-            
-        if ad_request.product_image_2_override and hasattr(ad_request.product_image_2_override, 'url'):
-            asset_overrides['product_image_2_url'] = ad_request.product_image_2_override.url
-            
-        # Add app images URLs
-        if ad_request.app_image_1_override and hasattr(ad_request.app_image_1_override, 'url'):
-            asset_overrides['app_image_1_url'] = ad_request.app_image_1_override.url
-            
-        if ad_request.app_image_2_override and hasattr(ad_request.app_image_2_override, 'url'):
-            asset_overrides['app_image_2_url'] = ad_request.app_image_2_override.url
-        
-        adrequest_data['asset_overrides'] = asset_overrides
-    
-    # Convert to JSON for the template
-    adrequest_json = json.dumps(adrequest_data)
-        
-    # Render the adlibrary_detail.html template with the ad_request as the object
-    template = "ads/adlibrary_detail.html"
-    context = {
-        "active_tab": "my_requests",
-        "object": ad_request.ad_library if ad_request.ad_library else None,
-        "ad_request": ad_request,
-        "versions": versions,
-        "adrequest_json": adrequest_json,  # Passing the complete JSON
-        "current_versions_count": versions.count()
-    }
-        
-    return TemplateResponse(request, template, context)
 
 def get_user_credits(user):
     """
@@ -3321,11 +3175,18 @@ def discover_clone_adrequest_page(request, pk):
                 if parsed_referer.path and parsed_referer.path.startswith('/ads/'):
                     back_url = parsed_referer.path
         
+        # Get brand assets generation cost from AppConfiguration
+        app_config = AppConfiguration.get_config()
+        brand_assets_cost = app_config.brand_assets_generation_cost if app_config else 4
+        ad_generation_cost = app_config.ad_generation_credit_cost if app_config else 1
+        
         context = {
             'ad_request': ad_request,
             'page_title': 'Clone Ad',
             'page_description': 'New ads follow the style & composition of the ad reference on the left.',
             'back_url': back_url,
+            'brand_assets_cost': brand_assets_cost,
+            'ad_generation_cost': ad_generation_cost,
         }
         
         return render(request, 'ads/discover_clone.html', context)
@@ -3826,9 +3687,17 @@ def generated_ad_page(request, version_id):
                 # If coming from discover-clone (after generation), go to discover
                 back_url = '/ads/discover/'
         
+        # Check if user is on free tier (no active subscription)
+        is_free_tier = not hasattr(request.user, 'subscription') or request.user.subscription is None or request.user.subscription.status != 'active'
+        
+        # Check if user has already rated this version
+        has_rated = version.rating is not None and version.review
+        
         context = {
             'version': version,
             'back_url': back_url,
+            'is_free_tier': is_free_tier,
+            'has_rated': has_rated,
         }
         
         return render(request, 'ads/generated_ad.html', context)
@@ -4136,44 +4005,3 @@ def get_brand_details(request, brand_id):
             'success': False,
             'error': str(e)
         }, status=500)
-
-def marketing_page_view(request, slug, path_prefix=''):
-    """
-    Renders a dynamic marketing page based on the slug and optional path prefix.
-    If not found, delegates to Wagtail.
-    Supports URLs like:
-    - /slug/ (no prefix)
-    - /services/slug/ (with prefix)
-    """
-    try:
-        router_entry = MarketingPagesRouter.objects.get(slug=slug, path_prefix=path_prefix)
-        page_data = router_entry.content_object
-        
-        # Check if the page is published
-        if hasattr(page_data, 'status') and page_data.status == 'PUBLISHED':
-            template_name = page_data.html_template
-            context = {
-                'page_data': page_data,
-                'full_path': router_entry.get_full_path()
-            }
-            return render(request, template_name, context)
-    except MarketingPagesRouter.DoesNotExist:
-        pass
-    
-    # If marketing page not found or not published, try Wagtail
-    from wagtail.views import serve as wagtail_serve
-    from django.http import Http404
-    
-    try:
-        # Reconstruct the path for Wagtail
-        if path_prefix:
-            wagtail_path = f"{path_prefix}/{slug}/"
-        else:
-            wagtail_path = f"{slug}/"
-        
-        # Call Wagtail's serve view
-        return wagtail_serve(request, wagtail_path)
-    except Http404:
-        # Neither marketing page nor Wagtail page found
-        raise Http404("Page not found")
-
