@@ -21,3 +21,4 @@ stripe
 wagtail
 apify-client
 playwright  # Para scraping de imágenes de Meta Ads
+lxml  # Parser HTML para BeautifulSoup

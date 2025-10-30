@@ -1,8 +1,10 @@
 import requests
 import json
 import logging
+import re
 from typing import Dict, Any, Optional
 from urllib.parse import urlparse
+from playwright.sync_api import sync_playwright
 from bs4 import BeautifulSoup
 import openai
 from django.conf import settings
@@ -13,6 +15,48 @@ from apps.ads.views import get_user_credits, deduct_user_credits
 
 log = logging.getLogger(__name__)
 
+FRAMEWORK_MARKERS = {
+    "nextjs_data": lambda html: re.search(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', html, re.S),
+    "nuxt_state":  lambda html: re.search(r'window\.__NUXT__\s*=\s*({.*?});', html, re.S),
+    "apollo":      lambda html: re.search(r'window\.__APOLLO_STATE__\s*=\s*({.*?});', html, re.S),
+    "generic_json":lambda html: re.search(r'<script[^>]+type="application/json"[^>]*>(.*?)</script>', html, re.S),
+    "react_root":  lambda html: re.search(r'id="__(next|root)"|data-reactroot', html, re.I),
+    "nuxt_root":   lambda html: re.search(r'id="__nuxt"', html, re.I),
+    "gatsby_hint": lambda html: re.search(r'/page-data/[^"]+/page-data\.json', html),
+}
+
+def has_target_content(html, selectors):
+    soup = BeautifulSoup(html, "lxml")
+    hits = sum(bool(soup.select_one(sel)) for sel in selectors)
+    # adjust threshold as needed
+    return hits >= min(2, len(selectors))  # e.g., any 2 selectors present
+
+def detect_js_heavy(html):
+    found = {k: bool(v(html)) for k,v in FRAMEWORK_MARKERS.items()}
+    score = sum(found.values())
+    return found, score
+
+def decide_scrape_mode(url, selectors):
+    html = requests.get(url, headers={"User-Agent":"Mozilla/5.0"}, timeout=20).text
+    if has_target_content(html, selectors):
+        return {"mode":"simple_html", "reason":"selectors present in initial HTML"}
+
+    markers, score = detect_js_heavy(html)
+    # Prefer data blobs or API hints first
+    if markers["nextjs_data"] or markers["nuxt_state"] or markers["apollo"] or markers["generic_json"]:
+        return {"mode":"parse_embedded_json", "markers": markers}
+    if markers["gatsby_hint"]:
+        return {"mode":"fetch_gatsby_page_data", "markers": markers}
+    if score >= 2 or markers["react_root"] or markers["nuxt_root"]:
+        return {"mode":"use_playwright", "markers": markers}
+
+    # Fallback: try to discover API endpoints by regex
+    api_like = re.findall(r'https?://[^"]+/(api|graphql|page-data)[^"]*', html, re.I)
+    if api_like:
+        return {"mode":"call_discovered_api", "examples": list(set(api_like))[:5]}
+
+    return {"mode":"use_playwright", "reason":"content missing in HTML and no easy data endpoints"}
+
 
 def extract_text_from_html(html_content: bytes) -> str:
     """
@@ -21,12 +65,29 @@ def extract_text_from_html(html_content: bytes) -> str:
     try:
         soup = BeautifulSoup(html_content, 'html.parser')
         
-        # Remove script and style elements
-        for script in soup(["script", "style", "nav", "header", "footer"]):
-            script.decompose()
+        # Remove script and style elements (but keep main content areas)
+        for element in soup(["script", "style", "noscript"]):
+            element.decompose()
+        
+        # Try to find main content area first (common semantic HTML tags)
+        main_content = None
+        for selector in ['article', 'main', '[role="main"]', '.content', '#content', '.post-content', '.article-content']:
+            main_content = soup.select_one(selector)
+            if main_content:
+                log.info(f"Found main content in selector: {selector}")
+                break
+        
+        # If we found main content, extract from there; otherwise use full body
+        if main_content:
+            text_source = main_content
+        else:
+            # Remove navigation elements only if we're using full body
+            for element in soup(["nav", "header", "footer"]):
+                element.decompose()
+            text_source = soup
         
         # Get text and clean it up
-        text = soup.get_text()
+        text = text_source.get_text()
         
         # Break into lines and remove leading and trailing space on each
         lines = (line.strip() for line in text.splitlines())
@@ -36,6 +97,8 @@ def extract_text_from_html(html_content: bytes) -> str:
         
         # Drop blank lines
         text = ' '.join(chunk for chunk in chunks if chunk)
+        
+        log.info(f"Extracted {len(text)} characters of text from HTML")
         
         # Limit text length to avoid token limits (approximately 50,000 characters)
         if len(text) > 50000:
@@ -47,7 +110,26 @@ def extract_text_from_html(html_content: bytes) -> str:
         return html_content[:10000]  # Fallback to raw HTML truncated
 
 
-def download_website_content(url: str) -> str:
+def download_website_content_with_playwright(url: str) -> str:
+    """
+    Download and extract text content from a website using Playwright.
+    """
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page()
+        
+        # Navigate and wait for network to be idle (content fully loaded)
+        page.goto(url, wait_until='networkidle')
+        
+        # Additional wait for dynamic content to render
+        page.wait_for_timeout(2000)  # Wait 2 seconds for JS to execute
+        
+        content = page.content()
+        log.info(f"Playwright captured {len(content)} characters of HTML")
+        browser.close()
+        return content
+
+def download_website_content(url: str, selectors: list) -> str:
     """
     Download and extract text content from a website.
     """
@@ -68,17 +150,26 @@ def download_website_content(url: str) -> str:
             'Upgrade-Insecure-Requests': '1',
         }
         
-        response = requests.get(url, timeout=15, headers=headers, allow_redirects=True)
-        response.raise_for_status()
+        decision = decide_scrape_mode(url, selectors)
+        log.info(f"Scraping decision for {url}: {decision}")
 
-        # Explicitly set encoding from headers, fallback to UTF-8
-        detected_encoding = response.apparent_encoding
-        final_encoding = detected_encoding or 'utf-8'
-        log.info(f"Detected encoding: {detected_encoding}. Using: {final_encoding}")
-        response.encoding = final_encoding
-        
-        # Use response.text to get properly decoded content (requests handles decompression)
-        text_content = extract_text_from_html(response.text.encode(final_encoding))
+        if decision['mode'] == 'use_playwright':
+            log.info(f"Using Playwright to download content from {url}")
+            html_content = download_website_content_with_playwright(url)
+            text_content = extract_text_from_html(html_content.encode('utf-8'))
+        else:
+            log.info(f"Using requests to download content from {url}")
+            response = requests.get(url, timeout=15, headers=headers, allow_redirects=True)
+            response.raise_for_status()
+
+            # Explicitly set encoding from headers, fallback to UTF-8
+            detected_encoding = response.apparent_encoding
+            final_encoding = detected_encoding or 'utf-8'
+            log.info(f"Detected encoding: {detected_encoding}. Using: {final_encoding}")
+            response.encoding = final_encoding
+            
+            # Use response.text to get properly decoded content (requests handles decompression)
+            text_content = extract_text_from_html(response.text.encode(final_encoding))
         
         log.info(f"Successfully downloaded content from {url}, extracted {len(text_content)} characters")
         return text_content
@@ -366,7 +457,9 @@ def extract_brand_assets_from_website(user, website_url: str, ad_request_id: str
         log.info(f"Starting brand asset extraction for user {user.email}, URL: {website_url}")
         
         # Download website content
-        website_content = download_website_content(website_url)
+                # Define selectors to look for
+        selectors = ["article", ".card", "[data-test=item]"]
+        website_content = download_website_content(website_url, selectors)
         log.info(f"Downloaded content preview: {website_content[:500]}...")
         
         # Analyze with OpenAI
