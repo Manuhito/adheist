@@ -96,6 +96,8 @@ def analyze_website_with_openai(website_content: str, url: str) -> Dict[str, Any
     Analyze website content using OpenAI API to extract brand assets.
     """
     try:
+        log.info(f"Website content to be sent to OpenAI for URL {url}:\n{website_content}")
+
         # Get web parsing configuration
         config = OpenAIConfiguration.get_webparsing_config()
         
