@@ -120,7 +120,7 @@ def analyze_website_with_openai(website_content: str, url: str) -> Dict[str, Any
     "brand_colors": ["#color1", "#color2"] // extract hex colors if visible
 }
 
-Only extract information that is clearly present on the website. If information is not available, use null for that field."""
+Only extract information that is clearly present on the website. If information is not available, set the corresponding parameter to null data type in the JSON response."""
         
         # Build the complete prompt combining user instructions, website content, and format requirements
         complete_prompt = f"""{config['web_parsing_prompt']}
@@ -232,7 +232,7 @@ def create_brand_from_extraction(user, extracted_assets: Dict[str, Any], website
         brand_name = extracted_assets.get('brand_name')
         
         if not brand_name:
-            raise Exception("No brand name was extracted from the website")
+            brand_name = "Brand Name not found"
         
         # Check if brand with this name already exists globally (unique constraint)
         if UserBrand.objects.filter(brand_name=brand_name).exists():
@@ -302,25 +302,29 @@ def create_brand_from_extraction(user, extracted_assets: Dict[str, Any], website
                 log.error(f"Error linking BrandAssetExtraction {extraction_id} with brand: {str(e)}")
         
         log.info(f"Successfully created brand '{brand_name}' and assets for user {user.email}")
-        
+
+        # Prepare brand colors for the response
+        response_brand_colors = []
+        if ad_request_assets.main_hex_color:
+            try:
+                response_brand_colors = json.loads(ad_request_assets.main_hex_color)
+            except (json.JSONDecodeError, TypeError):
+                response_brand_colors = []
+
         return {
             'success': True,
-            'brand': {
-                'id': brand.id,
-                'name': brand.brand_name,
-                'industry': ad_request_assets.industry,
-                'website': ad_request_assets.company_website,
-                'product_description': ad_request_assets.product_description,
-                'target_audience': ad_request_assets.target_audience,
-                'functional_benefits': ad_request_assets.functional_benefits,
-                'brand_colors': brand_colors,
-                'tone_of_voice': ad_request_assets.tone_of_voice,
-                'core_features': ad_request_assets.core_features,
-                'emotional_lifestyle_benefits': ad_request_assets.emotional_lifestyle_benefits,
-                'proof_points': ad_request_assets.proof_points,
-                'value_propositions': ad_request_assets.value_propositions,
-                'ad_request_assets_id': ad_request_assets.id
-            }
+            'brand_id': brand.id, # Include brand ID for reference
+            'brand_name': brand.brand_name,
+            'industry': ad_request_assets.industry,
+            'product_description': ad_request_assets.product_description,
+            'target_audience': ad_request_assets.target_audience,
+            'tone_of_voice': ad_request_assets.tone_of_voice,
+            'core_features': ad_request_assets.core_features,
+            'functional_benefits': ad_request_assets.functional_benefits,
+            'emotional_benefits': ad_request_assets.emotional_lifestyle_benefits,
+            'proof_points': ad_request_assets.proof_points,
+            'value_propositions': ad_request_assets.value_propositions,
+            'brand_colors': response_brand_colors
         }
         
     except Exception as e:
@@ -389,29 +393,41 @@ def extract_brand_assets_from_website(user, website_url: str, ad_request_id: str
             extraction.id
         )
         
-        result = {
-            'success': True,
-            'extraction_id': extraction.id,
-            'extracted_assets': analysis_result['extracted_assets'],
-            'cost': analysis_result['total_cost_usd']
-        }
-        
         # Finalize based on brand creation success
-        if brand_creation_result['success']:
+        if brand_creation_result.get('success'):
             # Deduct credits ONLY after successful brand creation
             if not deduct_extraction_credits(user):
                 log.warning(f"Failed to deduct credits for user {user.email} after successful extraction and brand creation")
-            
+
             extraction.status = 'completed'
-            result['brand_created'] = True
-            result['brand'] = brand_creation_result['brand']
-            log.info(f"Successfully created brand '{brand_creation_result['brand']['name']}' and completed extraction for user {user.email}")
+            log.info(f"Successfully created brand '{brand_creation_result.get('brand_name')}' and completed extraction for user {user.email}")
+
+            # The frontend expects the updated data in 'extracted_assets' and a 'brand' object.
+            # We will construct the response to match this expectation.
+            final_brand_data = brand_creation_result.copy()
+            final_brand_data['id'] = final_brand_data.pop('brand_id', None) # Rename brand_id to id for frontend
+            final_brand_data['name'] = final_brand_data.get('brand_name') # Add name alias for frontend
+
+            result = {
+                'success': True,
+                'extraction_id': extraction.id,
+                'extracted_assets': final_brand_data,  # Use the updated data
+                'cost': analysis_result['total_cost_usd'],
+                'brand_created': True,
+                'brand': final_brand_data  # Also provide the updated data in the 'brand' field
+            }
         else:
+            # If brand creation failed, return the original extracted assets
+            result = {
+                'success': False,
+                'extraction_id': extraction.id,
+                'extracted_assets': analysis_result['extracted_assets'],
+                'cost': analysis_result['total_cost_usd'],
+                'brand_created': False,
+                'brand_creation_error': brand_creation_result.get('error')
+            }
             extraction.status = 'failed'
             extraction.error_log = brand_creation_result.get('error', 'Brand creation failed without specific error')
-            result['success'] = False
-            result['brand_created'] = False
-            result['brand_creation_error'] = brand_creation_result.get('error')
             log.warning(f"Failed to create brand automatically: {brand_creation_result.get('error')}")
 
         extraction.save()
