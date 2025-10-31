@@ -790,14 +790,14 @@ def _generate_tts_audio_with_elevenlabs(text: str) -> Optional[str]:
         logger.info(f"[UGC Video - TTS] Starting audio generation with text: {text[:100]}...")
         
         # Hardcoded voice ID for testing (Rachel voice from ElevenLabs)
-        VOICE_ID = "21m00Tcm4TlvDq8ikWAM"
+        VOICE_ID = "Brian"
         
         # Submit request to fal.ai for ElevenLabs TTS
         response = fal_client.run(
             "fal-ai/elevenlabs/tts/eleven-v3",
             arguments={
                 "text": text,
-                "voice_id": VOICE_ID,
+                "voice": VOICE_ID,
             }
         )
         
@@ -835,7 +835,7 @@ def _generate_talking_avatar_with_infinitalk(audio_url: str) -> Optional[str]:
         
         # Hardcoded avatar image URL for testing
         # This is a placeholder - replace with actual avatar image URL
-        AVATAR_IMAGE_URL = "https://v3.fal.media/files/koala/gmpc0QevDF9bBsL1EAYVF_1c637094161147559f0910a68275dc34.png"
+        AVATAR_IMAGE_URL = "https://adheist-s3.s3.us-east-2.amazonaws.com/media/profile-pictures/20250920_182013.jpg"
         
         # Submit request to fal.ai for Infinitalk
         response = fal_client.run(

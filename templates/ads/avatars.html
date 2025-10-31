@@ -1,0 +1,15 @@
+{% extends "web/app/app_base_sidebar.html" %}
+{% load static %}
+
+{% block extra_js %}
+  {{ block.super }}
+  <script src="{% static 'js/avatars-page-bundle.js' %}?v={{ STATIC_VERSION }}"></script>
+{% endblock %}
+
+{% block app %}
+  {# This block is intentionally left empty because the content is rendered by React #}
+{% endblock %}
+
+{% block content %}
+  {# This block is intentionally left empty because the content is rendered by React #}
+{% endblock %}

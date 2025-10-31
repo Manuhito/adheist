@@ -537,6 +537,18 @@ def ugc_video_page(request):
 
 
 @login_required
+def avatars_page(request):
+    """
+    Render the Avatars page with Unsplash portrait images.
+    """
+    template = "ads/avatars.html"
+    context = {
+        "active_tab": "ugc-video",
+    }
+    return TemplateResponse(request, template, context)
+
+
+@login_required
 def brands_page(request):
     """
     Render the brands library page with React components.
@@ -1114,6 +1126,87 @@ def get_adlibrary_company_list(request):
         cache.set(cache_key, company_data, None)
     
     return JsonResponse({'companies': company_data}, safe=True)
+
+
+@login_required
+def get_unsplash_portraits(request):
+    """
+    Get portrait photos from Unsplash with pagination support.
+    
+    Query params:
+        - page: Page number (default: 1)
+        - per_page: Items per page (default: 30, max: 30)
+    
+    Returns: JSON with photos and pagination info
+    """
+    try:
+        from unsplash.api import Api
+        from unsplash.auth import Auth
+        
+        # Get API credentials from environment
+        access_key = os.environ.get('UNSPLASH_ACCESS_KEY')
+        secret_key = os.environ.get('UNSPLASH_SECRET_KEY')
+        
+        if not access_key or not secret_key:
+            return JsonResponse({
+                'error': 'Unsplash API credentials not configured'
+            }, status=500)
+        
+        # Initialize Unsplash API
+        auth = Auth(access_key, secret_key, '', code='')
+        api = Api(auth)
+        
+        # Get pagination parameters
+        page = int(request.GET.get('page', 1))
+        per_page = min(int(request.GET.get('per_page', 30)), 30)  # Max 30 per Unsplash API
+        
+        # Search for portrait photos
+        search_results = api.search.photos(
+            'portrait',
+            page=page,
+            per_page=per_page
+        )
+        
+        # Extract photo data
+        photos = []
+        for photo in search_results.get('results', []):
+            photos.append({
+                'id': photo.id,
+                'urls': {
+                    'raw': photo.urls.raw,
+                    'full': photo.urls.full,
+                    'regular': photo.urls.regular,
+                    'small': photo.urls.small,
+                    'thumb': photo.urls.thumb,
+                },
+                'width': photo.width,
+                'height': photo.height,
+                'alt_description': photo.alt_description or photo.description or 'Portrait',
+                'user': {
+                    'name': photo.user.name,
+                    'username': photo.user.username,
+                    'profile_url': f"https://unsplash.com/@{photo.user.username}",
+                },
+                'download_url': photo.links.download,
+            })
+        
+        return JsonResponse({
+            'photos': photos,
+            'total': search_results.get('total', 0),
+            'total_pages': search_results.get('total_pages', 0),
+            'current_page': page,
+            'per_page': per_page,
+        })
+        
+    except ImportError:
+        return JsonResponse({
+            'error': 'python-unsplash not installed. Run: pip install python-unsplash'
+        }, status=500)
+    except Exception as e:
+        logging.error(f"Error fetching Unsplash portraits: {str(e)}")
+        return JsonResponse({
+            'error': f'Failed to fetch portraits: {str(e)}'
+        }, status=500)
 
 
 @login_required

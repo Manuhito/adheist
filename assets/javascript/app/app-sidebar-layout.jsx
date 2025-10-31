@@ -37,8 +37,12 @@ function CreditsProgressBar() {
 
   const totalCredits = creditsData.general_credits + (creditsData.extra_general_credits || 0);
   const maxCredits = creditsData.max_general_credits;
-  const usedCredits = maxCredits - creditsData.general_credits;
-  const usagePercentage = maxCredits > 0 ? (usedCredits / maxCredits) * 100 : 0;
+  const currentCredits = creditsData.general_credits;
+  
+  // Calculate usage percentage (how much of the plan has been used)
+  // Ensure it's between 0 and 100
+  const usedCredits = Math.max(0, maxCredits - currentCredits);
+  const usagePercentage = maxCredits > 0 ? Math.min(100, Math.max(0, (usedCredits / maxCredits) * 100)) : 0;
 
   return (
     <div className="px-3 py-3">
@@ -65,7 +69,7 @@ function AppSidebar({ activeTab, sidebarComponent }) {
   const menuItems = [
     { id: 'discover', label: 'Discover', href: '/ads/discover/', icon: <Compass className="h-5 w-5" /> },
     { id: 'my-ads', label: 'My Ads', href: '/ads/my-ads/', icon: <Zap className="h-5 w-5" /> },
-    { id: 'ugc-video', label: 'UGC Video', href: '/ads/ugc-video/', icon: <Sparkles className="h-5 w-5" /> },
+    { id: 'ugc-video', label: 'UGC Video', href: '/ads/avatars/', icon: <Sparkles className="h-5 w-5" /> },
     { id: 'brands-library', label: 'Brands Library', href: '/ads/brands/', icon: <Library className="h-5 w-5" /> },
     { id: 'assets', label: 'Assets', href: '/ads/assets/', icon: <Folders className="h-5 w-5" /> },
   ];
