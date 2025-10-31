@@ -21,3 +21,4 @@ stripe
 wagtail
 apify-client
 playwright  # Para scraping de imágenes de Meta Ads
+fal-client  # Para generación de videos UGC con ElevenLabs y Infinitalk

@@ -774,9 +774,158 @@ More focus. Better gut health. Real energy that lasts."
         }
 
 @shared_task
-def generate_ugc_video_task(text: str):
+def _generate_tts_audio_with_elevenlabs(text: str) -> Optional[str]:
     """
-    A Celery task to generate a UGC video. For now, it just logs the text.
+    Generate TTS audio using ElevenLabs via fal.ai.
+    
+    Args:
+        text: The text to convert to speech
+        
+    Returns:
+        str: URL of the generated audio file, or None if failed
     """
-    logger.info(f"[UGC Video Task] Received text: {text}")
-    return {"status": "success", "message": "Task started for UGC video generation."}
+    try:
+        import fal_client
+        
+        logger.info(f"[UGC Video - TTS] Starting audio generation with text: {text[:100]}...")
+        
+        # Hardcoded voice ID for testing (Rachel voice from ElevenLabs)
+        VOICE_ID = "21m00Tcm4TlvDq8ikWAM"
+        
+        # Submit request to fal.ai for ElevenLabs TTS
+        response = fal_client.run(
+            "fal-ai/elevenlabs/tts/eleven-v3",
+            arguments={
+                "text": text,
+                "voice_id": VOICE_ID,
+            }
+        )
+        
+        audio_url = response.get("audio", {}).get("url")
+        
+        if audio_url:
+            logger.info(f"[UGC Video - TTS] Audio generated successfully: {audio_url}")
+            return audio_url
+        else:
+            logger.error(f"[UGC Video - TTS] No audio URL in response: {response}")
+            return None
+            
+    except ImportError:
+        logger.error("[UGC Video - TTS] fal-client not installed. Run: pip install fal-client")
+        return None
+    except Exception as e:
+        logger.error(f"[UGC Video - TTS] Error generating audio: {str(e)}")
+        return None
+
+
+def _generate_talking_avatar_with_infinitalk(audio_url: str) -> Optional[str]:
+    """
+    Generate talking avatar video using Infinitalk via fal.ai.
+    
+    Args:
+        audio_url: URL of the audio file to use for lip-sync
+        
+    Returns:
+        str: URL of the generated video file, or None if failed
+    """
+    try:
+        import fal_client
+        
+        logger.info(f"[UGC Video - Infinitalk] Starting video generation with audio: {audio_url}")
+        
+        # Hardcoded avatar image URL for testing
+        # This is a placeholder - replace with actual avatar image URL
+        AVATAR_IMAGE_URL = "https://v3.fal.media/files/koala/gmpc0QevDF9bBsL1EAYVF_1c637094161147559f0910a68275dc34.png"
+        
+        # Submit request to fal.ai for Infinitalk
+        response = fal_client.run(
+            "fal-ai/infinitalk",
+            arguments={
+                "image_url": AVATAR_IMAGE_URL,
+                "audio_url": audio_url,
+                "prompt": "A person talking naturally with expressive facial movements."
+            }
+        )
+        
+        video_url = response.get("video", {}).get("url")
+        
+        if video_url:
+            logger.info(f"[UGC Video - Infinitalk] Video generated successfully: {video_url}")
+            return video_url
+        else:
+            logger.error(f"[UGC Video - Infinitalk] No video URL in response: {response}")
+            return None
+            
+    except ImportError:
+        logger.error("[UGC Video - Infinitalk] fal-client not installed. Run: pip install fal-client")
+        return None
+    except Exception as e:
+        logger.error(f"[UGC Video - Infinitalk] Error generating video: {str(e)}")
+        return None
+
+
+@shared_task(bind=True)
+def generate_ugc_video_task(self, text: str):
+    """
+    Celery task to generate a UGC video using fal.ai services.
+    
+    This is a simple proof-of-concept implementation that:
+    1. Generates TTS audio using ElevenLabs via fal.ai
+    2. Creates a talking avatar video using Infinitalk via fal.ai
+    
+    Args:
+        text: The text to convert to speech and animate
+        
+    Returns:
+        dict: Status and result information
+    """
+    logger.info(f"[UGC Video Task] Starting UGC video generation")
+    logger.info(f"[UGC Video Task] Text: {text}")
+    
+    try:
+        # Step 1: Generate TTS audio with ElevenLabs
+        logger.info("[UGC Video Task] Step 1/2: Generating TTS audio...")
+        audio_url = _generate_tts_audio_with_elevenlabs(text)
+        
+        if not audio_url:
+            error_msg = "Failed to generate TTS audio"
+            logger.error(f"[UGC Video Task] {error_msg}")
+            return {
+                "status": "error",
+                "message": error_msg,
+                "step": "tts_generation"
+            }
+        
+        # Step 2: Generate talking avatar video with Infinitalk
+        logger.info("[UGC Video Task] Step 2/2: Generating talking avatar video...")
+        video_url = _generate_talking_avatar_with_infinitalk(audio_url)
+        
+        if not video_url:
+            error_msg = "Failed to generate talking avatar video"
+            logger.error(f"[UGC Video Task] {error_msg}")
+            return {
+                "status": "error",
+                "message": error_msg,
+                "step": "video_generation",
+                "audio_url": audio_url
+            }
+        
+        # Success!
+        logger.info(f"[UGC Video Task] UGC video generation completed successfully")
+        logger.info(f"[UGC Video Task] Audio URL: {audio_url}")
+        logger.info(f"[UGC Video Task] Video URL: {video_url}")
+        
+        return {
+            "status": "success",
+            "message": "UGC video generated successfully",
+            "audio_url": audio_url,
+            "video_url": video_url
+        }
+        
+    except Exception as e:
+        error_msg = f"Unexpected error in UGC video generation: {str(e)}"
+        logger.error(f"[UGC Video Task] {error_msg}")
+        return {
+            "status": "error",
+            "message": error_msg
+        }
