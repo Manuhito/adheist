@@ -68,10 +68,52 @@ const AvatarsPage = () => {
     setIsModalOpen(true);
   };
 
-  const handleUseAvatar = () => {
-    console.log('Using avatar:', selectedPhoto);
-    // TODO: Implement avatar selection logic
-    setIsModalOpen(false);
+  const handleUseAvatar = async () => {
+    try {
+      // Get CSRF token
+      const getCookie = (name) => {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+              break;
+            }
+          }
+        }
+        return cookieValue;
+      };
+      
+      const csrftoken = getCookie('csrftoken');
+      
+      // Create UGC Video with selected avatar
+      const response = await fetch('/ads/api/create-ugc-video/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrftoken,
+        },
+        body: JSON.stringify({
+          avatar_data: selectedPhoto
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create UGC video');
+      }
+      
+      // Redirect to UGC video page
+      window.location.href = data.redirect_url;
+      
+    } catch (err) {
+      console.error('Error creating UGC video:', err);
+      setError(err.message);
+      setIsModalOpen(false);
+    }
   };
 
   return (

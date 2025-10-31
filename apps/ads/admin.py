@@ -25,6 +25,7 @@ from .models import (
     UserFolder,
     UserBrandAssets,
     BrandAssetExtraction,
+    UGCVideo,
 )
 
 
@@ -633,3 +634,52 @@ class BrandAssetExtractionAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         # Allow deletion for cleanup
         return True
+
+
+@admin.register(UGCVideo)
+class UGCVideoAdmin(admin.ModelAdmin):
+    list_display = ["id", "user", "status", "has_text_dialog", "has_audio", "has_video", "audio_gender", "created_at", "updated_at"]
+    list_filter = ["status", "audio_gender", "created_at"]
+    search_fields = ["user__email", "text_dialog"]
+    readonly_fields = ["user", "avatar_data_display", "created_at", "updated_at"]
+    
+    fieldsets = [
+        ("Basic Information", {
+            "fields": ["user", "status", "created_at", "updated_at"],
+            "classes": ["wide"]
+        }),
+        ("Avatar Information", {
+            "fields": ["avatar_data_display"],
+            "classes": ["wide"]
+        }),
+        ("Content", {
+            "fields": ["text_dialog", "audio_gender"],
+            "classes": ["wide"]
+        }),
+        ("Generated Assets", {
+            "fields": ["generated_audio_url", "generated_video_url"],
+            "classes": ["wide"]
+        })
+    ]
+    
+    def has_text_dialog(self, obj):
+        return bool(obj.text_dialog)
+    has_text_dialog.boolean = True
+    has_text_dialog.short_description = "Has Text"
+    
+    def has_audio(self, obj):
+        return bool(obj.generated_audio_url)
+    has_audio.boolean = True
+    has_audio.short_description = "Has Audio"
+    
+    def has_video(self, obj):
+        return bool(obj.generated_video_url)
+    has_video.boolean = True
+    has_video.short_description = "Has Video"
+    
+    def avatar_data_display(self, obj):
+        if not obj.avatar_data:
+            return "-"
+        formatted_json = json.dumps(obj.avatar_data, indent=2)
+        return mark_safe(f'<pre style="background: #f5f5f5; padding: 10px; border-radius: 5px; overflow-x: auto;">{formatted_json}</pre>')
+    avatar_data_display.short_description = "Avatar Data"

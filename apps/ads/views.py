@@ -549,6 +549,49 @@ def avatars_page(request):
 
 
 @login_required
+@require_POST
+def create_ugc_video(request):
+    """
+    Create a new UGC Video with the selected avatar.
+    
+    Expects JSON data with:
+        - avatar_data: Unsplash photo data
+    
+    Returns: JSON with the created video ID
+    """
+    try:
+        import json as json_module
+        from .models import UGCVideo
+        
+        data = json_module.loads(request.body)
+        avatar_data = data.get('avatar_data')
+        
+        if not avatar_data:
+            return JsonResponse({
+                'error': 'Avatar data is required'
+            }, status=400)
+        
+        # Create new UGC Video in DRAFT status
+        ugc_video = UGCVideo.objects.create(
+            user=request.user,
+            avatar_data=avatar_data,
+            status='DRAFT'
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'video_id': ugc_video.id,
+            'redirect_url': '/ads/ugc-video/'
+        })
+        
+    except Exception as e:
+        logging.error(f"Error creating UGC video: {str(e)}")
+        return JsonResponse({
+            'error': f'Failed to create UGC video: {str(e)}'
+        }, status=500)
+
+
+@login_required
 def brands_page(request):
     """
     Render the brands library page with React components.
