@@ -3,6 +3,17 @@
 
 {% block extra_js %}
   {{ block.super }}
+  <script>
+    // Pass UGC Video data to JavaScript
+    window.__UGC_VIDEO_DATA__ = {{ video_data_json|safe }};
+  </script>
+  <script>
+    // Override sidebar data to hide logo
+    window.__SIDEBAR_DATA__ = {
+      activeTab: "{{ active_tab|default:'' }}",
+      hideLogo: true
+    };
+  </script>
   <script src="{% static 'js/ugc-video-page-bundle.js' %}?v={{ STATIC_VERSION }}"></script>
 {% endblock %}
 

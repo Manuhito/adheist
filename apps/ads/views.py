@@ -525,14 +525,40 @@ def discover_page(request):
 
 
 @login_required
-def ugc_video_page(request):
+def ugc_video_page(request, video_id=None):
     """
     Render the UGC Video page.
+    
+    Args:
+        video_id: Optional UGC Video ID to load existing video data
     """
+    import json as json_module
+    from .models import UGCVideo
+    
     template = "ads/ugc_video.html"
     context = {
         "active_tab": "ugc-video",
+        "video_data_json": "null",
     }
+    
+    # If video_id is provided, load the video data
+    if video_id:
+        try:
+            ugc_video = UGCVideo.objects.get(id=video_id, user=request.user)
+            video_data = {
+                "id": ugc_video.id,
+                "avatar_data": ugc_video.avatar_data,
+                "status": ugc_video.status,
+                "text_dialog": ugc_video.text_dialog or "",
+                "audio_gender": ugc_video.audio_gender or "",
+                "generated_audio_url": ugc_video.generated_audio_url or "",
+                "generated_video_url": ugc_video.generated_video_url or "",
+            }
+            context["video_data_json"] = json_module.dumps(video_data)
+        except UGCVideo.DoesNotExist:
+            # Video not found or doesn't belong to user
+            logging.warning(f"UGC Video {video_id} not found for user {request.user.id}")
+    
     return TemplateResponse(request, template, context)
 
 
@@ -581,7 +607,7 @@ def create_ugc_video(request):
         return JsonResponse({
             'success': True,
             'video_id': ugc_video.id,
-            'redirect_url': '/ads/ugc-video/'
+            'redirect_url': f'/ads/ugc-video/{ugc_video.id}/'
         })
         
     except Exception as e:
