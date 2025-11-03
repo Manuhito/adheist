@@ -25,4 +25,6 @@ _dist/
 static/css/
 static/js/
 meta_ads*
-
+contenido_descargado/
+articulos_procesados/
+logs_claude/

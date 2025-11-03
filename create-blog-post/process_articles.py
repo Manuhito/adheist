@@ -6,7 +6,7 @@ import anthropic
 # --- Configuración ---
 # Por favor, asegúrate de tener tu API key de Anthropic como una variable de entorno.
 # Ejemplo: export ANTHROPIC_API_KEY="tu_api_key"
-API_KEY = os.environ.get("ANTHROPIC_API_KEY")
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 CLAUDE_MODEL = "claude-opus-4-1-20250805" # Modelo base, ya que el solicitado no tiene precios públicos.
 
 # Precios de Claude 3 Opus (por millón de tokens en USD)
@@ -17,7 +17,7 @@ PRICE_OUTPUT_PER_MILLION_TOKENS = 75.0
 
 # Lista de URLs a procesar
 URLS_TO_PROCESS = [
-    "https://www.wordstream.com/blog/ws/2021/04/15/mobile-first-indexing"
+    "https://madgicx.com/blog/what-does-a-media-buyer-do"
     # Añade más URLs aquí
 ]
 
@@ -567,7 +567,7 @@ def get_claude_response(system_prompt, user_prompt):
     """Envía los prompts a la API de Claude y devuelve la respuesta y el uso de tokens."""
     print("Enviando a la API de Claude...")
     try:
-        client = anthropic.Anthropic(api_key=API_KEY)
+        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
         message = client.messages.create(
             model=CLAUDE_MODEL,
@@ -661,7 +661,7 @@ def save_response_to_file(url, response_content):
 
 def main():
     """Función principal que orquesta el proceso."""
-    if not API_KEY:
+    if not ANTHROPIC_API_KEY:
         print("Error: La variable de entorno ANTHROPIC_API_KEY no está configurada.")
         return
 
