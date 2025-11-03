@@ -181,6 +181,8 @@ l18n==2021.3
     # via wagtail
 laces==0.1.2
     # via wagtail
+lxml==6.0.2
+    # via -r requirements/requirements.in
 more-itertools==10.7.0
     # via apify-client
 oauthlib==3.2.2
