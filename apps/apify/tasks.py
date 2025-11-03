@@ -13,6 +13,7 @@ from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeo
 from apify_client import ApifyClient
 
 from apps.apify.models import Backload
+from apps.aiinterface.tasks import send_slack_notification
 
 logger = logging.getLogger(__name__)
 
@@ -546,6 +547,18 @@ def fetch_apify_ads(
             error_message = "Failed to start Apify actor run"
             logger.error(error_message)
             
+            # Send Slack notification
+            context = {
+                "backload_id": backload_id,
+                "actor_id": actor_id,
+                "urls": str(urls)[:200] if urls else None
+            }
+            send_slack_notification(
+                error_message=error_message,
+                context=context,
+                title="Failed to Start Apify Actor"
+            )
+            
             # Update Backload status to FAILED
             if backload_id:
                 try:
@@ -567,6 +580,18 @@ def fetch_apify_ads(
         if not dataset_id:
             error_message = "No dataset ID returned from Apify run"
             logger.error(error_message)
+            
+            # Send Slack notification
+            context = {
+                "backload_id": backload_id,
+                "run_id": run.get('id') if run else None,
+                "actor_id": actor_id
+            }
+            send_slack_notification(
+                error_message=error_message,
+                context=context,
+                title="No Dataset ID from Apify Run"
+            )
             
             # Update Backload status to FAILED
             if backload_id:
@@ -615,6 +640,20 @@ def fetch_apify_ads(
         
     except Exception as e:
         logger.exception(f"Error executing Apify API call: {str(e)}")
+        
+        # Send Slack notification
+        context = {
+            "backload_id": backload_id,
+            "page_id": page_id,
+            "actor_id": actor_id,
+            "urls": str(urls)[:200] if urls else None,
+            "period": period
+        }
+        send_slack_notification(
+            error_message=str(e),
+            context=context,
+            title="Error in Apify Ads Extraction Task"
+        )
         
         # Update Backload status to FAILED if it exists
         if backload_id:
@@ -783,6 +822,20 @@ def create_ad_library_entry(ad_data: dict, media_type: str = "MEME") -> Dict[str
         
     except Exception as e:
         logger.exception(f"Error creating AdLibrary entry: {str(e)}")
+        
+        # Send Slack notification
+        context = {
+            "ad_id": ad_data.get('id'),
+            "page_id": ad_data.get('page_id'),
+            "media_type": media_type,
+            "has_snapshot_url": bool(ad_data.get('snapshot_url'))
+        }
+        send_slack_notification(
+            error_message=str(e),
+            context=context,
+            title="Error Creating AdLibrary Entry"
+        )
+        
         return {
             'success': False,
             'error': str(e),
