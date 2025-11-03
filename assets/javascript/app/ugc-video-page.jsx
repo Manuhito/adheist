@@ -77,9 +77,75 @@ const UgcVideoPageContent = () => {
   const [audioGender, setAudioGender] = useState(videoData?.audio_gender || '');
   const [avatarData, setAvatarData] = useState(videoData?.avatar_data || null);
 
+  // Debounce timer for auto-save
+  const debounceTimerRef = React.useRef(null);
+
+  // Function to update UGC Video in backend
+  const updateUgcVideo = async (updates) => {
+    if (!videoData?.id) return;
+
+    const csrftoken = getCookie('csrftoken');
+    try {
+      const response = await fetch(`/ads/api/update-ugc-video/${videoData.id}/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrftoken,
+        },
+        body: JSON.stringify(updates),
+      });
+      
+      const data = await response.json();
+      if (response.ok) {
+        console.log('UGC Video updated:', data.updated_fields);
+      } else {
+        console.error('Error updating UGC video:', data.error);
+      }
+    } catch (error) {
+      console.error('Failed to update UGC video:', error);
+    }
+  };
+
+  // Auto-save text_dialog with debounce (500ms after user stops typing)
+  useEffect(() => {
+    if (!videoData?.id) return;
+
+    // Clear existing timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    // Set new timer
+    debounceTimerRef.current = setTimeout(() => {
+      updateUgcVideo({ text_dialog: textDialog });
+    }, 500);
+
+    // Cleanup
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [textDialog]);
+
+  // Auto-save audio_gender immediately when changed
+  useEffect(() => {
+    if (!videoData?.id) return;
+    
+    // Only update if audioGender has actually changed from initial value
+    if (audioGender !== (videoData?.audio_gender || '')) {
+      updateUgcVideo({ audio_gender: audioGender });
+    }
+  }, [audioGender]);
+
   // This effect exposes the `handleGenerate` function to the global scope.
   useEffect(() => {
     window.handleUgcGenerate = async () => {
+      if (!videoData?.id) {
+        console.error('No video ID available');
+        return;
+      }
+
       const csrftoken = getCookie('csrftoken');
       try {
         const response = await fetch('/ads/api/generate-ugc-video/', {
@@ -89,16 +155,15 @@ const UgcVideoPageContent = () => {
             'X-CSRFToken': csrftoken,
           },
           body: JSON.stringify({ 
-            text: textDialog,
-            audio_gender: audioGender,
-            video_id: videoData?.id
+            video_id: videoData.id
           }),
         });
         const data = await response.json();
         if (response.ok) {
-          console.log('Task started:', data);
+          console.log('UGC Video generation task started:', data);
+          console.log('Task ID:', data.task_id);
         } else {
-          console.error('Error starting task:', data);
+          console.error('Error starting task:', data.error);
         }
       } catch (error) {
         console.error('Failed to call generate API:', error);
@@ -108,7 +173,7 @@ const UgcVideoPageContent = () => {
     return () => {
       delete window.handleUgcGenerate;
     };
-  }, [textDialog, audioGender, videoData]);
+  }, [videoData]);
 
   return (
     <div className="max-w-6xl mx-auto p-6">

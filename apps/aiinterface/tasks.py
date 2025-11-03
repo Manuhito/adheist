@@ -774,12 +774,13 @@ More focus. Better gut health. Real energy that lasts."
         }
 
 @shared_task
-def _generate_tts_audio_with_elevenlabs(text: str) -> Optional[str]:
+def _generate_tts_audio_with_elevenlabs(text: str, audio_gender: str = None) -> Optional[str]:
     """
     Generate TTS audio using ElevenLabs via fal.ai.
     
     Args:
         text: The text to convert to speech
+        audio_gender: Voice gender ('MALE' or 'FEMALE')
         
     Returns:
         str: URL of the generated audio file, or None if failed
@@ -788,9 +789,16 @@ def _generate_tts_audio_with_elevenlabs(text: str) -> Optional[str]:
         import fal_client
         
         logger.info(f"[UGC Video - TTS] Starting audio generation with text: {text[:100]}...")
+        logger.info(f"[UGC Video - TTS] Audio gender: {audio_gender}")
         
-        # Hardcoded voice ID for testing (Rachel voice from ElevenLabs)
-        VOICE_ID = "Brian"
+        # Select voice ID based on gender
+        if audio_gender == "FEMALE":
+            VOICE_ID = "Rachel"
+        else:
+            # Default to male voice (Brian) if not specified or if MALE
+            VOICE_ID = "Brian"
+        
+        logger.info(f"[UGC Video - TTS] Using voice: {VOICE_ID}")
         
         # Submit request to fal.ai for ElevenLabs TTS
         response = fal_client.run(
@@ -865,36 +873,77 @@ def _generate_talking_avatar_with_infinitalk(audio_url: str) -> Optional[str]:
 
 
 @shared_task(bind=True)
-def generate_ugc_video_task(self, text: str):
+def generate_ugc_video_task(self, ugc_video_id: int):
     """
     Celery task to generate a UGC video using fal.ai services.
     
-    This is a simple proof-of-concept implementation that:
-    1. Generates TTS audio using ElevenLabs via fal.ai
-    2. Creates a talking avatar video using Infinitalk via fal.ai
+    This implementation:
+    1. Loads UGC Video data from database
+    2. Generates TTS audio using ElevenLabs via fal.ai
+    3. Creates a talking avatar video using Infinitalk via fal.ai
+    4. Updates UGC Video model with generated URLs and status
     
     Args:
-        text: The text to convert to speech and animate
+        ugc_video_id: ID of the UGCVideo model instance
         
     Returns:
         dict: Status and result information
     """
-    logger.info(f"[UGC Video Task] Starting UGC video generation")
-    logger.info(f"[UGC Video Task] Text: {text}")
+    from apps.ads.models import UGCVideo
+    
+    logger.info(f"[UGC Video Task] Starting UGC video generation for ID: {ugc_video_id}")
     
     try:
+        # Load UGC Video from database
+        try:
+            ugc_video = UGCVideo.objects.get(id=ugc_video_id)
+        except UGCVideo.DoesNotExist:
+            error_msg = f"UGC Video with ID {ugc_video_id} not found"
+            logger.error(f"[UGC Video Task] {error_msg}")
+            return {
+                "status": "error",
+                "message": error_msg
+            }
+        
+        # Update status to IN_PROGRESS
+        ugc_video.status = 'IN_PROGRESS'
+        ugc_video.save(update_fields=['status', 'updated_at'])
+        
+        # Get text and audio gender from model
+        text = ugc_video.text_dialog
+        audio_gender = ugc_video.audio_gender
+        
+        if not text:
+            error_msg = "No text_dialog found in UGC Video"
+            logger.error(f"[UGC Video Task] {error_msg}")
+            ugc_video.status = 'FAILED'
+            ugc_video.save(update_fields=['status', 'updated_at'])
+            return {
+                "status": "error",
+                "message": error_msg
+            }
+        
+        logger.info(f"[UGC Video Task] Text: {text[:100]}...")
+        logger.info(f"[UGC Video Task] Audio gender: {audio_gender}")
+        
         # Step 1: Generate TTS audio with ElevenLabs
         logger.info("[UGC Video Task] Step 1/2: Generating TTS audio...")
-        audio_url = _generate_tts_audio_with_elevenlabs(text)
+        audio_url = _generate_tts_audio_with_elevenlabs(text, audio_gender)
         
         if not audio_url:
             error_msg = "Failed to generate TTS audio"
             logger.error(f"[UGC Video Task] {error_msg}")
+            ugc_video.status = 'FAILED'
+            ugc_video.save(update_fields=['status', 'updated_at'])
             return {
                 "status": "error",
                 "message": error_msg,
                 "step": "tts_generation"
             }
+        
+        # Save audio URL to model
+        ugc_video.generated_audio_url = audio_url
+        ugc_video.save(update_fields=['generated_audio_url', 'updated_at'])
         
         # Step 2: Generate talking avatar video with Infinitalk
         logger.info("[UGC Video Task] Step 2/2: Generating talking avatar video...")
@@ -903,12 +952,19 @@ def generate_ugc_video_task(self, text: str):
         if not video_url:
             error_msg = "Failed to generate talking avatar video"
             logger.error(f"[UGC Video Task] {error_msg}")
+            ugc_video.status = 'FAILED'
+            ugc_video.save(update_fields=['status', 'updated_at'])
             return {
                 "status": "error",
                 "message": error_msg,
                 "step": "video_generation",
                 "audio_url": audio_url
             }
+        
+        # Save video URL and update status to COMPLETE
+        ugc_video.generated_video_url = video_url
+        ugc_video.status = 'COMPLETE'
+        ugc_video.save(update_fields=['generated_video_url', 'status', 'updated_at'])
         
         # Success!
         logger.info(f"[UGC Video Task] UGC video generation completed successfully")
@@ -918,6 +974,7 @@ def generate_ugc_video_task(self, text: str):
         return {
             "status": "success",
             "message": "UGC video generated successfully",
+            "ugc_video_id": ugc_video_id,
             "audio_url": audio_url,
             "video_url": video_url
         }
@@ -925,6 +982,15 @@ def generate_ugc_video_task(self, text: str):
     except Exception as e:
         error_msg = f"Unexpected error in UGC video generation: {str(e)}"
         logger.error(f"[UGC Video Task] {error_msg}")
+        
+        # Try to update status to FAILED
+        try:
+            ugc_video = UGCVideo.objects.get(id=ugc_video_id)
+            ugc_video.status = 'FAILED'
+            ugc_video.save(update_fields=['status', 'updated_at'])
+        except:
+            pass
+        
         return {
             "status": "error",
             "message": error_msg

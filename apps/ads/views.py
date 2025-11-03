@@ -618,6 +618,69 @@ def create_ugc_video(request):
 
 
 @login_required
+@require_POST
+def update_ugc_video(request, video_id):
+    """
+    Update UGC Video fields (text_dialog, audio_gender).
+    
+    Expects JSON data with any of:
+        - text_dialog: Text for the avatar to speak
+        - audio_gender: Voice gender (MALE or FEMALE)
+    
+    Returns: JSON with success status
+    """
+    try:
+        import json as json_module
+        from .models import UGCVideo
+        
+        # Get the video and verify ownership
+        try:
+            ugc_video = UGCVideo.objects.get(id=video_id, user=request.user)
+        except UGCVideo.DoesNotExist:
+            return JsonResponse({
+                'error': 'UGC Video not found or access denied'
+            }, status=404)
+        
+        # Parse request data
+        data = json_module.loads(request.body)
+        
+        # Update fields if provided
+        updated_fields = []
+        
+        if 'text_dialog' in data:
+            ugc_video.text_dialog = data['text_dialog']
+            updated_fields.append('text_dialog')
+        
+        if 'audio_gender' in data:
+            # Validate audio_gender value
+            valid_genders = ['MALE', 'FEMALE', '']
+            audio_gender = data['audio_gender']
+            if audio_gender not in valid_genders:
+                return JsonResponse({
+                    'error': f'Invalid audio_gender. Must be one of: {", ".join(valid_genders)}'
+                }, status=400)
+            ugc_video.audio_gender = audio_gender if audio_gender else None
+            updated_fields.append('audio_gender')
+        
+        # Save if any fields were updated
+        if updated_fields:
+            ugc_video.save(update_fields=updated_fields + ['updated_at'])
+            logging.info(f"Updated UGC Video {video_id} fields: {', '.join(updated_fields)}")
+        
+        return JsonResponse({
+            'success': True,
+            'updated_fields': updated_fields,
+            'video_id': ugc_video.id
+        })
+        
+    except Exception as e:
+        logging.error(f"Error updating UGC video {video_id}: {str(e)}")
+        return JsonResponse({
+            'error': f'Failed to update UGC video: {str(e)}'
+        }, status=500)
+
+
+@login_required
 def brands_page(request):
     """
     Render the brands library page with React components.
@@ -4186,20 +4249,44 @@ def get_brand_details(request, brand_id):
 def generate_ugc_video(request):
     """
     API endpoint to trigger the UGC video generation task.
+    
+    Expects JSON data with:
+        - video_id: ID of the UGCVideo to generate
     """
     try:
-        data = json.loads(request.body)
-        text = data.get('text')
-
-        if not text:
-            return JsonResponse({'error': 'Text is required'}, status=400)
-
         from apps.aiinterface.tasks import generate_ugc_video_task
-        generate_ugc_video_task.delay(text=text)
+        from .models import UGCVideo
+        
+        data = json.loads(request.body)
+        video_id = data.get('video_id')
 
-        return JsonResponse({'status': 'success', 'message': 'UGC video generation task has been queued.'})
+        if not video_id:
+            return JsonResponse({'error': 'video_id is required'}, status=400)
+
+        # Verify the video exists and belongs to the user
+        try:
+            ugc_video = UGCVideo.objects.get(id=video_id, user=request.user)
+        except UGCVideo.DoesNotExist:
+            return JsonResponse({'error': 'UGC Video not found or access denied'}, status=404)
+        
+        # Verify there's text to generate
+        if not ugc_video.text_dialog:
+            return JsonResponse({'error': 'No text dialog found. Please add text before generating.'}, status=400)
+
+        # Launch the Celery task
+        task = generate_ugc_video_task.delay(ugc_video_id=video_id)
+        
+        logging.info(f"UGC video generation task queued for video {video_id}, task ID: {task.id}")
+
+        return JsonResponse({
+            'status': 'success', 
+            'message': 'UGC video generation task has been queued.',
+            'task_id': task.id,
+            'video_id': video_id
+        })
 
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
     except Exception as e:
+        logging.error(f"Error queueing UGC video generation: {str(e)}")
         return JsonResponse({'error': str(e)}, status=500)

@@ -44,6 +44,7 @@ urlpatterns = [
     path("avatars/", views.avatars_page, name="avatars_page"),
     path("api/unsplash-portraits/", views.get_unsplash_portraits, name="get_unsplash_portraits"),
     path("api/create-ugc-video/", views.create_ugc_video, name="create_ugc_video"),
+    path("api/update-ugc-video/<int:video_id>/", views.update_ugc_video, name="update_ugc_video"),
     path("assets/", views.assets_page, name="assets_page"),
     path("assets/create-folder/", views.create_folder, name="create_folder"),
     path("assets/<int:brand_id>/", views.brand_assets_detail, name="brand_assets_detail"),
