@@ -25,7 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ThemeSwitch } from "@/components/theme-switch"
-import { PanelLeftClose, Menu, Compass, Bookmark, Zap, Library, Folders, User2, ChevronUp, CreditCard, Settings, LogOut, Sparkles } from "lucide-react"
+import { PanelLeftClose, Menu, Compass, Bookmark, Zap, Library, Folders, User2, ChevronUp, CreditCard, Settings, LogOut, Sparkles, Video, Film } from "lucide-react"
 import * as ProgressPrimitive from "@radix-ui/react-progress"
 
 function CreditsProgressBar() {
@@ -69,7 +69,8 @@ function AppSidebar({ activeTab, sidebarComponent }) {
   const menuItems = [
     { id: 'discover', label: 'Discover', href: '/ads/discover/', icon: <Compass className="h-5 w-5" /> },
     { id: 'my-ads', label: 'My Ads', href: '/ads/my-ads/', icon: <Zap className="h-5 w-5" /> },
-    { id: 'ugc-video', label: 'UGC Video', href: '/ads/avatars/', icon: <Sparkles className="h-5 w-5" /> },
+    { id: 'ugc-video', label: 'UGC Video', href: '/ads/avatars/', icon: <Video className="h-5 w-5" /> },
+    { id: 'my-videos', label: 'My Videos', href: '/ads/my-videos/', icon: <Film className="h-5 w-5" /> },
     { id: 'brands-library', label: 'Brands Library', href: '/ads/brands/', icon: <Library className="h-5 w-5" /> },
     { id: 'assets', label: 'Assets', href: '/ads/assets/', icon: <Folders className="h-5 w-5" /> },
   ];

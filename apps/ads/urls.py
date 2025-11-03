@@ -40,6 +40,7 @@ urlpatterns = [
     path("discover/", views.discover_page, name="discover_page"),
     path("brands/", views.brands_page, name="brands_page"),
     path("my-ads/", views.my_ads_page, name="my_ads_page"),
+    path("my-videos/", views.my_videos_page, name="my_videos_page"),
     path("ugc-video/<int:video_id>/", views.ugc_video_page, name="ugc_video_page_with_id"),
     path("avatars/", views.avatars_page, name="avatars_page"),
     path("api/unsplash-portraits/", views.get_unsplash_portraits, name="get_unsplash_portraits"),

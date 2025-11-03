@@ -26,6 +26,7 @@ module.exports = {
     'discover-clone': './assets/javascript/app/discover-clone-page.jsx',  // entry point for the discover clone page
     'brands-page': './assets/javascript/app/brands-page.jsx',  // entry point for the brands page
     'my-ads-page': './assets/javascript/app/my-ads-page.jsx',  // entry point for the my ads page
+    'my-videos-page': './assets/javascript/app/my-videos-page.jsx',  // entry point for the my videos page
     'assets-page': './assets/javascript/app/assets-page.jsx',  // entry point for the assets page
     'brand-assets-detail': './assets/javascript/app/brand-assets-detail.jsx',  // entry point for the brand assets detail page
     'folder-assets-detail': './assets/javascript/app/folder-assets-detail.jsx',  // entry point for the folder assets detail page

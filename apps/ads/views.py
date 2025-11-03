@@ -3496,6 +3496,56 @@ def my_ads_page(request):
 
 
 @login_required
+def my_videos_page(request):
+    """
+    Render the My Videos page with React components.
+    Shows all UGC Videos created by the current user as individual cards.
+    """
+    from .models import UGCVideo
+    
+    # Get all UGC Videos for the current user, ordered by most recent first
+    ugc_videos = UGCVideo.objects.filter(user=request.user).order_by('-created_at')
+    
+    # Prepare data for frontend
+    my_videos_data = []
+    for video in ugc_videos:
+        # Extract avatar image URL and alt_description from avatar_data
+        avatar_image_url = None
+        alt_description = None
+        if video.avatar_data:
+            # Get image URL (prefer regular, fallback to small)
+            urls = video.avatar_data.get('urls', {})
+            avatar_image_url = urls.get('regular') or urls.get('small')
+            # Get alt description
+            alt_description = video.avatar_data.get('alt_description', '')
+        
+        video_card_data = {
+            'id': video.id,
+            'status': video.status,
+            'avatar_image_url': avatar_image_url,
+            'alt_description': alt_description,
+            'text_dialog': video.text_dialog or '',
+            'audio_gender': video.audio_gender or '',
+            'generated_audio_url': video.generated_audio_url or '',
+            'generated_video_url': video.generated_video_url or '',
+            'created_at': video.created_at.isoformat() if video.created_at else None,
+            'updated_at': video.updated_at.isoformat() if video.updated_at else None,
+        }
+        my_videos_data.append(video_card_data)
+    
+    # Convert to JSON for frontend
+    my_videos_json = json.dumps(my_videos_data, cls=DjangoJSONEncoder)
+    
+    template = "ads/my-videos.html"
+    context = {
+        "active_tab": "my-videos",
+        "my_videos_data": my_videos_json,
+    }
+    
+    return TemplateResponse(request, template, context)
+
+
+@login_required
 def assets_page(request):
     """
     Render the Assets page with React components.
