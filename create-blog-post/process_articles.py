@@ -531,17 +531,22 @@ def download_article_content(url):
         if not tags:
             print(f"Advertencia: No se encontraron etiquetas de contenido (h*, p) en {url}.")
             return None
+        
+        # To add tags to the text: 
 
-        content_texts = []
-        for tag in tags:
-            text = tag.get_text(strip=True)
-            if tag.name.startswith('h'):
-                # Añadir el nombre de la etiqueta antes del texto para los encabezados
-                content_texts.append(f"<{tag.name}> {text}")
-            else:
-                # Para otros tags como <p>, solo añadir el texto
-                content_texts.append(text)
-        article_text = "\n\n".join(content_texts)
+        # content_texts = []
+        # for tag in tags:
+        #     text = tag.get_text(strip=True)
+        #     if tag.name.startswith('h'):
+        #         # Añadir el nombre de la etiqueta antes del texto para los encabezados
+        #         content_texts.append(f"<{tag.name}> {text}")
+        #     else:
+        #         # Para otros tags como <p>, solo añadir el texto
+        #         content_texts.append(text)
+        # article_text = "\n\n".join(content_texts)
+
+        # Extraer solo el texto de las etiquetas sin añadir marcas de encabezado
+        article_text = "\n\n".join(tag.get_text(strip=True) for tag in tags)
 
         if not article_text:
             print(f"Advertencia: No se encontró contenido de texto en {url}")
