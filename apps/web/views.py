@@ -28,8 +28,8 @@ def home(request):
         # This allows direct rendering in the template with {{ faq.answer|safe }}
         
         logo_list = [
-            "Google", "Microsoft", "Amazon", "Netflix", "YouTube", 
-            "Instagram", "Uber", "Spotify"
+            "HelloFresh", "TrueClassic", "Huel", "AG1", "Clickup", "Monday",
+            "Calm", "Lululemon", "MagicSpoon", "Gymshark", "Canva", "TheRidge", "BetterHelp"
         ]
 
         feature_cards = [
