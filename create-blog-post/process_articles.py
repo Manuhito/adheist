@@ -17,11 +17,8 @@ CLAUDE_MODEL = "claude-opus-4-1-20250805" # Modelo base, ya que el solicitado no
 PRICE_INPUT_PER_MILLION_TOKENS = 15.0
 PRICE_OUTPUT_PER_MILLION_TOKENS = 75.0
 
-# Lista de URLs a procesar
-URLS_TO_PROCESS = [
-    "https://madgicx.com/blog/what-does-a-media-buyer-do"
-    # Añade más URLs aquí
-]
+# El archivo markdown que contiene las URLs a procesar
+MARKDOWN_FILE = "all_facebook_meta_urls.md"
 
 # --- Prompts ---
 SYSTEM_PROMPT = """
@@ -649,9 +646,33 @@ Coste Total:         ${total_cost:.6f}
     except Exception as e:
         print(f"Error al guardar el log de Claude para {url}: {e}")
 
+def is_url_processed(line):
+    """Check if a line in the markdown file has been processed (has ' - DONE' suffix)."""
+    return line.strip().endswith(' - DONE')
+
+def mark_url_as_processed(markdown_file, url):
+    """Update the markdown file to mark a URL as processed."""
+    try:
+        with open(markdown_file, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+        
+        # Find and update the line containing the URL
+        for i, line in enumerate(lines):
+            if line.strip().startswith('- ' + url) and not is_url_processed(line):
+                lines[i] = f"- {url} - DONE\n"
+                break
+        
+        # Write the updated content back to the file
+        with open(markdown_file, 'w', encoding='utf-8') as f:
+            f.writelines(lines)
+            
+    except Exception as e:
+        print(f"Error updating markdown file: {e}")
+
 def parse_markdown_structure(markdown_file):
-    """Parse the markdown file to build a URL to folder mapping."""
+    """Parse the markdown file to build a URL to folder mapping and get unprocessed URLs."""
     url_to_folder = {}
+    unprocessed_urls = []
     current_section = ""
     current_subsection = ""
     
@@ -664,7 +685,14 @@ def parse_markdown_structure(markdown_file):
             elif line.startswith('### '):  # Subsection
                 current_subsection = line[4:].strip()
             elif line.startswith('- http'):  # URL
-                url = line[2:].strip()
+                # Extract URL, removing any existing ' - DONE' suffix
+                url = line[2:].strip().split(' - DONE')[0].strip()
+                
+                # Skip already processed URLs
+                if is_url_processed(line):
+                    print(f"Skipping already processed URL: {url}")
+                    continue
+                    
                 # Clean up section and subsection names for filesystem
                 section_clean = re.sub(r'[^\w\s-]', '', current_section).strip().replace(' ', '_')
                 subsection_clean = re.sub(r'[^\w\s-]', '', current_subsection).strip().replace(' ', '_') if current_subsection else ""
@@ -675,6 +703,9 @@ def parse_markdown_structure(markdown_file):
                     folder_parts.append(subsection_clean)
                     
                 url_to_folder[url] = os.path.join(*folder_parts)
+                unprocessed_urls.append(url)
+    
+    return url_to_folder, unprocessed_urls
     
     return url_to_folder
 
@@ -708,12 +739,20 @@ def main():
     # Crear el directorio de salida si no existe
     os.makedirs("articulos_procesados", exist_ok=True)
     
-    # Parsear la estructura del archivo markdown
-    url_to_folder = parse_markdown_structure("all_facebook_meta_urls.md")
+    print(f"Analizando archivo markdown: {MARKDOWN_FILE}")
     
-    # Procesar cada URL
-    for url in URLS_TO_PROCESS:
-        print(f"\nProcesando: {url}")
+    # Parsear la estructura del archivo markdown y obtener URLs sin procesar
+    url_to_folder, unprocessed_urls = parse_markdown_structure(MARKDOWN_FILE)
+    
+    if not unprocessed_urls:
+        print("No se encontraron URLs sin procesar en el archivo markdown.")
+        return
+    
+    print(f"\nEncontradas {len(unprocessed_urls)} URLs sin procesar.")
+    
+    # Procesar cada URL sin procesar
+    for url in unprocessed_urls:
+        print(f"\n---\nProcesando: {url}")
         
         # 1. Descargar el contenido del artículo
         article_content = download_article_content(url)
@@ -725,17 +764,27 @@ def main():
         user_prompt = USER_PROMPT_TEMPLATE.format(article_content=article_content, url=url)
         
         # 3. Obtener la respuesta de Claude
+        print("Enviando solicitud a la API de Claude...")
         response_content, usage = get_claude_response(SYSTEM_PROMPT, user_prompt)
         
         if response_content and usage:
-            # 4. Calcular y mostrar el coste
-            calculate_and_print_cost(usage)
-            
-            # 5. Guardar el log de la conversación
-            save_claude_log(url, user_prompt, usage)
-            
-            # 6. Guardar la respuesta en un archivo con la estructura de carpetas
-            save_response_to_file(url, response_content, url_to_folder)
+            try:
+                # 4. Calcular y mostrar el coste
+                calculate_and_print_cost(usage)
+                
+                # 5. Guardar el log de la conversación
+                save_claude_log(url, user_prompt, usage)
+                
+                # 6. Guardar la respuesta en un archivo con la estructura de carpetas
+                save_response_to_file(url, response_content, url_to_folder)
+                
+                # 7. Marcar la URL como procesada en el archivo markdown
+                mark_url_as_processed(MARKDOWN_FILE, url)
+                print(f"URL marcada como procesada: {url}")
+                
+            except Exception as e:
+                print(f"Error procesando la URL {url}: {e}")
+                # No mark as done if there was an error
 
     print("\nProceso completado.")
 
