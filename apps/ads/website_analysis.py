@@ -12,6 +12,7 @@ from django.conf import settings
 from apps.aiinterface.models import OpenAIConfiguration
 from apps.ads.models import BrandAssetExtraction, AppConfiguration, UserBrand, AdRequestAssets
 from apps.ads.views import get_user_credits, deduct_user_credits
+from apps.aiinterface.tasks import send_slack_notification
 
 log = logging.getLogger(__name__)
 
@@ -530,6 +531,18 @@ def extract_brand_assets_from_website(user, website_url: str, ad_request_id: str
     except Exception as e:
         error_message = str(e)
         log.error(f"Brand asset extraction failed for user {user.email}: {error_message}")
+        
+        # Send Slack notification for technical errors (excluding credit issues)
+        if "insufficient credits" not in error_message.lower():
+            context = {
+                "User": user.email,
+                "Website URL": website_url,
+            }
+            send_slack_notification.delay(
+                title="Brand Asset Extraction Failed",
+                error_message=error_message,
+                context=context
+            )
         
         # Update extraction record with error
         if extraction:
