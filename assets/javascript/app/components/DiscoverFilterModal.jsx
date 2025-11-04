@@ -18,15 +18,26 @@ import { Label } from "../../components/ui/label";
  */
 function DiscoverFilterModal({ selectedCompany, onFiltersApply }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [filters, setFilters] = useState({
-    format: '',
-    platform: '',
+  const allPlatformsValue = 'FACEBOOK,INSTAGRAM,AUDIENCE_NETWORK,MESSENGER,THREADS';
+
+  const createDefaultFilters = () => ({
+    platform: allPlatformsValue,
     industry: '',
     status: 'active',
     sortBy: ''
   });
+
+  const [filters, setFilters] = useState(createDefaultFilters);
+  const [appliedFilters, setAppliedFilters] = useState(createDefaultFilters);
   const [industries, setIndustries] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  const filtersApplied = !(
+    appliedFilters.platform === allPlatformsValue &&
+    appliedFilters.industry === '' &&
+    (!appliedFilters.status || appliedFilters.status === 'all') &&
+    !appliedFilters.sortBy
+  );
 
   // Cargar industrias al montar el componente
   useEffect(() => {
@@ -58,25 +69,6 @@ function DiscoverFilterModal({ selectedCompany, onFiltersApply }) {
       filterParams.append('page_id', selectedCompany.pageId);
     }
     
-    // Add format filter
-    if (filters.format) {
-      let mediaType = '';
-      switch (filters.format) {
-        case 'images':
-          mediaType = 'image';
-          break;
-        case 'memes':
-          mediaType = 'meme';
-          break;
-        case 'images_and_memes':
-          mediaType = 'image_and_meme';
-          break;
-      }
-      if (mediaType) {
-        filterParams.append('media_type', mediaType);
-      }
-    }
-    
     // Add platform filter
     if (filters.platform) {
       filterParams.append('publisher_platform', filters.platform);
@@ -92,6 +84,8 @@ function DiscoverFilterModal({ selectedCompany, onFiltersApply }) {
       filterParams.append('meta_status', filters.status.toUpperCase());
     }
     
+    setAppliedFilters({ ...filters });
+
     // Call parent callback with filters
     if (onFiltersApply) {
       onFiltersApply(filterParams.toString());
@@ -106,9 +100,12 @@ function DiscoverFilterModal({ selectedCompany, onFiltersApply }) {
         <Button 
           variant="outline" 
           size="sm"
-          className="h-9 px-3 ml-2 rounded-lg"
+          className="group relative h-9 px-3 ml-2 rounded-lg"
         >
           <Filter className="h-5 w-5" />
+          {filtersApplied && (
+            <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-primary transition-colors group-hover:bg-white" />
+          )}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
@@ -119,20 +116,6 @@ function DiscoverFilterModal({ selectedCompany, onFiltersApply }) {
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
-          {/* Format Filter */}
-          <div className="space-y-2">
-            <Label htmlFor="format">Format</Label>
-            <SimpleSelect 
-              value={filters.format} 
-              onValueChange={(value) => handleFilterChange('format', value)}
-              placeholder="Select format"
-            >
-              <SimpleSelectItem value="images">Images</SimpleSelectItem>
-              <SimpleSelectItem value="memes">Memes</SimpleSelectItem>
-              <SimpleSelectItem value="images_and_memes">Images and Memes</SimpleSelectItem>
-            </SimpleSelect>
-          </div>
-
           {/* Platform Filter */}
           <div className="space-y-2">
             <Label htmlFor="platform">Platform</Label>
@@ -146,7 +129,7 @@ function DiscoverFilterModal({ selectedCompany, onFiltersApply }) {
               <SimpleSelectItem value="AUDIENCE_NETWORK">Audience Network</SimpleSelectItem>
               <SimpleSelectItem value="MESSENGER">Messenger</SimpleSelectItem>
               <SimpleSelectItem value="THREADS">Threads</SimpleSelectItem>
-              <SimpleSelectItem value="FACEBOOK,INSTAGRAM,AUDIENCE_NETWORK,MESSENGER,THREADS">All</SimpleSelectItem>
+              <SimpleSelectItem value={allPlatformsValue}>All</SimpleSelectItem>
             </SimpleSelect>
           </div>
 
