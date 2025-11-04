@@ -1,7 +1,9 @@
 import os
+import re
 import requests
 from bs4 import BeautifulSoup
 import anthropic
+from urllib.parse import urlparse
 
 # --- Configuración ---
 # Por favor, asegúrate de tener tu API key de Anthropic como una variable de entorno.
@@ -647,12 +649,49 @@ Coste Total:         ${total_cost:.6f}
     except Exception as e:
         print(f"Error al guardar el log de Claude para {url}: {e}")
 
-def save_response_to_file(url, response_content):
-    """Guarda el contenido de la respuesta en un archivo de texto."""
+def parse_markdown_structure(markdown_file):
+    """Parse the markdown file to build a URL to folder mapping."""
+    url_to_folder = {}
+    current_section = ""
+    current_subsection = ""
+    
+    with open(markdown_file, 'r', encoding='utf-8') as f:
+        for line in f:
+            line = line.strip()
+            if line.startswith('## '):  # Main section
+                current_section = line[3:].strip()
+                current_subsection = ""  # Reset subsection when section changes
+            elif line.startswith('### '):  # Subsection
+                current_subsection = line[4:].strip()
+            elif line.startswith('- http'):  # URL
+                url = line[2:].strip()
+                # Clean up section and subsection names for filesystem
+                section_clean = re.sub(r'[^\w\s-]', '', current_section).strip().replace(' ', '_')
+                subsection_clean = re.sub(r'[^\w\s-]', '', current_subsection).strip().replace(' ', '_') if current_subsection else ""
+                
+                # Build the folder path
+                folder_parts = ["articulos_procesados", section_clean]
+                if subsection_clean:
+                    folder_parts.append(subsection_clean)
+                    
+                url_to_folder[url] = os.path.join(*folder_parts)
+    
+    return url_to_folder
+
+def save_response_to_file(url, response_content, url_to_folder):
+    """Guarda el contenido de la respuesta en un archivo de texto con estructura de carpetas."""
     try:
-        # Crear un nombre de archivo a partir de la URL
-        filename = url.replace("https://", "").replace("http://", "").replace("/", "_") + ".txt"
-        filepath = os.path.join("articulos_procesados", filename)
+        # Get the folder path for this URL, or use a default folder
+        folder_path = url_to_folder.get(url, os.path.join("articulos_procesados", "Uncategorized"))
+        
+        # Create directory if it doesn't exist
+        os.makedirs(folder_path, exist_ok=True)
+        
+        # Create a safe filename from URL
+        domain = urlparse(url).netloc.replace('www.', '').split('.')[0]
+        path = urlparse(url).path.strip('/').replace('/', '_')
+        filename = f"{domain}_{path}.txt"
+        filepath = os.path.join(folder_path, filename)
 
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(response_content)
@@ -666,39 +705,37 @@ def save_response_to_file(url, response_content):
 
 def main():
     """Función principal que orquesta el proceso."""
-    if not ANTHROPIC_API_KEY:
-        print("Error: La variable de entorno ANTHROPIC_API_KEY no está configurada.")
-        return
-
-    # Crear directorios para los resultados si no existen
+    # Crear el directorio de salida si no existe
     os.makedirs("articulos_procesados", exist_ok=True)
-    os.makedirs("contenido_descargado", exist_ok=True)
-    os.makedirs("logs_claude", exist_ok=True)
-
+    
+    # Parsear la estructura del archivo markdown
+    url_to_folder = parse_markdown_structure("all_facebook_meta_urls.md")
+    
+    # Procesar cada URL
     for url in URLS_TO_PROCESS:
-        # 1. Descargar contenido
+        print(f"\nProcesando: {url}")
+        
+        # 1. Descargar el contenido del artículo
         article_content = download_article_content(url)
         if not article_content:
+            print(f"No se pudo descargar el contenido de {url}")
             continue
-
-        # 2. Preparar el user prompt
-        user_prompt = USER_PROMPT_TEMPLATE.format(article_content=article_content)
-
-        # 3. Obtener respuesta de Claude
-        claude_response, usage_info = get_claude_response(SYSTEM_PROMPT, user_prompt)
-
-        # Si no hay respuesta, continuar con la siguiente URL
-        if not claude_response:
-            continue
-
-        # 4. Calcular y mostrar el coste en consola
-        calculate_and_print_cost(usage_info)
-
-        # 5. Guardar el log de la llamada a Claude en un archivo
-        save_claude_log(url, user_prompt, usage_info)
-
-        # 6. Guardar la respuesta final (artículo reescrito)
-        save_response_to_file(url, claude_response)
+            
+        # 2. Crear el prompt de usuario con el contenido del artículo
+        user_prompt = USER_PROMPT_TEMPLATE.format(article_content=article_content, url=url)
+        
+        # 3. Obtener la respuesta de Claude
+        response_content, usage = get_claude_response(SYSTEM_PROMPT, user_prompt)
+        
+        if response_content and usage:
+            # 4. Calcular y mostrar el coste
+            calculate_and_print_cost(usage)
+            
+            # 5. Guardar el log de la conversación
+            save_claude_log(url, user_prompt, usage)
+            
+            # 6. Guardar la respuesta en un archivo con la estructura de carpetas
+            save_response_to_file(url, response_content, url_to_folder)
 
     print("\nProceso completado.")
 
