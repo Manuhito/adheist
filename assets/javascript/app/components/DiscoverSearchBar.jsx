@@ -149,12 +149,18 @@ function DiscoverSearchBar({ onSearch, onFiltersApply }) {
           onFiltersApply={onFiltersApply}
         />
         {/* Request Brand Button */}
-        <button
-          onClick={() => setIsRequestModalOpen(true)}
-          className="ml-2 p-2 rounded-md transition-colors"
-        >
-          <Lightbulb className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
-        </button>
+        <div className="relative group">
+          <button
+            onClick={() => setIsRequestModalOpen(true)}
+            className="ml-2 p-2 rounded-md transition-colors"
+          >
+            <Lightbulb className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
+          </button>
+          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1.5 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-lg">
+            Request a new Advertiser
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-[6px] border-transparent border-b-gray-900 dark:border-b-gray-700"></div>
+          </div>
+        </div>
       </div>
       
       {/* Modal para solicitar una nueva marca */}
