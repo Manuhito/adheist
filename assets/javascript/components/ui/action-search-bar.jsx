@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Input } from "./input";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -69,6 +69,153 @@ const allActions = [
         end: "Command",
     },
 ];
+
+const FAVICON_STATUS_STORAGE_KEY = "discover_favicon_status";
+const ICON_PREFETCH_LIMIT = 12;
+
+const loadStoredStatuses = () => {
+    if (typeof window === "undefined") {
+        return [];
+    }
+
+    try {
+        const stored = window.sessionStorage.getItem(FAVICON_STATUS_STORAGE_KEY);
+        if (!stored) {
+            return [];
+        }
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+            return parsed;
+        }
+        return [];
+    } catch (error) {
+        console.warn("Failed to parse favicon status cache", error);
+        return [];
+    }
+};
+
+const faviconStatusCache = new Map(loadStoredStatuses());
+
+const persistStatuses = () => {
+    if (typeof window === "undefined") {
+        return;
+    }
+    const entries = Array.from(faviconStatusCache.entries());
+    try {
+        window.sessionStorage.setItem(
+            FAVICON_STATUS_STORAGE_KEY,
+            JSON.stringify(entries)
+        );
+    } catch (error) {
+        console.warn("Failed to persist favicon status cache", error);
+    }
+};
+
+const getLabelInitial = (label) => {
+    if (!label || typeof label !== "string") {
+        return "";
+    }
+    const trimmed = label.trim();
+    return trimmed ? trimmed.charAt(0).toUpperCase() : "";
+};
+
+function LazyFavicon({ iconUrl, labelInitial, forceLoad }) {
+    const containerRef = useRef(null);
+    const cachedStatus = faviconStatusCache.get(iconUrl);
+    const [status, setStatus] = useState(cachedStatus || "idle");
+    const [shouldLoad, setShouldLoad] = useState(() => {
+        if (!iconUrl) {
+            return false;
+        }
+        if (cachedStatus === "loaded") {
+            return true;
+        }
+        return Boolean(forceLoad);
+    });
+
+    useEffect(() => {
+        if (forceLoad) {
+            setShouldLoad(true);
+        }
+    }, [forceLoad]);
+
+    useEffect(() => {
+        if (!iconUrl || shouldLoad || status === "loaded" || status === "error") {
+            return;
+        }
+
+        const node = containerRef.current;
+        if (!node) {
+            return;
+        }
+
+        const observer = new IntersectionObserver((entries) => {
+            const [entry] = entries;
+            if (entry && entry.isIntersecting) {
+                setShouldLoad(true);
+                observer.disconnect();
+            }
+        }, { rootMargin: "64px" });
+
+        observer.observe(node);
+
+        return () => observer.disconnect();
+    }, [iconUrl, shouldLoad, status]);
+
+    useEffect(() => {
+        if (!iconUrl || !shouldLoad || status === "loaded" || status === "error") {
+            return;
+        }
+
+        setStatus("loading");
+    }, [iconUrl, shouldLoad, status]);
+
+    const handleLoad = () => {
+        faviconStatusCache.set(iconUrl, "loaded");
+        persistStatuses();
+        setStatus("loaded");
+    };
+
+    const handleError = () => {
+        faviconStatusCache.set(iconUrl, "error");
+        persistStatuses();
+        setStatus("error");
+    };
+
+    if (!iconUrl || status === "error") {
+        return (
+            <div
+                ref={containerRef}
+                className="w-6 h-6 rounded-sm overflow-hidden bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground"
+            >
+                {labelInitial}
+            </div>
+        );
+    }
+
+    return (
+        <div
+            ref={containerRef}
+            className="w-6 h-6 rounded-sm overflow-hidden bg-muted flex items-center justify-center"
+        >
+            {(status === "loaded" || shouldLoad) ? (
+                <img
+                    src={iconUrl}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-full object-cover"
+                    onLoad={handleLoad}
+                    onError={handleError}
+                />
+            ) : (
+                <span className="text-xs font-medium text-muted-foreground">
+                    {labelInitial}
+                </span>
+            )}
+        </div>
+    );
+}
 
 function ActionSearchBar({ actions = allActions, onSearch, onActionSelect, onKeywordSearch, hideIcons = false, clearInput = false, placeholder = "Search for a brand name or keywords...." }) {
     const [query, setQuery] = useState("");
@@ -265,7 +412,21 @@ function ActionSearchBar({ actions = allActions, onSearch, onActionSelect, onKey
                                                 <div className="flex items-center gap-2 justify-between">
                                                     <div className="flex items-center gap-2">
                                                         <span className={action.isKeywordSearch ? "text-gray-400 dark:text-gray-500" : "text-gray-500"}>
-                                                            {action.icon}
+                                                            {action.isKeywordSearch ? (
+                                                                <Search className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                                                            ) : action.icon ? (
+                                                                action.icon
+                                                            ) : action.iconUrl ? (
+                                                                <LazyFavicon
+                                                                    iconUrl={action.iconUrl}
+                                                                    labelInitial={action.labelInitial || getLabelInitial(action.label)}
+                                                                    forceLoad={index < ICON_PREFETCH_LIMIT}
+                                                                />
+                                                            ) : (
+                                                                <div className="w-6 h-6 rounded-sm overflow-hidden bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground">
+                                                                    {action.labelInitial || getLabelInitial(action.label)}
+                                                                </div>
+                                                            )}
                                                         </span>
                                                         <span className={action.isKeywordSearch 
                                                             ? "text-xs text-gray-500 dark:text-gray-400" 

@@ -33,28 +33,15 @@ function DiscoverSearchBar({ onSearch, onFiltersApply }) {
         
         // Convertir companies a formato de acciones
         const actions = companyList.map((company, index) => {
-          const logoUrl = company.page_url ? `https://twenty-icons.com/${company.page_url}` : null;
+          const label = company.page_name || company;
+          const iconUrl = company.page_url ? `https://twenty-icons.com/${company.page_url}` : null;
           
           return {
             id: `company-${index}`,
-            label: company.page_name || company, // Soporte para ambos formatos
-            pageId: company.id, // Añadir el ID de la página de Facebook
-            icon: logoUrl ? (
-              <div className="w-6 h-6 rounded-sm overflow-hidden bg-muted flex-shrink-0">
-                <img 
-                  src={logoUrl} 
-                  alt={`${company.page_name || company} logo`}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    // Fallback: mostrar primera letra del nombre
-                    const firstLetter = (company.page_name || company).charAt(0).toUpperCase();
-                    e.target.outerHTML = `<div class="w-full h-full bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-600">${firstLetter}</div>`;
-                  }}
-                />
-              </div>
-            ) : (
-              <Building className="h-6 w-6 text-blue-500" />
-            ),
+            label,
+            pageId: company.id,
+            iconUrl,
+            labelInitial: typeof label === 'string' ? label.charAt(0).toUpperCase() : '',
             description: "",
             short: "",
             end: company.ad_count !== undefined ? `${company.ad_count} Ads` : "Filter",
