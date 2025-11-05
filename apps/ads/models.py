@@ -347,7 +347,9 @@ class AdRequestAssets(BaseModel):
     marketing_image_3 = models.ImageField(upload_to="adrequest_assets/", null=True, blank=True)
 
     def __str__(self):
-        return f"Asset Collection {self.user}"
+        if self.brand:
+            return f"Asset Collection for {self.brand.brand_name}"
+        return f"Asset Collection for {self.user}"
     
     def to_dict(self):
         """Convert asset fields to dictionary for easier override handling"""

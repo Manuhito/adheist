@@ -97,6 +97,11 @@ class AdRequestAdmin(admin.ModelAdmin):
     list_display = ["get_version_id", "user", "ad_library", "status", "created_at", "updated_at"]
     search_fields = ["user__email", "ad_library__facebook_page__page_name"]
     list_filter = ["status", "canvas_size"]
+    raw_id_fields = ["user", "ad_library", "base_assets"]
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        return queryset.select_related("user", "ad_library__facebook_page", "base_assets")
 
 
 @admin.register(AdRequestAssets)
