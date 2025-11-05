@@ -33,7 +33,7 @@ export default function Header() {
   return (
     <header
       className={
-        "relative sticky top-0 z-50 py-2 bg-background/60 backdrop-blur"
+        "relative sticky top-0 z-50 py-6 bg-background/60 backdrop-blur"
       }
     >
       <div className="flex justify-between items-center container">
@@ -43,7 +43,7 @@ export default function Header() {
           className="relative mr-6 flex items-center space-x-2"
         >
           <Icons.logo className="w-auto h-[40px]" />
-          <span className="font-bold text-xl">{siteConfig.name}</span>
+          <span className="font-bold text-2xl text-primary">{siteConfig.name}</span>
         </a>
 
         <div className="hidden lg:block">
@@ -54,7 +54,7 @@ export default function Header() {
             <div className="flex items-center gap-2">
               <a
                 href="/accounts/login"
-                className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+                className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "text-base")}
               >
                 {t('login', 'Login')}
               </a>
@@ -62,7 +62,7 @@ export default function Header() {
                 href="/accounts/signup"
                 className={cn(
                   buttonVariants({ variant: "default", size: "sm" }),
-                  "text-background flex gap-2"
+                  "text-white flex gap-2 text-base"
                 )}
               >
                 {t('get_started_free', 'Get Started for Free')}

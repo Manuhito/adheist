@@ -1,12 +1,14 @@
 import os
+import re
 import requests
 from bs4 import BeautifulSoup
 import anthropic
+from urllib.parse import urlparse
 
 # --- Configuración ---
 # Por favor, asegúrate de tener tu API key de Anthropic como una variable de entorno.
 # Ejemplo: export ANTHROPIC_API_KEY="tu_api_key"
-API_KEY = os.environ.get("ANTHROPIC_API_KEY")
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 CLAUDE_MODEL = "claude-opus-4-1-20250805" # Modelo base, ya que el solicitado no tiene precios públicos.
 
 # Precios de Claude 3 Opus (por millón de tokens en USD)
@@ -15,11 +17,8 @@ CLAUDE_MODEL = "claude-opus-4-1-20250805" # Modelo base, ya que el solicitado no
 PRICE_INPUT_PER_MILLION_TOKENS = 15.0
 PRICE_OUTPUT_PER_MILLION_TOKENS = 75.0
 
-# Lista de URLs a procesar
-URLS_TO_PROCESS = [
-    "https://www.wordstream.com/blog/ws/2021/04/15/mobile-first-indexing"
-    # Añade más URLs aquí
-]
+# El archivo markdown que contiene las URLs a procesar
+MARKDOWN_FILE = "all_facebook_meta_urls.md"
 
 # --- Prompts ---
 SYSTEM_PROMPT = """
@@ -531,17 +530,22 @@ def download_article_content(url):
         if not tags:
             print(f"Advertencia: No se encontraron etiquetas de contenido (h*, p) en {url}.")
             return None
+        
+        # To add tags to the text: 
 
-        content_texts = []
-        for tag in tags:
-            text = tag.get_text(strip=True)
-            if tag.name.startswith('h'):
-                # Añadir el nombre de la etiqueta antes del texto para los encabezados
-                content_texts.append(f"<{tag.name}> {text}")
-            else:
-                # Para otros tags como <p>, solo añadir el texto
-                content_texts.append(text)
-        article_text = "\n\n".join(content_texts)
+        # content_texts = []
+        # for tag in tags:
+        #     text = tag.get_text(strip=True)
+        #     if tag.name.startswith('h'):
+        #         # Añadir el nombre de la etiqueta antes del texto para los encabezados
+        #         content_texts.append(f"<{tag.name}> {text}")
+        #     else:
+        #         # Para otros tags como <p>, solo añadir el texto
+        #         content_texts.append(text)
+        # article_text = "\n\n".join(content_texts)
+
+        # Extraer solo el texto de las etiquetas sin añadir marcas de encabezado
+        article_text = "\n\n".join(tag.get_text(strip=True) for tag in tags)
 
         if not article_text:
             print(f"Advertencia: No se encontró contenido de texto en {url}")
@@ -567,7 +571,7 @@ def get_claude_response(system_prompt, user_prompt):
     """Envía los prompts a la API de Claude y devuelve la respuesta y el uso de tokens."""
     print("Enviando a la API de Claude...")
     try:
-        client = anthropic.Anthropic(api_key=API_KEY)
+        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
         message = client.messages.create(
             model=CLAUDE_MODEL,
@@ -642,12 +646,83 @@ Coste Total:         ${total_cost:.6f}
     except Exception as e:
         print(f"Error al guardar el log de Claude para {url}: {e}")
 
-def save_response_to_file(url, response_content):
-    """Guarda el contenido de la respuesta en un archivo de texto."""
+def is_url_processed(line):
+    """Check if a line in the markdown file has been processed (has ' - DONE' suffix)."""
+    return line.strip().endswith(' - DONE')
+
+def mark_url_as_processed(markdown_file, url):
+    """Update the markdown file to mark a URL as processed."""
     try:
-        # Crear un nombre de archivo a partir de la URL
-        filename = url.replace("https://", "").replace("http://", "").replace("/", "_") + ".txt"
-        filepath = os.path.join("articulos_procesados", filename)
+        with open(markdown_file, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+        
+        # Find and update the line containing the URL
+        for i, line in enumerate(lines):
+            if line.strip().startswith('- ' + url) and not is_url_processed(line):
+                lines[i] = f"- {url} - DONE\n"
+                break
+        
+        # Write the updated content back to the file
+        with open(markdown_file, 'w', encoding='utf-8') as f:
+            f.writelines(lines)
+            
+    except Exception as e:
+        print(f"Error updating markdown file: {e}")
+
+def parse_markdown_structure(markdown_file):
+    """Parse the markdown file to build a URL to folder mapping and get unprocessed URLs."""
+    url_to_folder = {}
+    unprocessed_urls = []
+    current_section = ""
+    current_subsection = ""
+    
+    with open(markdown_file, 'r', encoding='utf-8') as f:
+        for line in f:
+            line = line.strip()
+            if line.startswith('## '):  # Main section
+                current_section = line[3:].strip()
+                current_subsection = ""  # Reset subsection when section changes
+            elif line.startswith('### '):  # Subsection
+                current_subsection = line[4:].strip()
+            elif line.startswith('- http'):  # URL
+                # Extract URL, removing any existing ' - DONE' suffix
+                url = line[2:].strip().split(' - DONE')[0].strip()
+                
+                # Skip already processed URLs
+                if is_url_processed(line):
+                    print(f"Skipping already processed URL: {url}")
+                    continue
+                    
+                # Clean up section and subsection names for filesystem
+                section_clean = re.sub(r'[^\w\s-]', '', current_section).strip().replace(' ', '_')
+                subsection_clean = re.sub(r'[^\w\s-]', '', current_subsection).strip().replace(' ', '_') if current_subsection else ""
+                
+                # Build the folder path
+                folder_parts = ["articulos_procesados", section_clean]
+                if subsection_clean:
+                    folder_parts.append(subsection_clean)
+                    
+                url_to_folder[url] = os.path.join(*folder_parts)
+                unprocessed_urls.append(url)
+    
+    return url_to_folder, unprocessed_urls
+    
+    return url_to_folder
+
+def save_response_to_file(url, response_content, url_to_folder):
+    """Guarda el contenido de la respuesta en un archivo de texto con estructura de carpetas."""
+    try:
+        # Get the folder path for this URL, or use a default folder
+        folder_path = url_to_folder.get(url, os.path.join("articulos_procesados", "Uncategorized"))
+        
+        # Create directory if it doesn't exist
+        os.makedirs(folder_path, exist_ok=True)
+        
+        # Create a safe filename from URL
+        domain = urlparse(url).netloc.replace('www.', '').split('.')[0]
+        path = urlparse(url).path.strip('/').replace('/', '_')
+        filename = f"{domain}_{path}.txt"
+        filepath = os.path.join(folder_path, filename)
 
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(response_content)
@@ -661,39 +736,55 @@ def save_response_to_file(url, response_content):
 
 def main():
     """Función principal que orquesta el proceso."""
-    if not API_KEY:
-        print("Error: La variable de entorno ANTHROPIC_API_KEY no está configurada.")
-        return
-
-    # Crear directorios para los resultados si no existen
+    # Crear el directorio de salida si no existe
     os.makedirs("articulos_procesados", exist_ok=True)
-    os.makedirs("contenido_descargado", exist_ok=True)
-    os.makedirs("logs_claude", exist_ok=True)
-
-    for url in URLS_TO_PROCESS:
-        # 1. Descargar contenido
+    
+    print(f"Analizando archivo markdown: {MARKDOWN_FILE}")
+    
+    # Parsear la estructura del archivo markdown y obtener URLs sin procesar
+    url_to_folder, unprocessed_urls = parse_markdown_structure(MARKDOWN_FILE)
+    
+    if not unprocessed_urls:
+        print("No se encontraron URLs sin procesar en el archivo markdown.")
+        return
+    
+    print(f"\nEncontradas {len(unprocessed_urls)} URLs sin procesar.")
+    
+    # Procesar cada URL sin procesar
+    for url in unprocessed_urls:
+        print(f"\n---\nProcesando: {url}")
+        
+        # 1. Descargar el contenido del artículo
         article_content = download_article_content(url)
         if not article_content:
+            print(f"No se pudo descargar el contenido de {url}")
             continue
-
-        # 2. Preparar el user prompt
-        user_prompt = USER_PROMPT_TEMPLATE.format(article_content=article_content)
-
-        # 3. Obtener respuesta de Claude
-        claude_response, usage_info = get_claude_response(SYSTEM_PROMPT, user_prompt)
-
-        # Si no hay respuesta, continuar con la siguiente URL
-        if not claude_response:
-            continue
-
-        # 4. Calcular y mostrar el coste en consola
-        calculate_and_print_cost(usage_info)
-
-        # 5. Guardar el log de la llamada a Claude en un archivo
-        save_claude_log(url, user_prompt, usage_info)
-
-        # 6. Guardar la respuesta final (artículo reescrito)
-        save_response_to_file(url, claude_response)
+            
+        # 2. Crear el prompt de usuario con el contenido del artículo
+        user_prompt = USER_PROMPT_TEMPLATE.format(article_content=article_content, url=url)
+        
+        # 3. Obtener la respuesta de Claude
+        print("Enviando solicitud a la API de Claude...")
+        response_content, usage = get_claude_response(SYSTEM_PROMPT, user_prompt)
+        
+        if response_content and usage:
+            try:
+                # 4. Calcular y mostrar el coste
+                calculate_and_print_cost(usage)
+                
+                # 5. Guardar el log de la conversación
+                save_claude_log(url, user_prompt, usage)
+                
+                # 6. Guardar la respuesta en un archivo con la estructura de carpetas
+                save_response_to_file(url, response_content, url_to_folder)
+                
+                # 7. Marcar la URL como procesada en el archivo markdown
+                mark_url_as_processed(MARKDOWN_FILE, url)
+                print(f"URL marcada como procesada: {url}")
+                
+            except Exception as e:
+                print(f"Error procesando la URL {url}: {e}")
+                # No mark as done if there was an error
 
     print("\nProceso completado.")
 
