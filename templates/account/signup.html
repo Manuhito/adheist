@@ -25,6 +25,12 @@
 
     <form class="mt-8 space-y-6" method="post">
       {% csrf_token %}
+      <input type="hidden" name="distinct_id" id="posthog-distinct-id" />
+      <script>
+        if (typeof posthog !== 'undefined') {
+          document.getElementById('posthog-distinct-id').value = posthog.get_distinct_id();
+        }
+      </script>
       {{ form.non_field_errors }}
       <div class="space-y-4 rounded-md">
         {% render_field form.email %}

@@ -19,33 +19,28 @@ class EmailAsUsernameAdapter(DefaultAccountAdapter):
     def save_user(self, request, user, form, commit=True):
         # Call the parent method to save the user
         user = super().save_user(request, user, form, commit)
-        
-        # Track signup event in PostHog
+
+        # PostHog user identification
         try:
-            # Determine signup method
-            signup_method = 'email'
-            if 'socialaccount_login' in request.session:
-                signup_method = request.session.get('socialaccount_login', {}).get('provider', 'social')
-                
-            # Track the signup event
-            posthog.capture(
+            # 1. Alias the anonymous user with the new user ID
+            distinct_id = request.POST.get('distinct_id')
+            if distinct_id:
+                posthog.alias(distinct_id, user.id)
+
+            # 2. Identify the user immediately after aliasing
+            posthog.identify(
                 user.id,
-                event='Signup Completed',
-                properties={ 
-                    '$set': { 
-                        'Signup Completed': True,
-                        'Signup Method': signup_method,
-                        'Date Joined': user.date_joined.isoformat(),
-                        'email': user.email,
-                    },
-                    'signup_method': signup_method,
-                    '$current_url': request.build_absolute_uri(),
+                properties={
+                    'email': user.email,
+                    'name': user.get_full_name(),
+                    'date_joined': user.date_joined.isoformat(),
                 }
             )
+
         except Exception as e:
             # Log the error but don't prevent signup
-            print(f"Error tracking PostHog signup event: {e}")
-            
+            print(f"Error in PostHog user identification during signup: {e}")
+
         return user
         
     def login(self, request, user):
@@ -58,16 +53,20 @@ class EmailAsUsernameAdapter(DefaultAccountAdapter):
                 
             # Track the login event
             posthog.capture(
-                user.id,  # Usar ID en lugar de email para consistencia con otros eventos
+                user.id,
                 event='User Login',
-                properties={ 
-                    '$set': { 
-                        'Last Login': timezone.now().isoformat(),
-                        'Login Count': user.last_login is not None,  # True if not first login
-                        'email': user.email,  # Añadir email como propiedad para mantener esta información
-                    },
+                properties={
                     'login_method': login_method,
                     '$current_url': request.build_absolute_uri(),
+                }
+            )
+            # Identify the user on login to update properties like last_login
+            posthog.identify(
+                user.id,
+                properties={
+                    'email': user.email,
+                    'name': user.get_full_name(),
+                    'last_login': timezone.now().isoformat(),
                 }
             )
         except Exception as e:

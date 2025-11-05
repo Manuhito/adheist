@@ -14,9 +14,26 @@ logger = logging.getLogger(__name__)
 
 @receiver(user_signed_up)
 def handle_sign_up(request, user, **kwargs):
-    # customize this function to do custom logic on sign up, e.g. send a welcome email
-    # or subscribe them to your mailing list.
-    # This example notifies the admins, in case you want to keep track of sign ups
+    # PostHog signup event tracking
+    try:
+        signup_method = 'email'
+        if 'socialaccount_login' in request.session:
+            provider = request.session.get('socialaccount_login', {}).get('provider')
+            if provider:
+                signup_method = provider
+
+        posthog.capture(
+            user.id,
+            event='Signup Completed',
+            properties={
+                'signup_method': signup_method,
+                '$current_url': request.build_absolute_uri(),
+            }
+        )
+    except Exception as e:
+        logger.error(f"Error tracking PostHog signup event in signal: {e}")
+
+    # Original function logic
     _notify_admins_of_signup(user)
 
 

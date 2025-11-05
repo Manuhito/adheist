@@ -12,19 +12,9 @@
     if (typeof posthog !== 'undefined') {
       {% if user.is_authenticated %}
       // Identify user by email
-      posthog.identify('{{ user.email }}', {
-        name: '{{ user.get_full_name|default:user.username }}',
+      posthog.identify('{{ user.id }}', {
         email: '{{ user.email }}',
-        id: '{{ user.id }}',
-        last_login: '{{ user.last_login|date:"c" }}'
-      });
-      
-      // Set user properties
-      posthog.people.set({
-        $name: '{{ user.get_full_name|default:user.username }}',
-        $email: '{{ user.email }}',
-        user_id: '{{ user.id }}',
-        date_joined: '{{ user.date_joined|date:"c" }}'
+        name: '{{ user.get_full_name|default:user.username }}'
       });
       {% endif %}
       
