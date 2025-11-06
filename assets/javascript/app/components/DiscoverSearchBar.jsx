@@ -169,22 +169,24 @@ function DiscoverSearchBar({ onSearch, onFiltersApply }) {
         {/* Clear All Filters Button */}
         {(keywordSearch || selectedCompany || modalFiltersApplied) && (
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
-            className="ml-2 h-9 px-3 text-sm text-muted-foreground hover:text-foreground"
+            className="ml-2 h-9 px-3 rounded-lg text-sm text-muted-foreground hover:text-foreground"
             onClick={handleClearAllFilters}
           >
-            Clear filters <X className="ml-1 h-4 w-4" />
+            Clear filters
           </Button>
         )}
         {/* Request Brand Button */}
         <div className="relative group">
-          <button
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 w-9 p-0 ml-2 rounded-lg"
             onClick={() => setIsRequestModalOpen(true)}
-            className="ml-2 p-2 rounded-md transition-colors"
           >
-            <Lightbulb className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
-          </button>
+            <Lightbulb className="h-5 w-5" />
+          </Button>
           <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1.5 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-lg">
             Request a new Advertiser
             <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-[6px] border-transparent border-b-gray-900 dark:border-b-gray-700"></div>
