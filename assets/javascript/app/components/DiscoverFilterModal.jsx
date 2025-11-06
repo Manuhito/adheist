@@ -22,14 +22,14 @@ const DiscoverFilterModal = forwardRef(({ selectedCompany, onFiltersApply, onFil
 
   const createDefaultFilters = () => ({
     platform: allPlatformsValue,
-    industry: '',
+    industry: 'all',
     status: 'active',
     sortBy: ''
   });
   
   const createClearFilters = () => ({
     platform: allPlatformsValue,
-    industry: '',
+    industry: 'all',
     status: 'all',
     sortBy: ''
   });
@@ -41,7 +41,7 @@ const DiscoverFilterModal = forwardRef(({ selectedCompany, onFiltersApply, onFil
 
   const filtersApplied = !(
     appliedFilters.platform === allPlatformsValue &&
-    appliedFilters.industry === '' &&
+    (appliedFilters.industry === '' || appliedFilters.industry === 'all') &&
     (!appliedFilters.status || appliedFilters.status === 'all') &&
     !appliedFilters.sortBy
   );
@@ -114,7 +114,7 @@ const DiscoverFilterModal = forwardRef(({ selectedCompany, onFiltersApply, onFil
     }
     
     // Add industry filter
-    if (filters.industry) {
+    if (filters.industry && filters.industry !== 'all') {
       filterParams.append('industries', filters.industry);
     }
     
@@ -163,12 +163,12 @@ const DiscoverFilterModal = forwardRef(({ selectedCompany, onFiltersApply, onFil
               onValueChange={(value) => handleFilterChange('platform', value)}
               placeholder="Select platform"
             >
+              <SimpleSelectItem value={allPlatformsValue}>All</SimpleSelectItem>
               <SimpleSelectItem value="FACEBOOK">Facebook</SimpleSelectItem>
               <SimpleSelectItem value="INSTAGRAM">Instagram</SimpleSelectItem>
               <SimpleSelectItem value="AUDIENCE_NETWORK">Audience Network</SimpleSelectItem>
               <SimpleSelectItem value="MESSENGER">Messenger</SimpleSelectItem>
               <SimpleSelectItem value="THREADS">Threads</SimpleSelectItem>
-              <SimpleSelectItem value={allPlatformsValue}>All</SimpleSelectItem>
             </SimpleSelect>
           </div>
 
@@ -180,6 +180,7 @@ const DiscoverFilterModal = forwardRef(({ selectedCompany, onFiltersApply, onFil
               onValueChange={(value) => handleFilterChange('industry', value)}
               placeholder="Select industry"
             >
+              <SimpleSelectItem value="all">All</SimpleSelectItem>
               {isLoading ? (
                 <SimpleSelectItem value="" disabled>Loading...</SimpleSelectItem>
               ) : (
