@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Filter } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import {
@@ -16,7 +16,7 @@ import { Label } from "../../components/ui/label";
  * Componente de filtros para la página Discover
  * Muestra un icono de embudo que abre un modal con opciones de filtrado
  */
-function DiscoverFilterModal({ selectedCompany, onFiltersApply }) {
+const DiscoverFilterModal = forwardRef(({ selectedCompany, onFiltersApply, onFiltersChange }, ref) => {
   const [isOpen, setIsOpen] = useState(false);
   const allPlatformsValue = 'FACEBOOK,INSTAGRAM,AUDIENCE_NETWORK,MESSENGER,THREADS';
 
@@ -24,6 +24,13 @@ function DiscoverFilterModal({ selectedCompany, onFiltersApply }) {
     platform: allPlatformsValue,
     industry: '',
     status: 'active',
+    sortBy: ''
+  });
+  
+  const createClearFilters = () => ({
+    platform: allPlatformsValue,
+    industry: '',
+    status: 'all',
     sortBy: ''
   });
 
@@ -38,6 +45,38 @@ function DiscoverFilterModal({ selectedCompany, onFiltersApply }) {
     (!appliedFilters.status || appliedFilters.status === 'all') &&
     !appliedFilters.sortBy
   );
+  
+  // Expose clearFilters method to parent via ref
+  useImperativeHandle(ref, () => ({
+    clearFilters: () => {
+      const clearedFilters = createClearFilters();
+      setFilters(clearedFilters);
+      setAppliedFilters(clearedFilters);
+      
+      // Apply cleared filters immediately
+      const filterParams = new URLSearchParams();
+      if (selectedCompany && selectedCompany.pageId) {
+        filterParams.append('page_id', selectedCompany.pageId);
+      }
+      if (clearedFilters.platform) {
+        filterParams.append('publisher_platform', clearedFilters.platform);
+      }
+      if (clearedFilters.status && clearedFilters.status !== 'all') {
+        filterParams.append('meta_status', clearedFilters.status.toUpperCase());
+      }
+      
+      if (onFiltersApply) {
+        onFiltersApply(filterParams.toString());
+      }
+    }
+  }));
+  
+  // Notify parent when filters change
+  useEffect(() => {
+    if (onFiltersChange) {
+      onFiltersChange(filtersApplied);
+    }
+  }, [filtersApplied, onFiltersChange]);
 
   // Cargar industrias al montar el componente
   useEffect(() => {
@@ -191,6 +230,8 @@ function DiscoverFilterModal({ selectedCompany, onFiltersApply }) {
       </DialogContent>
     </Dialog>
   );
-}
+});
+
+DiscoverFilterModal.displayName = 'DiscoverFilterModal';
 
 export default DiscoverFilterModal;

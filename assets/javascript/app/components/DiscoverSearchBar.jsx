@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ActionSearchBar } from '../../components/ui/action-search-bar.jsx';
 import { Building, X, Lightbulb } from 'lucide-react';
 import { Button } from '../../components/ui/button';
@@ -20,6 +20,12 @@ function DiscoverSearchBar({ onSearch, onFiltersApply }) {
   
   // State for the request brand modal
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+  
+  // State to track if modal filters are applied
+  const [modalFiltersApplied, setModalFiltersApplied] = useState(false);
+  
+  // Ref to access DiscoverFilterModal methods
+  const filterModalRef = useRef(null);
 
   // Cargar la lista de empresas al montar el componente
   useEffect(() => {
@@ -113,6 +119,16 @@ function DiscoverSearchBar({ onSearch, onFiltersApply }) {
     }
   };
   
+  const handleClearAllFilters = () => {
+    // Clear search filters
+    handleClearFilters();
+    
+    // Clear modal filters
+    if (filterModalRef.current) {
+      filterModalRef.current.clearFilters();
+    }
+  };
+  
   const placeholder = selectedCompany 
     ? `Filtering by: ${selectedCompany.label}`
     : keywordSearch 
@@ -145,9 +161,22 @@ function DiscoverSearchBar({ onSearch, onFiltersApply }) {
           )}
         </div>
         <DiscoverFilterModal 
+          ref={filterModalRef}
           selectedCompany={selectedCompany}
           onFiltersApply={onFiltersApply}
+          onFiltersChange={setModalFiltersApplied}
         />
+        {/* Clear All Filters Button */}
+        {(keywordSearch || selectedCompany || modalFiltersApplied) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="ml-2 h-9 px-3 text-sm text-muted-foreground hover:text-foreground"
+            onClick={handleClearAllFilters}
+          >
+            Clear filters <X className="ml-1 h-4 w-4" />
+          </Button>
+        )}
         {/* Request Brand Button */}
         <div className="relative group">
           <button
