@@ -5,6 +5,7 @@ import InteractiveBentoGallery from '../components/ui/interactive-bento-gallery.
 import { useTranslation } from '../lib/useTranslation.ts';
 import { motion, AnimatePresence } from 'framer-motion';
 import DiscoverSearchBar from './components/DiscoverSearchBar.jsx';
+import RequestBrandModal from './components/RequestBrandModal.jsx';
 
 // Function to get CSRF token from cookie
 const getCsrfToken = () => {
@@ -36,6 +37,7 @@ function DiscoverContent() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [selectedAdLibrary, setSelectedAdLibrary] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isRequestBrandOpen, setIsRequestBrandOpen] = useState(false);
 
   // Function to fetch ad libraries from the API with explicit query parameter
   const fetchFilteredResultsWithQuery = (page = 1, append = false, queryOverride = null) => {
@@ -285,7 +287,7 @@ function DiscoverContent() {
   const handleGalleryItemSelect = async (item) => {
     console.log('Selected gallery item:', item);
     setSelectedAdLibrary(item.id);
-    
+
     try {
       // Step 1: Create a new AdRequest
       console.log('Creating new AdRequest...');
@@ -394,11 +396,27 @@ function DiscoverContent() {
           )}
         </>
       ) : (
-        <div className="p-8 text-center text-gray-500">
-          {t('discover.no_results', 'No ad examples found. Try adjusting your search.')}
+        <div className="w-full flex items-center justify-center py-20 min-h-[60vh]">
+          <div className="text-center max-w-md">
+            <h1 className="text-xl font-semibold text-primary dark:text-primary mb-4">
+              No Ads results for your query
+            </h1>
+            <p className="text-sm text-gray-400 dark:text-gray-500">
+              Filter by Advertiser, industry, keywords or{' '}
+              <button
+                type="button"
+                className="text-blue-500 hover:text-blue-600 underline"
+                onClick={() => setIsRequestBrandOpen(true)}
+              >
+                Request a new Advertiser
+              </button>
+              .
+            </p>
+          </div>
         </div>
       )}
-    </div>
+      <RequestBrandModal isOpen={isRequestBrandOpen} onOpenChange={setIsRequestBrandOpen} />
+    </div >
   );
 }
 
