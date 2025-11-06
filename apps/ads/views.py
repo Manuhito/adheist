@@ -115,6 +115,34 @@ def payment_page(request):
     """
     return render(request, 'ads/payment.html')
 
+
+@require_http_methods(["POST"])
+def track_adlibrary_click(request, adlibrary_id):
+    """
+    Increment click_count for an AdLibrary item when a user clicks an image in Discover.
+    No authentication requirement; protected by CSRF middleware.
+    """
+    adlibrary = get_object_or_404(AdLibrary, pk=adlibrary_id)
+    # Atomic increment to avoid race conditions
+    AdLibrary.objects.filter(pk=adlibrary_id).update(click_count=F('click_count') + 1)
+    adlibrary.refresh_from_db(fields=['click_count'])
+
+    # Optional analytics
+    try:
+        posthog.capture(
+            request.user.id if request.user.is_authenticated else 'anonymous',
+            'AdLibrary Clicked',
+            properties={
+                'adlibrary_id': adlibrary_id,
+                'click_count': adlibrary.click_count,
+                'path': request.path,
+            }
+        )
+    except Exception:
+        pass
+
+    return JsonResponse({'id': adlibrary_id, 'click_count': adlibrary.click_count})
+
 @login_required
 def provision_credit_package(request, user_id, product):
     """
@@ -977,6 +1005,9 @@ def get_adlibrary_filters(request):
     elif sort_by == 'oldest':
         # Oldest first -> earliest delivery start time
         adlibraries = adlibraries.order_by('ad_delivery_start_time', 'id')
+    elif sort_by == 'popular':
+        # Most popular first -> highest click_count
+        adlibraries = adlibraries.order_by('-click_count', '-id')
 
     # Aplicar paginación a los resultados
     paginator = Paginator(adlibraries, page_size)
@@ -1034,6 +1065,7 @@ def get_adlibrary_filters(request):
             'publisher_platform': list(adlibrary.publisher_platform) if adlibrary.publisher_platform else [],
             'ad_creative_link_titles': adlibrary.ad_creative_link_titles,
             'cta_link': cta_link,  # New field for CTA link
+            'click_count': adlibrary.click_count,
         }
         adlibrary_list.append(adlibrary_data)
     

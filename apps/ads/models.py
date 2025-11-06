@@ -45,6 +45,7 @@ class AdLibrary(BaseModel):
     ad_image = models.ImageField(upload_to="adlibrary/", null=True, blank=True)
     is_fav = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True, help_text="Indica si el anuncio está activo o ha sido desactivado")
+    click_count = models.PositiveIntegerField(default=0, db_index=True, help_text="Number of user clicks on Discover page")
     language = ArrayField(
         models.CharField(max_length=2),
         blank=True,

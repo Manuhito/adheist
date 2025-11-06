@@ -29,6 +29,7 @@ urlpatterns = [
     path("proxy-image/", views.proxy_image_download, name="proxy_image_download"),
     path("api/toggle-favorite/", views.toggle_favorite, name="toggle_favorite"),
     path("api/deactivate-image/", views.deactivate_image, name="deactivate_image"),
+    path("api/adlibrary/<int:adlibrary_id>/click/", views.track_adlibrary_click, name="track_adlibrary_click"),
     path("api/request-brand/", views.request_brand, name="request_brand"),
     path("api/user-brands/", views.get_user_brands, name="get_user_brands"),
     path("api/containers/", views.get_user_containers, name="get_user_containers"),
