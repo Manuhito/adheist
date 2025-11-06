@@ -193,7 +193,7 @@ const MediaItem = ({ item, className, onClick, isSelected, userPermissions = { i
                     <div className="mt-2">
                         <div className="relative w-0 min-w-full">
                             {!isAdBodiesExpanded && item.ad_creative_bodies.length > 80 ? (
-                                <p className="text-xs text-foreground leading-relaxed break-words">
+                                <p className="text-xs text-foreground leading-relaxed break-words whitespace-pre-line">
                                     {item.ad_creative_bodies.substring(0, 80)}...{' '}
                                     <button
                                         onClick={(e) => {
@@ -207,7 +207,7 @@ const MediaItem = ({ item, className, onClick, isSelected, userPermissions = { i
                                 </p>
                             ) : (
                                 <div>
-                                    <p className="text-xs text-foreground leading-relaxed break-words">
+                                    <p className="text-xs text-foreground leading-relaxed break-words whitespace-pre-line">
                                         {item.ad_creative_bodies}
                                     </p>
                                     {isAdBodiesExpanded && item.ad_creative_bodies.length > 80 && (
@@ -436,7 +436,7 @@ const GalleryModal = ({
                                             <div>
                                                 <div className="relative w-0 min-w-full">
                                                     {!isAdBodiesExpanded && selectedItem.ad_creative_bodies.length > 100 ? (
-                                                        <p className="text-xs text-foreground leading-relaxed break-words">
+                                                        <p className="text-xs text-foreground leading-relaxed break-words whitespace-pre-line">
                                                             {selectedItem.ad_creative_bodies.substring(0, 100)}...{' '}
                                                             <button
                                                                 onClick={() => setIsAdBodiesExpanded(true)}
@@ -447,7 +447,7 @@ const GalleryModal = ({
                                                         </p>
                                                     ) : (
                                                         <div>
-                                                            <p className="text-xs text-foreground leading-relaxed break-words">
+                                                            <p className="text-xs text-foreground leading-relaxed break-words whitespace-pre-line">
                                                                 {selectedItem.ad_creative_bodies}
                                                             </p>
                                                             {isAdBodiesExpanded && selectedItem.ad_creative_bodies.length > 100 && (
