@@ -969,6 +969,15 @@ def get_adlibrary_filters(request):
             adlibraries = AdLibrary.objects.filter(is_fav=True, is_active=True)
         print(f"DEBUG: Favorites query count: {adlibraries.count()}")
     
+    # Apply sorting if requested (must be before pagination)
+    sort_by = request.GET.get('sort_by', '').lower()
+    if sort_by == 'newest':
+        # Newest first -> latest delivery start time
+        adlibraries = adlibraries.order_by('-ad_delivery_start_time', '-id')
+    elif sort_by == 'oldest':
+        # Oldest first -> earliest delivery start time
+        adlibraries = adlibraries.order_by('ad_delivery_start_time', 'id')
+
     # Aplicar paginación a los resultados
     paginator = Paginator(adlibraries, page_size)
     

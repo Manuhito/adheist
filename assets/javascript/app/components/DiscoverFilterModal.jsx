@@ -122,6 +122,11 @@ const DiscoverFilterModal = forwardRef(({ selectedCompany, onFiltersApply, onFil
     if (filters.status && filters.status !== 'all') {
       filterParams.append('meta_status', filters.status.toUpperCase());
     }
+
+    // Add sort option
+    if (filters.sortBy) {
+      filterParams.append('sort_by', filters.sortBy);
+    }
     
     setAppliedFilters({ ...filters });
 

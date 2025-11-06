@@ -38,6 +38,7 @@ function DiscoverContent() {
   const [selectedAdLibrary, setSelectedAdLibrary] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isRequestBrandOpen, setIsRequestBrandOpen] = useState(false);
+  const [activeFilterParams, setActiveFilterParams] = useState("");
 
   // Function to fetch ad libraries from the API with explicit query parameter
   const fetchFilteredResultsWithQuery = (page = 1, append = false, queryOverride = null) => {
@@ -56,6 +57,14 @@ function DiscoverContent() {
     // Add pagination parameters
     params.append('page', page);
     params.append('page_size', 20); // Same page size as StepOneComponent
+
+    // Include active filters (from modal) so pagination preserves them
+    if (activeFilterParams) {
+      const extra = new URLSearchParams(activeFilterParams);
+      for (const [key, value] of extra) {
+        params.append(key, value);
+      }
+    }
 
     // Añadir parámetro de búsqueda si existe
     if (effectiveQuery !== null && effectiveQuery !== undefined && effectiveQuery !== '') {
@@ -201,6 +210,9 @@ function DiscoverContent() {
   const handleFiltersApply = (filterParams) => {
     console.log(`🔧 handleFiltersApply called with:`, filterParams);
     setCurrentPage(1);
+
+    // Persist filters for future pagination and searches
+    setActiveFilterParams(filterParams || "");
 
     // Build URL with filter parameters
     const params = new URLSearchParams();
