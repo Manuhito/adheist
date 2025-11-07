@@ -9,7 +9,8 @@
     user: {
       name: "{{ request.user.get_full_name|default:'' }}",
       email: "{{ request.user.email|default:'' }}"
-    }
+    },
+    totalAdsCount: {{ total_ads_count }}
   };
   
   // Pass user permissions to JavaScript

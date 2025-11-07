@@ -544,9 +544,13 @@ def discover_page(request):
     """
     Render the discover page with React components.
     """
+    # Get total count of AdLibrary entries
+    total_ads_count = AdLibrary.objects.count()
+    
     template = "ads/discover.html"
     context = {
         "active_tab": "discover",
+        "total_ads_count": total_ads_count,
     }
     
     return TemplateResponse(request, template, context)
