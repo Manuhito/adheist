@@ -193,7 +193,7 @@ const MediaItem = ({ item, className, onClick, isSelected, userPermissions = { i
                     <div className="mt-2">
                         <div className="relative w-0 min-w-full">
                             {!isAdBodiesExpanded && item.ad_creative_bodies.length > 80 ? (
-                                <p className="text-xs text-foreground leading-relaxed break-words">
+                                <p className="text-xs text-foreground leading-relaxed break-words whitespace-pre-line">
                                     {item.ad_creative_bodies.substring(0, 80)}...{' '}
                                     <button
                                         onClick={(e) => {
@@ -207,7 +207,7 @@ const MediaItem = ({ item, className, onClick, isSelected, userPermissions = { i
                                 </p>
                             ) : (
                                 <div>
-                                    <p className="text-xs text-foreground leading-relaxed break-words">
+                                    <p className="text-xs text-foreground leading-relaxed break-words whitespace-pre-line">
                                         {item.ad_creative_bodies}
                                     </p>
                                     {isAdBodiesExpanded && item.ad_creative_bodies.length > 80 && (
@@ -436,7 +436,7 @@ const GalleryModal = ({
                                             <div>
                                                 <div className="relative w-0 min-w-full">
                                                     {!isAdBodiesExpanded && selectedItem.ad_creative_bodies.length > 100 ? (
-                                                        <p className="text-xs text-foreground leading-relaxed break-words">
+                                                        <p className="text-xs text-foreground leading-relaxed break-words whitespace-pre-line">
                                                             {selectedItem.ad_creative_bodies.substring(0, 100)}...{' '}
                                                             <button
                                                                 onClick={() => setIsAdBodiesExpanded(true)}
@@ -447,7 +447,7 @@ const GalleryModal = ({
                                                         </p>
                                                     ) : (
                                                         <div>
-                                                            <p className="text-xs text-foreground leading-relaxed break-words">
+                                                            <p className="text-xs text-foreground leading-relaxed break-words whitespace-pre-line">
                                                                 {selectedItem.ad_creative_bodies}
                                                             </p>
                                                             {isAdBodiesExpanded && selectedItem.ad_creative_bodies.length > 100 && (
@@ -834,6 +834,34 @@ const InteractiveBentoGallery = ({
         return csrfCookie ? csrfCookie.split('=')[1] : '';
     };
 
+    // Track click when opening the modal from a card, then open it
+    const handleCardOpen = async (item) => {
+        try {
+            // Extract the real ID from the compound ID if present
+            let adlibraryId;
+            if (item.original_id) {
+                adlibraryId = item.original_id;
+            } else if (item.id && typeof item.id === 'string' && item.id.includes('-')) {
+                adlibraryId = item.id.split('-')[0];
+            } else {
+                adlibraryId = item.id;
+            }
+
+            if (adlibraryId) {
+                await fetch(`/ads/api/adlibrary/${adlibraryId}/click/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCsrfToken(),
+                    },
+                });
+            }
+        } catch (e) {
+            // Non-blocking: ignore tracking errors
+        } finally {
+            setSelectedItem(item);
+        }
+    };
+
     return (
         <div className="container mx-auto px-1 py-1 max-w-5xl"
             style={{
@@ -915,9 +943,8 @@ const InteractiveBentoGallery = ({
                         layoutId={`media-${item.id}`}
                         className={`${selectedItemId === item.id ? 'ring-2 ring-primary ring-offset-2 rounded-xl' : ''}`}
                         onClick={() => {
-                            // Only open the modal, don't select the item yet
-                            setSelectedItem(item);
-                            // Selection will happen only when clicking the "Select This Ad Style" button
+                            // Open modal and track click for popularity
+                            handleCardOpen(item);
                         }}
                         variants={{
                             hidden: { y: 20, opacity: 0 },
@@ -937,7 +964,7 @@ const InteractiveBentoGallery = ({
                             key={item.id}
                             item={updatedItems[item.id] || item} // Use updated item if available
                             className=""
-                            onClick={() => setSelectedItem(updatedItems[item.id] || item)}
+                            onClick={undefined}
                             isSelected={selectedAdStyle && selectedAdStyle.id === item.id}
                             userPermissions={userPermissions}
                             onToggleFavorite={handleToggleFavorite}

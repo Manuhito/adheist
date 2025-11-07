@@ -274,6 +274,14 @@ function ConditionalHeader({ content, customComponent, hideLogo = false }) {
   // Priority: customComponent > content > empty
   const headerContent = customComponent || content;
 
+  // Get total ads count from window data
+  const totalAdsCount = window.__DISCOVER_DATA__?.totalAdsCount || 0;
+  
+  // Format number with commas
+  const formatNumber = (num) => {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  };
+
   return (
     <header className="flex h-16 shrink-0 items-center px-4">
       {!open && (
@@ -281,7 +289,7 @@ function ConditionalHeader({ content, customComponent, hideLogo = false }) {
           <Menu className="h-6 w-6 text-muted-foreground" />
         </CustomSidebarTrigger>
       )}
-      
+
       {/* Logo de la app - se oculta si hideLogo es true */}
       {!hideLogo && (
         <div className="flex items-center mr-4">
@@ -294,7 +302,7 @@ function ConditionalHeader({ content, customComponent, hideLogo = false }) {
           </a>
         </div>
       )}
-      
+
       {/* Custom header content takes full width */}
       {headerContent && React.isValidElement(headerContent) ? (
         <div className="flex-1">
@@ -306,7 +314,7 @@ function ConditionalHeader({ content, customComponent, hideLogo = false }) {
           <div className="flex-1 max-w-md mx-4">
             <div id="header-search-container"></div>
           </div>
-          
+
           {!open && headerContent && <div className="h-4 w-px bg-border mx-2" />}
           {headerContent && (
             <div className="flex items-center gap-2 text-sm">
@@ -318,6 +326,21 @@ function ConditionalHeader({ content, customComponent, hideLogo = false }) {
             </div>
           )}
         </>
+      )}
+
+      {/* Total Ads Counter - Always on the right */}
+      {totalAdsCount > 0 && (
+        <div className="flex items-center gap-1.5 ml-auto">
+          {/* Two overlapping green circles - centered */}
+          <div className="relative flex items-center justify-center" style={{ width: '18px', height: '18px' }}>
+            <div className="absolute w-[18px] h-[18px] rounded-full bg-green-500/20"></div>
+            <div className="absolute w-3 h-3 rounded-full bg-green-500"></div>
+          </div>
+          {/* Ads count text */}
+          <span className="text-green-500 text-sm font-medium whitespace-nowrap">
+            {formatNumber(totalAdsCount)} Ads
+          </span>
+        </div>
       )}
     </header>
   );

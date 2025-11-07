@@ -45,6 +45,7 @@ class AdLibrary(BaseModel):
     ad_image = models.ImageField(upload_to="adlibrary/", null=True, blank=True)
     is_fav = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True, help_text="Indica si el anuncio está activo o ha sido desactivado")
+    click_count = models.PositiveIntegerField(default=0, db_index=True, help_text="Number of user clicks on Discover page")
     language = ArrayField(
         models.CharField(max_length=2),
         blank=True,
@@ -347,7 +348,9 @@ class AdRequestAssets(BaseModel):
     marketing_image_3 = models.ImageField(upload_to="adrequest_assets/", null=True, blank=True)
 
     def __str__(self):
-        return f"Asset Collection {self.user}"
+        if self.brand:
+            return f"Asset Collection for {self.brand.brand_name}"
+        return f"Asset Collection for {self.user}"
     
     def to_dict(self):
         """Convert asset fields to dictionary for easier override handling"""

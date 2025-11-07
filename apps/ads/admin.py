@@ -30,10 +30,11 @@ from .models import (
 
 @admin.register(AdLibrary)
 class AdLibraryAdmin(admin.ModelAdmin):
-    list_display = ["facebook_page__page_name", "meta_ad_id", "meta_status", "ad_creation_time", "ad_delivery_start_time", "ad_delivery_stop_time", "is_fav", "get_industries", "get_tags", "get_languages", "media_type", "get_publisher_platforms", "created_at", "updated_at", "is_active"]
+    list_display = ["facebook_page__page_name", "meta_ad_id", "meta_status", "ad_creation_time", "ad_delivery_start_time", "ad_delivery_stop_time", "is_fav", "click_count", "get_industries", "get_tags", "get_languages", "media_type", "get_publisher_platforms", "created_at", "updated_at", "is_active"]
     search_fields = ["facebook_page__page_name", "facebook_page__page_id", "media_type", "meta_ad_id", "meta_status", "currency"]
     list_filter = ["facebook_page", "facebook_page__industries", "language", "media_type", "publisher_platform", "ad_creation_time", "ad_delivery_start_time", "ad_delivery_stop_time", "meta_status", "target_gender", "is_active"]
     filter_horizontal = ["tags"]
+    readonly_fields = ["click_count"]
     
     # Mostrar todos los campos en el formulario de edición
     fieldsets = [
@@ -50,7 +51,7 @@ class AdLibraryAdmin(admin.ModelAdmin):
             "fields": ["language", "media_type", "publisher_platform", "target_ages", "target_gender", "target_locations"]
         }),
         ("Performance Metrics", {
-            "fields": ["age_country_gender_reach_breakdown", "br_total_reach", "eu_total_reach", "delivery_by_region", "demographic_distribution", "estimated_audience_size", "impressions", "spend", "currency"]
+            "fields": ["age_country_gender_reach_breakdown", "br_total_reach", "eu_total_reach", "delivery_by_region", "demographic_distribution", "estimated_audience_size", "impressions", "spend", "currency", "click_count"]
         }),
         ("Payment Information", {
             "fields": ["beneficiary_payers"]
@@ -97,6 +98,11 @@ class AdRequestAdmin(admin.ModelAdmin):
     list_display = ["get_version_id", "user", "ad_library", "status", "created_at", "updated_at"]
     search_fields = ["user__email", "ad_library__facebook_page__page_name"]
     list_filter = ["status", "canvas_size"]
+    raw_id_fields = ["user", "ad_library", "base_assets"]
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        return queryset.select_related("user", "ad_library__facebook_page", "base_assets")
 
 
 @admin.register(AdRequestAssets)
