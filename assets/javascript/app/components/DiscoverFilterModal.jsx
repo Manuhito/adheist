@@ -40,7 +40,7 @@ const DiscoverFilterModal = forwardRef(({ selectedCompany, onFiltersApply, onFil
   const [isLoading, setIsLoading] = useState(false);
 
   const filtersApplied = !(
-    appliedFilters.platform === allPlatformsValue &&
+    (appliedFilters.platform === allPlatformsValue || !appliedFilters.platform) &&
     (appliedFilters.industry === '' || appliedFilters.industry === 'all') &&
     (!appliedFilters.status || appliedFilters.status === 'all') &&
     !appliedFilters.sortBy
@@ -53,20 +53,9 @@ const DiscoverFilterModal = forwardRef(({ selectedCompany, onFiltersApply, onFil
       setFilters(clearedFilters);
       setAppliedFilters(clearedFilters);
       
-      // Apply cleared filters immediately
-      const filterParams = new URLSearchParams();
-      if (selectedCompany && selectedCompany.pageId) {
-        filterParams.append('page_id', selectedCompany.pageId);
-      }
-      if (clearedFilters.platform) {
-        filterParams.append('publisher_platform', clearedFilters.platform);
-      }
-      if (clearedFilters.status && clearedFilters.status !== 'all') {
-        filterParams.append('meta_status', clearedFilters.status.toUpperCase());
-      }
-      
+      // Apply cleared filters immediately - don't send any filter params
       if (onFiltersApply) {
-        onFiltersApply(filterParams.toString());
+        onFiltersApply('');
       }
     }
   }));
@@ -108,8 +97,8 @@ const DiscoverFilterModal = forwardRef(({ selectedCompany, onFiltersApply, onFil
       filterParams.append('page_id', selectedCompany.pageId);
     }
     
-    // Add platform filter
-    if (filters.platform) {
+    // Add platform filter - only if not "All"
+    if (filters.platform && filters.platform !== allPlatformsValue) {
       filterParams.append('publisher_platform', filters.platform);
     }
     
@@ -118,7 +107,7 @@ const DiscoverFilterModal = forwardRef(({ selectedCompany, onFiltersApply, onFil
       filterParams.append('industries', filters.industry);
     }
     
-    // Add status filter
+    // Add status filter - only if not "all"
     if (filters.status && filters.status !== 'all') {
       filterParams.append('meta_status', filters.status.toUpperCase());
     }

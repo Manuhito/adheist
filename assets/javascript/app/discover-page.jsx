@@ -211,6 +211,11 @@ function DiscoverContent() {
     console.log(`🔧 handleFiltersApply called with:`, filterParams);
     setCurrentPage(1);
 
+    // Clear searchQuery when filters are cleared
+    if (!filterParams || filterParams === '') {
+      setSearchQuery('');
+    }
+
     // Persist filters for future pagination and searches
     setActiveFilterParams(filterParams || "");
 

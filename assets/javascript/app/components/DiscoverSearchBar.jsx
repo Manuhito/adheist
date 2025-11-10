@@ -102,7 +102,7 @@ function DiscoverSearchBar({ onSearch, onFiltersApply }) {
     }
   };
 
-  const handleClearFilters = () => {
+  const handleClearFilters = (skipApiCall = false) => {
     // Clear both company and keyword search
     setSelectedCompany(null);
     setKeywordSearch(null);
@@ -113,17 +113,17 @@ function DiscoverSearchBar({ onSearch, onFiltersApply }) {
     // Reset the clear flag after a brief delay
     setTimeout(() => setShouldClearInput(false), 100);
     
-    // Make API call without company or tags (only with other filters if any)
-    if (onFiltersApply) {
+    // Make API call only if not skipping (when clearing from X button only)
+    if (!skipApiCall && onFiltersApply) {
       onFiltersApply(''); // Empty string means no filters
     }
   };
   
   const handleClearAllFilters = () => {
-    // Clear search filters
-    handleClearFilters();
+    // Clear search filters without API call (skip it)
+    handleClearFilters(true);
     
-    // Clear modal filters
+    // Clear modal filters - this will make the single API call
     if (filterModalRef.current) {
       filterModalRef.current.clearFilters();
     }
