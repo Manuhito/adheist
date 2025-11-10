@@ -3,6 +3,65 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from '../../shadcn/components/ui/button';
 import { useTranslation } from '../../lib/useTranslation';
 
+// Bars loading component
+const Bars = ({ size = 64 }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+  >
+    <title>Loading...</title>
+    <style>{`
+      .spinner-bar {
+        animation: spinner-bars-animation .8s linear infinite;
+        animation-delay: -.8s;
+      }
+      .spinner-bars-2 {
+        animation-delay: -.65s;
+      }
+      .spinner-bars-3 {
+        animation-delay: -0.5s;
+      }
+      @keyframes spinner-bars-animation {
+        0% {
+          y: 1px;
+          height: 22px;
+        }
+        93.75% {
+          y: 5px;
+          height: 14px;
+          opacity: 0.2;
+        }
+      }
+    `}</style>
+    <rect
+      className="spinner-bar"
+      x="1"
+      y="1"
+      width="6"
+      height="22"
+      fill="currentColor"
+    />
+    <rect
+      className="spinner-bar spinner-bars-2"
+      x="9"
+      y="1"
+      width="6"
+      height="22"
+      fill="currentColor"
+    />
+    <rect
+      className="spinner-bar spinner-bars-3"
+      x="17"
+      y="1"
+      width="6"
+      height="22"
+      fill="currentColor"
+    />
+  </svg>
+);
+
 /**
  * Modal para solicitar agregar una nueva marca a la biblioteca
  * @param {Object} props - Propiedades del componente
@@ -14,6 +73,7 @@ function RequestBrandModal({ isOpen, onOpenChange }) {
   const [brandUrl, setBrandUrl] = useState('');
   const [requestStatus, setRequestStatus] = useState({ loading: false, success: false, error: null });
   const [urlError, setUrlError] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Function to get CSRF token from cookie
   const getCsrfToken = () => {
@@ -91,6 +151,7 @@ function RequestBrandModal({ isOpen, onOpenChange }) {
   const handleBrandRequest = async () => {
     if (!brandUrl.trim() || !isValidBrandUrl(brandUrl)) return;
     
+    setIsProcessing(true);
     setRequestStatus({ loading: true, success: false, error: null });
     
     try {
@@ -108,17 +169,14 @@ function RequestBrandModal({ isOpen, onOpenChange }) {
       
       if (response.ok) {
         setRequestStatus({ loading: false, success: true, error: null });
-        // Close modal after 2 seconds
-        setTimeout(() => {
-          onOpenChange(false);
-          setBrandUrl('');
-          setRequestStatus({ loading: false, success: false, error: null });
-        }, 2000);
+        // Keep modal open, user will close it manually
       } else {
+        setIsProcessing(false);
         setRequestStatus({ loading: false, success: false, error: data.error || 'An error occurred' });
       }
     } catch (error) {
       console.error('Error submitting brand request:', error);
+      setIsProcessing(false);
       setRequestStatus({ loading: false, success: false, error: 'Network error. Please try again.' });
     }
   };
@@ -128,6 +186,7 @@ function RequestBrandModal({ isOpen, onOpenChange }) {
       // Reset form state when closing
       setBrandUrl('');
       setUrlError(null);
+      setIsProcessing(false);
       setRequestStatus({ loading: false, success: false, error: null });
     }
     onOpenChange(open);
@@ -136,14 +195,33 @@ function RequestBrandModal({ isOpen, onOpenChange }) {
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Request a new Advertiser</DialogTitle>
-          <DialogDescription>
-            Request a new Advertiser that's not in our library. We'll add it for you.
-          </DialogDescription>
-        </DialogHeader>
-        
-        <div className="py-4 space-y-4">
+        {isProcessing ? (
+          // Processing view
+          <>
+            <DialogHeader>
+              <DialogTitle>Processing your request</DialogTitle>
+            </DialogHeader>
+            
+            <div className="py-8 flex flex-col items-center justify-center space-y-4">
+              <div className="text-primary">
+                <Bars size={64} />
+              </div>
+              <p className="text-center text-muted-foreground">
+                We are working on pulling your preferred advertiser ads for you. This action can take a few minutes.
+              </p>
+            </div>
+          </>
+        ) : (
+          // Form view
+          <>
+            <DialogHeader>
+              <DialogTitle>Request a new Advertiser</DialogTitle>
+              <DialogDescription>
+                Request a new Advertiser that's not in our library. We'll add it for you.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="py-4 space-y-4">
           {/* Input para la URL */}
           <div className="space-y-2">
             <label htmlFor="brand-url" className="text-sm font-medium text-foreground">
@@ -205,22 +283,24 @@ function RequestBrandModal({ isOpen, onOpenChange }) {
           )}
         </div>
         
-        <DialogFooter>
-          <Button 
-            variant="outline" 
-            onClick={() => handleOpenChange(false)}
-            disabled={requestStatus.loading}
-          >
-            {t('common.cancel', 'Cancel')}
-          </Button>
-          <Button 
-            onClick={handleBrandRequest}
-            disabled={!isValidBrandUrl(brandUrl) || requestStatus.loading || requestStatus.success}
-            loading={requestStatus.loading}
-          >
-            {t('request_brand.submit', 'Submit request')}
-          </Button>
-        </DialogFooter>
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => handleOpenChange(false)}
+                disabled={requestStatus.loading}
+              >
+                {t('common.cancel', 'Cancel')}
+              </Button>
+              <Button 
+                onClick={handleBrandRequest}
+                disabled={!isValidBrandUrl(brandUrl) || requestStatus.loading || requestStatus.success}
+                loading={requestStatus.loading}
+              >
+                {t('request_brand.submit', 'Submit request')}
+              </Button>
+            </DialogFooter>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );
