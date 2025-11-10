@@ -926,13 +926,8 @@ def get_adlibrary_filters(request):
         # Apply company filter if provided (AND logic)
         # Priority: page_id over company_name for more precise filtering
         if page_id:
-            try:
-                page_id_int = int(page_id)
-                adlibraries = adlibraries.filter(facebook_page_id=page_id_int)
-            except (ValueError, TypeError):
-                # If page_id is not a valid integer, fall back to company_name filter
-                if company_name:
-                    adlibraries = adlibraries.filter(facebook_page__page_name__icontains=company_name)
+            # page_id is the Facebook Page ID (string), not the DB ID
+            adlibraries = adlibraries.filter(facebook_page__page_id=page_id)
         elif company_name:
             adlibraries = adlibraries.filter(facebook_page__page_name__icontains=company_name)
         
@@ -1131,7 +1126,7 @@ def get_adlibrary_company_list(request):
             ad_count=Count('adlibraries', filter=Q(adlibraries__is_active=True))
         ).filter(
             ad_count__gt=0
-        ).values('id', 'page_name', 'ad_count', 'page_url').distinct().order_by('page_name')
+        ).values('id', 'page_id', 'page_name', 'ad_count', 'page_url').distinct().order_by('page_name')
         
         # Convert to list of dictionaries and clean page_url
         company_data = []
@@ -2955,7 +2950,8 @@ def request_brand(request):
             urls=[{'url': url}],
             page_id=facebook_page_id,
             backload_id=backload.pk,
-            is_automated=True
+            is_automated=True,
+            user_id=request.user.id
         )
         
         # Send Slack notification for tracking
@@ -2973,7 +2969,11 @@ def request_brand(request):
         
         send_slack_notification(message, context, title)
         
-        return JsonResponse({'success': True})
+        return JsonResponse({
+            'success': True,
+            'backload_id': backload.pk,
+            'facebook_page_id': facebook_page_id
+        })
         
     except Exception as e:
         logging.error(f"Error processing brand request: {str(e)}")

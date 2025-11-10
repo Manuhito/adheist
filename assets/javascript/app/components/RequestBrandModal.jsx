@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../../shadcn/components/ui/dialog';
-import { Button } from '../../shadcn/components/ui/button';
+import React, { useState, useEffect, useRef } from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../components/ui/dialog.tsx';
+import { Button } from '../../components/ui/button.tsx';
 import { useTranslation } from '../../lib/useTranslation';
 
 // Bars loading component
@@ -74,6 +74,9 @@ function RequestBrandModal({ isOpen, onOpenChange }) {
   const [requestStatus, setRequestStatus] = useState({ loading: false, success: false, error: null });
   const [urlError, setUrlError] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [backloadId, setBackloadId] = useState(null);
+  const [pageId, setPageId] = useState(null);
+  const eventSourceRef = useRef(null);
 
   // Function to get CSRF token from cookie
   const getCsrfToken = () => {
@@ -147,6 +150,75 @@ function RequestBrandModal({ isOpen, onOpenChange }) {
     }
   };
 
+  // Setup SSE listener when processing starts
+  useEffect(() => {
+    if (!isProcessing || !backloadId) return;
+
+    console.log('Setting up SSE listener for backload:', backloadId);
+    const eventSource = new EventSource('/ads/sse/adrequest-updates/');
+    eventSourceRef.current = eventSource;
+    let isComponentMounted = true;
+
+    eventSource.addEventListener('connected', (event) => {
+      console.log('SSE connected:', event.data);
+    });
+
+    eventSource.addEventListener('backload_completed', (event) => {
+      console.log('SSE backload_completed:', event.data);
+      const data = JSON.parse(event.data);
+      
+      // Check if this is our backload AND component is still mounted
+      if (data.backload_id === backloadId && isComponentMounted) {
+        console.log('Our backload completed!');
+        
+        // Close SSE connection
+        eventSource.close();
+        eventSourceRef.current = null;
+        
+        // Check if there were processed ads
+        if (data.processed_count > 0) {
+          console.log(`Successfully processed ${data.processed_count} ads. Redirecting to discover page...`);
+          // Redirect to discover page with company filter
+          setTimeout(() => {
+            window.location.href = `/ads/discover/?company=${data.page_id}`;
+          }, 1000);
+        } else {
+          console.log('No ads were processed. Showing error message.');
+          // Show error message to user
+          setIsProcessing(false);
+          setRequestStatus({ 
+            loading: false, 
+            success: false, 
+            error: `We couldn't extract any ads for this advertiser. This might be because they don't have active image/meme ads in English, or there was an error during extraction. Please try again or contact support at hey@adheist.ai` 
+          });
+        }
+      }
+    });
+
+    eventSource.onerror = (error) => {
+      console.error('SSE error:', error);
+      // Only handle error if component is still mounted
+      if (isComponentMounted) {
+        setIsProcessing(false);
+        setRequestStatus({ 
+          loading: false, 
+          success: false, 
+          error: 'Connection error. Please refresh the page and try again.' 
+        });
+      }
+    };
+
+    // Cleanup on unmount or when modal closes
+    return () => {
+      console.log('Cleaning up SSE connection');
+      isComponentMounted = false;
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
+    };
+  }, [isProcessing, backloadId]);
+
   // Function to handle brand request submission
   const handleBrandRequest = async () => {
     if (!brandUrl.trim() || !isValidBrandUrl(brandUrl)) return;
@@ -168,8 +240,11 @@ function RequestBrandModal({ isOpen, onOpenChange }) {
       const data = await response.json();
       
       if (response.ok) {
+        // Store backload_id and page_id to listen for completion
+        setBackloadId(data.backload_id);
+        setPageId(data.facebook_page_id);
         setRequestStatus({ loading: false, success: true, error: null });
-        // Keep modal open, user will close it manually
+        // Keep processing state to show loading and listen for SSE
       } else {
         setIsProcessing(false);
         setRequestStatus({ loading: false, success: false, error: data.error || 'An error occurred' });
@@ -183,10 +258,17 @@ function RequestBrandModal({ isOpen, onOpenChange }) {
 
   const handleOpenChange = (open) => {
     if (!open) {
+      // Cleanup SSE connection if open
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
       // Reset form state when closing
       setBrandUrl('');
       setUrlError(null);
       setIsProcessing(false);
+      setBackloadId(null);
+      setPageId(null);
       setRequestStatus({ loading: false, success: false, error: null });
     }
     onOpenChange(open);

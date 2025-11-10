@@ -553,7 +553,8 @@ def fetch_apify_ads(
     actor_id: str = "XtaWFhbtfxyzqrFmd",
     page_id: str = None,
     backload_id: int = None,
-    is_automated: bool = False
+    is_automated: bool = False,
+    user_id: int = None
 ) -> Dict[str, Any]:
     """
     Celery task to fetch ads from Apify API.
@@ -694,6 +695,43 @@ def fetch_apify_ads(
             except Exception as be:
                 logger.error(f"Error updating Backload {backload_id}: {str(be)}")
         
+        # Send SSE notification if automated and user_id provided
+        if is_automated and user_id:
+            try:
+                import redis
+                import json
+                from django.conf import settings
+                from django.utils import timezone
+                from apps.apify.models import FacebookPage
+                
+                redis_client = redis.from_url(settings.REDIS_URL)
+                
+                # Get FacebookPage name for notification
+                page_name = None
+                if page_id:
+                    try:
+                        facebook_page = FacebookPage.objects.get(page_id=page_id)
+                        page_name = facebook_page.page_name
+                    except FacebookPage.DoesNotExist:
+                        pass
+                
+                notification_data = {
+                    'type': 'backload_completed',
+                    'backload_id': backload_id,
+                    'page_id': page_id,
+                    'page_name': page_name,
+                    'processed_count': processing_result['processed_count'],
+                    'failed_count': processing_result['failed_count'],
+                    'skipped_count': processing_result['skipped_count'],
+                    'timestamp': timezone.now().isoformat()
+                }
+                
+                channel = f"user:{user_id}:adrequest_updates"
+                redis_client.publish(channel, json.dumps(notification_data))
+                logger.info(f"Sent SSE notification to user {user_id} for backload {backload_id}")
+            except Exception as e:
+                logger.error(f"Error sending SSE notification: {str(e)}")
+        
         result = {
             'success': True,
             'backload_id': backload_id,
@@ -736,6 +774,32 @@ def fetch_apify_ads(
                     logger.info(f"Updated Backload {backload_id} status to FAILED")
             except Exception as be:
                 logger.error(f"Error updating Backload {backload_id}: {str(be)}")
+        
+        # Send SSE notification for failure if automated and user_id provided
+        if is_automated and user_id:
+            try:
+                import redis
+                import json
+                from django.conf import settings
+                from django.utils import timezone
+                
+                redis_client = redis.from_url(settings.REDIS_URL)
+                
+                notification_data = {
+                    'type': 'backload_completed',
+                    'backload_id': backload_id,
+                    'page_id': page_id,
+                    'processed_count': 0,
+                    'failed_count': 1,
+                    'error': str(e),
+                    'timestamp': timezone.now().isoformat()
+                }
+                
+                channel = f"user:{user_id}:adrequest_updates"
+                redis_client.publish(channel, json.dumps(notification_data))
+                logger.info(f"Sent SSE error notification to user {user_id} for backload {backload_id}")
+            except Exception as sse_error:
+                logger.error(f"Error sending SSE error notification: {str(sse_error)}")
         
         result = {
             'success': False,

@@ -283,9 +283,22 @@ function DiscoverContent() {
     };
   }, []);
 
-  // Fetch data when component mounts (only once)
+  // Check for company parameter in URL on mount
   useEffect(() => {
-    if (!searchQuery) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const companyParam = urlParams.get('company');
+    
+    if (companyParam) {
+      console.log(`🔗 Found company parameter in URL: ${companyParam}`);
+      // Set the search query and trigger search
+      setSearchQuery(companyParam);
+      fetchFilteredResultsWithQuery(1, false, companyParam);
+      
+      // Clean the URL by removing the company parameter
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, '', cleanUrl);
+      console.log(`🧹 Cleaned URL, removed company parameter`);
+    } else if (!searchQuery) {
       console.log(`🚀 Initial load: calling fetchFilteredResultsWithQuery`);
       fetchFilteredResultsWithQuery(1, false, null);
     }
