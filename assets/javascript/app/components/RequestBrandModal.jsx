@@ -31,9 +31,31 @@ function RequestBrandModal({ isOpen, onOpenChange }) {
     return cookieValue;
   };
 
+  // Function to validate the brand URL
+  const isValidBrandUrl = (url) => {
+    if (!url.trim()) return false;
+    
+    try {
+      const urlObj = new URL(url);
+      
+      // Check if base URL is facebook.com/ads/library/
+      const isValidBase = (
+        (urlObj.hostname === 'facebook.com' || urlObj.hostname === 'www.facebook.com') &&
+        urlObj.pathname.startsWith('/ads/library/')
+      );
+      
+      // Check if URL contains view_all_page_id parameter
+      const hasPageId = urlObj.searchParams.has('view_all_page_id');
+      
+      return isValidBase && hasPageId;
+    } catch (e) {
+      return false;
+    }
+  };
+
   // Function to handle brand request submission
   const handleBrandRequest = async () => {
-    if (!brandUrl.trim()) return;
+    if (!brandUrl.trim() || !isValidBrandUrl(brandUrl)) return;
     
     setRequestStatus({ loading: true, success: false, error: null });
     
@@ -153,7 +175,7 @@ function RequestBrandModal({ isOpen, onOpenChange }) {
           </Button>
           <Button 
             onClick={handleBrandRequest}
-            disabled={!brandUrl.trim() || requestStatus.loading || requestStatus.success}
+            disabled={!isValidBrandUrl(brandUrl) || requestStatus.loading || requestStatus.success}
             loading={requestStatus.loading}
           >
             {t('request_brand.submit', 'Submit request')}
