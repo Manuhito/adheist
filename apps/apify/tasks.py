@@ -116,6 +116,9 @@ def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int
         try:
             # Extraer datos adicionales para FacebookPage si es automatizado
             if page_id and is_automated and facebook_page:
+                # Obtener snapshot si existe
+                snapshot = item.get('snapshot', {})
+                
                 # 1. Extraer page_name (solo una vez)
                 if not page_name_updated and item.get('page_name'):
                     facebook_page.page_name = item.get('page_name')
@@ -123,9 +126,9 @@ def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int
                     page_name_updated = True
                     logger.info(f"Updated FacebookPage.page_name to: {item.get('page_name')}")
                 
-                # 2. Extraer industries desde page_categories (solo si no es UNKNOWN)
-                if not industries_updated and item.get('page_categories'):
-                    categories = item.get('page_categories', [])
+                # 2. Extraer industries desde page_categories dentro de snapshot (solo si no es UNKNOWN)
+                if not industries_updated and snapshot.get('page_categories'):
+                    categories = snapshot.get('page_categories', [])
                     if categories and categories != ['UNKNOWN']:
                         for category_name in categories:
                             if category_name != 'UNKNOWN':
@@ -139,19 +142,27 @@ def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int
                         industries_updated = True
                         logger.info(f"Updated FacebookPage.industries with: {categories}")
                 
-                # 3. Extraer page_url desde caption
-                if not page_url_updated and item.get('caption'):
-                    caption = item.get('caption', '')
-                    # Buscar URL en el caption
-                    import re
-                    url_pattern = r'https?://[^\s]+'
-                    urls_found = re.findall(url_pattern, caption)
-                    if urls_found:
-                        # Tomar la primera URL encontrada
-                        facebook_page.page_url = urls_found[0]
-                        facebook_page.save(update_fields=['page_url'])
-                        page_url_updated = True
-                        logger.info(f"Updated FacebookPage.page_url to: {urls_found[0]}")
+                # 3. Extraer page_url desde caption dentro de snapshot
+                if not page_url_updated and snapshot.get('caption'):
+                    caption = snapshot.get('caption', '').strip()
+                    if caption:
+                        import re
+                        # Primero buscar URLs completas con protocolo
+                        url_pattern = r'https?://[^\s]+'
+                        urls_found = re.findall(url_pattern, caption)
+                        
+                        if urls_found:
+                            # Tomar la primera URL encontrada con protocolo
+                            facebook_page.page_url = urls_found[0]
+                            facebook_page.save(update_fields=['page_url'])
+                            page_url_updated = True
+                            logger.info(f"Updated FacebookPage.page_url to: {urls_found[0]}")
+                        elif re.match(r'^[a-zA-Z0-9][a-zA-Z0-9-]*\.[a-zA-Z]{2,}', caption):
+                            # Si el caption parece un dominio sin protocolo, añadir https://
+                            facebook_page.page_url = f"https://{caption}"
+                            facebook_page.save(update_fields=['page_url'])
+                            page_url_updated = True
+                            logger.info(f"Updated FacebookPage.page_url to: https://{caption}")
             
             # Skip if this ad has already been processed
             meta_ad_id = item.get('ad_archive_id')
