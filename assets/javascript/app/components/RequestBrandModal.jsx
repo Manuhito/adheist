@@ -13,6 +13,7 @@ function RequestBrandModal({ isOpen, onOpenChange }) {
   const { t } = useTranslation();
   const [brandUrl, setBrandUrl] = useState('');
   const [requestStatus, setRequestStatus] = useState({ loading: false, success: false, error: null });
+  const [urlError, setUrlError] = useState(null);
 
   // Function to get CSRF token from cookie
   const getCsrfToken = () => {
@@ -31,9 +32,9 @@ function RequestBrandModal({ isOpen, onOpenChange }) {
     return cookieValue;
   };
 
-  // Function to validate the brand URL
-  const isValidBrandUrl = (url) => {
-    if (!url.trim()) return false;
+  // Function to validate the brand URL and return error message if invalid
+  const validateBrandUrl = (url) => {
+    if (!url.trim()) return null;
     
     try {
       const urlObj = new URL(url);
@@ -44,12 +45,45 @@ function RequestBrandModal({ isOpen, onOpenChange }) {
         urlObj.pathname.startsWith('/ads/library/')
       );
       
-      // Check if URL contains view_all_page_id parameter
-      const hasPageId = urlObj.searchParams.has('view_all_page_id');
+      // Check if URL contains view_all_page_id parameter with a valid value
+      const pageId = urlObj.searchParams.get('view_all_page_id');
+      const hasValidPageId = pageId && pageId.trim() !== '';
       
-      return isValidBase && hasPageId;
+      // If domain is wrong or view_all_page_id is missing/empty
+      if (!isValidBase || !hasValidPageId) {
+        return "Seems like the url you pasted is not formatted properly, please find it in the Facebook Ad Library, and copy the URL from the address bar";
+      }
+      
+      // Check media_type parameter only if it's present in the URL
+      if (urlObj.searchParams.has('media_type')) {
+        const mediaType = urlObj.searchParams.get('media_type');
+        if (mediaType === 'video' || mediaType === 'none') {
+          return "Quick reminder, at the moment we will be pulling all images and memes ads for all advertisers. In the future we will be adding more formats";
+        }
+      }
+      
+      return null; // No error
     } catch (e) {
-      return false;
+      return "Seems like the url you pasted is not formatted properly, please find it in the Facebook Ad Library, and copy the URL from the address bar";
+    }
+  };
+
+  // Function to check if URL is valid (no errors)
+  const isValidBrandUrl = (url) => {
+    return validateBrandUrl(url) === null && url.trim() !== '';
+  };
+  
+  // Validate URL on change
+  const handleUrlChange = (e) => {
+    const newUrl = e.target.value;
+    setBrandUrl(newUrl);
+    
+    // Only show error if user has typed something
+    if (newUrl.trim()) {
+      const error = validateBrandUrl(newUrl);
+      setUrlError(error);
+    } else {
+      setUrlError(null);
     }
   };
 
@@ -93,6 +127,7 @@ function RequestBrandModal({ isOpen, onOpenChange }) {
     if (!open) {
       // Reset form state when closing
       setBrandUrl('');
+      setUrlError(null);
       setRequestStatus({ loading: false, success: false, error: null });
     }
     onOpenChange(open);
@@ -118,11 +153,16 @@ function RequestBrandModal({ isOpen, onOpenChange }) {
               id="brand-url"
               type="text"
               value={brandUrl}
-              onChange={(e) => setBrandUrl(e.target.value)}
+              onChange={handleUrlChange}
               className="w-full px-3 py-2 border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               placeholder="https://www.facebook.com/ads/library/..."
               disabled={requestStatus.loading || requestStatus.success}
             />
+            {urlError && (
+              <p className="text-xs text-red-600 dark:text-red-400">
+                {urlError}
+              </p>
+            )}
             <p className="text-xs text-muted-foreground">
               To get an Advertiser's Ads, find it in the{' '}
               <a 
