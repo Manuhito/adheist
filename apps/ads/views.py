@@ -2949,12 +2949,13 @@ def request_brand(request):
         # Construct URL for the page
         url = backload.get_facebook_ads_url_for_page(facebook_page_id)
         
-        # Launch Celery task in background
+        # Launch Celery task in background with automated flag
         fetch_apify_ads.delay(
             output_dir=output_dir,
             urls=[{'url': url}],
             page_id=facebook_page_id,
-            backload_id=backload.pk
+            backload_id=backload.pk,
+            is_automated=True
         )
         
         # Send Slack notification for tracking
