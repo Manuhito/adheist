@@ -519,7 +519,7 @@ def fetch_apify_ads(
     
     # API key should be stored in settings or environment variables
     # For now, we'll use a placeholder that should be replaced in production
-    api_key = "apify_api_Sh8IzxQlVSgJG832CgydsgbtbUl7BS41QY1q"  # Replace with actual API key from settings
+    api_key = "apify_api_fz8hiOfkgiMWMSdOQC7iqSq0fdoeOU07N0iZ"  # Replace with actual API key from settings
     
     # Default URLs if none provided
     if not urls:
