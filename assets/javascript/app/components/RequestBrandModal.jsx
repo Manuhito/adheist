@@ -115,6 +115,20 @@ function RequestBrandModal({ isOpen, onOpenChange }) {
             </p>
           </div>
           
+          {/* Important note */}
+          <div className="p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md">
+            <p className="text-xs text-primary">
+              <strong>Please note:</strong> at the moment, we are only pulling automatically ads that are images or memes, in English. If you have any special request, please contact us at{' '}
+              <a 
+                href="mailto:hey@adheist.ai"
+                className="underline hover:opacity-80"
+              >
+                hey@adheist.ai
+              </a>
+              .
+            </p>
+          </div>
+          
           {/* Status messages */}
           {requestStatus.error && (
             <div className="p-3 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-md text-red-600 dark:text-red-400 text-sm">
