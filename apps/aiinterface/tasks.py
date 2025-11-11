@@ -502,6 +502,297 @@ def generate_image_task(
 
 
 @shared_task(bind=True, max_retries=3)
+def generate_image_task_replicate(
+    self,
+    image_urls: List[str] = None,
+    canvas_size: str = "1024x1024",
+    version_id: Optional[int] = None,
+    version_type: Optional[str] = None
+) -> dict:
+    """
+    Celery task to generate an image using Replicate API.
+    
+    Args:
+        image_urls: List of image URLs or file paths to use as base images.
+        canvas_size: The desired image size (e.g., "1024x1024").
+        version_id: ID of the AdRequestVersion to update with the generated image.
+        version_type: Type of version being generated ('initial' or 'revision').
+        
+    Returns:
+        A dictionary containing the image data and metadata.
+    """
+    from apps.ads.models import AdRequestVersion
+    from .services import ReplicateImageGenerationService
+    
+    text_prompt = None
+    
+    try:
+        # Generate the prompt from version_id
+        if not version_id:
+            error_message = "version_id is required to generate the prompt"
+            logger.error(error_message)
+            raise ValueError(error_message)
+            
+        try:
+            version = AdRequestVersion.objects.get(id=version_id)
+            if version_type:
+                setattr(version, "_version_type", version_type)
+            
+            from apps.ads.gen_prompt import generate_prompt
+            text_prompt = generate_prompt(version)
+            
+            version.generated_prompt = text_prompt
+            version.save(update_fields=['generated_prompt'])
+            
+            logger.info(f"Generated prompt for version {version_id}: {text_prompt[:50]}...")
+        except Exception as e:
+            logger.exception(f"Error generating prompt for version {version_id}: {str(e)}")
+            raise
+            
+        text_prompt = str(text_prompt) if text_prompt else "Failed to generate prompt"
+            
+        logger.info(f"Starting Replicate image generation task with prompt: {text_prompt[:50]}...")
+        
+        # Generate the image using Replicate
+        service = ReplicateImageGenerationService()
+        try:
+            result = service.generate_image_from_text_and_images(
+                text_prompt=text_prompt,
+                image_urls=image_urls,
+                canvas_size=canvas_size
+            )
+            
+            if "error" in result:
+                error_message = result.get("error", "Unknown error")
+                logger.error(f"Replicate image generation failed: {error_message}")
+                
+                context = {
+                    "prompt": text_prompt[:100] + "..." if text_prompt and len(text_prompt) > 100 else text_prompt,
+                    "canvas_size": canvas_size,
+                    "version_id": version_id,
+                    "version_type": version_type,
+                    "has_images": bool(image_urls),
+                    "status_code": result.get("status_code"),
+                    "response_data": result.get("response_data", "")[:200] if result.get("response_data") else "",
+                    "service": "replicate"
+                }
+                send_slack_notification(
+                    error_message=error_message,
+                    context=context,
+                    title="Replicate Image Generation Error"
+                )
+                
+                if version_id:
+                    try:
+                        version = AdRequestVersion.objects.get(id=version_id)
+                        version.status = version.STATUS_FAILED
+                        version.error_logs = f"Replicate error: {error_message}"
+                        version.save(update_fields=['status', 'error_logs'])
+                    except Exception as e:
+                        logger.exception(f"Error updating AdRequestVersion with error: {str(e)}")
+                
+                return {
+                    "status": "error",
+                    "error": error_message,
+                    "details": result
+                }
+                
+        except Exception as service_error:
+            error_msg = f"Unhandled exception in Replicate service: {str(service_error)}"
+            logger.exception(error_msg)
+            
+            context = {
+                "prompt": text_prompt[:100] + "..." if text_prompt and len(text_prompt) > 100 else text_prompt,
+                "canvas_size": canvas_size,
+                "version_id": version_id,
+                "version_type": version_type,
+                "has_images": bool(image_urls),
+                "service": "replicate"
+            }
+            send_slack_notification(
+                error_message=str(service_error),
+                context=context,
+                title="Error in Replicate Service"
+            )
+            
+            if version_id:
+                try:
+                    version = AdRequestVersion.objects.get(id=version_id)
+                    version.status = version.STATUS_FAILED
+                    version.error_logs = f"Replicate service error: {str(service_error)}"
+                    version.save(update_fields=['status', 'error_logs'])
+                except Exception as e:
+                    logger.exception(f"Error updating AdRequestVersion with error: {str(e)}")
+            
+            self.retry(exc=service_error, countdown=60)
+            
+            return {
+                "status": "error",
+                "error": str(service_error)
+            }
+        
+        if result and "error" in result:
+            logger.error(f"Replicate image generation failed: {result['error']}")
+            
+            if version_id:
+                try:
+                    version = AdRequestVersion.objects.get(id=version_id)
+                    version.status = version.STATUS_FAILED
+                    
+                    error_details = {
+                        "error_message": result['error'],
+                        "status_code": result.get('status_code'),
+                        "response_data": result.get('response_data')
+                    }
+                    
+                    error_log = f"Replicate error: {result['error']}\n"
+                    if 'status_code' in result:
+                        error_log += f"Status code: {result['status_code']}\n"
+                    if 'response_data' in result:
+                        error_log += f"Response data: {result['response_data']}"
+                    
+                    version.error_logs = error_log
+                    version.save(update_fields=['status', 'error_logs'])
+                    
+                    return {
+                        "status": "error",
+                        "error": result['error'],
+                        "details": error_details
+                    }
+                except Exception as e:
+                    logger.exception(f"Error updating AdRequestVersion with error details: {str(e)}")
+                    
+            return {
+                "status": "error",
+                "error": result['error']
+            }
+        
+        # Update version with generated image
+        if version_id:
+            try:
+                version = AdRequestVersion.objects.get(id=version_id)
+                
+                if result and "image_content" in result and result.get('is_binary', False):
+                    image_content = result["image_content"]
+                    image_name = f"version_{version.id}_image.webp"
+                    version.generated_image.save(
+                        image_name,
+                        ContentFile(image_content),
+                        save=True
+                    )
+                    logger.info(f"Image saved to AdRequestVersion {version_id}")
+                    
+                    version.status = AdRequestVersion.STATUS_COMPLETED
+                    version.save(update_fields=['status'])
+                    
+                    # Deduct credits
+                    try:
+                        from apps.ads.services import use_credits_for_operation
+                        
+                        operation_type = 'generation' if version_type == 'initial' else 'version'
+                        user = version.ad_request.user
+                        credit_result = use_credits_for_operation(user, operation_type)
+                        
+                        if credit_result is None:
+                            logger.warning(f"Failed to deduct credits for user {user.id}")
+                        else:
+                            logger.info(f"Credits deducted for user {user.id}, operation: {operation_type}")
+                            
+                    except Exception as credit_error:
+                        logger.exception(f"Error deducting credits: {str(credit_error)}")
+                    
+                    # Save response metadata
+                    update_fields = []
+                    
+                    if 'response_metadata' in result:
+                        metadata = result['response_metadata']
+                        
+                        import json
+                        try:
+                            serializable_metadata = json.loads(json.dumps(metadata, default=str))
+                            version.openai_response_metadata = serializable_metadata
+                            update_fields.append('openai_response_metadata')
+                        except (TypeError, ValueError) as e:
+                            logger.warning(f"Could not serialize metadata: {e}")
+                            version.openai_response_metadata = {'service': 'replicate'}
+                            update_fields.append('openai_response_metadata')
+                    
+                    if update_fields:
+                        version.save(update_fields=update_fields)
+                    
+                    logger.info(f"Replicate image generated successfully for version {version_id}")
+                    
+                    # Track in PostHog
+                    try:
+                        from apps.aiinterface.models import ReplicateConfiguration
+                        
+                        replicate_config = ReplicateConfiguration.get_replicate_config()
+                        total_cost = float(replicate_config['image_generation_price'])
+                        
+                        generated_image_url = version.generated_image.url if version.generated_image else None
+                        
+                        posthog.capture(
+                            version.ad_request.user.id,
+                            'Ad Generated',
+                            properties={
+                                'version_type': version_type,
+                                'service': 'replicate',
+                                'model': replicate_config['image_replicate_model'],
+                                'total_cost': str(total_cost),
+                                'generated_image': generated_image_url,
+                                'ad_request_id': version.ad_request.id,
+                                'version_id': version.id,
+                                'timestamp': version.updated_at.isoformat() if hasattr(version, 'updated_at') else None
+                            }
+                        )
+                    except Exception as e:
+                        logger.exception(f"Error tracking PostHog event: {str(e)}")
+                    
+                else:
+                    error_message = f"No binary image content in result for version {version_id}"
+                    logger.error(error_message)
+                    version.status = version.STATUS_FAILED
+                    version.error_logs = error_message
+                    version.save(update_fields=['status', 'error_logs'])
+            except Exception as e:
+                logger.exception(f"Error saving image to version {version_id}: {str(e)}")
+        
+    except Exception as e:
+        error_msg = f"Error in generate_image_task_replicate: {str(e)}"
+        logger.exception(error_msg)
+        
+        context = {
+            "prompt": text_prompt[:100] + "..." if text_prompt and len(text_prompt) > 100 else text_prompt,
+            "canvas_size": canvas_size,
+            "version_id": version_id,
+            "version_type": version_type,
+            "has_images": bool(image_urls),
+            "service": "replicate"
+        }
+        send_slack_notification(
+            error_message=str(e),
+            context=context,
+            title="General Error in Replicate Task"
+        )
+        
+        if version_id:
+            try:
+                version = AdRequestVersion.objects.get(id=version_id)
+                version.status = version.STATUS_FAILED
+                version.error_logs = f"Replicate task error: {str(e)}"
+                version.save(update_fields=['status', 'error_logs'])
+            except Exception:
+                pass
+        
+        self.retry(exc=e, countdown=60)
+        
+        return {
+            "status": "error",
+            "error": str(e)
+        }
+
+
+@shared_task(bind=True, max_retries=3)
 def generate_ad_copy_text_task(self, ad_copy_version_id: int):
     """
     Generate ad copy text using OpenAI for an AdCopyVersion instance.

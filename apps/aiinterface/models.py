@@ -2,6 +2,107 @@ from django.db import models
 from django.core.cache import cache
 
 
+class ReplicateConfiguration(models.Model):
+    """
+    Model to store Replicate-related configuration settings.
+    Only one instance of this model should exist in the database.
+    """
+    # Replicate Image Generation Configuration
+    image_replicate_model = models.CharField(
+        max_length=200,
+        default="google/nano-banana",
+        help_text="Replicate model to use for image generation (format: owner/model-name)"
+    )
+    
+    image_replicate_model_version = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="Specific version hash of the model (optional, uses latest if empty)"
+    )
+    
+    # Image generation pricing (in USD)
+    image_generation_price = models.DecimalField(
+        max_digits=8,
+        decimal_places=4,
+        default=0.04,
+        help_text="Price per image generation (in USD)"
+    )
+    
+    # Timeout configuration
+    timeout_seconds = models.IntegerField(
+        default=300,
+        help_text="Timeout for image generation in seconds"
+    )
+    
+    # Polling configuration
+    polling_interval_seconds = models.IntegerField(
+        default=2,
+        help_text="Interval between status checks in seconds"
+    )
+    
+    class Meta:
+        verbose_name = "Replicate Configuration"
+        verbose_name_plural = "Replicate Configuration"
+    
+    def __str__(self):
+        return "Replicate Configuration"
+    
+    def save(self, *args, **kwargs):
+        """
+        Override save method to ensure only one instance exists
+        and to clear cache when configuration is updated.
+        """
+        # Ensure there's only one instance
+        if not self.pk and ReplicateConfiguration.objects.exists():
+            existing = ReplicateConfiguration.objects.first()
+            self.pk = existing.pk
+        
+        # Clear cache when configuration is updated
+        self.clear_cache()
+        
+        super().save(*args, **kwargs)
+    
+    def delete(self, *args, **kwargs):
+        self.clear_cache()
+        return super().delete(*args, **kwargs)
+    
+    @classmethod
+    def clear_cache(cls):
+        """Clear the Replicate configuration cache."""
+        cache.delete('replicate_config')
+    
+    @classmethod
+    def get_config(cls):
+        """
+        Get the Replicate configuration, using cache to improve performance.
+        
+        Returns:
+            ReplicateConfiguration: The Replicate configuration object
+        """
+        config = cache.get('replicate_config')
+        if not config:
+            config, created = cls.objects.get_or_create(pk=1)
+            cache.set('replicate_config', config, None)
+        return config
+    
+    @classmethod
+    def get_replicate_config(cls):
+        """
+        Get the Replicate configuration settings.
+        
+        Returns:
+            dict: Replicate configuration settings
+        """
+        config = cls.get_config()
+        return {
+            'image_replicate_model': config.image_replicate_model,
+            'image_replicate_model_version': config.image_replicate_model_version,
+            'image_generation_price': config.image_generation_price,
+            'timeout_seconds': config.timeout_seconds,
+            'polling_interval_seconds': config.polling_interval_seconds,
+        }
+
+
 class OpenAIConfiguration(models.Model):
     """
     Model to store OpenAI-related configuration settings.

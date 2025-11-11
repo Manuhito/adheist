@@ -597,6 +597,10 @@ if APP_ENV in ['stage', 'prod']:
 # OpenAI API configuration
 OPENAI_API_KEY = env("OPENAI_API_KEY", default="")
 
+# Replicate API configuration
+REPLICATE_API_KEY = env("REPLICATE_API_KEY", default="")
+REPLICATE_API_URL = env("REPLICATE_API_URL", default="https://api.replicate.com/v1")
+
 # Pricing model configuration
 PRICING_MODEL = env("PRICING_MODEL", default="STANDARD")
 
