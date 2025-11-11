@@ -30,7 +30,7 @@ import * as ProgressPrimitive from "@radix-ui/react-progress"
 
 function CreditsProgressBar() {
   const creditsData = window.__USER_CREDITS__;
-  
+
   if (!creditsData || creditsData.max_general_credits === 0) {
     return null;
   }
@@ -41,7 +41,7 @@ function CreditsProgressBar() {
   const usagePercentage = maxCredits > 0 ? (usedCredits / maxCredits) * 100 : 0;
 
   return (
-    <div className="px-3 py-3">
+    <div className="px-4 py-3">
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-primary">Credits</span>
@@ -75,7 +75,7 @@ function AppSidebar({ activeTab, sidebarComponent }) {
     name: userData.name || '',
     email: userData.email || '',
     avatar: userData.avatar || '',
-    initials: userData.name 
+    initials: userData.name
       ? userData.name.split(' ').map((n) => n[0]).join('').toUpperCase()
       : userData.email ? userData.email[0].toUpperCase() : 'U',
     displayName: userData.name || userData.email || 'User'
@@ -84,7 +84,7 @@ function AppSidebar({ activeTab, sidebarComponent }) {
   return (
     <CustomSidebar collapsible="offcanvas">
       <SidebarHeader>
-        <div className="flex items-center justify-between px-2 py-2">
+        <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center">
             <a href="/" className="flex items-center">
               <img
@@ -95,13 +95,13 @@ function AppSidebar({ activeTab, sidebarComponent }) {
             </a>
           </div>
           <CustomSidebarTrigger className="ml-auto">
-            <PanelLeftClose className="h-5 w-5 text-muted-foreground" />
+            <PanelLeftClose className="h-5 w-5" />
           </CustomSidebarTrigger>
         </div>
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
+        <SidebarGroup className="px-2">
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
@@ -111,7 +111,7 @@ function AppSidebar({ activeTab, sidebarComponent }) {
                     isActive={activeTab === item.id}
                     className={activeTab === item.id ? "bg-primary/5 rounded-md" : ""}
                   >
-                    <a href={item.href} className="flex items-center gap-3 py-3">
+                    <a href={item.href} className="flex items-center gap-3 py-3 px-4">
                       <span className={activeTab === item.id ? "text-primary" : ""}>
                         {item.icon}
                       </span>
@@ -125,13 +125,13 @@ function AppSidebar({ activeTab, sidebarComponent }) {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter>
+      <SidebarFooter className="px-2">
         <CreditsProgressBar />
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton>
+                <SidebarMenuButton className="px-4">
                   <User2 className="h-4 w-4" />
                   <span>{user.displayName}</span>
                   <ChevronUp className="ml-auto h-4 w-4" />
@@ -219,7 +219,7 @@ function AppSidebarLayout() {
   React.useEffect(() => {
     window.setAppHeader = setHeaderComponent;
     window.clearAppHeader = () => setHeaderComponent(null);
-    
+
     // Añadir setters para el componente de sidebar
     window.setSidebarComponent = setSidebarComponent;
     window.clearSidebarComponent = () => setSidebarComponent(null);
@@ -276,17 +276,17 @@ function ConditionalHeader({ content, customComponent, hideLogo = false }) {
 
   // Get total ads count from window data
   const totalAdsCount = window.__DISCOVER_DATA__?.totalAdsCount || 0;
-  
+
   // Format number with commas
   const formatNumber = (num) => {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   };
 
   return (
-    <header className="flex h-16 shrink-0 items-center px-4">
+    <header className="flex h-20 shrink-0 items-center px-6 py-4">
       {!open && (
         <CustomSidebarTrigger className="-ml-1 mr-2">
-          <Menu className="h-6 w-6 text-muted-foreground" />
+          <Menu className="h-5 w-5" />
         </CustomSidebarTrigger>
       )}
 
