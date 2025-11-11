@@ -1,5 +1,42 @@
 from django.contrib import admin
-from .models import OpenAIConfiguration
+from .models import OpenAIConfiguration, ReplicateConfiguration
+
+
+@admin.register(ReplicateConfiguration)
+class ReplicateConfigurationAdmin(admin.ModelAdmin):
+    """
+    Admin configuration for ReplicateConfiguration model.
+    """
+    list_display = (
+        'image_replicate_model',
+        'image_replicate_model_version',
+        'image_generation_price',
+        'timeout_seconds',
+        'polling_interval_seconds',
+    )
+    
+    fieldsets = (
+        ('Replicate Image Model Configuration', {
+            'fields': ('image_replicate_model', 'image_replicate_model_version'),
+            'description': 'Configure Replicate model for image generation. Format: owner/model-name. Leave version empty to use latest.'
+        }),
+        ('Pricing Configuration', {
+            'fields': ('image_generation_price',),
+            'description': 'Configure pricing for Replicate image generation (in USD per image)'
+        }),
+        ('Performance Configuration', {
+            'fields': ('timeout_seconds', 'polling_interval_seconds'),
+            'description': 'Configure timeout and polling settings for Replicate API'
+        }),
+    )
+    
+    def has_add_permission(self, request):
+        """Only allow adding if no instance exists yet."""
+        return not ReplicateConfiguration.objects.exists()
+    
+    def has_delete_permission(self, request, obj=None):
+        """Prevent deletion of the configuration."""
+        return False
 
 
 @admin.register(OpenAIConfiguration)

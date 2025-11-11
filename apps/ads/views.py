@@ -1795,14 +1795,15 @@ def adrequest_version_create(request):
             canvas_size = ad_request.canvas_size or "1024x1024"
             
             # Generate image using Celery task in the background
-            from apps.aiinterface.tasks import generate_image_task
+            # Using Replicate instead of OpenAI
+            from apps.aiinterface.tasks import generate_image_task_replicate
             
             # Update version status to processing
             version.status = "processing"
             version.save(update_fields=['status'])
             
             # Launch the Celery task
-            task = generate_image_task.delay(
+            task = generate_image_task_replicate.delay(
                 image_urls=image_urls,
                 canvas_size=canvas_size,
                 version_id=version.id,
@@ -1933,14 +1934,15 @@ def adrequest_revision_create(request):
             canvas_size = ad_request.canvas_size or "1024x1024"
             
             # Generate image using Celery task in the background
-            from apps.aiinterface.tasks import generate_image_task
+            # Using Replicate instead of OpenAI
+            from apps.aiinterface.tasks import generate_image_task_replicate
             
             # Update version status to processing
             version.status = "processing"
             version.save(update_fields=['status'])
             
             # Launch the Celery task
-            task = generate_image_task.delay(
+            task = generate_image_task_replicate.delay(
                 image_urls=image_urls,
                 canvas_size=canvas_size,
                 version_id=version.id,
