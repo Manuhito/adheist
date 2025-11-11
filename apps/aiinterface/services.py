@@ -351,12 +351,12 @@ class ReplicateImageGenerationService:
                 input=input_data
             )
             
-            # nano-banana returns a FileOutput object
-            # We need to get the URL and download the content
-            if hasattr(output, 'url'):
-                image_url = output.url()
-            elif isinstance(output, str):
+            # nano-banana returns a string URL directly
+            if isinstance(output, str):
                 image_url = output
+            elif hasattr(output, 'url'):
+                # Some models return FileOutput objects
+                image_url = output.url() if callable(output.url) else output.url
             else:
                 return {
                     "error": f"Unexpected output format from nano-banana: {type(output)}",
