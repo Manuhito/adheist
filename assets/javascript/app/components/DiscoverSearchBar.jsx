@@ -45,7 +45,7 @@ function DiscoverSearchBar({ onSearch, onFiltersApply }) {
           return {
             id: `company-${index}`,
             label,
-            pageId: company.id,
+            pageId: company.page_id, // Use page_id (Facebook Page ID) instead of id (DB ID)
             iconUrl,
             labelInitial: typeof label === 'string' ? label.charAt(0).toUpperCase() : '',
             description: "",
@@ -56,6 +56,22 @@ function DiscoverSearchBar({ onSearch, onFiltersApply }) {
         
         setCompanyActions(actions);
         setIsLoading(false);
+        
+        // Check for company parameter in URL after companies are loaded
+        const urlParams = new URLSearchParams(window.location.search);
+        const companyParam = urlParams.get('company');
+        
+        if (companyParam) {
+          console.log(`🔗 DiscoverSearchBar: Found company parameter in URL: ${companyParam}`);
+          // Find the company in the loaded list
+          const matchedCompany = actions.find(action => action.pageId === companyParam);
+          if (matchedCompany) {
+            console.log(`✅ Found matching company:`, matchedCompany);
+            setSelectedCompany(matchedCompany);
+          } else {
+            console.log(`⚠️ Company ${companyParam} not found in company list`);
+          }
+        }
       })
       .catch(error => {
         console.error('Error al cargar empresas:', error);
@@ -102,7 +118,7 @@ function DiscoverSearchBar({ onSearch, onFiltersApply }) {
     }
   };
 
-  const handleClearFilters = () => {
+  const handleClearFilters = (skipApiCall = false) => {
     // Clear both company and keyword search
     setSelectedCompany(null);
     setKeywordSearch(null);
@@ -113,17 +129,17 @@ function DiscoverSearchBar({ onSearch, onFiltersApply }) {
     // Reset the clear flag after a brief delay
     setTimeout(() => setShouldClearInput(false), 100);
     
-    // Make API call without company or tags (only with other filters if any)
-    if (onFiltersApply) {
+    // Make API call only if not skipping (when clearing from X button only)
+    if (!skipApiCall && onFiltersApply) {
       onFiltersApply(''); // Empty string means no filters
     }
   };
   
   const handleClearAllFilters = () => {
-    // Clear search filters
-    handleClearFilters();
+    // Clear search filters without API call (skip it)
+    handleClearFilters(true);
     
-    // Clear modal filters
+    // Clear modal filters - this will make the single API call
     if (filterModalRef.current) {
       filterModalRef.current.clearFilters();
     }

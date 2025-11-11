@@ -18,7 +18,7 @@ from apps.aiinterface.tasks import send_slack_notification
 logger = logging.getLogger(__name__)
 
 
-def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int = None, page_id: str = None) -> dict:
+def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int = None, page_id: str = None, is_automated: bool = False) -> dict:
     """
     Procesa los items de un dataset de Apify y crea entradas en AdLibrary para cada anuncio.
     
@@ -27,6 +27,7 @@ def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int
         client: Cliente de Apify inicializado
         backload_id: ID del Backload asociado a esta ejecución
         page_id: ID de la página de Facebook asociada a esta tarea
+        is_automated: Si True, extrae datos adicionales para completar FacebookPage
         
     Returns:
         Diccionario con estadísticas de procesamiento
@@ -59,7 +60,24 @@ def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int
     skipped_count = 0
     errors = []
     
-    from apps.ads.models import AdLibrary
+    from apps.ads.models import AdLibrary, IndustryList
+    from apps.apify.models import FacebookPage
+
+    # Variables para extracción de datos adicionales en modo automatizado
+    facebook_page = None
+    page_name_updated = False
+    page_url_updated = False
+    industries_updated = False
+    
+    if page_id and is_automated:
+        try:
+            facebook_page = FacebookPage.objects.get(page_id=page_id)
+            # Marcar como automatizado
+            if "[AUTOMATED]" not in facebook_page.notes:
+                facebook_page.notes = "[AUTOMATED]" + ("\n" + facebook_page.notes if facebook_page.notes else "")
+                facebook_page.save(update_fields=['notes'])
+        except FacebookPage.DoesNotExist:
+            logger.warning(f"FacebookPage with page_id {page_id} not found")
 
     # Obtener la lista de meta_ad_id únicos de AdLibrary asociados al FacebookPage
     existing_ad_ids = []
@@ -96,6 +114,56 @@ def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int
     
     for item in items:
         try:
+            # Extraer datos adicionales para FacebookPage si es automatizado
+            if page_id and is_automated and facebook_page:
+                # Obtener snapshot si existe
+                snapshot = item.get('snapshot', {})
+                
+                # 1. Extraer page_name (solo una vez)
+                if not page_name_updated and item.get('page_name'):
+                    facebook_page.page_name = item.get('page_name')
+                    facebook_page.save(update_fields=['page_name'])
+                    page_name_updated = True
+                    logger.info(f"Updated FacebookPage.page_name to: {item.get('page_name')}")
+                
+                # 2. Extraer industries desde page_categories dentro de snapshot (solo si no es UNKNOWN)
+                if not industries_updated and snapshot.get('page_categories'):
+                    categories = snapshot.get('page_categories', [])
+                    if categories and categories != ['UNKNOWN']:
+                        for category_name in categories:
+                            if category_name != 'UNKNOWN':
+                                # Buscar o crear la industria
+                                industry, created = IndustryList.objects.get_or_create(
+                                    name=category_name
+                                )
+                                facebook_page.industries.add(industry)
+                                if created:
+                                    logger.info(f"Created new industry: {category_name}")
+                        industries_updated = True
+                        logger.info(f"Updated FacebookPage.industries with: {categories}")
+                
+                # 3. Extraer page_url desde caption dentro de snapshot
+                if not page_url_updated and snapshot.get('caption'):
+                    caption = snapshot.get('caption', '').strip()
+                    if caption:
+                        import re
+                        # Primero buscar URLs completas con protocolo
+                        url_pattern = r'https?://[^\s]+'
+                        urls_found = re.findall(url_pattern, caption)
+                        
+                        if urls_found:
+                            # Tomar la primera URL encontrada con protocolo
+                            facebook_page.page_url = urls_found[0]
+                            facebook_page.save(update_fields=['page_url'])
+                            page_url_updated = True
+                            logger.info(f"Updated FacebookPage.page_url to: {urls_found[0]}")
+                        elif re.match(r'^[a-zA-Z0-9][a-zA-Z0-9-]*\.[a-zA-Z]{2,}', caption):
+                            # Si el caption parece un dominio sin protocolo, añadir https://
+                            facebook_page.page_url = f"https://{caption}"
+                            facebook_page.save(update_fields=['page_url'])
+                            page_url_updated = True
+                            logger.info(f"Updated FacebookPage.page_url to: https://{caption}")
+            
             # Skip if this ad has already been processed
             meta_ad_id = item.get('ad_archive_id')
             if not meta_ad_id:
@@ -484,7 +552,9 @@ def fetch_apify_ads(
     period: str = "",
     actor_id: str = "XtaWFhbtfxyzqrFmd",
     page_id: str = None,
-    backload_id: int = None
+    backload_id: int = None,
+    is_automated: bool = False,
+    user_id: int = None
 ) -> Dict[str, Any]:
     """
     Celery task to fetch ads from Apify API.
@@ -498,6 +568,7 @@ def fetch_apify_ads(
         actor_id: ID of the Apify actor to run
         page_id: ID de la página de Facebook asociada a esta tarea
         backload_id: ID of the Backload object to update with error logs
+        is_automated: Si True, extrae datos adicionales para completar FacebookPage
     
     Returns:
         Dictionary with task execution information
@@ -519,7 +590,7 @@ def fetch_apify_ads(
     
     # API key should be stored in settings or environment variables
     # For now, we'll use a placeholder that should be replaced in production
-    api_key = "apify_api_Sh8IzxQlVSgJG832CgydsgbtbUl7BS41QY1q"  # Replace with actual API key from settings
+    api_key = "apify_api_fz8hiOfkgiMWMSdOQC7iqSq0fdoeOU07N0iZ"  # Replace with actual API key from settings
     
     # Default URLs if none provided
     if not urls:
@@ -610,7 +681,7 @@ def fetch_apify_ads(
             }
         
         # Fetch and process items from the dataset
-        processing_result = process_apify_dataset(dataset_id, client, backload_id, page_id)
+        processing_result = process_apify_dataset(dataset_id, client, backload_id, page_id, is_automated)
         
         # Update Backload status to SUCCESS
         if backload_id:
@@ -623,6 +694,43 @@ def fetch_apify_ads(
                 logger.info(f"Updated Backload {backload_id} status to SUCCESS")
             except Exception as be:
                 logger.error(f"Error updating Backload {backload_id}: {str(be)}")
+        
+        # Send SSE notification if automated and user_id provided
+        if is_automated and user_id:
+            try:
+                import redis
+                import json
+                from django.conf import settings
+                from django.utils import timezone
+                from apps.apify.models import FacebookPage
+                
+                redis_client = redis.from_url(settings.REDIS_URL)
+                
+                # Get FacebookPage name for notification
+                page_name = None
+                if page_id:
+                    try:
+                        facebook_page = FacebookPage.objects.get(page_id=page_id)
+                        page_name = facebook_page.page_name
+                    except FacebookPage.DoesNotExist:
+                        pass
+                
+                notification_data = {
+                    'type': 'backload_completed',
+                    'backload_id': backload_id,
+                    'page_id': page_id,
+                    'page_name': page_name,
+                    'processed_count': processing_result['processed_count'],
+                    'failed_count': processing_result['failed_count'],
+                    'skipped_count': processing_result['skipped_count'],
+                    'timestamp': timezone.now().isoformat()
+                }
+                
+                channel = f"user:{user_id}:adrequest_updates"
+                redis_client.publish(channel, json.dumps(notification_data))
+                logger.info(f"Sent SSE notification to user {user_id} for backload {backload_id}")
+            except Exception as e:
+                logger.error(f"Error sending SSE notification: {str(e)}")
         
         result = {
             'success': True,
@@ -666,6 +774,32 @@ def fetch_apify_ads(
                     logger.info(f"Updated Backload {backload_id} status to FAILED")
             except Exception as be:
                 logger.error(f"Error updating Backload {backload_id}: {str(be)}")
+        
+        # Send SSE notification for failure if automated and user_id provided
+        if is_automated and user_id:
+            try:
+                import redis
+                import json
+                from django.conf import settings
+                from django.utils import timezone
+                
+                redis_client = redis.from_url(settings.REDIS_URL)
+                
+                notification_data = {
+                    'type': 'backload_completed',
+                    'backload_id': backload_id,
+                    'page_id': page_id,
+                    'processed_count': 0,
+                    'failed_count': 1,
+                    'error': str(e),
+                    'timestamp': timezone.now().isoformat()
+                }
+                
+                channel = f"user:{user_id}:adrequest_updates"
+                redis_client.publish(channel, json.dumps(notification_data))
+                logger.info(f"Sent SSE error notification to user {user_id} for backload {backload_id}")
+            except Exception as sse_error:
+                logger.error(f"Error sending SSE error notification: {str(sse_error)}")
         
         result = {
             'success': False,

@@ -926,13 +926,8 @@ def get_adlibrary_filters(request):
         # Apply company filter if provided (AND logic)
         # Priority: page_id over company_name for more precise filtering
         if page_id:
-            try:
-                page_id_int = int(page_id)
-                adlibraries = adlibraries.filter(facebook_page_id=page_id_int)
-            except (ValueError, TypeError):
-                # If page_id is not a valid integer, fall back to company_name filter
-                if company_name:
-                    adlibraries = adlibraries.filter(facebook_page__page_name__icontains=company_name)
+            # page_id is the Facebook Page ID (string), not the DB ID
+            adlibraries = adlibraries.filter(facebook_page__page_id=page_id)
         elif company_name:
             adlibraries = adlibraries.filter(facebook_page__page_name__icontains=company_name)
         
@@ -1131,7 +1126,7 @@ def get_adlibrary_company_list(request):
             ad_count=Count('adlibraries', filter=Q(adlibraries__is_active=True))
         ).filter(
             ad_count__gt=0
-        ).values('id', 'page_name', 'ad_count', 'page_url').distinct().order_by('page_name')
+        ).values('id', 'page_id', 'page_name', 'ad_count', 'page_url').distinct().order_by('page_name')
         
         # Convert to list of dictionaries and clean page_url
         company_data = []
@@ -2879,7 +2874,7 @@ def toggle_favorite(request):
 @login_required
 def request_brand(request):
     """
-    Handle brand request and send Slack notification.
+    Handle brand request, create FacebookPage, Backload and trigger automatic extraction.
     
     POST Parameters:
     - brand_url: URL of the brand to request
@@ -2887,17 +2882,19 @@ def request_brand(request):
     Returns: JSON with success status
     """
     try:
+        from apps.apify.models import FacebookPage, Backload
+        from apps.apify.tasks import fetch_apify_ads
+        
         data = json.loads(request.body)
         brand_url = data.get('brand_url')
         
         if not brand_url:
             return JsonResponse({'success': False, 'error': 'Brand URL is required'}, status=400)
         
-        # Extract Facebook Page ID from URL if present
+        # Extract Facebook Page ID from URL
         facebook_page_id = None
         if 'view_all_page_id=' in brand_url:
             try:
-                # Extract the ID using regex to find the pattern view_all_page_id=NUMBER
                 import re
                 match = re.search(r'view_all_page_id=([0-9]+)', brand_url)
                 if match:
@@ -2905,25 +2902,78 @@ def request_brand(request):
             except Exception as e:
                 logging.warning(f"Failed to extract Facebook Page ID: {str(e)}")
         
-        # Send Slack notification
+        if not facebook_page_id:
+            return JsonResponse({
+                'success': False, 
+                'error': 'Could not extract Facebook Page ID from URL'
+            }, status=400)
+        
+        # Step 1: Create or get FacebookPage
+        facebook_page, created = FacebookPage.objects.get_or_create(
+            page_id=facebook_page_id,
+            defaults={
+                'is_active': True
+            }
+        )
+        
+        if not created:
+            # Page already exists, check if there's a pending backload
+            return JsonResponse({
+                'success': False,
+                'error': 'This advertiser is already in our system or being processed'
+            }, status=400)
+        
+        # Step 2: Create Backload with default values
+        backload = Backload.objects.create(
+            status=Backload.STATUS_PENDING,
+            ad_active_status=Backload.AD_ACTIVE,
+            ad_reached_countries='ALL',
+            content_languages='en',
+            media_types=Backload.MEDIA_TYPE_IMAGE_AND_MEME,
+            last_run=timezone.now()
+        )
+        
+        # Associate the FacebookPage with the Backload
+        backload.pages.add(facebook_page)
+        
+        # Step 3: Execute fetch command automatically
+        output_dir = f"meta_ads_results_backload_{backload.pk}_{facebook_page_id}"
+        backload.output_file = output_dir
+        backload.save(update_fields=['output_file'])
+        
+        # Construct URL for the page
+        url = backload.get_facebook_ads_url_for_page(facebook_page_id)
+        
+        # Launch Celery task in background with automated flag
+        fetch_apify_ads.delay(
+            output_dir=output_dir,
+            urls=[{'url': url}],
+            page_id=facebook_page_id,
+            backload_id=backload.pk,
+            is_automated=True,
+            user_id=request.user.id
+        )
+        
+        # Send Slack notification for tracking
         user_email = request.user.email
-        title = "New Brand Request"
-        message = f"A user has requested a new brand to be added to the library"
+        title = "New Brand Request - Auto Processing"
+        message = f"A user requested a new brand and automatic extraction has been initiated"
         
         context = {
             'user_email': user_email,
             'brand_url': brand_url,
+            'facebook_page_id': facebook_page_id,
+            'backload_id': backload.pk,
             'timestamp': str(timezone.now())
         }
         
-        # Add Facebook Page ID to context if found
-        if facebook_page_id:
-            context['facebook_page_id'] = facebook_page_id
-        
-        # Send notification using the existing function
         send_slack_notification(message, context, title)
         
-        return JsonResponse({'success': True})
+        return JsonResponse({
+            'success': True,
+            'backload_id': backload.pk,
+            'facebook_page_id': facebook_page_id
+        })
         
     except Exception as e:
         logging.error(f"Error processing brand request: {str(e)}")
