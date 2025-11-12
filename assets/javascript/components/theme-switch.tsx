@@ -18,7 +18,7 @@ function getStoredTheme(): "dark" | "light" {
   if (typeof window === "undefined") return "light"
   const storedTheme = localStorage.getItem("theme")
   if (storedTheme === "dark" || storedTheme === "light") return storedTheme
-  return getSystemTheme()
+  return "light"
 }
 
 export function ThemeSwitch({ className }: ThemeSwitchProps) {

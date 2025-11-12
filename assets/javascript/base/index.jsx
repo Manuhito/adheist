@@ -27,7 +27,7 @@ const BaseLayout = () => {
   }, []);
 
   return (
-    <ThemeProvider defaultTheme="system" storageKey="theme">
+    <ThemeProvider defaultTheme="light" storageKey="theme">
       <main className="min-h-screen flex flex-col">
         <Header />
         <div className="flex-grow container mx-auto px-4">

@@ -88,12 +88,11 @@
     function syncDarkMode() {
       const darkTheme = '{{ dark_theme }}' || 'dark';
       const lightTheme = '{{ light_theme }}' || 'light';
-      const systemTheme = 'system';
 
-      const theme = localStorage.getItem('theme') || systemTheme;
+      const theme = localStorage.getItem('theme') || lightTheme;
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-      if (theme === darkTheme || (theme === systemTheme && prefersDark)) {
+      if (theme === darkTheme) {
         document.documentElement.classList.add('dark');
         document.documentElement.setAttribute('data-theme', darkTheme);
         document.cookie = `theme=${darkTheme};path=/;max-age=31536000`;

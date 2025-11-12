@@ -3,7 +3,6 @@ import React from 'react';
 import Drawer from "@/components/drawer";
 import { Icons } from "@/components/icons";
 import Menu from "@/components/menu";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { buttonVariants } from "@/components/ui/button";
 import { siteConfig } from "@/lib/config";
 import { cn } from "@/lib/utils";
@@ -67,7 +66,6 @@ export default function Header() {
               >
                 {t('get_started_free', 'Get Started for Free')}
               </a>
-              <ThemeToggle />
             </div>
           </div>
         </div>
