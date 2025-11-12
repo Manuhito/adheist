@@ -265,7 +265,7 @@ function ActionSearchBar({ actions = allActions, onSearch, onActionSelect, onKey
         // Combine keyword search with filtered actions
         const allResults = [keywordSearchItem, ...filteredActions];
         setResult({ actions: allResults });
-        
+
         // Notify parent component about search
         if (onSearch) {
             onSearch(debouncedQuery);
@@ -292,9 +292,9 @@ function ActionSearchBar({ actions = allActions, onSearch, onActionSelect, onKey
             height: "auto",
             transition: {
                 height: {
-                    duration: 0.4,
+                    duration: 0.2,
                 },
-                staggerChildren: 0.1,
+                // staggerChildren removed for faster rendering
             },
         },
         exit: {
@@ -302,29 +302,29 @@ function ActionSearchBar({ actions = allActions, onSearch, onActionSelect, onKey
             height: 0,
             transition: {
                 height: {
-                    duration: 0.3,
+                    duration: 0.2,
                 },
                 opacity: {
-                    duration: 0.2,
+                    duration: 0.15,
                 },
             },
         },
     };
 
     const item = {
-        hidden: { opacity: 0, y: 20 },
+        hidden: { opacity: 0, y: 10 },
         show: {
             opacity: 1,
             y: 0,
             transition: {
-                duration: 0.3,
+                duration: 0.15,
             },
         },
         exit: {
             opacity: 0,
-            y: -10,
+            y: -5,
             transition: {
-                duration: 0.2,
+                duration: 0.1,
             },
         },
     };
@@ -428,8 +428,8 @@ function ActionSearchBar({ actions = allActions, onSearch, onActionSelect, onKey
                                                                 </div>
                                                             )}
                                                         </span>
-                                                        <span className={action.isKeywordSearch 
-                                                            ? "text-xs text-gray-500 dark:text-gray-400" 
+                                                        <span className={action.isKeywordSearch
+                                                            ? "text-xs text-gray-500 dark:text-gray-400"
                                                             : "text-sm font-medium text-gray-900 dark:text-gray-100"
                                                         }>
                                                             {action.label}
@@ -443,8 +443,8 @@ function ActionSearchBar({ actions = allActions, onSearch, onActionSelect, onKey
                                                     <span className="text-xs text-gray-400">
                                                         {action.short}
                                                     </span>
-                                                    <span className={action.isKeywordSearch 
-                                                        ? "text-xs text-gray-400 dark:text-gray-500 text-right" 
+                                                    <span className={action.isKeywordSearch
+                                                        ? "text-xs text-gray-400 dark:text-gray-500 text-right"
                                                         : "text-xs text-gray-400 text-right"
                                                     }>
                                                         {action.end}
