@@ -805,18 +805,19 @@ Generate a **highly detailed image generation prompt for the OpenAI Image API** 
         logger.exception(f"Error generating prompt with {model_name}: {str(e)}")
         raise
 
-def generate_prompt(version):
+def generate_prompt(ad_request, version_type='initial', user_prompt_override=None):
     """
     Generate a prompt for an AdRequestVersion based on its AdRequest data.
     This function now uses GPT-5 to generate the prompt.
     
     Args:
-        version: The AdRequestVersion instance
+        ad_request: The AdRequest instance
+        version_type: Type of version ('initial' or 'revision')
+        user_prompt_override: Optional user prompt for revisions (overrides ad_request.get_user_prompt())
         
     Returns:
-        str: The generated prompt
+        tuple: (prompt: str, cost_metadata: dict or None)
     """
-    ad_request = version.ad_request
     
     # Get non-image fields from AdRequest
     canvas_size = ad_request.canvas_size
@@ -844,10 +845,9 @@ def generate_prompt(version):
     marketing_image_3_override = ad_request.get_marketing_image_3()
     
     # Get user_prompt from the correct source based on version type
-    version_type = getattr(version, "_version_type", None)
-    if version_type == 'revision':
-        # For revisions, get user_prompt from the AdRequestVersion itself
-        user_prompt = version.user_prompt or ''
+    if version_type == 'revision' and user_prompt_override is not None:
+        # For revisions, use the provided user_prompt_override
+        user_prompt = user_prompt_override or ''
     else:
         # For initial versions, get user_prompt from the AdRequest
         user_prompt = ad_request.get_user_prompt()
@@ -969,8 +969,6 @@ def generate_prompt(version):
     start_time = time.time()
     cost_metadata = None
     
-    # The version_type will be injected by the caller when needed
-    version_type = getattr(version, "_version_type", None)
     if version_type == 'revision':
         prompt, cost_metadata = generate_revision_prompt(version_data, image_urls)
         logger.info(f"GPT-5 revision prompt generated in {time.time() - start_time:.2f} seconds")
@@ -979,16 +977,5 @@ def generate_prompt(version):
         prompt, cost_metadata = generate_version_prompt(version_data, image_urls)
         logger.info(f"GPT-5 prompt generated in {time.time() - start_time:.2f} seconds")
     
-    # Save cost metadata to the version if available
-    if cost_metadata and hasattr(version, 'openai_prompt_response_metadata'):
-        try:
-            # Convert to JSON and back to ensure serializability
-            import json
-            serializable_metadata = json.loads(json.dumps(cost_metadata, default=str))
-            version.openai_prompt_response_metadata = serializable_metadata
-            version.save(update_fields=['openai_prompt_response_metadata'])
-            logger.info(f"Saved prompt cost metadata: ${cost_metadata.get('total_cost_usd', 0):.6f} USD")
-        except (TypeError, ValueError) as e:
-            logger.warning(f"Could not serialize prompt cost metadata for AdRequestVersion {version.id}: {e}")
-    
-    return prompt
+    # Return both prompt and cost metadata
+    return prompt, cost_metadata

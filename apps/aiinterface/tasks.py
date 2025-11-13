@@ -150,17 +150,35 @@ def generate_image_task(
         try:
             # Get the AdRequestVersion instance
             version = AdRequestVersion.objects.get(id=version_id)
-            # Propagate version_type to version for conditional prompt generation
-            if version_type:
-                setattr(version, "_version_type", version_type)
+            ad_request = version.ad_request
             
             # Import generate_prompt function here to avoid circular imports
             from apps.ads.gen_prompt import generate_prompt
-            text_prompt = generate_prompt(version)
             
-            # Save the generated prompt in the model for future reference
+            # Prepare parameters for generate_prompt
+            user_prompt_override = version.user_prompt if version_type == 'revision' else None
+            
+            # Generate prompt and get cost metadata
+            text_prompt, cost_metadata = generate_prompt(
+                ad_request=ad_request,
+                version_type=version_type or 'initial',
+                user_prompt_override=user_prompt_override
+            )
+            
+            # Save the generated prompt and cost metadata
             version.generated_prompt = text_prompt
-            version.save(update_fields=['generated_prompt'])
+            
+            # Save cost metadata if available
+            if cost_metadata:
+                try:
+                    import json
+                    serializable_metadata = json.loads(json.dumps(cost_metadata, default=str))
+                    version.openai_prompt_response_metadata = serializable_metadata
+                    logger.info(f"Saved prompt cost metadata: ${cost_metadata.get('total_cost_usd', 0):.6f} USD")
+                except (TypeError, ValueError) as e:
+                    logger.warning(f"Could not serialize prompt cost metadata: {e}")
+            
+            version.save(update_fields=['generated_prompt', 'openai_prompt_response_metadata'])
             
             logger.info(f"Generated prompt for version {version_id}: {text_prompt[:50]}...")
         except Exception as e:
@@ -535,14 +553,34 @@ def generate_image_task_replicate(
             
         try:
             version = AdRequestVersion.objects.get(id=version_id)
-            if version_type:
-                setattr(version, "_version_type", version_type)
+            ad_request = version.ad_request
             
             from apps.ads.gen_prompt import generate_prompt
-            text_prompt = generate_prompt(version)
             
+            # Prepare parameters for generate_prompt
+            user_prompt_override = version.user_prompt if version_type == 'revision' else None
+            
+            # Generate prompt and get cost metadata
+            text_prompt, cost_metadata = generate_prompt(
+                ad_request=ad_request,
+                version_type=version_type or 'initial',
+                user_prompt_override=user_prompt_override
+            )
+            
+            # Save the generated prompt and cost metadata
             version.generated_prompt = text_prompt
-            version.save(update_fields=['generated_prompt'])
+            
+            # Save cost metadata if available
+            if cost_metadata:
+                try:
+                    import json
+                    serializable_metadata = json.loads(json.dumps(cost_metadata, default=str))
+                    version.openai_prompt_response_metadata = serializable_metadata
+                    logger.info(f"Saved prompt cost metadata: ${cost_metadata.get('total_cost_usd', 0):.6f} USD")
+                except (TypeError, ValueError) as e:
+                    logger.warning(f"Could not serialize prompt cost metadata: {e}")
+            
+            version.save(update_fields=['generated_prompt', 'openai_prompt_response_metadata'])
             
             logger.info(f"Generated prompt for version {version_id}: {text_prompt[:50]}...")
         except Exception as e:
