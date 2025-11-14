@@ -1734,29 +1734,34 @@ def adrequest_version_create(request):
         # Get optional fields
         user_prompt = request.POST.get('user_prompt')
         print("User prompt: ", user_prompt)
-        # Create a new AdRequestVersion instance
+
+        # Create three AdRequestVersion instances for this AdRequest
         print("ad_request: ", ad_request)
         print("user_prompt: ", user_prompt)
         print("status: ", AdRequestVersion.STATUS_UNASSIGNED)
-        version = AdRequestVersion.objects.create(
-            ad_request=ad_request,
-            user_prompt=user_prompt,
-            status=AdRequestVersion.STATUS_UNASSIGNED
-        )
-        print("Version created: ", version)
-        
-        # Track event in PostHog when a new AdRequestVersion is created
-        posthog.capture(
-            request.user.id,
-            'Ad Version Created',
-            properties={
-                'version_type': 'initial',
-                'ad_request_id': ad_request.id,
-                'version_id': version.id,
-                'has_user_prompt': bool(user_prompt),
-                'timestamp': version.created_at.isoformat() if hasattr(version, 'created_at') else None
-            }
-        )
+
+        versions = []
+        for _ in range(3):
+            v = AdRequestVersion.objects.create(
+                ad_request=ad_request,
+                user_prompt=user_prompt,
+                status=AdRequestVersion.STATUS_UNASSIGNED
+            )
+            versions.append(v)
+            print("Version created: ", v)
+            
+            # Track event in PostHog when a new AdRequestVersion is created
+            posthog.capture(
+                request.user.id,
+                'Ad Version Created',
+                properties={
+                    'version_type': 'initial',
+                    'ad_request_id': ad_request.id,
+                    'version_id': v.id,
+                    'has_user_prompt': bool(user_prompt),
+                    'timestamp': v.created_at.isoformat() if hasattr(v, 'created_at') else None
+                }
+            )
         # Generate image using OpenAI if user_prompt is provided
         image_generated = False
         task_id = None
@@ -1797,51 +1802,54 @@ def adrequest_version_create(request):
             # Generate image using Celery task in the background
             # Using Replicate instead of OpenAI
             from apps.aiinterface.tasks import generate_image_task_replicate
-            
-            # Update version status to processing
-            version.status = "processing"
-            version.save(update_fields=['status'])
-            
-            # Launch the Celery task
+
+            # Update all versions status to processing
+            for v in versions:
+                v.status = "processing"
+                v.save(update_fields=['status'])
+
+            # Launch the Celery task for the three versions
             task = generate_image_task_replicate.delay(
                 image_urls=image_urls,
                 canvas_size=canvas_size,
-                version_id=version.id,
+                version_ids=[v.id for v in versions],
+                ad_request_id=ad_request.id,
                 version_type="initial"
             )
             
             task_id = task.id
-            print(f"Image generation task (ID: {task_id}) started for AdRequestVersion {version.id}")
+            # Usamos la primera versión como referencia para el log
+            print(f"Image generation task (ID: {task_id}) started for AdRequestVersion {versions[0].id}")
             
             # Credits will be deducted in the task after successful image generation
-            
-            # Create AdCopyVersion and start ad copy text generation task
+
+            # Create AdCopyVersion for each AdRequestVersion and start ad copy text generation tasks
             try:
                 from apps.ads.models import AdCopyVersion
                 from apps.aiinterface.tasks import generate_ad_copy_text_task
-                
-                # Create AdCopyVersion instance
-                ad_copy_version = AdCopyVersion.objects.create(
-                    ad_request_version=version
-                )
-                print(f"AdCopyVersion created with ID: {ad_copy_version.id}")
-                
-                # Launch the ad copy text generation task
-                copy_task = generate_ad_copy_text_task.delay(ad_copy_version.id)
-                print(f"Ad copy text generation task (ID: {copy_task.id}) started for AdCopyVersion {ad_copy_version.id}")
-                
+
+                for v in versions:
+                    ad_copy_version = AdCopyVersion.objects.create(
+                        ad_request_version=v
+                    )
+                    print(f"AdCopyVersion created with ID: {ad_copy_version.id} for AdRequestVersion {v.id}")
+
+                    copy_task = generate_ad_copy_text_task.delay(ad_copy_version.id)
+                    print(f"Ad copy text generation task (ID: {copy_task.id}) started for AdCopyVersion {ad_copy_version.id}")
+
             except Exception as copy_error:
                 print(f"Error starting ad copy text generation task: {str(copy_error)}")
             
         except Exception as img_error:
             print(f"Error starting image generation task: {str(img_error)}")
         
-        # Return the AdRequestVersion instance ID and image generation status
+        # Return the primary AdRequestVersion instance ID and image generation status
         response_data = {
-            'id': version.id,
-            'status': version.status,
+            'id': versions[0].id,
+            'version_ids': [v.id for v in versions],
+            'status': versions[0].status,
             'image_generated': image_generated,
-            'message': 'Version created successfully. Image generation started in background.'
+            'message': '3 versions created successfully. Image generation started in background.'
         }
         
         # Add task_id to response if available

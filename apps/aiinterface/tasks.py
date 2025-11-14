@@ -525,7 +525,9 @@ def generate_image_task_replicate(
     image_urls: List[str] = None,
     canvas_size: str = "1024x1024",
     version_id: Optional[int] = None,
-    version_type: Optional[str] = None
+    version_ids: Optional[List[int]] = None,
+    ad_request_id: Optional[int] = None,
+    version_type: Optional[str] = None,
 ) -> dict:
     """
     Celery task to generate an image using Replicate API.
@@ -539,37 +541,279 @@ def generate_image_task_replicate(
     Returns:
         A dictionary containing the image data and metadata.
     """
-    from apps.ads.models import AdRequestVersion
+    from apps.ads.models import AdRequestVersion, AdRequest
     from .services import ReplicateImageGenerationService
     
     text_prompt = None
     
     try:
+        # Multi-version initial flow using JSON prompt (3 versions)
+        if version_type == 'initial' and version_ids:
+            if not ad_request_id:
+                error_message = "ad_request_id is required when using version_ids for initial generation"
+                logger.error(error_message)
+                raise ValueError(error_message)
+
+            if len(version_ids) < 3:
+                error_message = f"Expected 3 version_ids for initial generation, got {len(version_ids)}"
+                logger.error(error_message)
+                raise ValueError(error_message)
+
+            try:
+                ad_request = AdRequest.objects.get(id=ad_request_id)
+            except AdRequest.DoesNotExist:
+                error_message = f"AdRequest with id {ad_request_id} does not exist"
+                logger.error(error_message)
+                raise ValueError(error_message)
+
+            from apps.ads.gen_prompt import generate_prompt
+
+            # Generate JSON prompt once for the AdRequest
+            text_prompt, cost_metadata = generate_prompt(
+                ad_request=ad_request,
+                version_type='initial',
+                user_prompt_override=None,
+            )
+
+            import json
+
+            try:
+                data = json.loads(text_prompt)
+            except json.JSONDecodeError as e:
+                logger.exception(f"Prompt is not valid JSON for AdRequest {ad_request_id}: {str(e)}")
+                raise
+
+            variations = data.get('variations') or []
+            if len(variations) < len(version_ids):
+                error_message = f"Prompt generation returned fewer variations ({len(variations)}) than requested versions ({len(version_ids)})"
+                logger.error(error_message)
+                raise ValueError(error_message)
+
+            # Serialize cost metadata once (optional)
+            serializable_metadata = None
+            if cost_metadata:
+                try:
+                    serializable_metadata = json.loads(json.dumps(cost_metadata, default=str))
+                except (TypeError, ValueError) as e:
+                    logger.warning(f"Could not serialize prompt cost metadata for multi-version: {e}")
+
+            service = ReplicateImageGenerationService()
+
+            # Process each version with its own image_prompt
+            for idx, v_id in enumerate(version_ids):
+                variation = variations[idx]
+                image_prompt = variation.get('image_prompt') or ''
+
+                try:
+                    version = AdRequestVersion.objects.get(id=v_id)
+                except AdRequestVersion.DoesNotExist:
+                    logger.error(f"AdRequestVersion with id {v_id} does not exist; skipping")
+                    continue
+
+                # Save per-version prompt (image_prompt) and shared metadata
+                version.generated_prompt = image_prompt
+                update_fields = ['generated_prompt']
+
+                if serializable_metadata:
+                    version.openai_prompt_response_metadata = serializable_metadata
+                    update_fields.append('openai_prompt_response_metadata')
+
+                version.save(update_fields=update_fields)
+
+                text_prompt = image_prompt or "Failed to generate prompt"
+                logger.info(
+                    f"Starting Replicate image generation task for version {v_id} "
+                    f"with prompt: {text_prompt[:50]}..."
+                )
+
+                try:
+                    result = service.generate_image_from_text_and_images(
+                        text_prompt=text_prompt,
+                        image_urls=image_urls,
+                        canvas_size=canvas_size,
+                    )
+                except Exception as service_error:
+                    error_msg = f"Unhandled exception in Replicate service for version {v_id}: {str(service_error)}"
+                    logger.exception(error_msg)
+
+                    context = {
+                        "prompt": text_prompt[:100] + "..." if text_prompt and len(text_prompt) > 100 else text_prompt,
+                        "canvas_size": canvas_size,
+                        "version_id": v_id,
+                        "version_type": version_type,
+                        "has_images": bool(image_urls),
+                        "service": "replicate",
+                    }
+                    send_slack_notification(
+                        error_message=str(service_error),
+                        context=context,
+                        title="Error in Replicate Service (multi initial)",
+                    )
+
+                    try:
+                        version = AdRequestVersion.objects.get(id=v_id)
+                        version.status = version.STATUS_FAILED
+                        version.error_logs = f"Replicate service error: {str(service_error)}"
+                        version.save(update_fields=['status', 'error_logs'])
+                    except Exception as e:
+                        logger.exception(f"Error updating AdRequestVersion with error: {str(e)}")
+
+                    # Continue with other versions
+                    continue
+
+                # Reutilizamos la lógica existente de manejo de result por versión
+                if result and "error" in result:
+                    error_message = result.get("error", "Unknown error")
+                    logger.error(f"Replicate image generation failed for version {v_id}: {error_message}")
+
+                    context = {
+                        "prompt": text_prompt[:100] + "..." if text_prompt and len(text_prompt) > 100 else text_prompt,
+                        "canvas_size": canvas_size,
+                        "version_id": v_id,
+                        "version_type": version_type,
+                        "has_images": bool(image_urls),
+                        "status_code": result.get("status_code"),
+                        "response_data": result.get("response_data", "")[:200]
+                        if result.get("response_data")
+                        else "",
+                        "service": "replicate",
+                    }
+                    send_slack_notification(
+                        error_message=error_message,
+                        context=context,
+                        title="Replicate Image Generation Error (multi initial)",
+                    )
+
+                    try:
+                        version = AdRequestVersion.objects.get(id=v_id)
+                        version.status = version.STATUS_FAILED
+                        version.error_logs = f"Replicate error: {error_message}"
+                        version.save(update_fields=['status', 'error_logs'])
+                    except Exception as e:
+                        logger.exception(f"Error updating AdRequestVersion with error: {str(e)}")
+
+                    # Continue with other versions
+                    continue
+
+                # If we reach here, we have a non-error result for this version
+                try:
+                    version = AdRequestVersion.objects.get(id=v_id)
+                except AdRequestVersion.DoesNotExist:
+                    logger.error(f"AdRequestVersion with id {v_id} does not exist when saving image; skipping")
+                    continue
+
+                if result and "image_content" in result and result.get("is_binary", False):
+                    image_content = result["image_content"]
+                    image_name = f"version_{version.id}_image.webp"
+                    version.generated_image.save(
+                        image_name,
+                        ContentFile(image_content),
+                        save=True,
+                    )
+                    logger.info(f"Image saved to AdRequestVersion {v_id}")
+
+                    version.status = AdRequestVersion.STATUS_COMPLETED
+                    version.save(update_fields=['status'])
+
+                    # Deduct credits per generated version
+                    try:
+                        from apps.ads.services import use_credits_for_operation
+
+                        operation_type = 'generation'
+                        user = version.ad_request.user
+                        credit_result = use_credits_for_operation(user, operation_type)
+
+                        if credit_result is None:
+                            logger.warning(f"Failed to deduct credits for user {user.id} (multi initial)")
+                        else:
+                            logger.info(f"Credits deducted for user {user.id}, operation: {operation_type}")
+
+                    except Exception as credit_error:
+                        logger.exception(f"Error deducting credits (multi initial): {str(credit_error)}")
+
+                    # Save response metadata
+                    update_fields = []
+
+                    if 'response_metadata' in result:
+                        metadata = result['response_metadata']
+
+                        import json
+                        try:
+                            serializable_metadata = json.loads(json.dumps(metadata, default=str))
+                            version.openai_response_metadata = serializable_metadata
+                            update_fields.append('openai_response_metadata')
+                        except (TypeError, ValueError) as e:
+                            logger.warning(f"Could not serialize metadata (multi initial): {e}")
+                            version.openai_response_metadata = {'service': 'replicate'}
+                            update_fields.append('openai_response_metadata')
+
+                    if update_fields:
+                        version.save(update_fields=update_fields)
+
+                    logger.info(f"Replicate image generated successfully for version {v_id} (multi initial)")
+
+                    # Track in PostHog
+                    try:
+                        from apps.aiinterface.models import ReplicateConfiguration
+
+                        replicate_config = ReplicateConfiguration.get_replicate_config()
+                        total_cost = float(replicate_config['image_generation_price'])
+
+                        generated_image_url = version.generated_image.url if version.generated_image else None
+
+                        posthog.capture(
+                            version.ad_request.user.id,
+                            'Ad Generated',
+                            properties={
+                                'version_type': version_type,
+                                'service': 'replicate',
+                                'model': replicate_config['image_replicate_model'],
+                                'total_cost': str(total_cost),
+                                'generated_image': generated_image_url,
+                                'ad_request_id': version.ad_request.id,
+                                'version_id': version.id,
+                                'timestamp': version.updated_at.isoformat() if hasattr(version, 'updated_at') else None,
+                            },
+                        )
+                    except Exception as e:
+                        logger.exception(f"Error tracking PostHog event (multi initial): {str(e)}")
+
+                else:
+                    error_message = f"No binary image content in result for version {v_id} (multi initial)"
+                    logger.error(error_message)
+                    version.status = version.STATUS_FAILED
+                    version.error_logs = error_message
+                    version.save(update_fields=['status', 'error_logs'])
+
+            # We processed all versions; return a simple status
+            return {"status": "ok", "processed_versions": version_ids}
+
+        # Single-version flow (revision or legacy initial)
         # Generate the prompt from version_id
         if not version_id:
             error_message = "version_id is required to generate the prompt"
             logger.error(error_message)
             raise ValueError(error_message)
-            
+
         try:
             version = AdRequestVersion.objects.get(id=version_id)
             ad_request = version.ad_request
-            
+
             from apps.ads.gen_prompt import generate_prompt
-            
+
             # Prepare parameters for generate_prompt
             user_prompt_override = version.user_prompt if version_type == 'revision' else None
-            
+
             # Generate prompt and get cost metadata
             text_prompt, cost_metadata = generate_prompt(
                 ad_request=ad_request,
                 version_type=version_type or 'initial',
-                user_prompt_override=user_prompt_override
+                user_prompt_override=user_prompt_override,
             )
-            
+
             # Save the generated prompt and cost metadata
             version.generated_prompt = text_prompt
-            
+
             # Save cost metadata if available
             if cost_metadata:
                 try:
@@ -579,25 +823,25 @@ def generate_image_task_replicate(
                     logger.info(f"Saved prompt cost metadata: ${cost_metadata.get('total_cost_usd', 0):.6f} USD")
                 except (TypeError, ValueError) as e:
                     logger.warning(f"Could not serialize prompt cost metadata: {e}")
-            
+
             version.save(update_fields=['generated_prompt', 'openai_prompt_response_metadata'])
-            
+
             logger.info(f"Generated prompt for version {version_id}: {text_prompt[:50]}...")
         except Exception as e:
             logger.exception(f"Error generating prompt for version {version_id}: {str(e)}")
             raise
-            
+
         text_prompt = str(text_prompt) if text_prompt else "Failed to generate prompt"
-            
+
         logger.info(f"Starting Replicate image generation task with prompt: {text_prompt[:50]}...")
-        
+
         # Generate the image using Replicate
         service = ReplicateImageGenerationService()
         try:
             result = service.generate_image_from_text_and_images(
                 text_prompt=text_prompt,
                 image_urls=image_urls,
-                canvas_size=canvas_size
+                canvas_size=canvas_size,
             )
             
             if "error" in result:
