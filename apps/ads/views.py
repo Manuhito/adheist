@@ -1745,7 +1745,8 @@ def adrequest_version_create(request):
             v = AdRequestVersion.objects.create(
                 ad_request=ad_request,
                 user_prompt=user_prompt,
-                status=AdRequestVersion.STATUS_UNASSIGNED
+                status=AdRequestVersion.STATUS_UNASSIGNED,
+                is_primary=True  # Mark initial versions as primary
             )
             versions.append(v)
             print("Version created: ", v)

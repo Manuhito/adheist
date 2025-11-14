@@ -599,6 +599,11 @@ class AdRequestVersion(BaseModel):
     ]
     
     ad_request = models.ForeignKey(AdRequest, on_delete=models.CASCADE, related_name="versions")
+    
+    # Version hierarchy fields
+    is_primary = models.BooleanField(default=False, help_text="True for the 3 initial versions created for an AdRequest")
+    parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name="revisions", help_text="Parent version for revisions (links to initial version)")
+    
     # Original fields (keeping for backward compatibility)
     generated_prompt = models.TextField(null=True, blank=True)
     user_prompt = models.TextField(null=True, blank=True)
