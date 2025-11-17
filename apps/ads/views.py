@@ -3856,6 +3856,76 @@ def ad_request_versions_page(request, ad_request_id):
 
 
 @login_required
+def generated_versions_page(request, primary_version_id):
+    """
+    Display a primary version and all its child versions (revisions).
+    Shows the primary version plus all versions where parent_version = primary_version_id.
+    """
+    try:
+        # Get the primary version and verify user permissions
+        primary_version = get_object_or_404(
+            AdRequestVersion, 
+            id=primary_version_id, 
+            ad_request__user=request.user,
+            is_primary=True
+        )
+        
+        # Verify that the primary version has a generated image
+        if not primary_version.generated_image:
+            return redirect('ads:my_ads_page')
+        
+        # Get all child versions (revisions) of this primary version
+        child_versions = AdRequestVersion.objects.filter(
+            parent=primary_version
+        ).prefetch_related('ad_copies')
+        
+        # Combine primary version with its children and sort by created_at (most recent first)
+        all_versions = sorted(
+            [primary_version] + list(child_versions),
+            key=lambda v: v.created_at,
+            reverse=True
+        )
+        
+        # Determine back URL based on referrer
+        referer = request.META.get('HTTP_REFERER', '')
+        back_url = f'/ads/adrequest/{primary_version.ad_request.id}/versions/'  # Default to versions page
+        
+        if referer:
+            # Parse the referrer to determine origin
+            if '/ads/my-ads/' in referer:
+                back_url = '/ads/my-ads/'
+            elif '/ads/discover/' in referer and '/create/' not in referer:
+                back_url = '/ads/discover/'
+        
+        # Check if user is on free tier
+        is_free_tier = not hasattr(request.user, 'subscription') or request.user.subscription is None or request.user.subscription.status != 'active'
+        
+        # Check if user has already rated this version
+        has_rated = primary_version.rating is not None and primary_version.review
+        
+        # Get brand name
+        brand_name = None
+        if primary_version.ad_request.base_assets and primary_version.ad_request.base_assets.brand:
+            brand_name = primary_version.ad_request.base_assets.brand.brand_name
+        
+        context = {
+            'version': primary_version,  # Main version for compatibility with generated_ad template
+            'back_url': back_url,
+            'is_free_tier': is_free_tier,
+            'has_rated': has_rated,
+            'brand_name': brand_name or f'Ad Request #{primary_version.ad_request.id}',
+        }
+        
+        # Override ordered_versions with our filtered list
+        primary_version.ad_request.ordered_versions = all_versions
+        
+        return render(request, 'ads/generated_versions.html', context)
+        
+    except AdRequestVersion.DoesNotExist:
+        return redirect('ads:my_ads_page')
+
+
+@login_required
 @require_http_methods(["POST"])
 def analyze_website_for_brand_assets(request):
     """

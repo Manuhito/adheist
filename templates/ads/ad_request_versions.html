@@ -4,10 +4,6 @@
 {% block extra_js %}
 {{ block.super }}
 <script>
-  console.log('=== TEMPLATE SCRIPT EXECUTING ===');
-  console.log('ad_request.id:', {{ ad_request.id }});
-  console.log('primary_versions count:', {{ primary_versions| length }});
-
   // Override sidebar data to hide logo
   window.__SIDEBAR_DATA__ = {
     ...window.__SIDEBAR_DATA__,

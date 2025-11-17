@@ -114,16 +114,6 @@ const AdRequestVersionsPage = () => {
   const data = window.__AD_REQUEST_VERSIONS_DATA__ || {};
   const versions = data.versions || [];
 
-  // Debug logging
-  console.log('=== AD REQUEST VERSIONS DEBUG ===');
-  console.log('Full window.__AD_REQUEST_VERSIONS_DATA__:', window.__AD_REQUEST_VERSIONS_DATA__);
-  console.log('data:', data);
-  console.log('versions:', versions);
-  console.log('versions type:', typeof versions);
-  console.log('versions length:', versions.length);
-  console.log('versions is array:', Array.isArray(versions));
-  console.log('=================================');
-
   // Set custom header when component mounts
   React.useEffect(() => {
     if (window.setAppHeader) {
@@ -141,7 +131,7 @@ const AdRequestVersionsPage = () => {
   }, [data.brand_name, data.back_url]);
 
   const handleVersionClick = (versionId) => {
-    window.location.href = `/ads/generated/${versionId}/`;
+    window.location.href = `/ads/generated/versions/${versionId}/`;
   };
 
   return (
