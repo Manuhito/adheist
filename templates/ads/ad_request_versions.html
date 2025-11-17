@@ -1,0 +1,39 @@
+{% extends "web/app/app_base_sidebar.html" %}
+{% load static %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+  console.log('=== TEMPLATE SCRIPT EXECUTING ===');
+  console.log('ad_request.id:', {{ ad_request.id }});
+  console.log('primary_versions count:', {{ primary_versions| length }});
+
+  // Override sidebar data to hide logo
+  window.__SIDEBAR_DATA__ = {
+    ...window.__SIDEBAR_DATA__,
+    hideLogo: true
+  };
+
+  window.__AD_REQUEST_VERSIONS_DATA__ = {
+    ad_request_id: {{ ad_request.id }},
+  brand_name: "{{ brand_name|escapejs }}",
+    back_url: "{{ back_url|escapejs }}",
+      canvas_size: "{{ ad_request.canvas_size|default:'1024x1024' }}",
+        versions: [
+          {% for version in primary_versions %}
+  {
+    id: {{ version.id }},
+    generated_image: {% if version.generated_image %} "{{ version.generated_image.url|escapejs }}"{% else %} null{% endif %},
+    ad_copy_text: {% if version.ad_copies.first and version.ad_copies.first.ad_copy_text %} "{{ version.ad_copies.first.ad_copy_text|escapejs }}"{% else %} null{% endif %},
+    created_at: "{{ version.created_at|date:'c' }}"
+  } {% if not forloop.last %}, {% endif %}
+  {% endfor %}
+    ]
+  };
+</script>
+<script src="{% static 'js/ad-request-versions-bundle.js' %}?v={{ STATIC_VERSION }}"></script>
+{% endblock %}
+
+{% block app %}
+<!-- Content will be mounted by React in sidebar-page-content -->
+{% endblock %}

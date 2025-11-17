@@ -64,8 +64,8 @@ function VersionCard({ versionData, onDeleteDraft }) {
 
   const handleCardClick = () => {
     if (versionData.version_id && versionData.version_status === 'COMPLETED') {
-      // If has a completed version, go to generated ad page
-      window.location.href = `/ads/generated/${versionData.version_id}/`;
+      // If has a completed version, go to ad request versions page
+      window.location.href = `/ads/adrequest/${versionData.ad_request_id}/versions/`;
     } else if (versionData.ad_request_status === 'DRAFT') {
       // If it's a draft, go to discover clone page
       window.location.href = `/ads/discover/${versionData.ad_request_id}/create/`;
@@ -81,8 +81,8 @@ function VersionCard({ versionData, onDeleteDraft }) {
   return (
     <Card
       className={`transition-colors rounded-xl bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 ${isClickable
-          ? 'hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer'
-          : 'cursor-default'
+        ? 'hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer'
+        : 'cursor-default'
         }`}
       onClick={isClickable ? handleCardClick : undefined}
     >
@@ -200,8 +200,8 @@ function VersionListItem({ versionData, onDeleteDraft }) {
 
   const handleCardClick = () => {
     if (versionData.version_id && versionData.version_status === 'COMPLETED') {
-      // If has a completed version, go to generated ad page
-      window.location.href = `/ads/generated/${versionData.version_id}/`;
+      // If has a completed version, go to ad request versions page
+      window.location.href = `/ads/adrequest/${versionData.ad_request_id}/versions/`;
     } else if (versionData.ad_request_status === 'DRAFT') {
       // If it's a draft, go to discover clone page
       window.location.href = `/ads/discover/${versionData.ad_request_id}/create/`;
@@ -212,7 +212,7 @@ function VersionListItem({ versionData, onDeleteDraft }) {
   const handleViewDetailsClick = (e) => {
     e.stopPropagation(); // Prevent card click
     if (versionData.version_id && versionData.version_status === 'COMPLETED') {
-      window.location.href = `/ads/generated/${versionData.version_id}/`;
+      window.location.href = `/ads/adrequest/${versionData.ad_request_id}/versions/`;
     } else if (versionData.ad_request_status === 'DRAFT') {
       window.location.href = `/ads/discover/${versionData.ad_request_id}/create/`;
     } else {
@@ -228,8 +228,8 @@ function VersionListItem({ versionData, onDeleteDraft }) {
   return (
     <Card
       className={`transition-shadow rounded-xl bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 ${isClickable
-          ? 'hover:shadow-md cursor-pointer'
-          : 'cursor-default'
+        ? 'hover:shadow-md cursor-pointer'
+        : 'cursor-default'
         }`}
       onClick={isClickable ? handleCardClick : undefined}
     >
@@ -492,8 +492,8 @@ function MyAdsPage() {
           <button
             onClick={() => setViewMode('grid')}
             className={`p-2 rounded-md transition-colors ${viewMode === 'grid'
-                ? 'bg-background text-primary shadow-sm'
-                : 'text-muted-foreground hover:text-primary'
+              ? 'bg-background text-primary shadow-sm'
+              : 'text-muted-foreground hover:text-primary'
               }`}
             title="Grid view"
           >
@@ -502,8 +502,8 @@ function MyAdsPage() {
           <button
             onClick={() => setViewMode('list')}
             className={`p-2 rounded-md transition-colors ${viewMode === 'list'
-                ? 'bg-background text-primary shadow-sm'
-                : 'text-muted-foreground hover:text-primary'
+              ? 'bg-background text-primary shadow-sm'
+              : 'text-muted-foreground hover:text-primary'
               }`}
             title="List view"
           >

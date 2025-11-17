@@ -50,6 +50,7 @@ urlpatterns = [
     path("assets/folder/<int:folder_id>/detail/", views.folder_assets_detail_page, name="folder_assets_detail_page"),
     path("assets/folder/<int:folder_id>/upload/", views.upload_folder_assets, name="upload_folder_assets"),
     path("generated/<int:version_id>/", views.generated_ad_page, name="generated_ad_page"),
+    path("adrequest/<int:ad_request_id>/versions/", views.ad_request_versions_page, name="ad_request_versions_page"),
     path("api/analyze-website/", views.analyze_website_for_brand_assets, name="analyze_website_for_brand_assets"),
     path("api/update-user-brand/<int:brand_id>/", views.update_user_brand, name="update_user_brand"),
     path("api/brand-details/<int:brand_id>/", views.get_brand_details, name="get_brand_details"),

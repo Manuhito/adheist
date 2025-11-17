@@ -32,6 +32,9 @@ from .forms import AdLibraryForm
 from .services import can_create_ad_request, use_credit, can_create_ad_request_version, get_ad_request_version_limit, use_general_credit, use_version_credit, can_create_ad_version
 import boto3
 
+# Initialize logger
+logger = logging.getLogger(__name__)
+
 # A reasonable value for pagination would be 10 or 20 entries per page.
 # Here we use 4 (a very low value), so we can show off the pagination using fewer items
 PAGINATE_BY = 4
@@ -3809,6 +3812,46 @@ def generated_ad_page(request, version_id):
         return render(request, 'ads/generated_ad.html', context)
         
     except AdRequestVersion.DoesNotExist:
+        return redirect('ads:my_ads_page')
+
+
+@login_required
+def ad_request_versions_page(request, ad_request_id):
+    """
+    Display all primary versions (is_primary=True) for a specific AdRequest.
+    Shows version cards with ad copy text and images.
+    """
+    try:
+        # Get the AdRequest and verify user permissions
+        ad_request = get_object_or_404(AdRequest, id=ad_request_id, user=request.user)
+        
+        # Get all primary versions for this ad request with optimized query
+        primary_versions = ad_request.versions.filter(is_primary=True).prefetch_related('ad_copies').order_by('-created_at')
+        
+        # Determine back URL based on referrer
+        referer = request.META.get('HTTP_REFERER', '')
+        back_url = '/ads/my-ads/'  # Default
+        
+        if referer:
+            # Parse the referrer to determine origin
+            if '/ads/discover/' in referer:
+                back_url = '/ads/discover/'
+        
+        # Get brand name
+        brand_name = None
+        if ad_request.base_assets and ad_request.base_assets.brand:
+            brand_name = ad_request.base_assets.brand.brand_name
+        
+        context = {
+            'ad_request': ad_request,
+            'primary_versions': primary_versions,
+            'back_url': back_url,
+            'brand_name': brand_name or f'Ad Request #{ad_request_id}',
+        }
+        
+        return render(request, 'ads/ad_request_versions.html', context)
+        
+    except AdRequest.DoesNotExist:
         return redirect('ads:my_ads_page')
 
 
