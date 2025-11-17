@@ -51,13 +51,18 @@ const AdCopyTextDisplay = ({ text }) => {
 const VersionCard = ({ version, onClick }) => {
   return (
     <div
-      onClick={() => onClick(version.id)}
+      onClick={() => version.generated_image && onClick(version.id)}
       className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm cursor-pointer hover:shadow-md transition-shadow p-3"
     >
       {/* Ad Copy Text */}
-      {version.ad_copy_text && (
+      {version.ad_copy_text ? (
         <div className="mb-2">
           <AdCopyTextDisplay text={version.ad_copy_text} />
+        </div>
+      ) : (
+        <div className="mb-2 flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500">
+          <div className="w-3 h-3 border-2 border-primary/20 dark:border-primary/30 border-t-primary dark:border-t-primary rounded-full animate-spin"></div>
+          Generating copy...
         </div>
       )}
 
@@ -70,7 +75,10 @@ const VersionCard = ({ version, onClick }) => {
             className="w-full h-full object-contain"
           />
         ) : (
-          <div className="text-gray-400 dark:text-gray-500">No image</div>
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-8 h-8 border-4 border-primary/20 dark:border-primary/30 border-t-primary dark:border-t-primary rounded-full animate-spin"></div>
+            <div className="text-xs text-gray-400 dark:text-gray-500">Generating...</div>
+          </div>
         )}
       </div>
     </div>
@@ -112,7 +120,10 @@ const AdRequestVersionsHeader = ({ brandName, backUrl }) => {
 
 const AdRequestVersionsPage = () => {
   const data = window.__AD_REQUEST_VERSIONS_DATA__ || {};
-  const versions = data.versions || [];
+  const [versions, setVersions] = useState(data.versions || []);
+  const [pendingIds, setPendingIds] = useState(() =>
+    (data.versions || []).filter(v => !v.generated_image || !v.ad_copy_text).map(v => v.id)
+  );
 
   // Set custom header when component mounts
   React.useEffect(() => {
@@ -129,6 +140,64 @@ const AdRequestVersionsPage = () => {
       }
     };
   }, [data.brand_name, data.back_url]);
+
+  // Poll versions that are still generating until they have images
+  React.useEffect(() => {
+    if (!pendingIds || pendingIds.length === 0) return;
+    let cancelled = false;
+
+    const interval = setInterval(async () => {
+      try {
+        const results = await Promise.all(
+          pendingIds.map(async (id) => {
+            try {
+              const resp = await fetch(`/ads/api/version/${id}/`, { credentials: 'same-origin' });
+              if (!resp.ok) return null;
+              const data = await resp.json();
+              return data;
+            } catch (_) {
+              return null;
+            }
+          })
+        );
+
+        if (cancelled) return;
+
+        const updatesById = {};
+        results.forEach((res) => {
+          if (res && (res.generated_image || res.ad_copy_text)) {
+            updatesById[res.id] = res;
+          }
+        });
+
+        // A version is completed only when BOTH image and copy exist
+        const completed = results
+          .filter((res) => res && res.generated_image && !!res.ad_copy_text)
+          .map((res) => res.id);
+        if (completed.length > 0) {
+          // Update versions state with new images/text
+          setVersions((prev) =>
+            prev.map((v) => {
+              const upd = updatesById[v.id];
+              return upd
+                ? { ...v, generated_image: upd.generated_image, ad_copy_text: upd.ad_copy_text ?? v.ad_copy_text }
+                : v;
+            })
+          );
+
+          // Remove completed ids from pending list
+          setPendingIds((prev) => prev.filter((id) => !completed.includes(id)));
+        }
+      } catch (_) {
+        // Ignore polling errors; next tick will retry
+      }
+    }, 2000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [pendingIds]);
 
   const handleVersionClick = (versionId) => {
     window.location.href = `/ads/generated/versions/${versionId}/`;

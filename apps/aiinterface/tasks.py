@@ -809,6 +809,7 @@ def generate_image_task_replicate(
                 ad_request=ad_request,
                 version_type=version_type or 'initial',
                 user_prompt_override=user_prompt_override,
+                override_image_urls=image_urls,
             )
 
             # Save the generated prompt and cost metadata

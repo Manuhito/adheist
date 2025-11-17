@@ -1873,12 +1873,11 @@ def adrequest_revision_create(request):
     """
     Create a new AdRequestVersion instance and generate an image using OpenAI with a revision image.
     
-    Required input:
+    Required inputs:
     - ad_request: The primary key of the AdRequest to create a version for
     - url_image_revision: URL of the image to use for revision
-    
-    Optional inputs:
     - user_prompt: The user prompt for the version
+    - parent_version_id: The ID of the parent version (the version being revised)
     
     Returns: JSON with the AdRequestVersion instance ID and image generation status
     """
@@ -1886,6 +1885,7 @@ def adrequest_revision_create(request):
     ad_request_id = request.POST.get('ad_request')
     url_image_revision = request.POST.get('url_image_revision')
     user_prompt = request.POST.get('user_prompt')
+    parent_version_id = request.POST.get('parent_version_id')
     
     # Validate inputs
     if not ad_request_id:
@@ -1896,6 +1896,9 @@ def adrequest_revision_create(request):
     
     if not user_prompt:
         return JsonResponse({'error': 'User prompt is required'}, status=400)
+    
+    if not parent_version_id:
+        return JsonResponse({'error': 'Parent version ID is required'}, status=400)
     
     try:
         # Get the AdRequest instance
@@ -1909,11 +1912,20 @@ def adrequest_revision_create(request):
         if not can_create_ad_version(request.user):
             return JsonResponse({'error': 'You have reached your version credit limit for your plan'}, status=403)
         
-        # Create a new AdRequestVersion instance
+        # Get the parent version
+        parent_version = get_object_or_404(AdRequestVersion, id=parent_version_id)
+        
+        # Verify the parent version belongs to the same ad_request
+        if parent_version.ad_request.id != ad_request.id:
+            return JsonResponse({'error': 'Parent version does not belong to this ad request'}, status=400)
+        
+        # Create a new AdRequestVersion instance with is_primary=False and parent set
         version = AdRequestVersion.objects.create(
             ad_request=ad_request,
             user_prompt=user_prompt,
-            status=AdRequestVersion.STATUS_UNASSIGNED
+            status=AdRequestVersion.STATUS_UNASSIGNED,
+            is_primary=False,
+            parent=parent_version
         )
         print("Revision created: ", version)
         

@@ -1003,7 +1003,7 @@ Generate a **highly detailed image generation prompt for the OpenAI Image API** 
         logger.exception(f"Error generating prompt with {model_name}: {str(e)}")
         raise
 
-def generate_prompt(ad_request, version_type='initial', user_prompt_override=None):
+def generate_prompt(ad_request, version_type='initial', user_prompt_override=None, override_image_urls=None):
     """
     Generate a prompt for an AdRequestVersion based on its AdRequest data.
     This function now uses GPT-5 to generate the prompt.
@@ -1131,33 +1131,38 @@ def generate_prompt(ad_request, version_type='initial', user_prompt_override=Non
     # Collect image URLs for context
     image_urls = []
     
-    # Add AdLibrary ad_image if available (canvas size already extracted above)
-    if ad_request.ad_library and ad_request.ad_library.ad_image:
-        image_urls.append(ad_request.ad_library.ad_image.url)
-    
-    # Add logo if available
-    if logo_override:
-        image_urls.append(logo_override.url)
-    
-    # Add product images if available
-    if product_image_1_override:
-        image_urls.append(product_image_1_override.url)
-    if product_image_2_override:
-        image_urls.append(product_image_2_override.url)
+    # For revisions, use ONLY the provided override_image_urls (expected: [revision_image_url, logo_url])
+    if version_type == 'revision' and override_image_urls:
+        image_urls = list(override_image_urls)
+    else:
+        # Initial flow (or no overrides provided): collect all available context images from AdRequest
+        # Add AdLibrary ad_image if available (canvas size already extracted above)
+        if ad_request.ad_library and ad_request.ad_library.ad_image:
+            image_urls.append(ad_request.ad_library.ad_image.url)
         
-    # Add app images if available
-    if app_image_1_override:
-        image_urls.append(app_image_1_override.url)
-    if app_image_2_override:
-        image_urls.append(app_image_2_override.url)
+        # Add logo if available
+        if logo_override:
+            image_urls.append(logo_override.url)
         
-    # Add marketing images if available
-    if marketing_image_1_override:
-        image_urls.append(marketing_image_1_override.url)
-    if marketing_image_2_override:
-        image_urls.append(marketing_image_2_override.url)
-    if marketing_image_3_override:
-        image_urls.append(marketing_image_3_override.url)
+        # Add product images if available
+        if product_image_1_override:
+            image_urls.append(product_image_1_override.url)
+        if product_image_2_override:
+            image_urls.append(product_image_2_override.url)
+            
+        # Add app images if available
+        if app_image_1_override:
+            image_urls.append(app_image_1_override.url)
+        if app_image_2_override:
+            image_urls.append(app_image_2_override.url)
+            
+        # Add marketing images if available
+        if marketing_image_1_override:
+            image_urls.append(marketing_image_1_override.url)
+        if marketing_image_2_override:
+            image_urls.append(marketing_image_2_override.url)
+        if marketing_image_3_override:
+            image_urls.append(marketing_image_3_override.url)
         
     # Log the number of images collected
     if image_urls:
