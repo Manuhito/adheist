@@ -48,12 +48,43 @@ const AdCopyTextDisplay = ({ text }) => {
 };
 
 // Version Card component
-const VersionCard = ({ version, onClick }) => {
+const VersionCard = ({ version, onClick, brandName, brandUrl }) => {
+  const getFaviconUrl = (url) => {
+    try {
+      if (!url) return null;
+      const u = new URL(url);
+      const host = u.hostname;
+      return `https://www.google.com/s2/favicons?domain=${host}&sz=64`;
+    } catch (_) {
+      return null;
+    }
+  };
+  const favicon = getFaviconUrl(brandUrl);
+  const initial = (brandName || '').trim().charAt(0).toUpperCase();
+
   return (
     <div
       onClick={() => version.generated_image && onClick(version.id)}
       className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm cursor-pointer hover:shadow-md transition-shadow p-3"
     >
+      {/* Brand header with avatar */}
+      <div className="flex items-center gap-2 mb-2">
+        <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700">
+          <span className="absolute inset-0 flex items-center justify-center text-[10px] font-medium text-gray-700 dark:text-gray-300">
+            {initial || '?'}
+          </span>
+          {favicon && (
+            <img
+              src={favicon}
+              alt=""
+              className="w-full h-full object-cover"
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+            />
+          )}
+        </div>
+        <span className="text-sm text-gray-900 dark:text-gray-100 truncate">{brandName || 'Brand'}</span>
+      </div>
+
       {/* Ad Copy Text */}
       {version.ad_copy_text ? (
         <div className="mb-2">
@@ -212,6 +243,8 @@ const AdRequestVersionsPage = () => {
             key={version.id}
             version={version}
             onClick={handleVersionClick}
+            brandName={data.brand_name}
+            brandUrl={data.brand_url}
           />
         ))}
       </div>

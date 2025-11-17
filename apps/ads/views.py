@@ -3849,16 +3849,22 @@ def ad_request_versions_page(request, ad_request_id):
             if '/ads/discover/' in referer:
                 back_url = '/ads/discover/'
         
-        # Get brand name
+        # Get brand name and website url
         brand_name = None
-        if ad_request.base_assets and ad_request.base_assets.brand:
-            brand_name = ad_request.base_assets.brand.brand_name
+        brand_url = None
+        if ad_request.base_assets:
+            if ad_request.base_assets.brand:
+                brand_name = ad_request.base_assets.brand.brand_name
+            # Company website can exist even if brand is None
+            if ad_request.base_assets.company_website:
+                brand_url = ad_request.base_assets.company_website
         
         context = {
             'ad_request': ad_request,
             'primary_versions': primary_versions,
             'back_url': back_url,
             'brand_name': brand_name or f'Ad Request #{ad_request_id}',
+            'brand_url': brand_url or '',
         }
         
         return render(request, 'ads/ad_request_versions.html', context)

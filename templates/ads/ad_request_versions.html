@@ -13,10 +13,11 @@
   window.__AD_REQUEST_VERSIONS_DATA__ = {
     ad_request_id: {{ ad_request.id }},
   brand_name: "{{ brand_name|escapejs }}",
-    back_url: "{{ back_url|escapejs }}",
-      canvas_size: "{{ ad_request.canvas_size|default:'1024x1024' }}",
-        versions: [
-          {% for version in primary_versions %}
+    brand_url: "{{ brand_url|escapejs }}",
+      back_url: "{{ back_url|escapejs }}",
+        canvas_size: "{{ ad_request.canvas_size|default:'1024x1024' }}",
+          versions: [
+            {% for version in primary_versions %}
   {
     id: {{ version.id }},
     generated_image: {% if version.generated_image %} "{{ version.generated_image.url|escapejs }}"{% else %} null{% endif %},
