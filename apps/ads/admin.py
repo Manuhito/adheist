@@ -117,9 +117,9 @@ class AdRequestVersionAdmin(admin.ModelAdmin):
     def get_version_id(self, obj):
         return f"Ad Request #{obj.id}"
     get_version_id.short_description = "Version ID"
-    list_display = ["get_version_id", "status", "user_admin_assigned", "created_at", "updated_at"]
+    list_display = ["get_version_id", "is_primary", "parent", "status", "user_admin_assigned", "created_at", "updated_at"]
     search_fields = ["ad_request__ad_library__facebook_page__page_name", "status"]
-    list_filter = ["status", "user_admin_assigned"]
+    list_filter = ["status", "user_admin_assigned", "is_primary"]
     readonly_fields = ["user_admin_assigned", "generated_prompt_with_copy", "status", "download_overrides_button", "user_prompt"]
     # readonly_fields = ["ad_request", "generated_prompt", "status", "download_overrides_button"]
     exclude = ["generated_prompt"]

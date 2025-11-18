@@ -1,0 +1,41 @@
+{% extends "web/app/app_base_sidebar.html" %}
+{% load static %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+  // Override sidebar data to hide logo
+  window.__SIDEBAR_DATA__ = {
+    ...window.__SIDEBAR_DATA__,
+    hideLogo: true
+  };
+
+  window.__GENERATED_AD_DATA__ = {
+    version_id: {{ version.id }},
+  generated_image: {% if version.generated_image %} "{{ version.generated_image.url|escapejs }}"{% else %} null{% endif %},
+  ad_request_id: {{ version.ad_request.id }},
+  version_index: {% if version.version_index %} {{ version.version_index }} {% else %} 1{% endif %},
+  created_at: "{{ version.created_at|date:'c' }}",
+    brand_name: "{{ brand_name|escapejs }}",
+      canvas_size: "{{ version.ad_request.canvas_size|default:'1024x1024' }}",
+        back_url: "{{ back_url|escapejs }}",
+          is_free_tier: {% if is_free_tier %} true{% else %} false{% endif %},
+  has_rated: {% if has_rated %} true{% else %} false{% endif %},
+  versions: [
+    {% for v in version.ad_request.ordered_versions %}
+  {
+    id: {{ v.id }},
+    generated_image: {% if v.generated_image %} "{{ v.generated_image.url|escapejs }}"{% else %} null{% endif %},
+    canvas_size: "{{ v.ad_request.canvas_size|default:'1024x1024' }}",
+      ad_copy_text: {% if v.ad_copies.first and v.ad_copies.first.ad_copy_text %} "{{ v.ad_copies.first.ad_copy_text|escapejs }}"{% else %} null{% endif %}
+  } {% if not forloop.last %}, {% endif %}
+  {% endfor %}
+    ]
+  };
+</script>
+<script src="{% static 'js/generated-ad-bundle.js' %}?v={{ STATIC_VERSION }}"></script>
+{% endblock %}
+
+{% block app %}
+<!-- Content will be mounted by React in sidebar-page-content -->
+{% endblock %}
