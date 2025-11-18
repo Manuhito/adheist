@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -41,6 +41,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState('');
   const [createdBrandId, setCreatedBrandId] = useState(null);
+  const autoSaveTimerRef = useRef(null);
 
   // Effect to preload data when editing a brand
   useEffect(() => {
@@ -332,6 +333,132 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
     console.log('Logo deleted:', logoData);
   };
 
+  // Auto-save function that saves without closing the modal
+  const autoSave = useCallback(async () => {
+    // Don't auto-save if brand name is empty (required field)
+    if (!brandName.trim()) {
+      return;
+    }
+
+    try {
+      // Prepare form data for submission
+      const formData = {
+        brand_name: brandName.trim(),
+        industry: industry.trim(),
+        website: website.trim(),
+        product_description: productDescription.trim(),
+        target_audience: targetAudience.trim(),
+        functional_benefits: functionalBenefits.trim(),
+        brand_colors: brandColors,
+        tone_of_voice: toneOfVoice.trim(),
+        font_direction: fontDirection.trim(),
+        core_features: coreFeatures.trim(),
+        emotional_lifestyle_benefits: emotionalBenefits.trim(),
+        proof_points: proofPoints.trim(),
+        value_propositions: valuePropositions.trim()
+      };
+
+      // Determine if we're creating or updating
+      const isUpdating = createdBrandId !== null;
+      const endpoint = isUpdating ? `/ads/api/update-user-brand/${createdBrandId}/` : '/ads/api/create-user-brand/';
+
+      // Check if we need to handle logo changes
+      const hasNewLogoFile = selectedLogoData && selectedLogoData.file;
+      const shouldRemoveLogo = isUpdating && !selectedLogoData;
+
+      let response;
+
+      // If there's a logo file or we need to remove logo, use FormData for multipart upload
+      if (hasNewLogoFile || shouldRemoveLogo) {
+        const formDataMultipart = new FormData();
+
+        // Add all text fields
+        Object.keys(formData).forEach(key => {
+          if (key === 'brand_colors') {
+            formDataMultipart.append(key, JSON.stringify(formData[key]));
+          } else {
+            formDataMultipart.append(key, formData[key]);
+          }
+        });
+
+        // Handle logo changes
+        if (hasNewLogoFile) {
+          formDataMultipart.append('logo_file', selectedLogoData.file);
+        } else if (shouldRemoveLogo) {
+          formDataMultipart.append('remove_logo', 'true');
+        }
+
+        const multipartEndpoint = isUpdating ? `/ads/api/update-user-brand/${createdBrandId}/` : '/ads/api/create-user-brand/';
+
+        response = await fetch(multipartEndpoint, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCsrfToken(),
+            ...(isUpdating && { 'X-Update-Mode': 'true' })
+          },
+          body: formDataMultipart,
+        });
+      } else {
+        // No logo file, use JSON
+        response = await fetch(endpoint, {
+          method: isUpdating ? 'PUT' : 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken(),
+          },
+          body: JSON.stringify(formData),
+        });
+      }
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // If this was a create operation, store the brand ID for future updates
+        if (!isUpdating && data.brand && data.brand.id) {
+          setCreatedBrandId(data.brand.id);
+        }
+
+        // Call appropriate callback based on operation type
+        if (isUpdating && onBrandUpdated) {
+          onBrandUpdated(data.brand);
+        } else if (!isUpdating && onBrandCreated) {
+          onBrandCreated(data.brand);
+        }
+
+        // Clear any previous errors
+        setError('');
+      }
+    } catch (err) {
+      console.error('Auto-save error:', err);
+      // Don't show error to user for auto-save failures
+    }
+  }, [brandName, industry, website, productDescription, targetAudience, functionalBenefits, brandColors, toneOfVoice, fontDirection, coreFeatures, emotionalBenefits, proofPoints, valuePropositions, selectedLogoData, createdBrandId, onBrandCreated, onBrandUpdated]);
+
+  // Auto-save effect: monitors all form fields and triggers save after 2 seconds of inactivity
+  useEffect(() => {
+    // Don't auto-save if brand name is empty (required field)
+    if (!brandName.trim()) {
+      return;
+    }
+
+    // Clear existing timer
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+
+    // Set new timer for 2 seconds
+    autoSaveTimerRef.current = setTimeout(() => {
+      autoSave();
+    }, 2000);
+
+    // Cleanup on unmount or when dependencies change
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
+  }, [brandName, industry, website, productDescription, targetAudience, functionalBenefits, brandColors, toneOfVoice, fontDirection, coreFeatures, emotionalBenefits, proofPoints, valuePropositions, selectedLogoData, autoSave]);
+
   // Function to get CSRF token from cookies
   const getCsrfToken = () => {
     const name = 'csrftoken';
@@ -587,7 +714,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
                   {analysisError === 'credits' ? (
                     <span>
                       You do not have enough credits to perform this action. Please{' '}
-                      <a 
+                      <a
                         href="/ads/billing/"
                         className="underline hover:text-red-600 dark:hover:text-red-300"
                       >
@@ -598,8 +725,8 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
                   ) : (
                     <span>
                       Failed to download website content. Please try with a different website or{' '}
-                      <a 
-                        href="mailto:hey@adheist.ai" 
+                      <a
+                        href="mailto:hey@adheist.ai"
                         className="underline hover:text-red-600 dark:hover:text-red-300"
                       >
                         contact us
