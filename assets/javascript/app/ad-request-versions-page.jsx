@@ -15,7 +15,7 @@ const AdCopyTextDisplay = ({ text }) => {
 
   return (
     <div className="relative w-0 min-w-full">
-      <p className="text-xs text-gray-600 dark:text-gray-400 whitespace-pre-wrap leading-relaxed break-words">
+      <p className="text-xs text-foreground leading-relaxed break-words whitespace-pre-line">
         {displayText}
         {shouldTruncate && !isExpanded && (
           <>
@@ -25,7 +25,7 @@ const AdCopyTextDisplay = ({ text }) => {
                 e.stopPropagation();
                 setIsExpanded(true);
               }}
-              className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-xs underline inline"
+              className="text-gray-500 hover:text-gray-700 text-xs underline inline"
             >
               read more
             </button>
@@ -38,7 +38,7 @@ const AdCopyTextDisplay = ({ text }) => {
             e.stopPropagation();
             setIsExpanded(false);
           }}
-          className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-xs underline mt-1"
+          className="text-gray-500 hover:text-gray-700 text-xs underline mt-1"
         >
           Read less
         </button>
@@ -65,53 +65,71 @@ const VersionCard = ({ version, onClick, brandName, brandUrl }) => {
   return (
     <div
       onClick={() => version.generated_image && onClick(version.id)}
-      className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm cursor-pointer hover:shadow-md transition-shadow p-3"
+      className="bg-background rounded-xl overflow-hidden border border-border hover:border-primary/50 transition-colors cursor-pointer group"
     >
       {/* Brand header with avatar */}
-      <div className="flex items-center gap-2 mb-2">
-        <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700">
-          <span className="absolute inset-0 flex items-center justify-center text-[10px] font-medium text-gray-700 dark:text-gray-300">
-            {initial || '?'}
+      <div className="p-3">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-8 h-8 rounded-full overflow-hidden bg-muted flex-shrink-0">
+              {favicon ? (
+                <img
+                  src={favicon}
+                  alt=""
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.parentNode.innerHTML = `<div class=\"w-full h-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-xs\">${initial || '?'}</div>`;
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-xs">
+                  {initial || '?'}
+                </div>
+              )}
+            </div>
+            <h3 className="text-sm font-semibold truncate">{brandName || 'Brand'}</h3>
+          </div>
+          <span
+            className={`text-[10px] px-2 py-[2px] rounded-full whitespace-nowrap ${version.revisions_count > 0
+              ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary'
+              : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300'
+              }`}
+          >
+            {version.revisions_count > 0 ? `${version.revisions_count} revision${version.revisions_count > 1 ? 's' : ''}` : 'No revisions'}
           </span>
-          {favicon && (
-            <img
-              src={favicon}
-              alt=""
-              className="w-full h-full object-cover"
-              onError={(e) => { e.currentTarget.style.display = 'none'; }}
-            />
-          )}
         </div>
-        <span className="text-sm text-gray-900 dark:text-gray-100 truncate">{brandName || 'Brand'}</span>
+        {/* Ad Copy Text */}
+        {version.ad_copy_text ? (
+          <div className="mt-2">
+            <AdCopyTextDisplay text={version.ad_copy_text} />
+          </div>
+        ) : (
+          <div className="mt-2 flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500">
+            <div className="w-3 h-3 border-2 border-primary/20 dark:border-primary/30 border-t-primary dark:border-t-primary rounded-full animate-spin"></div>
+            Generating copy...
+          </div>
+        )}
       </div>
 
-      {/* Ad Copy Text */}
-      {version.ad_copy_text ? (
-        <div className="mb-2">
-          <AdCopyTextDisplay text={version.ad_copy_text} />
-        </div>
-      ) : (
-        <div className="mb-2 flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500">
-          <div className="w-3 h-3 border-2 border-primary/20 dark:border-primary/30 border-t-primary dark:border-t-primary rounded-full animate-spin"></div>
-          Generating copy...
-        </div>
-      )}
-
       {/* Image */}
-      <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-        {version.generated_image ? (
+      {version.generated_image ? (
+        <div className="relative aspect-square rounded-lg overflow-hidden mx-3">
           <img
             src={version.generated_image}
             alt="Generated Ad"
-            className="w-full h-full object-contain"
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
-        ) : (
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        </div>
+      ) : (
+        <div className="relative aspect-square rounded-lg overflow-hidden mx-3 bg-muted flex items-center justify-center">
           <div className="flex flex-col items-center gap-2">
             <div className="w-8 h-8 border-4 border-primary/20 dark:border-primary/30 border-t-primary dark:border-t-primary rounded-full animate-spin"></div>
             <div className="text-xs text-gray-400 dark:text-gray-500">Generating...</div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -237,15 +255,19 @@ const AdRequestVersionsPage = () => {
   return (
     <div className="max-w-7xl mx-auto p-6">
       {/* Grid of version cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      <div className="flex flex-wrap justify-center gap-6">
         {versions.map((version) => (
-          <VersionCard
+          <div
             key={version.id}
-            version={version}
-            onClick={handleVersionClick}
-            brandName={data.brand_name}
-            brandUrl={data.brand_url}
-          />
+            className="w-full sm:flex-[0_0_calc((100%_-_48px)/3)]"
+          >
+            <VersionCard
+              version={version}
+              onClick={handleVersionClick}
+              brandName={data.brand_name}
+              brandUrl={data.brand_url}
+            />
+          </div>
         ))}
       </div>
 

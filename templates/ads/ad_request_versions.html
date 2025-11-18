@@ -22,6 +22,7 @@
     id: {{ version.id }},
     generated_image: {% if version.generated_image %} "{{ version.generated_image.url|escapejs }}"{% else %} null{% endif %},
     ad_copy_text: {% if version.ad_copies.first and version.ad_copies.first.ad_copy_text %} "{{ version.ad_copies.first.ad_copy_text|escapejs }}"{% else %} null{% endif %},
+    revisions_count: {{ version.revisions_count }},
     created_at: "{{ version.created_at|date:'c' }}"
   } {% if not forloop.last %}, {% endif %}
   {% endfor %}

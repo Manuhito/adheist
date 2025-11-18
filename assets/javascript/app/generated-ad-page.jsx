@@ -125,7 +125,11 @@ const GeneratedAdPage = () => {
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
 
   // Version selection state
-  const [selectedVersion, setSelectedVersion] = useState(null);
+  const [selectedVersion, setSelectedVersion] = useState(
+    (generatedAdData.versions && generatedAdData.versions.length > 0)
+      ? generatedAdData.versions[0]
+      : null
+  );
 
   // Tooltip state - only show if user is on free tier and hasn't rated yet
   const shouldShowTooltip = generatedAdData.is_free_tier && !generatedAdData.has_rated;
@@ -137,10 +141,9 @@ const GeneratedAdPage = () => {
   // Initialize selected version when component mounts
   React.useEffect(() => {
     if (generatedAdData.versions && generatedAdData.versions.length > 0) {
-      const current = generatedAdData.versions.find(v => v.id === generatedAdData.version_id) || generatedAdData.versions[0];
-      setSelectedVersion(current);
+      setSelectedVersion(generatedAdData.versions[0]);
     }
-  }, [generatedAdData.versions, generatedAdData.version_id]);
+  }, [generatedAdData.versions]);
 
   // Poll for ad copy text if not available yet
   React.useEffect(() => {
@@ -254,7 +257,7 @@ const GeneratedAdPage = () => {
         if (data.success) {
           // Hide tooltip after successful feedback
           setShowTooltip(false);
-          
+
           // Crear contenedor para la notificación
           const notificationContainer = document.createElement('div');
           notificationContainer.id = 'rating-notification-container';
@@ -436,7 +439,7 @@ const GeneratedAdPage = () => {
                     <X className="h-5 w-5" />
                   </button>
                   {/* Arrow */}
-                  <div 
+                  <div
                     className="absolute left-1/2 transform -translate-x-1/2 top-full h-0 w-0 border-x-[12px] border-x-transparent border-t-[12px] border-t-gray-800 dark:border-t-gray-200"
                   ></div>
                 </div>

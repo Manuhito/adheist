@@ -11,6 +11,7 @@ from apps.aiinterface.services import ImageGenerationService
 from django.db.models import Q, Count, Sum, F, Exists, OuterRef, Subquery
 from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404, render, redirect
+from django.db.models import Count
 from django.template.response import TemplateResponse
 from django.views.decorators.http import require_POST
 from apps.subscriptions.helpers import create_stripe_checkout_session
@@ -3838,7 +3839,14 @@ def ad_request_versions_page(request, ad_request_id):
         ad_request = get_object_or_404(AdRequest, id=ad_request_id, user=request.user)
         
         # Get all primary versions for this ad request with optimized query
-        primary_versions = ad_request.versions.filter(is_primary=True).prefetch_related('ad_copies').order_by('-created_at')
+        primary_versions = (
+            ad_request
+            .versions
+            .filter(is_primary=True)
+            .prefetch_related('ad_copies')
+            .annotate(revisions_count=Count('revisions'))
+            .order_by('-created_at')
+        )
         
         # Determine back URL based on referrer
         referer = request.META.get('HTTP_REFERER', '')
