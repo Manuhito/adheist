@@ -969,6 +969,7 @@ class UserBrand(BaseModel):
     """
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="brands")
     brand_name = models.CharField(max_length=255, help_text="Name of the brand")
+    active = models.BooleanField(default=True, help_text="Indicates if the brand is active or has been soft deleted")
     
     class Meta:
         verbose_name = "User Brand"

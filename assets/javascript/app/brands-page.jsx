@@ -2,14 +2,44 @@ import React, { useState, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Card, CardContent } from '@/components/ui/card.tsx';
 import { Input } from '@/components/ui/input.tsx';
-import { Building2, Plus, Search, Grid3x3, List } from 'lucide-react';
+import { Building2, Plus, Search, Grid3x3, List, MoreVertical, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button.tsx';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu.tsx';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog.tsx';
 import CreateBrandModal from './components/CreateBrandModal.jsx';
 
-function BrandCard({ brand, onClick }) {
+function BrandCard({ brand, onClick, onDelete }) {
   return (
-    <Card className="hover:shadow-md transition-shadow cursor-pointer rounded-xl" onClick={() => onClick(brand)}>
+    <Card className="hover:shadow-md transition-shadow cursor-pointer rounded-xl group relative" onClick={() => onClick(brand)}>
       <CardContent className="p-6">
+        {/* Delete Button */}
+        <div className="absolute top-2 right-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 hover:bg-gray-100"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <MoreVertical className="h-4 w-4 text-gray-500" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(brand);
+                }}
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
         <div className="flex flex-col items-center text-center space-y-4">
           {/* Logo */}
           <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
@@ -36,9 +66,9 @@ function BrandCard({ brand, onClick }) {
   );
 }
 
-function BrandListItem({ brand, onClick }) {
+function BrandListItem({ brand, onClick, onDelete }) {
   return (
-    <Card className="hover:shadow-md transition-shadow cursor-pointer rounded-xl" onClick={() => onClick(brand)}>
+    <Card className="hover:shadow-md transition-shadow cursor-pointer rounded-xl group" onClick={() => onClick(brand)}>
       <CardContent className="p-4">
         <div className="flex items-center space-x-4">
           {/* Logo */}
@@ -64,6 +94,34 @@ function BrandListItem({ brand, onClick }) {
                 {brand.industry}
               </p>
             )}
+          </div>
+
+          {/* Delete Button */}
+          <div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 hover:bg-gray-100"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <MoreVertical className="h-4 w-4 text-gray-900" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(brand);
+                  }}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </CardContent>
@@ -127,6 +185,10 @@ function BrandsPage() {
   const [editingBrand, setEditingBrand] = useState(null);
   const [brandsList, setBrandsList] = useState(brands);
 
+  // Delete confirmation modal state
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [brandToDelete, setBrandToDelete] = useState(null);
+
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -180,8 +242,8 @@ function BrandsPage() {
   const handleBrandCreated = (newBrand) => {
     if (editingBrand) {
       // Update existing brand in the list
-      setBrandsList(prevBrands => 
-        prevBrands.map(brand => 
+      setBrandsList(prevBrands =>
+        prevBrands.map(brand =>
           brand.id === editingBrand.id ? { ...brand, ...newBrand } : brand
         )
       );
@@ -200,6 +262,67 @@ function BrandsPage() {
   // Handle search input change
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
+  };
+
+  // Function to get CSRF token from cookies
+  const getCsrfToken = () => {
+    const name = 'csrftoken';
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  };
+
+  // Handle delete brand
+  const handleDeleteBrand = (brand) => {
+    setBrandToDelete(brand);
+    setShowDeleteConfirmation(true);
+  };
+
+  // Confirm delete brand
+  const confirmDeleteBrand = async () => {
+    if (!brandToDelete) return;
+
+    try {
+      const response = await fetch(`/ads/api/brands/${brandToDelete.id}/delete/`, {
+        method: 'PATCH',
+        headers: {
+          'X-CSRFToken': getCsrfToken(),
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        // Remove the brand from the local state
+        setBrandsList(prevBrands =>
+          prevBrands.filter(brand => brand.id !== brandToDelete.id)
+        );
+
+        // Close the confirmation modal
+        setShowDeleteConfirmation(false);
+        setBrandToDelete(null);
+      } else {
+        console.error('Failed to delete brand');
+        // You could add error handling here
+      }
+    } catch (error) {
+      console.error('Error deleting brand:', error);
+      // You could add error handling here
+    }
+  };
+
+  // Cancel delete brand
+  const cancelDeleteBrand = () => {
+    setShowDeleteConfirmation(false);
+    setBrandToDelete(null);
   };
 
   // Filter brands based on search query
@@ -235,22 +358,20 @@ function BrandsPage() {
         <div className="flex items-center space-x-1 bg-muted rounded-lg p-1 flex-shrink-0">
           <button
             onClick={() => setViewMode('grid')}
-            className={`p-2 rounded-md transition-colors ${
-              viewMode === 'grid'
-                ? 'bg-background text-primary shadow-sm'
-                : 'text-muted-foreground hover:text-primary'
-            }`}
+            className={`p-2 rounded-md transition-colors ${viewMode === 'grid'
+              ? 'bg-background text-primary shadow-sm'
+              : 'text-muted-foreground hover:text-primary'
+              }`}
             title="Grid view"
           >
             <Grid3x3 className="h-4 w-4" />
           </button>
           <button
             onClick={() => setViewMode('list')}
-            className={`p-2 rounded-md transition-colors ${
-              viewMode === 'list'
-                ? 'bg-background text-primary shadow-sm'
-                : 'text-muted-foreground hover:text-primary'
-            }`}
+            className={`p-2 rounded-md transition-colors ${viewMode === 'list'
+              ? 'bg-background text-primary shadow-sm'
+              : 'text-muted-foreground hover:text-primary'
+              }`}
             title="List view"
           >
             <List className="h-4 w-4" />
@@ -266,7 +387,7 @@ function BrandsPage() {
 
           {/* Existing Brands */}
           {filteredBrands.map((brand) => (
-            <BrandCard key={brand.id} brand={brand} onClick={handleBrandClick} />
+            <BrandCard key={brand.id} brand={brand} onClick={handleBrandClick} onDelete={handleDeleteBrand} />
           ))}
         </div>
       ) : (
@@ -276,7 +397,7 @@ function BrandsPage() {
 
           {/* Existing Brands */}
           {filteredBrands.map((brand) => (
-            <BrandListItem key={brand.id} brand={brand} onClick={handleBrandClick} />
+            <BrandListItem key={brand.id} brand={brand} onClick={handleBrandClick} onDelete={handleDeleteBrand} />
           ))}
         </div>
       )}
@@ -315,6 +436,34 @@ function BrandsPage() {
         editingBrand={editingBrand}
         brandAssetsCost={brandAssetsCost}
       />
+
+      {/* Delete Confirmation Modal */}
+      <Dialog open={showDeleteConfirmation} onOpenChange={setShowDeleteConfirmation}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Brand</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-gray-600">
+              Are you sure you want to delete "{brandToDelete?.name}"? This action cannot be undone.
+            </p>
+          </div>
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={cancelDeleteBrand}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDeleteBrand}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

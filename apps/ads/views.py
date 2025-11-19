@@ -3016,8 +3016,8 @@ def get_user_brands(request):
     Returns: JSON with list of user brands
     """
     try:
-        # Get all brands for the current user
-        brands = UserBrand.objects.filter(user=request.user).order_by('brand_name')
+        # Get all active brands for the current user
+        brands = UserBrand.objects.filter(user=request.user, active=True).order_by('brand_name')
         
         # Format the brands as a list of dictionaries
         brands_data = [{
@@ -3048,10 +3048,11 @@ def get_user_containers(request):
     try:
         containers_data = []
         
-        # Get all brands for the current user
+        # Get all active brands for the current user
         # Note: This shows all user's brands, even if they don't have uploaded assets yet
         user_brands = UserBrand.objects.filter(
-            user=request.user
+            user=request.user,
+            active=True  # Only show active brands
         ).order_by('brand_name')
         
         # Add brands
@@ -3386,10 +3387,11 @@ def assets_page(request):
     Render the Assets page with React components.
     Shows all UserBrands and UserFolders for the current user as containers.
     """
-    # Get all brands for the current user
+    # Get all active brands for the current user
     # Note: This shows all user's brands, even if they don't have uploaded assets yet
     user_brands = UserBrand.objects.filter(
-        user=request.user
+        user=request.user,
+        active=True  # Only show active brands
     ).order_by('brand_name')
     
     # Get all root folders (folders without parent and without brand) for the current user
@@ -4249,4 +4251,44 @@ def get_brand_details(request, brand_id):
         return JsonResponse({
             'success': False,
             'error': str(e)
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["PATCH"])
+def delete_user_brand(request, brand_id):
+    """
+    Soft delete a user brand by marking it as inactive.
+    
+    Args:
+        request: HTTP request object
+        brand_id: ID of the brand to delete
+        
+    Returns:
+        JSON response indicating success or failure
+    """
+    try:
+        # Get the brand and verify ownership
+        brand = UserBrand.objects.get(id=brand_id, user=request.user)
+        
+        # Mark as inactive (soft delete)
+        brand.active = False
+        brand.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Brand "{brand.brand_name}" has been deleted successfully.'
+        })
+        
+    except UserBrand.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'Brand not found or you do not have permission to delete it.'
+        }, status=404)
+        
+    except Exception as e:
+        logging.error(f"Error deleting user brand {brand_id}: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': 'An error occurred while deleting the brand.'
         }, status=500)
