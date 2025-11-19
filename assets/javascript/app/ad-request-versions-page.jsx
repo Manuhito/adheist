@@ -114,7 +114,7 @@ const VersionCard = ({ version, onClick, brandName, brandUrl }) => {
 
       {/* Image */}
       {version.generated_image ? (
-        <div className="relative aspect-square rounded-lg overflow-hidden mx-3">
+        <div className="relative aspect-square rounded-lg overflow-hidden mx-3 mb-3">
           <img
             src={version.generated_image}
             alt="Generated Ad"
@@ -123,7 +123,7 @@ const VersionCard = ({ version, onClick, brandName, brandUrl }) => {
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         </div>
       ) : (
-        <div className="relative aspect-square rounded-lg overflow-hidden mx-3 bg-muted flex items-center justify-center">
+        <div className="relative aspect-square rounded-lg overflow-hidden mx-3 mb-3 bg-muted flex items-center justify-center">
           <div className="flex flex-col items-center gap-2">
             <div className="w-8 h-8 border-4 border-primary/20 dark:border-primary/30 border-t-primary dark:border-t-primary rounded-full animate-spin"></div>
             <div className="text-xs text-gray-400 dark:text-gray-500">Generating...</div>
