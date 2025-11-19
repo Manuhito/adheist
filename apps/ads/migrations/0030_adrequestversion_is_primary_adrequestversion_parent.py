@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='adrequestversion',
             name='is_primary',
-            field=models.BooleanField(default=False, help_text='True for the 3 initial versions created for an AdRequest'),
+            field=models.BooleanField(default=True, help_text='True for the 3 initial versions created for an AdRequest'),
         ),
         migrations.AddField(
             model_name='adrequestversion',
