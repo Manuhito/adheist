@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input.tsx';
 import { Building2, Plus, Search, Grid3x3, List, MoreVertical, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button.tsx';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu.tsx';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog.tsx';
 import CreateBrandModal from './components/CreateBrandModal.jsx';
 
 function BrandCard({ brand, onClick, onDelete }) {
@@ -438,32 +437,39 @@ function BrandsPage() {
       />
 
       {/* Delete Confirmation Modal */}
-      <Dialog open={showDeleteConfirmation} onOpenChange={setShowDeleteConfirmation}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Delete Brand</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm text-gray-600">
+      {showDeleteConfirmation && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          style={{ margin: 0 }}
+          onClick={cancelDeleteBrand} // Close on click outside
+        >
+          <div
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-md w-full mx-4"
+            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal
+          >
+            <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Delete Brand</h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
               Are you sure you want to delete "{brandToDelete?.name}"? This action cannot be undone.
             </p>
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md transition-colors"
+                onClick={cancelDeleteBrand}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="px-4 py-2 text-white bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 rounded-md transition-colors"
+                onClick={confirmDeleteBrand}
+              >
+                Delete
+              </button>
+            </div>
           </div>
-          <DialogFooter className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={cancelDeleteBrand}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={confirmDeleteBrand}
-            >
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
     </div>
   );
 }

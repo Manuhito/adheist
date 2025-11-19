@@ -326,12 +326,12 @@ def create_brand_from_extraction(user, extracted_assets: Dict[str, Any], website
         if not brand_name:
             brand_name = "Brand Name not found"
         
-        # Check if brand with this name already exists globally (unique constraint)
-        if UserBrand.objects.filter(brand_name=brand_name).exists():
+        # Check if brand with this name already exists for this user (only active brands)
+        if UserBrand.objects.filter(user=user, brand_name=brand_name, active=True).exists():
             # Generate a unique name by appending a number
             counter = 1
             original_name = brand_name
-            while UserBrand.objects.filter(brand_name=brand_name).exists():
+            while UserBrand.objects.filter(user=user, brand_name=brand_name, active=True).exists():
                 brand_name = f"{original_name} ({counter})"
                 counter += 1
         

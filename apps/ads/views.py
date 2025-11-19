@@ -565,10 +565,11 @@ def brands_page(request):
     """
     Render the brands library page with React components.
     """
-    # Get all AdRequestAssets for the current user that have an associated brand
+    # Get all AdRequestAssets for the current user that have an associated active brand
     user_assets = AdRequestAssets.objects.filter(
         user=request.user,
-        brand__isnull=False
+        brand__isnull=False,
+        brand__active=True
     ).select_related('brand').distinct('brand')
     
     # Prepare brands data for frontend
@@ -3147,11 +3148,11 @@ def create_user_brand(request):
                 'error': 'Brand name is required'
             }, status=400)
         
-        # Check if brand with this name already exists globally (unique constraint)
-        if UserBrand.objects.filter(brand_name=brand_name).exists():
+        # Check if brand with this name already exists for this user (only active brands)
+        if UserBrand.objects.filter(user=request.user, brand_name=brand_name, active=True).exists():
             return JsonResponse({
                 'success': False,
-                'error': 'A brand with this name already exists. Please choose a different name.'
+                'error': 'You already have an active brand with this name. Please choose a different name.'
             }, status=400)
         
         # Create the new brand (simple, just name)
@@ -4083,11 +4084,11 @@ def update_user_brand(request, brand_id):
         # Update brand name if provided
         brand_name = data.get('brand_name', '').strip()
         if brand_name:
-            # Check if another brand with this name exists (excluding current brand)
-            if UserBrand.objects.filter(brand_name=brand_name).exclude(id=brand_id).exists():
+            # Check if another active brand with this name exists for this user (excluding current brand)
+            if UserBrand.objects.filter(user=request.user, brand_name=brand_name, active=True).exclude(id=brand_id).exists():
                 return JsonResponse({
                     'success': False,
-                    'error': 'A brand with this name already exists. Please choose a different name.'
+                    'error': 'You already have an active brand with this name. Please choose a different name.'
                 }, status=400)
             brand.brand_name = brand_name
             brand.save()

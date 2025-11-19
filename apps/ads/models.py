@@ -978,7 +978,8 @@ class UserBrand(BaseModel):
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'brand_name'],
-                name='unique_user_brand'
+                condition=models.Q(active=True),
+                name='unique_active_user_brand'
             )
         ]
     

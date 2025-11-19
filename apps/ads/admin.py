@@ -438,13 +438,14 @@ class AppConfigurationAdmin(admin.ModelAdmin):
 
 @admin.register(UserBrand)
 class UserBrandAdmin(admin.ModelAdmin):
-    list_display = ["brand_name", "user", "created_at", "updated_at"]
+    list_display = ["brand_name", "user", "active", "created_at", "updated_at"]
     search_fields = ["brand_name", "user__email"]
-    list_filter = ["user"]
+    list_filter = ["user", "active"]
+    list_editable = ["active"]
     
     fieldsets = [
         (None, {
-            "fields": ["user", "brand_name"]
+            "fields": ["user", "brand_name", "active"]
         })
     ]
 
