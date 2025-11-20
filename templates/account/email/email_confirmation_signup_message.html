@@ -1,8 +1,24 @@
 {% extends 'account/email/email_template_base.html' %}
 {% load i18n %}
-{% block message_body %}{% blocktranslate with site_name=current_site.name %}
+
+{% block message_body %}
+{% if code %}
+<p>
+  {% blocktranslate with site_name=current_site.name %}
+  Welcome to {{ site_name }}!
+  Your email verification code is listed below. Please enter it in your open browser window to activate your account.
+  {% endblocktranslate %}
+</p>
+<p style="font-weight: bold">{{ code }}</p>
+{% else %}
+<p>
+  {% blocktranslate with site_name=current_site.name %}
   Welcome to {{ site_name }}!
   Click the confirmation link below to activate your account.
-{% endblocktranslate %}{% endblock %}
-{% block cta_link %}{{ activate_url }}{% endblock %}
-{% block cta_text %}{% translate "Confirm Email Address" %}{% endblock %}
+  {% endblocktranslate %}
+</p>
+{% endif %}
+{% endblock %}
+
+{% block cta_link %}{% if not code %}{{ activate_url }}{% endif %}{% endblock %}
+{% block cta_text %}{% if not code %}{% translate "Confirm Email Address" %}{% endif %}{% endblock %}

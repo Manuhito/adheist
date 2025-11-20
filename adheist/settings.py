@@ -241,6 +241,9 @@ SOCIALACCOUNT_FORMS = {
 # User signup configuration: change to "mandatory" to require users to confirm email before signing in.
 # or "optional" to send confirmation emails but not require them
 ACCOUNT_EMAIL_VERIFICATION = env("ACCOUNT_EMAIL_VERIFICATION", default="none")
+ACCOUNT_EMAIL_VERIFICATION_BY_CODE_ENABLED = env.bool(
+    "ACCOUNT_EMAIL_VERIFICATION_BY_CODE_ENABLED", default=False
+)
 
 AUTHENTICATION_BACKENDS = (
     # Needed to login by username in Django admin, regardless of `allauth`
