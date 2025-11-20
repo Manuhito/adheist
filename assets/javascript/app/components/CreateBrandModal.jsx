@@ -41,7 +41,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState('');
   const [createdBrandId, setCreatedBrandId] = useState(null);
-  const autoSaveTimerRef = useRef(null);
+  const [logoChangeTrigger, setLogoChangeTrigger] = useState(0);
 
   // Effect to preload data when editing a brand
   useEffect(() => {
@@ -330,6 +330,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
 
     setSelectedLogo(null);
     setSelectedLogoData(null);
+    setLogoChangeTrigger(prev => prev + 1);
     console.log('Logo deleted:', logoData);
   };
 
@@ -434,30 +435,15 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
     }
   }, [brandName, industry, website, productDescription, targetAudience, functionalBenefits, brandColors, toneOfVoice, fontDirection, coreFeatures, emotionalBenefits, proofPoints, valuePropositions, selectedLogoData, createdBrandId, onBrandCreated, onBrandUpdated]);
 
-  // Auto-save effect: monitors all form fields and triggers save after 2 seconds of inactivity
   useEffect(() => {
-    // Don't auto-save if brand name is empty (required field)
     if (!brandName.trim()) {
       return;
     }
-
-    // Clear existing timer
-    if (autoSaveTimerRef.current) {
-      clearTimeout(autoSaveTimerRef.current);
+    if (!logoChangeTrigger) {
+      return;
     }
-
-    // Set new timer for 2 seconds
-    autoSaveTimerRef.current = setTimeout(() => {
-      autoSave();
-    }, 2000);
-
-    // Cleanup on unmount or when dependencies change
-    return () => {
-      if (autoSaveTimerRef.current) {
-        clearTimeout(autoSaveTimerRef.current);
-      }
-    };
-  }, [brandName, industry, website, productDescription, targetAudience, functionalBenefits, brandColors, toneOfVoice, fontDirection, coreFeatures, emotionalBenefits, proofPoints, valuePropositions, selectedLogoData, autoSave]);
+    autoSave();
+  }, [logoChangeTrigger, brandName, autoSave]);
 
   // Function to get CSRF token from cookies
   const getCsrfToken = () => {
@@ -505,12 +491,14 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
 
         // Update state with complete file info
         setSelectedLogoData(fileInfo);
+        setLogoChangeTrigger(prev => prev + 1);
         console.log('Logo file selected:', fileInfo);
       };
       img.onerror = function () {
         // If can't load image, still store the file info without dimensions
         console.warn('Could not extract logo dimensions');
         setSelectedLogoData(fileInfo);
+        setLogoChangeTrigger(prev => prev + 1);
       };
       img.src = previewUrl;
 
@@ -669,8 +657,15 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
     }
   };
 
+  const handleDialogOpenChange = useCallback((open) => {
+    if (!open) {
+      autoSave();
+      onClose();
+    }
+  }, [autoSave, onClose]);
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleDialogOpenChange}>
       <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
         <DialogHeader className="border-b border-gray-200 dark:border-gray-700 pb-4">
           <DialogTitle className="text-gray-900 dark:text-gray-100">{editingBrand ? 'Edit Brand' : 'Create Brand'}</DialogTitle>
@@ -766,6 +761,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
                   id="brandName"
                   value={brandName}
                   onChange={handleBrandNameChange}
+                  onBlur={autoSave}
                   placeholder={t('brand.name_placeholder', 'Brand name')}
                   disabled={isSubmitting}
                   className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
@@ -782,6 +778,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
                   id="industry"
                   value={industry}
                   onChange={handleIndustryChange}
+                  onBlur={autoSave}
                   placeholder="Industry/Vertical"
                   disabled={isSubmitting}
                   className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
@@ -797,6 +794,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
                   id="website"
                   value={website}
                   onChange={handleWebsiteChange}
+                  onBlur={autoSave}
                   placeholder="Website"
                   disabled={isSubmitting}
                   className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
@@ -812,6 +810,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
                   id="productDescription"
                   value={productDescription}
                   onChange={handleProductDescriptionChange}
+                  onBlur={autoSave}
                   placeholder="Outline the product range and services provided by the brand."
                   disabled={isSubmitting}
                   rows={3}
@@ -828,6 +827,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
                   id="targetAudience"
                   value={targetAudience}
                   onChange={handleTargetAudienceChange}
+                  onBlur={autoSave}
                   placeholder="Description of the target audience"
                   disabled={isSubmitting}
                   rows={2}
@@ -844,6 +844,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
                   id="functionalBenefits"
                   value={functionalBenefits}
                   onChange={handleFunctionalBenefitsChange}
+                  onBlur={autoSave}
                   placeholder="Functional Benefits"
                   disabled={isSubmitting}
                   rows={2}
@@ -907,6 +908,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
                   id="toneOfVoice"
                   value={toneOfVoice}
                   onChange={handleToneOfVoiceChange}
+                  onBlur={autoSave}
                   placeholder="Tone of Voice"
                   disabled={isSubmitting}
                   className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
@@ -922,6 +924,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
                   id="fontDirection"
                   value={fontDirection}
                   onChange={handleFontDirectionChange}
+                  onBlur={autoSave}
                   placeholder="Font Direction"
                   disabled={isSubmitting}
                   className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
@@ -937,6 +940,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
                   id="coreFeatures"
                   value={coreFeatures}
                   onChange={handleCoreFeaturesChange}
+                  onBlur={autoSave}
                   placeholder="Core Features"
                   disabled={isSubmitting}
                   rows={2}
@@ -954,6 +958,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
                   id="emotionalBenefits"
                   value={emotionalBenefits}
                   onChange={handleEmotionalBenefitsChange}
+                  onBlur={autoSave}
                   placeholder="Emotional/Lifestyle Benefits"
                   disabled={isSubmitting}
                   rows={2}
@@ -970,6 +975,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
                   id="proofPoints"
                   value={proofPoints}
                   onChange={handleProofPointsChange}
+                  onBlur={autoSave}
                   placeholder="Proof Points"
                   disabled={isSubmitting}
                   rows={2}
@@ -986,6 +992,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
                   id="valuePropositions"
                   value={valuePropositions}
                   onChange={handleValuePropositionsChange}
+                  onBlur={autoSave}
                   placeholder="Value Propositions"
                   disabled={isSubmitting}
                   rows={2}

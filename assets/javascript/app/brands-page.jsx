@@ -252,6 +252,15 @@ function BrandsPage() {
     }
   };
 
+  // Handle brand update success (used by CreateBrandModal autosave and submit)
+  const handleBrandUpdated = (updatedBrand) => {
+    setBrandsList(prevBrands =>
+      prevBrands.map(brand =>
+        brand.id === updatedBrand.id ? { ...brand, ...updatedBrand } : brand
+      )
+    );
+  };
+
   // Handle brand click for editing
   const handleBrandClick = (brand) => {
     setEditingBrand(brand);
@@ -432,6 +441,7 @@ function BrandsPage() {
         isOpen={isCreateModalOpen}
         onClose={handleCloseCreateModal}
         onBrandCreated={handleBrandCreated}
+        onBrandUpdated={handleBrandUpdated}
         editingBrand={editingBrand}
         brandAssetsCost={brandAssetsCost}
       />
