@@ -31,6 +31,8 @@ COPY requirements requirements/
 RUN --mount=type=cache,target=/root/.cache \
     uv pip install --system -r prod-requirements.txt \
     gunicorn gevent
+# Install playwright browsers
+RUN playwright install --with-deps chromium
 
 # Create necessary directories
 RUN mkdir -p /var/log/nginx /var/log/supervisor /var/log/gunicorn /run/nginx /code/static /code/media
