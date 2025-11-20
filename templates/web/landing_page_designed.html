@@ -12,7 +12,8 @@
         <br />
         Converts
       </h1>
-      <p class="mt-6 text-2xl font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300 max-w-2xl text-center">
+      <p
+        class="mt-6 text-2xl font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300 max-w-2xl text-center">
         The ultimate AI tool to create, optimize, and scale your ad creatives with a user-friendly interface.
       </p>
       <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -59,7 +60,8 @@
           </svg>
           <span class="ml-2 text-base font-medium text-neutral-800 dark:text-white">5.0</span>
         </div>
-        <p class="mt-2 text-sm font-light leading-relaxed tracking-normal text-neutral-500 dark:text-neutral-400">From 80+ reviews</p>
+        <p class="mt-2 text-sm font-light leading-relaxed tracking-normal text-neutral-500 dark:text-neutral-400">From
+          80+ reviews</p>
       </div>
     </div>
 
@@ -68,19 +70,23 @@
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 items-center">
         <!-- Vertical image left (full height) -->
         <div>
-          <img src="{% static 'images/landing/home-1.jpg' %}" alt="Ad example 1" class="rounded-3xl w-full h-auto object-cover">
+          <img src="{% static 'images/landing/home-1.jpg' %}" alt="Ad example 1"
+            class="rounded-3xl w-full h-auto object-cover">
         </div>
         <!-- Square image 1 -->
         <div>
-          <img src="{% static 'images/landing/home-page-top-square-1.jpeg' %}" alt="Ad example 2" class="rounded-3xl w-full aspect-square object-cover">
+          <img src="{% static 'images/landing/home-page-top-square-1.jpeg' %}" alt="Ad example 2"
+            class="rounded-3xl w-full aspect-square object-cover">
         </div>
         <!-- Square image 2 -->
         <div>
-          <img src="{% static 'images/landing/home-page-top-square-2.jpeg' %}" alt="Ad example 3" class="rounded-3xl w-full aspect-square object-cover">
+          <img src="{% static 'images/landing/home-page-top-square-2.jpeg' %}" alt="Ad example 3"
+            class="rounded-3xl w-full aspect-square object-cover">
         </div>
         <!-- Vertical image right (full height) -->
         <div>
-          <img src="{% static 'images/landing/home-4.jpg' %}" alt="Ad example 4" class="rounded-3xl w-full h-auto object-cover">
+          <img src="{% static 'images/landing/home-4.jpg' %}" alt="Ad example 4"
+            class="rounded-3xl w-full h-auto object-cover">
         </div>
       </div>
   </section>
@@ -89,9 +95,15 @@
   <section id="logos" class="container mx-auto px-4 md:px-8 pt-4 pb-4">
     <div class="relative mt-6 overflow-hidden">
       <div class="flex justify-center items-center gap-x-12">
-        {% for logo in logo_list %}
-        <img width="112" height="40" src="https://cdn.magicui.design/companies/{{ logo }}.svg"
-          class="h-10 w-28 dark:brightness-0 dark:invert grayscale opacity-30" alt="{{ logo }}" />
+        {% for logo in logo_list|slice:":6" %}
+        <img width="112" height="40" src="{% static logo %}"
+          class="h-10 w-28 dark:brightness-0 dark:invert grayscale opacity-30" alt="Brand logo" />
+        {% endfor %}
+      </div>
+      <div class="flex justify-center items-center gap-x-12 mt-4">
+        {% for logo in logo_list|slice:"6:" %}
+        <img width="112" height="40" src="{% static logo %}"
+          class="h-10 w-28 dark:brightness-0 dark:invert grayscale opacity-30" alt="Brand logo" />
         {% endfor %}
       </div>
       <div class="pointer-events-none absolute inset-y-0 left-0 h-full w-1/3 bg-gradient-to-r from-background"></div>
@@ -123,7 +135,8 @@
         </div>
         <div>
           <h3 class="text-2xl font-medium text-primary pt-2">{{ card.title }}</h3>
-          <p class="mt-3 text-lg font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300">{{ card.text }}</p>
+          <p class="mt-3 text-lg font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300">{{
+            card.text }}</p>
         </div>
       </div>
       {% endfor %}
@@ -171,7 +184,8 @@
       <div class="space-y-12">
         <div>
           <h2 class="text-4xl font-bold text-primary leading-tight">Instant Brand Understanding</h2>
-          <p class="mt-4 text-lg font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300">Simply enter your product URL and our AI will
+          <p class="mt-4 text-lg font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300">
+            Simply enter your product URL and our AI will
             automatically scan your website to understand your brand identity, color schemes, messaging style, and
             visual elements.</p>
         </div>
@@ -182,7 +196,8 @@
             </div>
             <div>
               <h3 class="font-semibold text-primary text-lg">Smart Website Analysis</h3>
-              <p class="mt-2 font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300">Our AI scans your product page to extract key
+              <p class="mt-2 font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300">Our AI
+                scans your product page to extract key
                 selling points, imagery, and brand elements, ensuring your ads remain consistent with your existing
                 marketing strategy.</p>
             </div>
@@ -193,7 +208,8 @@
             </div>
             <div>
               <h3 class="font-semibold text-primary text-lg">Brand Voice Identification</h3>
-              <p class="mt-2 font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300">The system analyzes your website copy to capture
+              <p class="mt-2 font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300">The
+                system analyzes your website copy to capture
                 your unique tone and messaging approach, then applies it to all your ad copies for seamless brand
                 consistency.</p>
             </div>
@@ -202,7 +218,8 @@
       </div>
       <!-- Image Placeholder -->
       <div>
-        <img src="{% static 'images/landing/2-brand-details.png' %}" alt="Brand Understanding" class="rounded-3xl w-full">
+        <img src="{% static 'images/landing/2-brand-details.png' %}" alt="Brand Understanding"
+          class="rounded-3xl w-full">
       </div>
     </div>
   </section>
@@ -212,13 +229,15 @@
     <div class="grid md:grid-cols-2 gap-24 items-center">
       <!-- Image Placeholder -->
       <div class="order-last md:order-first">
-        <img src="{% static 'images/landing/3-creating-ads.jpg' %}" alt="Generate effective ads" class="rounded-3xl w-full">
+        <img src="{% static 'images/landing/3-creating-ads.jpg' %}" alt="Generate effective ads"
+          class="rounded-3xl w-full">
       </div>
       <!-- Text Content -->
       <div class="space-y-12">
         <div>
           <h2 class="text-4xl font-bold text-primary leading-tight">Generate effective ads that convert</h2>
-          <p class="mt-4 text-lg font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300">Transform basic product images into
+          <p class="mt-4 text-lg font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300">
+            Transform basic product images into
             scroll-stopping ad designs with AI that understands what drives clicks and conversions for your target
             audience.</p>
         </div>
@@ -229,7 +248,8 @@
             </div>
             <div>
               <h3 class="font-semibold text-primary text-lg">AI-Powered Creative Generators</h3>
-              <p class="mt-2 font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300">Struggling with design expertise? Our platform
+              <p class="mt-2 font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300">
+                Struggling with design expertise? Our platform
                 creates professional AI ads for various platforms in seconds, with intelligent text placement and
                 perfect aspect ratios that converts.</p>
             </div>
@@ -240,7 +260,8 @@
             </div>
             <div>
               <h3 class="font-semibold text-primary text-lg">Massive Template Library</h3>
-              <p class="mt-2 font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300">Access over 1,000,000 pre-designed ad templates
+              <p class="mt-2 font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300">Access
+                over 1,000,000 pre-designed ad templates
                 with brand kits across all industries, optimized for performance and ready to customize with your brand
                 voice.</p>
             </div>
@@ -257,7 +278,8 @@
       <div class="space-y-12">
         <div>
           <h2 class="text-4xl font-bold text-primary leading-tight">Leverage competitor intelligence</h2>
-          <p class="mt-4 text-lg font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300">Wondering why competitors are outperforming
+          <p class="mt-4 text-lg font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300">
+            Wondering why competitors are outperforming
             you? Discover the exact ad formats and messaging driving their success, then make them work for your digital
             marketing.</p>
         </div>
@@ -268,7 +290,8 @@
             </div>
             <div>
               <h3 class="font-semibold text-primary text-lg">Competitor Ad Analysis</h3>
-              <p class="mt-2 font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300">Scrape and analyze your competitors' top-performing
+              <p class="mt-2 font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300">Scrape
+                and analyze your competitors' top-performing
                 social media ads to understand consumer behavior in your niche right now.</p>
             </div>
           </div>
@@ -278,7 +301,8 @@
             </div>
             <div>
               <h3 class="font-semibold text-primary text-lg">One-Click Ad Cloning</h3>
-              <p class="mt-2 font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300">See a winning competitor ad? Clone it instantly
+              <p class="mt-2 font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300">See a
+                winning competitor ad? Clone it instantly
                 with your own branding, messaging, and products while keeping the proven format that converts.</p>
             </div>
           </div>
@@ -286,7 +310,8 @@
       </div>
       <!-- Image Placeholder -->
       <div>
-        <img src="{% static 'images/landing/4-ad-details.png' %}" alt="Competitor Intelligence" class="rounded-3xl w-full">
+        <img src="{% static 'images/landing/4-ad-details.png' %}" alt="Competitor Intelligence"
+          class="rounded-3xl w-full">
       </div>
     </div>
   </section>
@@ -343,21 +368,33 @@
 
       <div class="mt-8 w-full bg-primary/5 dark:bg-primary/10 rounded-3xl p-8 md:p-12" data-tab-content>
         <div data-tab-panel="generation" class="text-center space-y-4">
-            <h3 class="text-3xl font-bold text-primary">AI-Powered Ad Generation</h3>
-            <p class="font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300 max-w-2xl mx-auto">Create high-converting ads in seconds. Our AI analyzes your brand and generates multiple ad variations tailored to your audience and platform.</p>
-          </div>
-          <div data-tab-panel="analytics" class="text-center space-y-4 hidden">
-            <h3 class="text-3xl font-bold text-primary">In-Depth Performance Analytics</h3>
-            <p class="font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300 max-w-2xl mx-auto">Track your ad performance with detailed analytics, providing insights into what works and what doesn't, helping you optimize for better results.</p>
-          </div>
-          <div data-tab-panel="intelligence" class="text-center space-y-4 hidden">
-            <h3 class="text-3xl font-bold text-primary">Competitor Intelligence</h3>
-            <p class="font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300 max-w-2xl mx-auto">Analyze competitor strategies and successful ads to gain a competitive edge and discover new opportunities in your market.</p>
-          </div>
-          <div data-tab-panel="scaling" class="text-center space-y-4 hidden">
-            <h3 class="text-3xl font-bold text-primary">Effortless Campaign Scaling</h3>
-            <p class="font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300 max-w-2xl mx-auto">Scale your advertising efforts with bulk ad generation and smart adaptation tools that ensure brand consistency across all platforms.</p>
-          </div>
+          <h3 class="text-3xl font-bold text-primary">AI-Powered Ad Generation</h3>
+          <p
+            class="font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300 max-w-2xl mx-auto">
+            Create high-converting ads in seconds. Our AI analyzes your brand and generates multiple ad variations
+            tailored to your audience and platform.</p>
+        </div>
+        <div data-tab-panel="analytics" class="text-center space-y-4 hidden">
+          <h3 class="text-3xl font-bold text-primary">In-Depth Performance Analytics</h3>
+          <p
+            class="font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300 max-w-2xl mx-auto">
+            Track your ad performance with detailed analytics, providing insights into what works and what doesn't,
+            helping you optimize for better results.</p>
+        </div>
+        <div data-tab-panel="intelligence" class="text-center space-y-4 hidden">
+          <h3 class="text-3xl font-bold text-primary">Competitor Intelligence</h3>
+          <p
+            class="font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300 max-w-2xl mx-auto">
+            Analyze competitor strategies and successful ads to gain a competitive edge and discover new opportunities
+            in your market.</p>
+        </div>
+        <div data-tab-panel="scaling" class="text-center space-y-4 hidden">
+          <h3 class="text-3xl font-bold text-primary">Effortless Campaign Scaling</h3>
+          <p
+            class="font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300 max-w-2xl mx-auto">
+            Scale your advertising efforts with bulk ad generation and smart adaptation tools that ensure brand
+            consistency across all platforms.</p>
+        </div>
       </div>
     </div>
   </section>
@@ -367,7 +404,7 @@
     <div class="text-center mb-12">
       <h2 class="text-3xl font-bold tracking-tight">Frequently Asked Questions</h2>
     </div>
-    
+
     <div class="max-w-3xl mx-auto">
       {% for faq in faq_data %}
       <div class="mb-4 border-b border-border pb-4">
@@ -384,34 +421,37 @@
   <section class="container mx-auto py-16 px-4 md:px-6">
     <div class="text-center mb-12">
       <h2 class="text-4xl font-bold text-primary">Simple, transparent pricing</h2>
-      <p class="mt-4 text-lg font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300">Choose the plan that fits your needs. All plans include a 14-day free trial.</p>
+      <p class="mt-4 text-lg font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300">Choose
+        the plan that fits your needs. All plans include a 14-day free trial.</p>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
       {% for tier in pricing_data.tiers %}
-        {% if tier.name == 'Free' or tier.name == 'Beta' or tier.name == 'Starter' or tier.name == 'Pro' %}
-          <div class="border rounded-2xl p-8 flex flex-col {% if tier.name == 'Pro' %}border-primary{% endif %}">
-            <h3 class="text-xl font-semibold text-primary">{{ tier.name }}</h3>
-            <p class="text-neutral-500 mt-2 h-12">{{ tier.description }}</p>
-            {% if tier.name == 'Free' or tier.name == 'Beta' %}
-            <p class="text-sm text-neutral-400 mt-1">* No credit card required</p>
-            {% endif %}
-            <div class="mt-6">
-              <span class="text-4xl font-bold">${{ tier.price }}</span>
-              <span class="text-neutral-500">/ month</span>
-            </div>
-            <a href="{% url 'account_signup' %}" class="mt-6 w-full text-center rounded-lg px-6 py-3 text-base font-medium text-white shadow-sm" style="background-color: #5C67F2;">
-              Start Free Trial
-            </a>
-            <ul class="mt-8 space-y-4 text-sm flex-grow">
-              {% for feature in tier.features %}
-                <li class="flex items-center gap-3">
-                  <i data-lucide="check" class="w-5 h-5 text-primary"></i>
-                  <span>{{ feature }}</span>
-                </li>
-              {% endfor %}
-            </ul>
-          </div>
+      {% if tier.name == 'Free' or tier.name == 'Beta' or tier.name == 'Starter' or tier.name == 'Pro' %}
+      <div class="border rounded-2xl p-8 flex flex-col {% if tier.name == 'Pro' %}border-primary{% endif %}">
+        <h3 class="text-xl font-semibold text-primary">{{ tier.name }}</h3>
+        <p class="text-neutral-500 mt-2 h-12">{{ tier.description }}</p>
+        {% if tier.name == 'Free' or tier.name == 'Beta' %}
+        <p class="text-sm text-neutral-400 mt-1">* No credit card required</p>
         {% endif %}
+        <div class="mt-6">
+          <span class="text-4xl font-bold">${{ tier.price }}</span>
+          <span class="text-neutral-500">/ month</span>
+        </div>
+        <a href="{% url 'account_signup' %}"
+          class="mt-6 w-full text-center rounded-lg px-6 py-3 text-base font-medium text-white shadow-sm"
+          style="background-color: #5C67F2;">
+          Start Free Trial
+        </a>
+        <ul class="mt-8 space-y-4 text-sm flex-grow">
+          {% for feature in tier.features %}
+          <li class="flex items-center gap-3">
+            <i data-lucide="check" class="w-5 h-5 text-primary"></i>
+            <span>{{ feature }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
       {% endfor %}
     </div>
   </section>

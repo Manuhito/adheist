@@ -28,8 +28,18 @@ def home(request):
         # This allows direct rendering in the template with {{ faq.answer|safe }}
         
         logo_list = [
-            "HelloFresh", "TrueClassic", "Huel", "AG1", "Clickup", "Monday",
-            "Calm", "Lululemon", "MagicSpoon", "Gymshark", "Canva", "TheRidge", "BetterHelp"
+            "images/landing/brands-icons/hello-fresh-logo.svg",
+            "images/landing/brands-icons/true-classic.svg",
+            "images/landing/brands-icons/huel.svg",
+            "images/landing/brands-icons/ag1-logo.svg",
+            "images/landing/brands-icons/logo-clickup.svg",
+            "images/landing/brands-icons/monday.svg",
+            "images/landing/brands-icons/calm.svg",
+            "images/landing/brands-icons/lululemon.svg",
+            "images/landing/brands-icons/magicspoon.svg",
+            "images/landing/brands-icons/gymshark.svg",
+            "images/landing/brands-icons/canva.svg",
+            "images/landing/brands-icons/the-ridge.svg",
         ]
 
         feature_cards = [
