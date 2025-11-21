@@ -1,86 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { createRoot } from 'react-dom/client';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../components/ui/dialog.tsx';
 import { Button } from '../../components/ui/button.tsx';
-import { Alert } from '../../components/ui/alert.tsx';
-import { AlertCircle, X } from 'lucide-react';
 import { useTranslation } from '../../lib/useTranslation';
-
-const SEARCH_DURATION_MS = 5 * 60 * 1000; // 5 minutes
-const SAVE_DURATION_MS = 5 * 60 * 1000;   // 5 minutes
-
-const RequestBrandProgressAlert = ({ phase, progress, canClose, onClose, pageId, hasAds }) => {
-  let message = '';
-
-  if (phase === 'searching') {
-    message = 'Searching ads for the requested advertiser';
-  } else if (phase === 'saving') {
-    message = 'Saving the ads we found';
-  } else if (phase === 'done') {
-    if (hasAds) {
-      message = 'The ads are now available';
-    } else {
-      message = "We couldn't extract any ads for this advertiser.";
-    }
-  }
-
-  if (!message) return null;
-
-  return (
-    <div className="fixed bottom-6 right-6 z-50 w-[380px] animate-in fade-in slide-in-from-bottom-5">
-      <Alert
-        layout="row"
-        isNotification
-        variant="info"
-        icon={
-          <AlertCircle
-            className="text-blue-500"
-            size={16}
-            strokeWidth={2}
-          />
-        }
-        action={
-          canClose ? (
-            <button
-              className="group -my-1.5 -me-2 size-8 p-0 hover:bg-transparent"
-              aria-label="Close notification"
-              onClick={onClose}
-            >
-              <X
-                size={16}
-                strokeWidth={2}
-                className="opacity-60 transition-opacity group-hover:opacity-100"
-              />
-            </button>
-          ) : null
-        }
-      >
-        <div className="flex flex-col w-full">
-          <p className="text-sm mb-2">{message}</p>
-          {phase === 'done' && hasAds && pageId && (
-            <div className="mt-1 flex justify-end">
-              <button
-                type="button"
-                className="text-xs font-medium text-blue-600 hover:text-blue-700 underline"
-                onClick={() => {
-                  window.location.href = `/ads/discover/?company=${pageId}`;
-                }}
-              >
-                Go to discover
-              </button>
-            </div>
-          )}
-          <div className="mt-2 h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-blue-500 transition-all ease-linear"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        </div>
-      </Alert>
-    </div>
-  );
-};
+import { startRequestBrandProgress } from '../request-brand-progress-manager';
 
 /**
  * Modal para solicitar agregar una nueva marca a la biblioteca
@@ -97,14 +19,6 @@ function RequestBrandModal({ isOpen, onOpenChange, onRequestStateChange }) {
   const [pageId, setPageId] = useState(null);
   const [backloadId, setBackloadId] = useState(null);
   const [hasProcessedAds, setHasProcessedAds] = useState(false);
-
-  const [progressPhase, setProgressPhase] = useState('idle'); // 'idle' | 'searching' | 'saving' | 'done'
-  const [progressValue, setProgressValue] = useState(0);
-  const [isProgressVisible, setIsProgressVisible] = useState(false);
-  const [canCloseProgress, setCanCloseProgress] = useState(false);
-  const eventSourceRef = useRef(null);
-  const progressContainerRef = useRef(null);
-  const progressRootRef = useRef(null);
 
   // Function to get CSRF token from cookie
   const getCsrfToken = () => {
@@ -178,164 +92,6 @@ function RequestBrandModal({ isOpen, onOpenChange, onRequestStateChange }) {
     }
   };
 
-  // Progress handling via SSE events from Apify / Backload
-  useEffect(() => {
-    if (!isProgressVisible || !backloadId) {
-      return;
-    }
-
-    const eventSource = new EventSource('/ads/sse/adrequest-updates/');
-    eventSourceRef.current = eventSource;
-    let isComponentMounted = true;
-
-    eventSource.addEventListener('backload_fetch_completed', (event) => {
-      if (!isComponentMounted) return;
-      try {
-        const data = JSON.parse(event.data);
-        if (data.backload_id === backloadId) {
-          setProgressPhase('saving');
-          setProgressValue(50);
-        }
-      } catch (e) {
-        // Ignore parse errors for unrelated events
-      }
-    });
-
-    eventSource.addEventListener('backload_completed', (event) => {
-      if (!isComponentMounted) return;
-      try {
-        const data = JSON.parse(event.data);
-        if (data.backload_id === backloadId) {
-          eventSource.close();
-          eventSourceRef.current = null;
-
-          if (data.processed_count && data.processed_count > 0) {
-            setHasProcessedAds(true);
-            if (data.page_id) {
-              setPageId(data.page_id);
-            }
-            setProgressPhase('done');
-            setProgressValue(100);
-            setCanCloseProgress(true);
-            if (onRequestStateChange) {
-              onRequestStateChange(false);
-            }
-          } else {
-            setHasProcessedAds(false);
-            setProgressPhase('done');
-            setProgressValue(100);
-            setCanCloseProgress(true);
-            setRequestStatus({
-              loading: false,
-              success: false,
-              error: "We couldn't extract any ads for this advertiser. This might be because they don't have active image/meme ads in English, or there was an error during extraction. Please try again or contact support at hey@adheist.ai"
-            });
-            if (onRequestStateChange) {
-              onRequestStateChange(false);
-            }
-          }
-        }
-      } catch (e) {
-        // Ignore parse errors for unrelated events
-      }
-    });
-
-    eventSource.onerror = () => {
-      if (!isComponentMounted) return;
-      eventSource.close();
-      eventSourceRef.current = null;
-      setIsProgressVisible(false);
-      setProgressPhase('idle');
-      setProgressValue(0);
-      setCanCloseProgress(false);
-      setRequestStatus({
-        loading: false,
-        success: false,
-        error: 'Connection error. Please refresh the page and try again.'
-      });
-      if (onRequestStateChange) {
-        onRequestStateChange(false);
-      }
-    };
-
-    return () => {
-      isComponentMounted = false;
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-        eventSourceRef.current = null;
-      }
-    };
-  }, [isProgressVisible, backloadId, onRequestStateChange]);
-
-  // Render the progress alert globally so it is not tied to the modal lifecycle
-  useEffect(() => {
-    if (!isProgressVisible) {
-      if (progressRootRef.current && progressContainerRef.current) {
-        progressRootRef.current.unmount();
-        if (progressContainerRef.current.parentNode) {
-          progressContainerRef.current.parentNode.removeChild(progressContainerRef.current);
-        }
-      }
-      progressRootRef.current = null;
-      progressContainerRef.current = null;
-      return;
-    }
-
-    if (!progressContainerRef.current) {
-      const container = document.createElement('div');
-      container.id = 'request-brand-progress-container';
-      document.body.appendChild(container);
-      progressContainerRef.current = container;
-      progressRootRef.current = createRoot(container);
-    }
-
-    if (progressRootRef.current && progressContainerRef.current) {
-      progressRootRef.current.render(
-        <RequestBrandProgressAlert
-          phase={progressPhase}
-          progress={progressValue}
-          canClose={canCloseProgress}
-          onClose={handleProgressClose}
-          pageId={pageId}
-          hasAds={hasProcessedAds}
-        />
-      );
-    }
-  }, [isProgressVisible, progressPhase, progressValue, canCloseProgress, pageId, hasProcessedAds]);
-
-  // Smooth progress animation within each phase so the bar keeps moving while waiting for SSE events
-  useEffect(() => {
-    if (!isProgressVisible) {
-      return;
-    }
-
-    if (progressPhase !== 'searching' && progressPhase !== 'saving') {
-      return;
-    }
-
-    const duration = progressPhase === 'searching' ? SEARCH_DURATION_MS : SAVE_DURATION_MS;
-    const minValue = progressPhase === 'searching' ? 0 : 50;
-    const maxValue = progressPhase === 'searching' ? 45 : 95;
-    const startTime = Date.now();
-
-    const intervalId = window.setInterval(() => {
-      setProgressValue((prev) => {
-        if (prev >= maxValue) {
-          return prev;
-        }
-        const elapsed = Date.now() - startTime;
-        const fraction = Math.min(1, elapsed / duration);
-        const next = minValue + (maxValue - minValue) * fraction;
-        const rounded = Math.round(next);
-        return rounded > prev ? rounded : prev;
-      });
-    }, 1000);
-
-    return () => {
-      window.clearInterval(intervalId);
-    };
-  }, [isProgressVisible, progressPhase]);
-
   // Function to handle brand request submission
   const handleBrandRequest = async () => {
     if (!brandUrl.trim() || !isValidBrandUrl(brandUrl)) return;
@@ -360,12 +116,11 @@ function RequestBrandModal({ isOpen, onOpenChange, onRequestStateChange }) {
         setBackloadId(data.backload_id);
         setRequestStatus({ loading: false, success: true, error: null });
 
-        // Start progress tracking and notify parent that a request is in progress
-        setIsProgressVisible(true);
-        setProgressPhase('searching');
-        if (onRequestStateChange) {
-          onRequestStateChange(true);
-        }
+        startRequestBrandProgress({
+          backloadId: data.backload_id,
+          pageId: data.facebook_page_id,
+        });
+
         onOpenChange(false);
       } else {
         setRequestStatus({ loading: false, success: false, error: data.error || 'An error occurred' });
@@ -374,13 +129,6 @@ function RequestBrandModal({ isOpen, onOpenChange, onRequestStateChange }) {
       console.error('Error submitting brand request:', error);
       setRequestStatus({ loading: false, success: false, error: 'Network error. Please try again.' });
     }
-  };
-
-  const handleProgressClose = () => {
-    setIsProgressVisible(false);
-    setProgressPhase('idle');
-    setProgressValue(0);
-    setCanCloseProgress(false);
   };
 
   const handleOpenChange = (open) => {
@@ -419,7 +167,7 @@ function RequestBrandModal({ isOpen, onOpenChange, onRequestStateChange }) {
                 onChange={handleUrlChange}
                 className="w-full px-3 py-2 border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="https://www.facebook.com/ads/library/..."
-                disabled={requestStatus.loading || progressPhase !== 'idle'}
+                disabled={requestStatus.loading}
               />
               {urlError && (
                 <p className="text-xs text-red-600 dark:text-red-400">
@@ -478,7 +226,7 @@ function RequestBrandModal({ isOpen, onOpenChange, onRequestStateChange }) {
             </Button>
             <Button
               onClick={handleBrandRequest}
-              disabled={!isValidBrandUrl(brandUrl) || requestStatus.loading || progressPhase !== 'idle'}
+              disabled={!isValidBrandUrl(brandUrl) || requestStatus.loading}
               loading={requestStatus.loading}
             >
               {t('request_brand.submit', 'Submit request')}

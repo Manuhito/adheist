@@ -4,6 +4,7 @@ import { Building, X, Lightbulb } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import DiscoverFilterModal from './DiscoverFilterModal.jsx';
 import RequestBrandModal from './RequestBrandModal.jsx';
+import { resumeRequestBrandProgressIfNeeded, setRequestBrandStateListener } from '../request-brand-progress-manager';
 
 /**
  * Componente de búsqueda personalizado para la página Discover
@@ -78,6 +79,17 @@ function DiscoverSearchBar({ onSearch, onFiltersApply }) {
         console.error('Error al cargar empresas:', error);
         setIsLoading(false);
       });
+  }, []);
+
+  useEffect(() => {
+    setRequestBrandStateListener(setIsBrandRequestInProgress);
+
+    // Asegurar que al volver a Discover reflejamos correctamente si hay una request en curso
+    resumeRequestBrandProgressIfNeeded();
+
+    return () => {
+      setRequestBrandStateListener(null);
+    };
   }, []);
 
   const handleSearch = (query) => {
