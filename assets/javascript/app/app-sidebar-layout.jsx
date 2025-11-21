@@ -1,5 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import { resumeRequestBrandProgressIfNeeded } from './request-brand-progress-manager';
 import {
   SidebarContent,
   SidebarFooter,
@@ -223,6 +224,8 @@ function AppSidebarLayout() {
     // Añadir setters para el componente de sidebar
     window.setSidebarComponent = setSidebarComponent;
     window.clearSidebarComponent = () => setSidebarComponent(null);
+
+    resumeRequestBrandProgressIfNeeded();
 
     // Move Django HTML content to sidebar-page-content (same pattern as base/index.jsx)
     const djangoContent = document.getElementById('page-content');
