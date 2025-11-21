@@ -680,6 +680,39 @@ def fetch_apify_ads(
                 'errors': [error_message]
             }
         
+        # Notify via SSE that Apify fetch has completed, before processing dataset items
+        if is_automated and user_id:
+            try:
+                import redis
+                import json
+                from django.conf import settings
+                from django.utils import timezone
+                from apps.apify.models import FacebookPage
+
+                redis_client = redis.from_url(settings.REDIS_URL)
+
+                page_name = None
+                if page_id:
+                    try:
+                        facebook_page = FacebookPage.objects.get(page_id=page_id)
+                        page_name = facebook_page.page_name
+                    except FacebookPage.DoesNotExist:
+                        pass
+
+                notification_data = {
+                    'type': 'backload_fetch_completed',
+                    'backload_id': backload_id,
+                    'page_id': page_id,
+                    'page_name': page_name,
+                    'timestamp': timezone.now().isoformat()
+                }
+
+                channel = f"user:{user_id}:adrequest_updates"
+                redis_client.publish(channel, json.dumps(notification_data))
+                logger.info(f"Sent SSE fetch-completed notification to user {user_id} for backload {backload_id}")
+            except Exception as e:
+                logger.error(f"Error sending SSE fetch-completed notification: {str(e)}")
+        
         # Fetch and process items from the dataset
         processing_result = process_apify_dataset(dataset_id, client, backload_id, page_id, is_automated)
         

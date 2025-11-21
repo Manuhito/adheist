@@ -17,13 +17,14 @@ function DiscoverSearchBar({ onSearch, onFiltersApply }) {
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [keywordSearch, setKeywordSearch] = useState(null);
   const [shouldClearInput, setShouldClearInput] = useState(false);
-  
+
   // State for the request brand modal
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
-  
+  const [isBrandRequestInProgress, setIsBrandRequestInProgress] = useState(false);
+
   // State to track if modal filters are applied
   const [modalFiltersApplied, setModalFiltersApplied] = useState(false);
-  
+
   // Ref to access DiscoverFilterModal methods
   const filterModalRef = useRef(null);
 
@@ -36,12 +37,12 @@ function DiscoverSearchBar({ onSearch, onFiltersApply }) {
       .then(data => {
         const companyList = data.companies || [];
         setCompanies(companyList);
-        
+
         // Convertir companies a formato de acciones
         const actions = companyList.map((company, index) => {
           const label = company.page_name || company;
           const iconUrl = company.page_url ? `https://twenty-icons.com/${company.page_url}` : null;
-          
+
           return {
             id: `company-${index}`,
             label,
@@ -53,14 +54,14 @@ function DiscoverSearchBar({ onSearch, onFiltersApply }) {
             end: company.ad_count !== undefined ? `${company.ad_count} Ads` : "Filter",
           };
         });
-        
+
         setCompanyActions(actions);
         setIsLoading(false);
-        
+
         // Check for company parameter in URL after companies are loaded
         const urlParams = new URLSearchParams(window.location.search);
         const companyParam = urlParams.get('company');
-        
+
         if (companyParam) {
           console.log(`🔗 DiscoverSearchBar: Found company parameter in URL: ${companyParam}`);
           // Find the company in the loaded list
@@ -88,11 +89,11 @@ function DiscoverSearchBar({ onSearch, onFiltersApply }) {
   const handleKeywordSearch = (keywords) => {
     // Transform spaces to commas for tags parameter
     const tags = keywords.trim().replace(/\s+/g, ',');
-    
+
     // Set keyword search state for placeholder
     setKeywordSearch(keywords);
     setSelectedCompany(null); // Clear company selection
-    
+
     // Call the adlibraries API with tags parameter
     if (onFiltersApply) {
       const filterParams = new URLSearchParams();
@@ -109,7 +110,7 @@ function DiscoverSearchBar({ onSearch, onFiltersApply }) {
       handleKeywordSearch(query);
       return;
     }
-    
+
     // Cuando se selecciona una empresa, filtrar por su ID
     setSelectedCompany(selectedAction);
     setKeywordSearch(null); // Clear keyword search
@@ -122,41 +123,41 @@ function DiscoverSearchBar({ onSearch, onFiltersApply }) {
     // Clear both company and keyword search
     setSelectedCompany(null);
     setKeywordSearch(null);
-    
+
     // Trigger input clearing
     setShouldClearInput(true);
-    
+
     // Reset the clear flag after a brief delay
     setTimeout(() => setShouldClearInput(false), 100);
-    
+
     // Make API call only if not skipping (when clearing from X button only)
     if (!skipApiCall && onFiltersApply) {
       onFiltersApply(''); // Empty string means no filters
     }
   };
-  
+
   const handleClearAllFilters = () => {
     // Clear search filters without API call (skip it)
     handleClearFilters(true);
-    
+
     // Clear modal filters - this will make the single API call
     if (filterModalRef.current) {
       filterModalRef.current.clearFilters();
     }
   };
-  
-  const placeholder = selectedCompany 
+
+  const placeholder = selectedCompany
     ? `Filtering by: ${selectedCompany.label}`
-    : keywordSearch 
-    ? `Filtering by: "${keywordSearch}"`
-    : "Search for a brand name or keywords....";
+    : keywordSearch
+      ? `Filtering by: "${keywordSearch}"`
+      : "Search for a brand name or keywords....";
 
   return (
     <div className="w-full">
       <div className="flex items-center gap-0">
         <div className="flex-1 relative">
-          <ActionSearchBar 
-            actions={companyActions} 
+          <ActionSearchBar
+            actions={companyActions}
             onSearch={handleSearch}
             onActionSelect={handleCompanySelect}
             onKeywordSearch={handleKeywordSearch}
@@ -176,7 +177,7 @@ function DiscoverSearchBar({ onSearch, onFiltersApply }) {
             </Button>
           )}
         </div>
-        <DiscoverFilterModal 
+        <DiscoverFilterModal
           ref={filterModalRef}
           selectedCompany={selectedCompany}
           onFiltersApply={onFiltersApply}
@@ -200,6 +201,7 @@ function DiscoverSearchBar({ onSearch, onFiltersApply }) {
             size="sm"
             className="h-9 w-9 p-0 ml-2 rounded-lg"
             onClick={() => setIsRequestModalOpen(true)}
+            disabled={isBrandRequestInProgress}
           >
             <Lightbulb className="h-5 w-5" />
           </Button>
@@ -209,11 +211,12 @@ function DiscoverSearchBar({ onSearch, onFiltersApply }) {
           </div>
         </div>
       </div>
-      
+
       {/* Modal para solicitar una nueva marca */}
-      <RequestBrandModal 
+      <RequestBrandModal
         isOpen={isRequestModalOpen}
         onOpenChange={setIsRequestModalOpen}
+        onRequestStateChange={setIsBrandRequestInProgress}
       />
     </div>
   );
