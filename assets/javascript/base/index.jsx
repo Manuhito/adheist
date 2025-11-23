@@ -18,6 +18,8 @@ const BaseLayout = () => {
       // Solo mover si es contenido Django (no React)
       if (!window.isReactPage) {
         mountPoint.innerHTML = djangoContent.innerHTML;
+        // Clear original content so crawlers only see one set of headings
+        djangoContent.innerHTML = '';
         djangoContent.style.display = 'none';
       }
     }
