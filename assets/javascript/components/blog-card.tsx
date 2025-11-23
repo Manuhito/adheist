@@ -44,7 +44,7 @@ export default function BlogCard({
           </time>
         </p>
         <h3 className="text-xl font-semibold mb-2">
-          <Link href={`/blog/${data.slug}`} className="hover:underline">
+          <Link href={`/blog/${data.slug}/`} className="hover:underline">
             {data.title}
           </Link>
         </h3>
