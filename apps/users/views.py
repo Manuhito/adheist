@@ -229,12 +229,15 @@ def onboarding_view(request):
         
     current_step = request.user.current_onboarding_step
     
+    is_google_login = SocialAccount.objects.filter(user=request.user, provider='google').exists()
+
     onboarding_data = {
         'currentStep': current_step,
         'user': {
             'username': request.user.username,
             'email': request.user.email,
             'firstName': request.user.first_name,
+            'isGoogleLogin': is_google_login,
         }
     }
     
