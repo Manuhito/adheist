@@ -599,16 +599,31 @@ def generate_image_task_replicate(
 
             service = ReplicateImageGenerationService()
 
-            # Process each version with its own image_prompt
+            # Process each version with its own image_prompt and ad copy
             for idx, v_id in enumerate(version_ids):
                 variation = variations[idx]
                 image_prompt = variation.get('image_prompt') or ''
+                ad_copy_text = variation.get('ad_copy') or ''
 
                 try:
                     version = AdRequestVersion.objects.get(id=v_id)
                 except AdRequestVersion.DoesNotExist:
                     logger.error(f"AdRequestVersion with id {v_id} does not exist; skipping")
                     continue
+
+                # Create or update AdCopyVersion for this variation using GPT-5 ad_copy text
+                try:
+                    ad_copy_version, created = AdCopyVersion.objects.get_or_create(
+                        ad_request_version=version,
+                        defaults={"ad_copy_text": ad_copy_text},
+                    )
+                    if not created and ad_copy_text:
+                        ad_copy_version.ad_copy_text = ad_copy_text
+                        ad_copy_version.save(update_fields=["ad_copy_text"])
+                except Exception as e:
+                    logger.exception(
+                        f"Error creating/updating AdCopyVersion for AdRequestVersion {v_id}: {str(e)}"
+                    )
 
                 # Save per-version prompt (image_prompt) and shared metadata
                 version.generated_prompt = image_prompt
