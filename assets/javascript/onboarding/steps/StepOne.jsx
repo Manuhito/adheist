@@ -8,17 +8,26 @@ const StepOne = ({ onNext, initialData, user, setMascotMessageOverride }) => {
   const [url, setUrl] = useState(initialData?.url || '');
 
   useEffect(() => {
-    // If user logged in via Google and we don't have a URL yet, try to prefill from email
-    if (user?.isGoogleLogin && !url && !initialData?.url && user?.email) {
-      try {
-        const emailDomain = user.email.split('@')[1];
-        const genericDomains = ['gmail.com', 'googlemail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com', 'me.com'];
+    // If user logged in via Google and we don't have a URL yet
+    if (user?.isGoogleLogin && !url && !initialData?.url) {
+      // Try to prefill from Google Hosted Domain (hd) first
+      if (user.googleHd) {
+        setUrl(`https://${user.googleHd}`);
+        return;
+      }
 
-        if (emailDomain && !genericDomains.includes(emailDomain.toLowerCase())) {
-          setUrl(`https://${emailDomain}`);
+      // Fallback to email domain extraction
+      if (user.email) {
+        try {
+          const emailDomain = user.email.split('@')[1];
+          const genericDomains = ['gmail.com', 'googlemail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com', 'me.com'];
+
+          if (emailDomain && !genericDomains.includes(emailDomain.toLowerCase())) {
+            setUrl(`https://${emailDomain}`);
+          }
+        } catch (e) {
+          console.error("Error prefilling domain:", e);
         }
-      } catch (e) {
-        console.error("Error prefilling domain:", e);
       }
     }
   }, [user, initialData]);

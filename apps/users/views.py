@@ -229,7 +229,9 @@ def onboarding_view(request):
         
     current_step = request.user.current_onboarding_step
     
-    is_google_login = SocialAccount.objects.filter(user=request.user, provider='google').exists()
+    google_account = SocialAccount.objects.filter(user=request.user, provider='google').first()
+    is_google_login = google_account is not None
+    google_hd = google_account.extra_data.get('hd') if is_google_login and google_account.extra_data else None
 
     onboarding_data = {
         'currentStep': current_step,
@@ -238,6 +240,7 @@ def onboarding_view(request):
             'email': request.user.email,
             'firstName': request.user.first_name,
             'isGoogleLogin': is_google_login,
+            'googleHd': google_hd,
         }
     }
     
