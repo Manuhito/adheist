@@ -24,6 +24,29 @@ class CustomUser(SubscriptionModelBase, AbstractUser):
     language = models.CharField(max_length=10, blank=True, null=True)
     timezone = models.CharField(max_length=100, blank=True, default="")
 
+    # Onboarding Status Constants
+    ONBOARDING_STEP_1 = 'STEP_1'
+    ONBOARDING_STEP_2 = 'STEP_2'
+    ONBOARDING_STEP_3 = 'STEP_3'
+    ONBOARDING_STEP_4 = 'STEP_4'
+    ONBOARDING_STEP_5 = 'STEP_5'
+    ONBOARDED = 'ONBOARDED'
+
+    STATUS_CHOICES = [
+        (ONBOARDING_STEP_1, 'Step 1'),
+        (ONBOARDING_STEP_2, 'Step 2'),
+        (ONBOARDING_STEP_3, 'Step 3'),
+        (ONBOARDING_STEP_4, 'Step 4'),
+        (ONBOARDING_STEP_5, 'Step 5'),
+        (ONBOARDED, 'Onboarded'),
+    ]
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=ONBOARDING_STEP_1
+    )
+
     def __str__(self):
         return f"{self.get_full_name()} <{self.email or self.username}>"
 
@@ -31,6 +54,36 @@ class CustomUser(SubscriptionModelBase, AbstractUser):
         if self.get_full_name().strip():
             return self.get_full_name()
         return self.email or self.username
+
+    @property
+    def has_completed_onboarding(self):
+        return self.status == self.ONBOARDED
+
+    @property
+    def current_onboarding_step(self):
+        return self.status
+
+    def advance_onboarding(self):
+        """
+        Advances the onboarding status to the next step.
+        Returns True if updated, False if already onboarded.
+        """
+        if self.status == self.ONBOARDED:
+            return False
+        
+        if self.status == self.ONBOARDING_STEP_1:
+            self.status = self.ONBOARDING_STEP_2
+        elif self.status == self.ONBOARDING_STEP_2:
+            self.status = self.ONBOARDING_STEP_3
+        elif self.status == self.ONBOARDING_STEP_3:
+            self.status = self.ONBOARDING_STEP_4
+        elif self.status == self.ONBOARDING_STEP_4:
+            self.status = self.ONBOARDING_STEP_5
+        elif self.status == self.ONBOARDING_STEP_5:
+            self.status = self.ONBOARDED
+            
+        self.save(update_fields=['status'])
+        return True
 
     @property
     def avatar_url(self) -> str:

@@ -217,3 +217,16 @@ def upload_profile_image(request):
     else:
         readable_errors = ", ".join(str(error) for key, errors in form.errors.items() for error in errors)
         return JsonResponse(status=403, data={"errors": readable_errors})
+
+
+@login_required
+def onboarding_view(request):
+    """
+    View to handle the onboarding process.
+    """
+    current_step = request.user.current_onboarding_step
+    
+    if request.user.has_completed_onboarding:
+        return redirect('users:user_profile')
+        
+    return HttpResponse(f"Onboarding Process - Current Step: {current_step}")
