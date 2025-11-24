@@ -8,7 +8,7 @@ from decimal import Decimal
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.utils import translation, timezone
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
@@ -224,9 +224,25 @@ def onboarding_view(request):
     """
     View to handle the onboarding process.
     """
+    if request.user.has_completed_onboarding:
+        return redirect('ads:discover_page')
+        
     current_step = request.user.current_onboarding_step
     
-    if request.user.has_completed_onboarding:
-        return redirect('users:user_profile')
-        
-    return HttpResponse(f"Onboarding Process - Current Step: {current_step}")
+    onboarding_data = {
+        'currentStep': current_step,
+        'user': {
+            'username': request.user.username,
+            'email': request.user.email,
+            'firstName': request.user.first_name,
+        }
+    }
+    
+    return render(
+        request,
+        "onboarding/onboarding.html",
+        {
+            "onboarding_data": json.dumps(onboarding_data),
+            "page_title": "Onboarding",
+        },
+    )

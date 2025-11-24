@@ -1,0 +1,14 @@
+{% extends "web/base_core.html" %}
+{% load static %}
+
+{% block body %}
+<div id="root" class="min-h-screen w-full"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Pass data to React component
+  window.__ONBOARDING_DATA__ = JSON.parse('{{ onboarding_data|escapejs }}');
+</script>
+<script src="{% static 'js/onboarding-bundle.js' %}?v={{ STATIC_VERSION }}"></script>
+{% endblock %}

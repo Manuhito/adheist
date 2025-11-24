@@ -23,6 +23,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 import urllib.parse
 import os
 from django.conf import settings
+from apps.users.decorators import onboarding_required
 import posthog
 from django.utils import timezone
 from apps.aiinterface.tasks import send_slack_notification
@@ -542,7 +543,7 @@ def payment_success(request):
             'debug_info': f"Payment processing error: {str(e)}"
         })
 
-
+@onboarding_required
 @login_required
 def discover_page(request):
     """
@@ -559,7 +560,7 @@ def discover_page(request):
     
     return TemplateResponse(request, template, context)
 
-
+@onboarding_required
 @login_required
 def brands_page(request):
     """
@@ -604,6 +605,7 @@ def brands_page(request):
     return TemplateResponse(request, template, context)
 
 
+@onboarding_required
 @login_required
 def home(request):
     template = "ads/ads_home.html"
@@ -794,8 +796,6 @@ def _extract_cta_link(adlibrary):
     
     logger.info("No URL found in any field, returning 'Unknown'")
     return 'Unknown'
-
-
 
 
 def get_adlibrary_by_id(request, adlibrary_id):
@@ -2334,7 +2334,6 @@ def adrequest_version_get(request, version_id):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-
 def billing_page(request):
     """
     Render the billing page with pricing information.
@@ -3246,7 +3245,7 @@ def deactivate_image(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-
+@onboarding_required
 @login_required
 def discover_clone_adrequest_page(request, pk):
     """
@@ -3301,7 +3300,7 @@ def discover_clone_adrequest_page(request, pk):
     except AdRequest.DoesNotExist:
         return redirect('ads:discover_page')
 
-
+@onboarding_required
 @login_required
 def my_ads_page(request):
     """
@@ -3364,7 +3363,7 @@ def my_ads_page(request):
     
     return TemplateResponse(request, template, context)
 
-
+@onboarding_required
 @login_required
 def assets_page(request):
     """
@@ -3424,6 +3423,7 @@ def assets_page(request):
     return TemplateResponse(request, template, context)
 
 
+@onboarding_required
 @login_required
 def folder_assets_detail(request, folder_id):
     """
@@ -3490,7 +3490,7 @@ def folder_assets_detail(request, folder_id):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-
+@onboarding_required
 @login_required
 def folder_assets_detail_page(request, folder_id):
     """
@@ -3590,7 +3590,7 @@ def create_folder(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-
+@onboarding_required
 @login_required
 def brand_assets_detail(request, brand_id):
     """
@@ -3652,7 +3652,7 @@ def brand_assets_detail(request, brand_id):
     except UserBrand.DoesNotExist:
         return JsonResponse({'error': 'Brand not found'}, status=404)
 
-
+@onboarding_required
 @login_required
 def brand_assets_detail_page(request, brand_id):
     """
@@ -3761,7 +3761,7 @@ def upload_folder_assets(request, folder_id):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-
+@onboarding_required
 @login_required
 def generated_ad_page(request, version_id):
     """
@@ -3813,7 +3813,7 @@ def generated_ad_page(request, version_id):
     except AdRequestVersion.DoesNotExist:
         return redirect('ads:my_ads_page')
 
-
+@onboarding_required
 @login_required
 def ad_request_versions_page(request, ad_request_id):
     """
@@ -3866,7 +3866,7 @@ def ad_request_versions_page(request, ad_request_id):
     except AdRequest.DoesNotExist:
         return redirect('ads:my_ads_page')
 
-
+@onboarding_required
 @login_required
 def generated_versions_page(request, primary_version_id):
     """
