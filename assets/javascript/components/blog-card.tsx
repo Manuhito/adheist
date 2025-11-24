@@ -13,8 +13,7 @@ export default function BlogCard({
 }) {
   const { t } = useTranslation();
   return (
-    <Link href={`/blog/${data.slug}`} className="block">
-      <div className="bg-background rounded-lg p-4 mb-4 border hover:shadow-sm transition-shadow duration-200">
+    <div className="bg-background rounded-lg p-4 mb-4 border hover:shadow-sm transition-shadow duration-200">
         {data.image && (
           <Image
             className="rounded-t-lg object-cover border"
@@ -44,9 +43,12 @@ export default function BlogCard({
             )}
           </time>
         </p>
-        <h3 className="text-xl font-semibold mb-2">{data.title}</h3>
+        <h3 className="text-xl font-semibold mb-2">
+          <Link href={`/blog/${data.slug}/`} className="hover:underline">
+            {data.title}
+          </Link>
+        </h3>
         <p className="text-foreground mb-4">{data.summary}</p>
       </div>
-    </Link>
   );
 }

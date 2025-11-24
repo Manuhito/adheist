@@ -16,7 +16,7 @@ interface ThemeProviderState {
 }
 
 const initialState: ThemeProviderState = {
-  theme: "system",
+  theme: "light",
   setTheme: () => null,
 };
 
@@ -24,7 +24,7 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
 export function ThemeProvider({
   children,
-  defaultTheme = "system",
+  defaultTheme = "light",
   storageKey = "theme",
   ...props
 }: ThemeProviderProps) {
@@ -34,9 +34,7 @@ export function ThemeProvider({
 
   useEffect(() => {
     const root = window.document.documentElement;
-    root.classList.remove("light", "dark");
-    root.removeAttribute("data-theme");
-
+    
     let effectiveTheme = theme;
     if (theme === "system") {
       effectiveTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
@@ -44,8 +42,16 @@ export function ThemeProvider({
         : "light";
     }
 
-    root.classList.add(effectiveTheme);
-    root.setAttribute("data-theme", effectiveTheme);
+    // Solo actualizar si el tema ha cambiado
+    const currentTheme = root.classList.contains("dark") ? "dark" : "light";
+    if (currentTheme !== effectiveTheme) {
+      root.classList.remove("light", "dark");
+      root.classList.add(effectiveTheme);
+      root.setAttribute("data-theme", effectiveTheme);
+      
+      // Actualizar cookie
+      document.cookie = `theme=${effectiveTheme};path=/;max-age=31536000`;
+    }
   }, [theme]);
 
   const value = {

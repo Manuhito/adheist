@@ -241,6 +241,9 @@ SOCIALACCOUNT_FORMS = {
 # User signup configuration: change to "mandatory" to require users to confirm email before signing in.
 # or "optional" to send confirmation emails but not require them
 ACCOUNT_EMAIL_VERIFICATION = env("ACCOUNT_EMAIL_VERIFICATION", default="none")
+ACCOUNT_EMAIL_VERIFICATION_BY_CODE_ENABLED = env.bool(
+    "ACCOUNT_EMAIL_VERIFICATION_BY_CODE_ENABLED", default=False
+)
 
 AUTHENTICATION_BACKENDS = (
     # Needed to login by username in Django admin, regardless of `allauth`
@@ -597,9 +600,13 @@ if APP_ENV in ['stage', 'prod']:
 # OpenAI API configuration
 OPENAI_API_KEY = env("OPENAI_API_KEY", default="")
 
+# Replicate API configuration
+REPLICATE_API_KEY = env("REPLICATE_API_KEY", default="")
+REPLICATE_API_URL = env("REPLICATE_API_URL", default="https://api.replicate.com/v1")
+
 # Pricing model configuration
 PRICING_MODEL = env("PRICING_MODEL", default="STANDARD")
 
 # Static files versioning for cache busting
 # Increment this version number when deploying changes to force browser cache refresh
-STATIC_VERSION = env('STATIC_VERSION', default='1.2.20')
+STATIC_VERSION = env('STATIC_VERSION', default='0.113')

@@ -157,6 +157,7 @@ httpx==0.28.1
     # via
     #   apify-client
     #   openai
+    #   replicate
     #   svix
 idna==3.10
     # via
@@ -210,6 +211,7 @@ pycparser==2.22
 pydantic==2.11.7
     # via
     #   openai
+    #   replicate
     #   svix
 pydantic-core==2.33.2
     # via pydantic
@@ -240,6 +242,8 @@ referencing==0.36.1
     # via
     #   jsonschema
     #   jsonschema-specifications
+replicate==1.0.7
+    # via -r requirements/requirements.in
 requests==2.32.3
     # via
     #   django-allauth
@@ -291,6 +295,7 @@ typing-extensions==4.12.2
     #   pydantic-core
     #   pyee
     #   referencing
+    #   replicate
     #   typing-inspection
 typing-inspection==0.4.1
     # via pydantic

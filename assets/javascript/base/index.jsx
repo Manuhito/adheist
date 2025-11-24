@@ -18,6 +18,8 @@ const BaseLayout = () => {
       // Solo mover si es contenido Django (no React)
       if (!window.isReactPage) {
         mountPoint.innerHTML = djangoContent.innerHTML;
+        // Clear original content so crawlers only see one set of headings
+        djangoContent.innerHTML = '';
         djangoContent.style.display = 'none';
       }
     }
@@ -27,7 +29,7 @@ const BaseLayout = () => {
   }, []);
 
   return (
-    <ThemeProvider defaultTheme="system" storageKey="theme">
+    <ThemeProvider defaultTheme="light" storageKey="theme">
       <main className="min-h-screen flex flex-col">
         <Header />
         <div className="flex-grow container mx-auto px-4">

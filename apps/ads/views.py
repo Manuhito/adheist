@@ -11,6 +11,7 @@ from apps.aiinterface.services import ImageGenerationService
 from django.db.models import Q, Count, Sum, F, Exists, OuterRef, Subquery
 from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404, render, redirect
+from django.db.models import Count
 from django.template.response import TemplateResponse
 from django.views.decorators.http import require_POST
 from apps.subscriptions.helpers import create_stripe_checkout_session
@@ -31,6 +32,9 @@ from .models import AdLibrary, IndustryList, TagList, AdRequest, AdRequestAssets
 from .forms import AdLibraryForm
 from .services import can_create_ad_request, use_credit, can_create_ad_request_version, get_ad_request_version_limit, use_general_credit, use_version_credit, can_create_ad_version
 import boto3
+
+# Initialize logger
+logger = logging.getLogger(__name__)
 
 # A reasonable value for pagination would be 10 or 20 entries per page.
 # Here we use 4 (a very low value), so we can show off the pagination using fewer items
@@ -561,10 +565,11 @@ def brands_page(request):
     """
     Render the brands library page with React components.
     """
-    # Get all AdRequestAssets for the current user that have an associated brand
+    # Get all AdRequestAssets for the current user that have an associated active brand
     user_assets = AdRequestAssets.objects.filter(
         user=request.user,
-        brand__isnull=False
+        brand__isnull=False,
+        brand__active=True
     ).select_related('brand').distinct('brand')
     
     # Prepare brands data for frontend
@@ -1734,29 +1739,35 @@ def adrequest_version_create(request):
         # Get optional fields
         user_prompt = request.POST.get('user_prompt')
         print("User prompt: ", user_prompt)
-        # Create a new AdRequestVersion instance
+
+        # Create three AdRequestVersion instances for this AdRequest
         print("ad_request: ", ad_request)
         print("user_prompt: ", user_prompt)
         print("status: ", AdRequestVersion.STATUS_UNASSIGNED)
-        version = AdRequestVersion.objects.create(
-            ad_request=ad_request,
-            user_prompt=user_prompt,
-            status=AdRequestVersion.STATUS_UNASSIGNED
-        )
-        print("Version created: ", version)
-        
-        # Track event in PostHog when a new AdRequestVersion is created
-        posthog.capture(
-            request.user.id,
-            'Ad Version Created',
-            properties={
-                'version_type': 'initial',
-                'ad_request_id': ad_request.id,
-                'version_id': version.id,
-                'has_user_prompt': bool(user_prompt),
-                'timestamp': version.created_at.isoformat() if hasattr(version, 'created_at') else None
-            }
-        )
+
+        versions = []
+        for _ in range(3):
+            v = AdRequestVersion.objects.create(
+                ad_request=ad_request,
+                user_prompt=user_prompt,
+                status=AdRequestVersion.STATUS_UNASSIGNED,
+                is_primary=True  # Mark initial versions as primary
+            )
+            versions.append(v)
+            print("Version created: ", v)
+            
+            # Track event in PostHog when a new AdRequestVersion is created
+            posthog.capture(
+                request.user.id,
+                'Ad Version Created',
+                properties={
+                    'version_type': 'initial',
+                    'ad_request_id': ad_request.id,
+                    'version_id': v.id,
+                    'has_user_prompt': bool(user_prompt),
+                    'timestamp': v.created_at.isoformat() if hasattr(v, 'created_at') else None
+                }
+            )
         # Generate image using OpenAI if user_prompt is provided
         image_generated = False
         task_id = None
@@ -1795,52 +1806,39 @@ def adrequest_version_create(request):
             canvas_size = ad_request.canvas_size or "1024x1024"
             
             # Generate image using Celery task in the background
-            from apps.aiinterface.tasks import generate_image_task
-            
-            # Update version status to processing
-            version.status = "processing"
-            version.save(update_fields=['status'])
-            
-            # Launch the Celery task
-            task = generate_image_task.delay(
+            # Using Replicate instead of OpenAI
+            from apps.aiinterface.tasks import generate_image_task_replicate
+
+            # Update all versions status to processing
+            for v in versions:
+                v.status = "processing"
+                v.save(update_fields=['status'])
+
+            # Launch the Celery task for the three versions
+            task = generate_image_task_replicate.delay(
                 image_urls=image_urls,
                 canvas_size=canvas_size,
-                version_id=version.id,
+                version_ids=[v.id for v in versions],
+                ad_request_id=ad_request.id,
                 version_type="initial"
             )
             
             task_id = task.id
-            print(f"Image generation task (ID: {task_id}) started for AdRequestVersion {version.id}")
+            # Usamos la primera versión como referencia para el log
+            print(f"Image generation task (ID: {task_id}) started for AdRequestVersion {versions[0].id}")
             
             # Credits will be deducted in the task after successful image generation
-            
-            # Create AdCopyVersion and start ad copy text generation task
-            try:
-                from apps.ads.models import AdCopyVersion
-                from apps.aiinterface.tasks import generate_ad_copy_text_task
-                
-                # Create AdCopyVersion instance
-                ad_copy_version = AdCopyVersion.objects.create(
-                    ad_request_version=version
-                )
-                print(f"AdCopyVersion created with ID: {ad_copy_version.id}")
-                
-                # Launch the ad copy text generation task
-                copy_task = generate_ad_copy_text_task.delay(ad_copy_version.id)
-                print(f"Ad copy text generation task (ID: {copy_task.id}) started for AdCopyVersion {ad_copy_version.id}")
-                
-            except Exception as copy_error:
-                print(f"Error starting ad copy text generation task: {str(copy_error)}")
             
         except Exception as img_error:
             print(f"Error starting image generation task: {str(img_error)}")
         
-        # Return the AdRequestVersion instance ID and image generation status
+        # Return the primary AdRequestVersion instance ID and image generation status
         response_data = {
-            'id': version.id,
-            'status': version.status,
+            'id': versions[0].id,
+            'version_ids': [v.id for v in versions],
+            'status': versions[0].status,
             'image_generated': image_generated,
-            'message': 'Version created successfully. Image generation started in background.'
+            'message': '3 versions created successfully. Image generation started in background.'
         }
         
         # Add task_id to response if available
@@ -1860,12 +1858,11 @@ def adrequest_revision_create(request):
     """
     Create a new AdRequestVersion instance and generate an image using OpenAI with a revision image.
     
-    Required input:
+    Required inputs:
     - ad_request: The primary key of the AdRequest to create a version for
     - url_image_revision: URL of the image to use for revision
-    
-    Optional inputs:
     - user_prompt: The user prompt for the version
+    - parent_version_id: The ID of the parent version (the version being revised)
     
     Returns: JSON with the AdRequestVersion instance ID and image generation status
     """
@@ -1873,6 +1870,7 @@ def adrequest_revision_create(request):
     ad_request_id = request.POST.get('ad_request')
     url_image_revision = request.POST.get('url_image_revision')
     user_prompt = request.POST.get('user_prompt')
+    parent_version_id = request.POST.get('parent_version_id')
     
     # Validate inputs
     if not ad_request_id:
@@ -1883,6 +1881,9 @@ def adrequest_revision_create(request):
     
     if not user_prompt:
         return JsonResponse({'error': 'User prompt is required'}, status=400)
+    
+    if not parent_version_id:
+        return JsonResponse({'error': 'Parent version ID is required'}, status=400)
     
     try:
         # Get the AdRequest instance
@@ -1896,11 +1897,20 @@ def adrequest_revision_create(request):
         if not can_create_ad_version(request.user):
             return JsonResponse({'error': 'You have reached your version credit limit for your plan'}, status=403)
         
-        # Create a new AdRequestVersion instance
+        # Get the parent version
+        parent_version = get_object_or_404(AdRequestVersion, id=parent_version_id)
+        
+        # Verify the parent version belongs to the same ad_request
+        if parent_version.ad_request.id != ad_request.id:
+            return JsonResponse({'error': 'Parent version does not belong to this ad request'}, status=400)
+        
+        # Create a new AdRequestVersion instance with is_primary=False and parent set
         version = AdRequestVersion.objects.create(
             ad_request=ad_request,
             user_prompt=user_prompt,
-            status=AdRequestVersion.STATUS_UNASSIGNED
+            status=AdRequestVersion.STATUS_UNASSIGNED,
+            is_primary=False,
+            parent=parent_version
         )
         print("Revision created: ", version)
         
@@ -1933,14 +1943,15 @@ def adrequest_revision_create(request):
             canvas_size = ad_request.canvas_size or "1024x1024"
             
             # Generate image using Celery task in the background
-            from apps.aiinterface.tasks import generate_image_task
+            # Using Replicate instead of OpenAI
+            from apps.aiinterface.tasks import generate_image_task_replicate
             
             # Update version status to processing
             version.status = "processing"
             version.save(update_fields=['status'])
             
             # Launch the Celery task
-            task = generate_image_task.delay(
+            task = generate_image_task_replicate.delay(
                 image_urls=image_urls,
                 canvas_size=canvas_size,
                 version_id=version.id,
@@ -2989,8 +3000,8 @@ def get_user_brands(request):
     Returns: JSON with list of user brands
     """
     try:
-        # Get all brands for the current user
-        brands = UserBrand.objects.filter(user=request.user).order_by('brand_name')
+        # Get all active brands for the current user
+        brands = UserBrand.objects.filter(user=request.user, active=True).order_by('brand_name')
         
         # Format the brands as a list of dictionaries
         brands_data = [{
@@ -3021,10 +3032,11 @@ def get_user_containers(request):
     try:
         containers_data = []
         
-        # Get all brands for the current user
+        # Get all active brands for the current user
         # Note: This shows all user's brands, even if they don't have uploaded assets yet
         user_brands = UserBrand.objects.filter(
-            user=request.user
+            user=request.user,
+            active=True  # Only show active brands
         ).order_by('brand_name')
         
         # Add brands
@@ -3119,11 +3131,11 @@ def create_user_brand(request):
                 'error': 'Brand name is required'
             }, status=400)
         
-        # Check if brand with this name already exists globally (unique constraint)
-        if UserBrand.objects.filter(brand_name=brand_name).exists():
+        # Check if brand with this name already exists for this user (only active brands)
+        if UserBrand.objects.filter(user=request.user, brand_name=brand_name, active=True).exists():
             return JsonResponse({
                 'success': False,
-                'error': 'A brand with this name already exists. Please choose a different name.'
+                'error': 'You already have an active brand with this name. Please choose a different name.'
             }, status=400)
         
         # Create the new brand (simple, just name)
@@ -3359,10 +3371,11 @@ def assets_page(request):
     Render the Assets page with React components.
     Shows all UserBrands and UserFolders for the current user as containers.
     """
-    # Get all brands for the current user
+    # Get all active brands for the current user
     # Note: This shows all user's brands, even if they don't have uploaded assets yet
     user_brands = UserBrand.objects.filter(
-        user=request.user
+        user=request.user,
+        active=True  # Only show active brands
     ).order_by('brand_name')
     
     # Get all root folders (folders without parent and without brand) for the current user
@@ -3802,6 +3815,129 @@ def generated_ad_page(request, version_id):
 
 
 @login_required
+def ad_request_versions_page(request, ad_request_id):
+    """
+    Display all primary versions (is_primary=True) for a specific AdRequest.
+    Shows version cards with ad copy text and images.
+    """
+    try:
+        # Get the AdRequest and verify user permissions
+        ad_request = get_object_or_404(AdRequest, id=ad_request_id, user=request.user)
+        
+        # Get all primary versions for this ad request with optimized query
+        primary_versions = (
+            ad_request
+            .versions
+            .filter(is_primary=True)
+            .prefetch_related('ad_copies')
+            .annotate(revisions_count=Count('revisions'))
+            .order_by('-created_at')
+        )
+        
+        # Determine back URL based on referrer
+        referer = request.META.get('HTTP_REFERER', '')
+        back_url = '/ads/my-ads/'  # Default
+        
+        if referer:
+            # Parse the referrer to determine origin
+            if '/ads/discover/' in referer:
+                back_url = '/ads/discover/'
+        
+        # Get brand name and website url
+        brand_name = None
+        brand_url = None
+        if ad_request.base_assets:
+            if ad_request.base_assets.brand:
+                brand_name = ad_request.base_assets.brand.brand_name
+            # Company website can exist even if brand is None
+            if ad_request.base_assets.company_website:
+                brand_url = ad_request.base_assets.company_website
+        
+        context = {
+            'ad_request': ad_request,
+            'primary_versions': primary_versions,
+            'back_url': back_url,
+            'brand_name': brand_name or f'Ad Request #{ad_request_id}',
+            'brand_url': brand_url or '',
+        }
+        
+        return render(request, 'ads/ad_request_versions.html', context)
+        
+    except AdRequest.DoesNotExist:
+        return redirect('ads:my_ads_page')
+
+
+@login_required
+def generated_versions_page(request, primary_version_id):
+    """
+    Display a primary version and all its child versions (revisions).
+    Shows the primary version plus all versions where parent_version = primary_version_id.
+    """
+    try:
+        # Get the primary version and verify user permissions
+        primary_version = get_object_or_404(
+            AdRequestVersion, 
+            id=primary_version_id, 
+            ad_request__user=request.user,
+            is_primary=True
+        )
+        
+        # Verify that the primary version has a generated image
+        if not primary_version.generated_image:
+            return redirect('ads:my_ads_page')
+        
+        # Get all child versions (revisions) of this primary version
+        child_versions = AdRequestVersion.objects.filter(
+            parent=primary_version
+        ).prefetch_related('ad_copies')
+        
+        # Combine primary version with its children and sort by created_at (most recent first)
+        all_versions = sorted(
+            [primary_version] + list(child_versions),
+            key=lambda v: v.created_at,
+            reverse=True
+        )
+        
+        # Determine back URL based on referrer
+        referer = request.META.get('HTTP_REFERER', '')
+        back_url = f'/ads/adrequest/{primary_version.ad_request.id}/versions/'  # Default to versions page
+        
+        if referer:
+            # Parse the referrer to determine origin
+            if '/ads/my-ads/' in referer:
+                back_url = '/ads/my-ads/'
+            elif '/ads/discover/' in referer and '/create/' not in referer:
+                back_url = '/ads/discover/'
+        
+        # Check if user is on free tier
+        is_free_tier = not hasattr(request.user, 'subscription') or request.user.subscription is None or request.user.subscription.status != 'active'
+        
+        # Check if user has already rated this version
+        has_rated = primary_version.rating is not None and primary_version.review
+        
+        # Get brand name
+        brand_name = None
+        if primary_version.ad_request.base_assets and primary_version.ad_request.base_assets.brand:
+            brand_name = primary_version.ad_request.base_assets.brand.brand_name
+        
+        context = {
+            'version': primary_version,  # Main version for compatibility with generated_ad template
+            'back_url': back_url,
+            'is_free_tier': is_free_tier,
+            'has_rated': has_rated,
+            'brand_name': brand_name or f'Ad Request #{primary_version.ad_request.id}',
+        }
+        
+        # Override ordered_versions with our filtered list
+        primary_version.ad_request.ordered_versions = all_versions
+        
+        return render(request, 'ads/generated_versions.html', context)
+        
+    except AdRequestVersion.DoesNotExist:
+        return redirect('ads:my_ads_page')
+
+
+@login_required
 @require_http_methods(["POST"])
 def analyze_website_for_brand_assets(request):
     """
@@ -3931,11 +4067,11 @@ def update_user_brand(request, brand_id):
         # Update brand name if provided
         brand_name = data.get('brand_name', '').strip()
         if brand_name:
-            # Check if another brand with this name exists (excluding current brand)
-            if UserBrand.objects.filter(brand_name=brand_name).exclude(id=brand_id).exists():
+            # Check if another active brand with this name exists for this user (excluding current brand)
+            if UserBrand.objects.filter(user=request.user, brand_name=brand_name, active=True).exclude(id=brand_id).exists():
                 return JsonResponse({
                     'success': False,
-                    'error': 'A brand with this name already exists. Please choose a different name.'
+                    'error': 'You already have an active brand with this name. Please choose a different name.'
                 }, status=400)
             brand.brand_name = brand_name
             brand.save()
@@ -4099,4 +4235,44 @@ def get_brand_details(request, brand_id):
         return JsonResponse({
             'success': False,
             'error': str(e)
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["PATCH"])
+def delete_user_brand(request, brand_id):
+    """
+    Soft delete a user brand by marking it as inactive.
+    
+    Args:
+        request: HTTP request object
+        brand_id: ID of the brand to delete
+        
+    Returns:
+        JSON response indicating success or failure
+    """
+    try:
+        # Get the brand and verify ownership
+        brand = UserBrand.objects.get(id=brand_id, user=request.user)
+        
+        # Mark as inactive (soft delete)
+        brand.active = False
+        brand.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Brand "{brand.brand_name}" has been deleted successfully.'
+        })
+        
+    except UserBrand.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'Brand not found or you do not have permission to delete it.'
+        }, status=404)
+        
+    except Exception as e:
+        logging.error(f"Error deleting user brand {brand_id}: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': 'An error occurred while deleting the brand.'
         }, status=500)

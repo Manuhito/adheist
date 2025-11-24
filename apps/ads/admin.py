@@ -117,9 +117,9 @@ class AdRequestVersionAdmin(admin.ModelAdmin):
     def get_version_id(self, obj):
         return f"Ad Request #{obj.id}"
     get_version_id.short_description = "Version ID"
-    list_display = ["get_version_id", "status", "user_admin_assigned", "created_at", "updated_at"]
+    list_display = ["get_version_id", "ad_request", "is_primary", "parent", "status", "user_admin_assigned", "created_at", "updated_at"]
     search_fields = ["ad_request__ad_library__facebook_page__page_name", "status"]
-    list_filter = ["status", "user_admin_assigned"]
+    list_filter = ["status", "user_admin_assigned", "is_primary"]
     readonly_fields = ["user_admin_assigned", "generated_prompt_with_copy", "status", "download_overrides_button", "user_prompt"]
     # readonly_fields = ["ad_request", "generated_prompt", "status", "download_overrides_button"]
     exclude = ["generated_prompt"]
@@ -438,13 +438,14 @@ class AppConfigurationAdmin(admin.ModelAdmin):
 
 @admin.register(UserBrand)
 class UserBrandAdmin(admin.ModelAdmin):
-    list_display = ["brand_name", "user", "created_at", "updated_at"]
+    list_display = ["brand_name", "user", "active", "created_at", "updated_at"]
     search_fields = ["brand_name", "user__email"]
-    list_filter = ["user"]
+    list_filter = ["user", "active"]
+    list_editable = ["active"]
     
     fieldsets = [
         (None, {
-            "fields": ["user", "brand_name"]
+            "fields": ["user", "brand_name", "active"]
         })
     ]
 

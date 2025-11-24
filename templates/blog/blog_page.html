@@ -1,13 +1,12 @@
 {% extends "web/base.html" %}
+{% block page_title %}{{ page.title }}{% endblock page_title %}
 {% load static wagtailcore_tags wagtailimages_tags blog_tags %}
 
 {% block meta %}
-{% with page.title as page_title %}
-{% with page.intro as page_description %}
+{% comment %} {% with page.title as page_title %} {% endcomment %}
 {% with page.get_social_image_url as page_image %}
 {{ block.super }}
-{% endwith %}
-{% endwith %}
+{% comment %} {% endwith %} {% endcomment %}
 {% endwith %}
 {% endblock %}
 

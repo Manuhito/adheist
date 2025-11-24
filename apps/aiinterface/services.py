@@ -2,6 +2,8 @@
 Services for AI interface operations.
 """
 from typing import Dict, List, Optional, Union
+import logging
+import time
 
 from django.conf import settings
 from openai import OpenAI
@@ -9,7 +11,9 @@ import os
 import requests
 
 from apps.ads.models import AppConfiguration
-from apps.aiinterface.models import OpenAIConfiguration
+from apps.aiinterface.models import OpenAIConfiguration, ReplicateConfiguration
+
+logger = logging.getLogger(__name__)
 
 
 
@@ -255,3 +259,152 @@ class ImageGenerationService:
                 except Exception:
                     pass
 
+
+class ReplicateImageGenerationService:
+    """Service for generating images using Replicate API (nano-banana)."""
+
+    def __init__(self):
+        """Initialize the service with Replicate API configuration."""
+        self.api_key = settings.REPLICATE_API_KEY
+        
+        if not self.api_key:
+            raise ValueError("REPLICATE_API_KEY is not configured in settings")
+
+    def generate_image_from_text_and_images(
+        self,
+        text_prompt: str,
+        image_urls: List[str] = None,
+        canvas_size: str = "1024x1024",
+    ) -> dict:
+        """
+        Generate an image using Replicate API with nano-banana model.
+        
+        Args:
+            text_prompt: The text prompt describing the image to generate.
+            image_urls: List of image URLs or file paths to use as input.
+            canvas_size: The desired image size (e.g., "1024x1024").
+        
+        Returns:
+            A dictionary containing the image data and metadata.
+        """
+        logger.info(f"Starting Replicate nano-banana image generation with prompt: {text_prompt[:50]}...")
+        
+        if not image_urls:
+            return {
+                "error": "At least one image URL or file path must be provided",
+                "status_code": 400
+            }
+
+        try:
+            import replicate
+        except ImportError:
+            return {
+                "error": "replicate package is not installed. Run: pip install replicate",
+                "status_code": 500
+            }
+
+        # Get configuration
+        replicate_config = ReplicateConfiguration.get_replicate_config()
+        model = replicate_config['image_replicate_model']
+        
+        start_time = time.time()
+        
+        try:
+            # Set API token
+            os.environ['REPLICATE_API_TOKEN'] = self.api_key
+            
+            # Prepare image_input - nano-banana expects URLs
+            # If we have local file paths, we need to convert them to URLs
+            processed_image_urls = []
+            for image_source in image_urls:
+                from urllib.parse import urlparse
+                if urlparse(image_source).scheme in ("http", "https"):
+                    # Already a URL
+                    processed_image_urls.append(image_source)
+                else:
+                    # Local file - we need to upload it or convert to URL
+                    # For now, log a warning and skip
+                    logger.warning(f"Local file paths not supported for nano-banana: {image_source}")
+                    return {
+                        "error": "nano-banana requires image URLs, not local file paths",
+                        "status_code": 400
+                    }
+            
+            if not processed_image_urls:
+                return {
+                    "error": "No valid image URLs provided",
+                    "status_code": 400
+                }
+            
+            # Build input for nano-banana
+            input_data = {
+                "prompt": text_prompt,
+                "image_input": processed_image_urls
+            }
+            
+            logger.info(f"Calling Replicate with model: {model}")
+            logger.info(f"Input: prompt={text_prompt[:50]}..., images={len(processed_image_urls)}")
+            
+            # Run the model
+            output = replicate.run(
+                model,
+                input=input_data
+            )
+            
+            # nano-banana returns a string URL directly
+            if isinstance(output, str):
+                image_url = output
+            elif hasattr(output, 'url'):
+                # Some models return FileOutput objects
+                image_url = output.url() if callable(output.url) else output.url
+            else:
+                return {
+                    "error": f"Unexpected output format from nano-banana: {type(output)}",
+                    "status_code": 500
+                }
+            
+            logger.info(f"Downloading generated image from: {image_url}")
+            
+            # Download the image
+            img_response = requests.get(image_url, timeout=60)
+            img_response.raise_for_status()
+            image_bytes = img_response.content
+            
+            # Calculate generation time
+            generation_time = time.time() - start_time
+            
+            # Build response
+            formatted_response = {
+                "image_content": image_bytes,
+                "is_binary": True,
+                "enhanced_prompt": text_prompt,
+                "response_metadata": {
+                    "model": model,
+                    "service": "replicate",
+                    "service_type": "nano-banana",
+                    "generation_time_seconds": round(generation_time, 2),
+                    "image_url": image_url,
+                    "costs": {
+                        "image_generation_cost": float(replicate_config['image_generation_price']),
+                        "total_cost": float(replicate_config['image_generation_price'])
+                    }
+                }
+            }
+            
+            logger.info(f"Image generated successfully in {generation_time:.2f}s")
+            return formatted_response
+            
+        except replicate.exceptions.ReplicateError as e:
+            error_msg = f"Replicate API error: {str(e)}"
+            logger.exception(error_msg)
+            return {
+                "error": error_msg,
+                "status_code": 500
+            }
+        except Exception as e:
+            error_msg = f"Unexpected error in Replicate nano-banana service: {str(e)}"
+            logger.exception(error_msg)
+            return {
+                "error": error_msg,
+                "status_code": 500
+            }

@@ -11,7 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET
 
 from .services import ImageGenerationService
-from .tasks import generate_image_task
+from .tasks import generate_image_task, generate_image_task_replicate
 
 logger = logging.getLogger(__name__)
 
@@ -103,7 +103,8 @@ def generate_image(request):
                 return {"error": "version_id is required for async image generation"}
                 
             logger.info(f"Starting async image generation for version: {version_id}")
-            task = generate_image_task.delay(
+            # Using Replicate instead of OpenAI
+            task = generate_image_task_replicate.delay(
                 image_urls=image_urls,
                 canvas_size=canvas_size,
                 version_id=version_id

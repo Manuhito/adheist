@@ -115,6 +115,7 @@ const RevisionModal = ({ open, onOpenChange, imageUrl, canvasSize, versions = []
       revisionFormData.append('ad_request', adRequestId);
       revisionFormData.append('user_prompt', editDescription);
       revisionFormData.append('url_image_revision', imageUrl);
+      revisionFormData.append('parent_version_id', currentVersionId);
 
       const response = await fetch('/ads/adrequest/revision/create/', {
         method: 'POST',
@@ -164,93 +165,93 @@ const RevisionModal = ({ open, onOpenChange, imageUrl, canvasSize, versions = []
           <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
             {/* Main content */}
             <div className="w-full">
-                {/* Image container with lighter gray background and border */}
-                <div className="bg-gray-100 dark:bg-gray-600 rounded-xl p-4 border border-gray-300 dark:border-gray-500 mb-4">
-                  {/* Header with title and canvas size inside container */}
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                      Generated Ad
-                    </h3>
-                    <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-                      {formatCanvasSize(displayCanvasSize)}
-                    </span>
-                  </div>
-
-                  {/* Image */}
-                  <div className="flex items-center justify-center">
-                    {displayImageUrl ? (
-                      <img
-                        src={displayImageUrl}
-                        alt="Generated Ad for Revision"
-                        className="max-w-full max-h-[60vh] object-contain rounded-lg"
-                      />
-                    ) : (
-                      <div className="w-full h-96 bg-gray-200 dark:bg-gray-500 rounded-lg flex items-center justify-center">
-                        <p className="text-gray-500 dark:text-gray-400">No image available</p>
-                      </div>
-                    )}
-                  </div>
+              {/* Image container with lighter gray background and border */}
+              <div className="bg-gray-100 dark:bg-gray-600 rounded-xl p-4 border border-gray-300 dark:border-gray-500 mb-4">
+                {/* Header with title and canvas size inside container */}
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    Generated Ad
+                  </h3>
+                  <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                    {formatCanvasSize(displayCanvasSize)}
+                  </span>
                 </div>
 
-                {/* Edit description textarea */}
-                <div className="relative">
-                  <div className="relative">
-                    <WandSparkles className="absolute left-3 top-3 h-4 w-4 text-gray-500 dark:text-gray-400" />
-                    <textarea
-                      value={editDescription}
-                      onChange={(e) => setEditDescription(e.target.value)}
-                      placeholder="Describe your edits (e.g. Make it more vibrant and colorful)"
-                      className="w-full pl-10 pr-20 min-h-[80px] resize-none rounded-2xl border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                {/* Image */}
+                <div className="flex items-center justify-center">
+                  {displayImageUrl ? (
+                    <img
+                      src={displayImageUrl}
+                      alt="Generated Ad for Revision"
+                      className="max-w-full max-h-[60vh] object-contain rounded-lg"
                     />
-                    <Button
-                      disabled={!editDescription.trim() || isGenerating}
-                      onClick={handleGenerateVersion}
-                      className={`absolute bottom-3 right-3 h-8 px-3 text-xs rounded-full ${!editDescription.trim() || isGenerating
-                          ? 'bg-gray-400 hover:bg-gray-400 text-white cursor-not-allowed'
-                          : ''
-                        }`}
-                      size="sm"
-                    >
-                      <ArrowUp className={`h-3 w-3 mr-1 ${isGenerating ? 'animate-spin' : ''}`} />
-                      {isGenerating ? 'Generating...' : 'Generate'}
-                    </Button>
-                  </div>
+                  ) : (
+                    <div className="w-full h-96 bg-gray-200 dark:bg-gray-500 rounded-lg flex items-center justify-center">
+                      <p className="text-gray-500 dark:text-gray-400">No image available</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Edit description textarea */}
+              <div className="relative">
+                <div className="relative">
+                  <WandSparkles className="absolute left-3 top-3 h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  <textarea
+                    value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
+                    placeholder="Describe your edits (e.g. Make it more vibrant and colorful)"
+                    className="w-full pl-10 pr-20 min-h-[80px] resize-none rounded-2xl border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                  <Button
+                    disabled={!editDescription.trim() || isGenerating}
+                    onClick={handleGenerateVersion}
+                    className={`absolute bottom-3 right-3 h-8 px-3 text-xs rounded-full ${!editDescription.trim() || isGenerating
+                      ? 'bg-gray-400 hover:bg-gray-400 text-white cursor-not-allowed'
+                      : ''
+                      }`}
+                    size="sm"
+                  >
+                    <ArrowUp className={`h-3 w-3 mr-1 ${isGenerating ? 'animate-spin' : ''}`} />
+                    {isGenerating ? 'Generating...' : 'Generate'}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Tips cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-4">
+                <div
+                  onClick={() => setEditDescription('Make it more vibrant and colorful')}
+                  className="flex items-center gap-2 px-3 py-2 border border-primary/20 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <Zap className="h-3 w-3 text-primary flex-shrink-0" />
+                  <span className="text-xs text-gray-700 dark:text-gray-300 truncate">Make it more vibrant and colorful</span>
                 </div>
 
-                {/* Tips cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-4">
-                  <div
-                    onClick={() => setEditDescription('Make it more vibrant and colorful')}
-                    className="flex items-center gap-2 px-3 py-2 border border-primary/20 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <Zap className="h-3 w-3 text-primary flex-shrink-0" />
-                    <span className="text-xs text-gray-700 dark:text-gray-300 truncate">Make it more vibrant and colorful</span>
-                  </div>
-
-                  <div
-                    onClick={() => setEditDescription('Add a modern minimalist style')}
-                    className="flex items-center gap-2 px-3 py-2 border border-primary/20 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <Zap className="h-3 w-3 text-primary flex-shrink-0" />
-                    <span className="text-xs text-gray-700 dark:text-gray-300 truncate">Add a modern minimalist style</span>
-                  </div>
-
-                  <div
-                    onClick={() => setEditDescription('Enhance the overall quality')}
-                    className="flex items-center gap-2 px-3 py-2 border border-primary/20 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <Zap className="h-3 w-3 text-primary flex-shrink-0" />
-                    <span className="text-xs text-gray-700 dark:text-gray-300 truncate">Enhance the overall quality</span>
-                  </div>
-
-                  <div
-                    onClick={() => setEditDescription('Apply a professional business look')}
-                    className="flex items-center gap-2 px-3 py-2 border border-primary/20 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <Zap className="h-3 w-3 text-primary flex-shrink-0" />
-                    <span className="text-xs text-gray-700 dark:text-gray-300 truncate">Apply a professional business look</span>
-                  </div>
+                <div
+                  onClick={() => setEditDescription('Add a modern minimalist style')}
+                  className="flex items-center gap-2 px-3 py-2 border border-primary/20 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <Zap className="h-3 w-3 text-primary flex-shrink-0" />
+                  <span className="text-xs text-gray-700 dark:text-gray-300 truncate">Add a modern minimalist style</span>
                 </div>
+
+                <div
+                  onClick={() => setEditDescription('Enhance the overall quality')}
+                  className="flex items-center gap-2 px-3 py-2 border border-primary/20 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <Zap className="h-3 w-3 text-primary flex-shrink-0" />
+                  <span className="text-xs text-gray-700 dark:text-gray-300 truncate">Enhance the overall quality</span>
+                </div>
+
+                <div
+                  onClick={() => setEditDescription('Apply a professional business look')}
+                  className="flex items-center gap-2 px-3 py-2 border border-primary/20 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <Zap className="h-3 w-3 text-primary flex-shrink-0" />
+                  <span className="text-xs text-gray-700 dark:text-gray-300 truncate">Apply a professional business look</span>
+                </div>
+              </div>
             </div>
           </div>
         </DialogContent>

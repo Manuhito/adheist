@@ -32,7 +32,9 @@ const BrandDropdown = ({ initialBrandId, onBrandChange, adRequestId = null, bran
         }
         const data = await response.json();
         if (data.success && Array.isArray(data.brands)) {
-          setBrands(data.brands);
+          // Filter out inactive brands
+          const activeBrands = data.brands.filter(brand => brand.active !== false);
+          setBrands(activeBrands);
         } else {
           throw new Error('Invalid response format');
         }
@@ -46,7 +48,7 @@ const BrandDropdown = ({ initialBrandId, onBrandChange, adRequestId = null, bran
 
     fetchBrands();
   }, []);
-  
+
   // Update selectedBrand when initialBrandId changes
   useEffect(() => {
     if (initialBrandId) {
@@ -103,11 +105,11 @@ const BrandDropdown = ({ initialBrandId, onBrandChange, adRequestId = null, bran
   const handleBrandCreated = (newBrand) => {
     // Add the new brand to the list
     setBrands([...brands, newBrand]);
-    
+
     // Select the newly created brand and trigger the same update process
     // as when a user selects a brand from the dropdown
     setSelectedBrand(newBrand.id.toString());
-    
+
     if (onBrandChange) {
       // Call onBrandChange with the new brand object to trigger the update process
       onBrandChange(newBrand);
@@ -117,15 +119,15 @@ const BrandDropdown = ({ initialBrandId, onBrandChange, adRequestId = null, bran
   // Handle brand update success
   const handleBrandUpdated = (updatedBrand) => {
     // Update the brand in the existing list instead of adding it
-    setBrands(prevBrands => 
-      prevBrands.map(brand => 
+    setBrands(prevBrands =>
+      prevBrands.map(brand =>
         brand.id === updatedBrand.id ? updatedBrand : brand
       )
     );
-    
+
     // Keep the same brand selected (no need to change selection)
     // The brand data has been updated in place
-    
+
     if (onBrandChange) {
       // Call onBrandChange with the updated brand object to refresh the UI
       onBrandChange(updatedBrand);
@@ -171,7 +173,7 @@ const BrandDropdown = ({ initialBrandId, onBrandChange, adRequestId = null, bran
                   {getSelectedBrandName() || (
                     <>
                       <Building className="h-4 w-4 mr-2" />
-                      {brands.length === 0 
+                      {brands.length === 0
                         ? t('step_two.no_brands_click_to_create', 'No brands available - Click to create one')
                         : t('step_two.select_brand', 'Select a brand')
                       }
@@ -193,7 +195,7 @@ const BrandDropdown = ({ initialBrandId, onBrandChange, adRequestId = null, bran
             >
               <div className="max-h-60 overflow-auto p-1 outline-none [clip-path:inset(0_0_0_0_round_calc(var(--radius)-2px))]">
                 {brands.length === 0 ? (
-                  <div 
+                  <div
                     className="px-2 py-1.5 text-sm text-center cursor-pointer rounded-sm hover:bg-accent hover:text-accent-foreground"
                     onClick={() => {
                       setIsOpen(false);
@@ -233,10 +235,10 @@ const BrandDropdown = ({ initialBrandId, onBrandChange, adRequestId = null, bran
             </PopoverContent>
           </Popover>
         </div>
-        <Button 
-          variant="outline" 
-          size="icon" 
-          className="h-10 w-10" 
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-10 w-10"
           onClick={() => setIsModalOpen(true)}
           title={t('brand.create_new', 'Create New Brand')}
         >
@@ -247,11 +249,11 @@ const BrandDropdown = ({ initialBrandId, onBrandChange, adRequestId = null, bran
           <span className="sr-only">{t('brand.create_new', 'Create New Brand')}</span>
         </Button>
       </div>
-      
+
       {/* Modal for creating/editing a brand */}
-      <CreateBrandModal 
-        isOpen={isModalOpen} 
-        onClose={handleModalClose} 
+      <CreateBrandModal
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
         onBrandCreated={handleBrandCreated}
         onBrandUpdated={handleBrandUpdated}
         adRequestId={adRequestId}

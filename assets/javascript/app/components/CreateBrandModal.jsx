@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -41,6 +41,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState('');
   const [createdBrandId, setCreatedBrandId] = useState(null);
+  const [logoChangeTrigger, setLogoChangeTrigger] = useState(0);
 
   // Effect to preload data when editing a brand
   useEffect(() => {
@@ -329,8 +330,120 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
 
     setSelectedLogo(null);
     setSelectedLogoData(null);
+    setLogoChangeTrigger(prev => prev + 1);
     console.log('Logo deleted:', logoData);
   };
+
+  // Auto-save function that saves without closing the modal
+  const autoSave = useCallback(async () => {
+    // Don't auto-save if brand name is empty (required field)
+    if (!brandName.trim()) {
+      return;
+    }
+
+    try {
+      // Prepare form data for submission
+      const formData = {
+        brand_name: brandName.trim(),
+        industry: industry.trim(),
+        website: website.trim(),
+        product_description: productDescription.trim(),
+        target_audience: targetAudience.trim(),
+        functional_benefits: functionalBenefits.trim(),
+        brand_colors: brandColors,
+        tone_of_voice: toneOfVoice.trim(),
+        font_direction: fontDirection.trim(),
+        core_features: coreFeatures.trim(),
+        emotional_lifestyle_benefits: emotionalBenefits.trim(),
+        proof_points: proofPoints.trim(),
+        value_propositions: valuePropositions.trim()
+      };
+
+      // Determine if we're creating or updating
+      const isUpdating = createdBrandId !== null;
+      const endpoint = isUpdating ? `/ads/api/update-user-brand/${createdBrandId}/` : '/ads/api/create-user-brand/';
+
+      // Check if we need to handle logo changes
+      const hasNewLogoFile = selectedLogoData && selectedLogoData.file;
+      const shouldRemoveLogo = isUpdating && !selectedLogoData;
+
+      let response;
+
+      // If there's a logo file or we need to remove logo, use FormData for multipart upload
+      if (hasNewLogoFile || shouldRemoveLogo) {
+        const formDataMultipart = new FormData();
+
+        // Add all text fields
+        Object.keys(formData).forEach(key => {
+          if (key === 'brand_colors') {
+            formDataMultipart.append(key, JSON.stringify(formData[key]));
+          } else {
+            formDataMultipart.append(key, formData[key]);
+          }
+        });
+
+        // Handle logo changes
+        if (hasNewLogoFile) {
+          formDataMultipart.append('logo_file', selectedLogoData.file);
+        } else if (shouldRemoveLogo) {
+          formDataMultipart.append('remove_logo', 'true');
+        }
+
+        const multipartEndpoint = isUpdating ? `/ads/api/update-user-brand/${createdBrandId}/` : '/ads/api/create-user-brand/';
+
+        response = await fetch(multipartEndpoint, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCsrfToken(),
+            ...(isUpdating && { 'X-Update-Mode': 'true' })
+          },
+          body: formDataMultipart,
+        });
+      } else {
+        // No logo file, use JSON
+        response = await fetch(endpoint, {
+          method: isUpdating ? 'PUT' : 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken(),
+          },
+          body: JSON.stringify(formData),
+        });
+      }
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // If this was a create operation, store the brand ID for future updates
+        if (!isUpdating && data.brand && data.brand.id) {
+          setCreatedBrandId(data.brand.id);
+        }
+
+        // Call appropriate callback based on operation type
+        if (isUpdating && onBrandUpdated) {
+          onBrandUpdated(data.brand);
+        } else if (!isUpdating && onBrandCreated) {
+          onBrandCreated(data.brand);
+        }
+
+        // Clear any previous errors
+        setError('');
+      }
+    } catch (err) {
+      console.error('Auto-save error:', err);
+      // Don't show error to user for auto-save failures
+    }
+  }, [brandName, industry, website, productDescription, targetAudience, functionalBenefits, brandColors, toneOfVoice, fontDirection, coreFeatures, emotionalBenefits, proofPoints, valuePropositions, selectedLogoData, createdBrandId, onBrandCreated, onBrandUpdated]);
+
+  useEffect(() => {
+    if (!brandName.trim()) {
+      return;
+    }
+    if (!logoChangeTrigger) {
+      return;
+    }
+    autoSave();
+  }, [logoChangeTrigger, brandName, autoSave]);
 
   // Function to get CSRF token from cookies
   const getCsrfToken = () => {
@@ -378,12 +491,14 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
 
         // Update state with complete file info
         setSelectedLogoData(fileInfo);
+        setLogoChangeTrigger(prev => prev + 1);
         console.log('Logo file selected:', fileInfo);
       };
       img.onerror = function () {
         // If can't load image, still store the file info without dimensions
         console.warn('Could not extract logo dimensions');
         setSelectedLogoData(fileInfo);
+        setLogoChangeTrigger(prev => prev + 1);
       };
       img.src = previewUrl;
 
@@ -542,8 +657,15 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
     }
   };
 
+  const handleDialogOpenChange = useCallback((open) => {
+    if (!open) {
+      autoSave();
+      onClose();
+    }
+  }, [autoSave, onClose]);
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleDialogOpenChange}>
       <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
         <DialogHeader className="border-b border-gray-200 dark:border-gray-700 pb-4">
           <DialogTitle className="text-gray-900 dark:text-gray-100">{editingBrand ? 'Edit Brand' : 'Create Brand'}</DialogTitle>
@@ -587,7 +709,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
                   {analysisError === 'credits' ? (
                     <span>
                       You do not have enough credits to perform this action. Please{' '}
-                      <a 
+                      <a
                         href="/ads/billing/"
                         className="underline hover:text-red-600 dark:hover:text-red-300"
                       >
@@ -598,8 +720,8 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
                   ) : (
                     <span>
                       Failed to download website content. Please try with a different website or{' '}
-                      <a 
-                        href="mailto:hey@adheist.ai" 
+                      <a
+                        href="mailto:hey@adheist.ai"
                         className="underline hover:text-red-600 dark:hover:text-red-300"
                       >
                         contact us
@@ -639,6 +761,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
                   id="brandName"
                   value={brandName}
                   onChange={handleBrandNameChange}
+                  onBlur={autoSave}
                   placeholder={t('brand.name_placeholder', 'Brand name')}
                   disabled={isSubmitting}
                   className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
@@ -655,6 +778,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
                   id="industry"
                   value={industry}
                   onChange={handleIndustryChange}
+                  onBlur={autoSave}
                   placeholder="Industry/Vertical"
                   disabled={isSubmitting}
                   className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
@@ -670,6 +794,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
                   id="website"
                   value={website}
                   onChange={handleWebsiteChange}
+                  onBlur={autoSave}
                   placeholder="Website"
                   disabled={isSubmitting}
                   className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
@@ -685,6 +810,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
                   id="productDescription"
                   value={productDescription}
                   onChange={handleProductDescriptionChange}
+                  onBlur={autoSave}
                   placeholder="Outline the product range and services provided by the brand."
                   disabled={isSubmitting}
                   rows={3}
@@ -701,6 +827,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
                   id="targetAudience"
                   value={targetAudience}
                   onChange={handleTargetAudienceChange}
+                  onBlur={autoSave}
                   placeholder="Description of the target audience"
                   disabled={isSubmitting}
                   rows={2}
@@ -717,6 +844,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
                   id="functionalBenefits"
                   value={functionalBenefits}
                   onChange={handleFunctionalBenefitsChange}
+                  onBlur={autoSave}
                   placeholder="Functional Benefits"
                   disabled={isSubmitting}
                   rows={2}
@@ -780,6 +908,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
                   id="toneOfVoice"
                   value={toneOfVoice}
                   onChange={handleToneOfVoiceChange}
+                  onBlur={autoSave}
                   placeholder="Tone of Voice"
                   disabled={isSubmitting}
                   className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
@@ -795,6 +924,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
                   id="fontDirection"
                   value={fontDirection}
                   onChange={handleFontDirectionChange}
+                  onBlur={autoSave}
                   placeholder="Font Direction"
                   disabled={isSubmitting}
                   className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
@@ -810,6 +940,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
                   id="coreFeatures"
                   value={coreFeatures}
                   onChange={handleCoreFeaturesChange}
+                  onBlur={autoSave}
                   placeholder="Core Features"
                   disabled={isSubmitting}
                   rows={2}
@@ -827,6 +958,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
                   id="emotionalBenefits"
                   value={emotionalBenefits}
                   onChange={handleEmotionalBenefitsChange}
+                  onBlur={autoSave}
                   placeholder="Emotional/Lifestyle Benefits"
                   disabled={isSubmitting}
                   rows={2}
@@ -843,6 +975,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
                   id="proofPoints"
                   value={proofPoints}
                   onChange={handleProofPointsChange}
+                  onBlur={autoSave}
                   placeholder="Proof Points"
                   disabled={isSubmitting}
                   rows={2}
@@ -859,6 +992,7 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
                   id="valuePropositions"
                   value={valuePropositions}
                   onChange={handleValuePropositionsChange}
+                  onBlur={autoSave}
                   placeholder="Value Propositions"
                   disabled={isSubmitting}
                   rows={2}

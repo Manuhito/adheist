@@ -599,6 +599,11 @@ class AdRequestVersion(BaseModel):
     ]
     
     ad_request = models.ForeignKey(AdRequest, on_delete=models.CASCADE, related_name="versions")
+    
+    # Version hierarchy fields
+    is_primary = models.BooleanField(default=True, help_text="True for the 3 initial versions created for an AdRequest")
+    parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name="revisions", help_text="Parent version for revisions (links to initial version)")
+    
     # Original fields (keeping for backward compatibility)
     generated_prompt = models.TextField(null=True, blank=True)
     user_prompt = models.TextField(null=True, blank=True)
@@ -963,7 +968,8 @@ class UserBrand(BaseModel):
     Model to store user brands information.
     """
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="brands")
-    brand_name = models.CharField(max_length=255, help_text="Name of the brand", unique=True)
+    brand_name = models.CharField(max_length=255, help_text="Name of the brand")
+    active = models.BooleanField(default=True, help_text="Indicates if the brand is active or has been soft deleted")
     
     class Meta:
         verbose_name = "User Brand"
@@ -972,7 +978,8 @@ class UserBrand(BaseModel):
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'brand_name'],
-                name='unique_user_brand'
+                condition=models.Q(active=True),
+                name='unique_active_user_brand'
             )
         ]
     
