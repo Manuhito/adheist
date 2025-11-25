@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import Mascot from './components/Mascot';
 import StepOne from './steps/StepOne';
 import StepTwo from './steps/StepTwo';
+import StepThree from './steps/StepThree';
 
 const OnboardingPage = () => {
   const { currentStep: initialStep, user } = window.__ONBOARDING_DATA__ || {};
@@ -20,7 +21,13 @@ const OnboardingPage = () => {
   const handleStepTwoNext = (data) => {
     console.log('Step 2 submitted:', data);
     setFormData(prev => ({ ...prev, ...data }));
-    // setCurrentStep('STEP_3'); 
+    setCurrentStep('STEP_3');
+  };
+
+  const handleStepThreeNext = (data) => {
+    console.log('Step 3 submitted:', data);
+    setFormData(prev => ({ ...prev, ...data }));
+    // setCurrentStep('STEP_4');
   };
 
   const getMascotMessage = () => {
@@ -29,6 +36,8 @@ const OnboardingPage = () => {
         return `Hi ${user?.firstName ? user.firstName : 'there'}! To get started, I need your brand's website URL.`;
       case 'STEP_2':
         return "Great! Now tell me more about your products.";
+      case 'STEP_3':
+        return "Let's review the details I extracted. Make any changes you like!";
       default:
         return "We're making great progress!";
     }
@@ -49,6 +58,14 @@ const OnboardingPage = () => {
         return (
           <StepTwo
             onNext={handleStepTwoNext}
+            initialData={formData}
+            setMascotMessageOverride={setMascotMessageOverride}
+          />
+        );
+      case 'STEP_3':
+        return (
+          <StepThree
+            onNext={handleStepThreeNext}
             initialData={formData}
             setMascotMessageOverride={setMascotMessageOverride}
           />
