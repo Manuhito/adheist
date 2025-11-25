@@ -89,11 +89,11 @@ const StepTwo = ({ onNext, initialData, setMascotMessageOverride }) => {
     <div className="flex flex-col items-center justify-center w-full py-8 animate-in fade-in duration-500">
       <div className="w-full max-w-4xl px-4">
         {data?.screenshot && (
-          <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-2xl border bg-muted/50 mb-8 group">
+          <div className="relative w-full rounded-xl overflow-hidden shadow-md border bg-muted/50 mb-8 group">
             <img
               src={data.screenshot}
               alt="Website Screenshot"
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              className="w-full h-auto"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-6">
               <p className="text-white font-medium">Analyzed from {initialData.url}</p>
