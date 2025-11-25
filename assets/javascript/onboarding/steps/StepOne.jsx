@@ -3,9 +3,12 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import Bars from '../components/Bars';
 
+// Bars loading component
 const StepOne = ({ onNext, initialData, user, setMascotMessageOverride }) => {
   const [url, setUrl] = useState(initialData?.url || '');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     // If user logged in via Google and we don't have a URL yet
@@ -67,10 +70,60 @@ const StepOne = ({ onNext, initialData, user, setMascotMessageOverride }) => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validateUrl(url)) {
-      onNext({ url });
+    if (validateUrl(url) && !isLoading) {
+      setIsLoading(true);
+
+      // Ensure URL has protocol
+      const processedUrl = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+
+      try {
+        // Get CSRF token
+        const csrfToken = document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
+
+        // Prepare form data
+        const formData = new FormData();
+        formData.append('website_url', processedUrl);
+
+        // 1. Trigger tasks in parallel immediately
+        // Task 1: Take screenshot
+        const screenshotPromise = fetch('/ads/api/capture-screenshot/', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrfToken,
+          },
+          body: formData
+        }).then(res => res.json());
+
+        // Task 2: Brand generation (Analyze website)
+        const analysisPromise = fetch('/ads/api/analyze-website/', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrfToken,
+          },
+          body: formData
+        }).then(res => res.json());
+
+        // 2. Wait 3 seconds minimum before navigating
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
+        // 3. Navigate to next step, passing the pending promises
+        onNext({
+          url: processedUrl,
+          promises: {
+            screenshot: screenshotPromise,
+            analysis: analysisPromise
+          }
+        });
+
+      } catch (error) {
+        console.error("Error during submission:", error);
+        setIsLoading(false);
+        if (setMascotMessageOverride) {
+          setMascotMessageOverride("Sorry, I couldn't connect to the server. Please try again.");
+        }
+      }
     }
   };
 
@@ -78,20 +131,22 @@ const StepOne = ({ onNext, initialData, user, setMascotMessageOverride }) => {
 
   useEffect(() => {
     if (setMascotMessageOverride) {
-      if (isUrlValid) {
+      if (isLoading) {
+        setMascotMessageOverride("Checking your website... Hang tight!");
+      } else if (isUrlValid) {
         setMascotMessageOverride("Is this your website?");
       } else {
         setMascotMessageOverride(null);
       }
     }
-  }, [isUrlValid, setMascotMessageOverride]);
+  }, [isUrlValid, isLoading, setMascotMessageOverride]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] w-full px-4">
       {/* Matching login form container width */}
       <Card className="w-96 border-none shadow-none bg-transparent">
         <CardContent className="p-0">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6" noValidate>
             <div className="space-y-1">
               {/* Label matching render_text_input style */}
               <Label htmlFor="website-url" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
@@ -107,6 +162,7 @@ const StepOne = ({ onNext, initialData, user, setMascotMessageOverride }) => {
                 className="block w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-primary focus:ring-2 focus:ring-primary focus:ring-opacity-50 sm:text-sm h-auto"
                 autoFocus
                 required
+                disabled={isLoading}
               />
             </div>
 
@@ -115,9 +171,9 @@ const StepOne = ({ onNext, initialData, user, setMascotMessageOverride }) => {
               <Button
                 type="submit"
                 className="group relative flex justify-center rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary h-auto min-w-[100px]"
-                disabled={!isUrlValid}
+                disabled={!isUrlValid || isLoading}
               >
-                Continue
+                {isLoading ? <Bars size={20} /> : 'Continue'}
               </Button>
             </div>
           </form>

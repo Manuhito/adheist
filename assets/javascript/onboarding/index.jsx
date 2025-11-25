@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import Mascot from './components/Mascot';
 import StepOne from './steps/StepOne';
+import StepTwo from './steps/StepTwo';
 
 const OnboardingPage = () => {
   const { currentStep: initialStep, user } = window.__ONBOARDING_DATA__ || {};
@@ -13,9 +14,13 @@ const OnboardingPage = () => {
   const handleStepOneNext = (data) => {
     console.log('Step 1 submitted:', data);
     setFormData(prev => ({ ...prev, ...data }));
-    // TODO: Implement API call to save data and advance step
-    // For now, we just log it.
-    // setCurrentStep('STEP_2'); 
+    setCurrentStep('STEP_2');
+  };
+
+  const handleStepTwoNext = (data) => {
+    console.log('Step 2 submitted:', data);
+    setFormData(prev => ({ ...prev, ...data }));
+    // setCurrentStep('STEP_3'); 
   };
 
   const getMascotMessage = () => {
@@ -37,6 +42,14 @@ const OnboardingPage = () => {
             onNext={handleStepOneNext}
             initialData={formData}
             user={user}
+            setMascotMessageOverride={setMascotMessageOverride}
+          />
+        );
+      case 'STEP_2':
+        return (
+          <StepTwo
+            onNext={handleStepTwoNext}
+            initialData={formData}
             setMascotMessageOverride={setMascotMessageOverride}
           />
         );

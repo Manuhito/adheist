@@ -130,6 +130,31 @@ def download_website_content_with_playwright(url: str) -> str:
         browser.close()
         return content
 
+def capture_screenshot_with_playwright(url: str) -> str:
+    """
+    Capture a screenshot of a website using Playwright and return as base64 string.
+    """
+    import base64
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page()
+        
+        # Set viewport size to desktop
+        page.set_viewport_size({"width": 1280, "height": 800})
+        
+        # Navigate and wait for network to be idle
+        page.goto(url, wait_until='networkidle')
+        
+        # Additional wait for dynamic content to render
+        page.wait_for_timeout(2000)
+        
+        # Take screenshot
+        screenshot_bytes = page.screenshot(full_page=False)
+        browser.close()
+        
+        # Convert to base64
+        return base64.b64encode(screenshot_bytes).decode('utf-8')
+
 def download_website_content(url: str, selectors: list) -> str:
     """
     Download and extract text content from a website.

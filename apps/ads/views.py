@@ -3987,6 +3987,47 @@ def analyze_website_for_brand_assets(request):
         }, status=500)
 
 @login_required
+@require_http_methods(["POST"])
+def capture_website_screenshot(request):
+    """
+    Capture a screenshot of a website.
+    
+    Args:
+        request: Django request object with 'website_url' in POST data
+        
+    Returns:
+        JsonResponse with base64 screenshot or error
+    """
+    try:
+        website_url = request.POST.get('website_url')
+        
+        if not website_url:
+            return JsonResponse({
+                'success': False,
+                'error': 'Website URL is required'
+            }, status=400)
+            
+        # Ensure URL has scheme
+        if not website_url.startswith(('http://', 'https://')):
+            website_url = 'https://' + website_url
+            
+        from .website_analysis import capture_screenshot_with_playwright
+        
+        screenshot_base64 = capture_screenshot_with_playwright(website_url)
+        
+        return JsonResponse({
+            'success': True,
+            'screenshot': f"data:image/png;base64,{screenshot_base64}"
+        })
+            
+    except Exception as e:
+        logging.error(f"Error capturing screenshot: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+@login_required
 @require_http_methods(["PUT", "POST"])  # Allow POST for multipart data
 def update_user_brand(request, brand_id):
     """
