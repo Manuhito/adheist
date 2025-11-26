@@ -1,7 +1,13 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import CustomUser
+from .models import CustomUser, UserOnboarding
+
+
+@admin.register(UserOnboarding)
+class UserOnboardingAdmin(admin.ModelAdmin):
+    list_display = ("user", "website")
+    search_fields = ("user__email", "user__username", "website")
 
 
 @admin.register(CustomUser)

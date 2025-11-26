@@ -100,3 +100,12 @@ class CustomUser(SubscriptionModelBase, AbstractUser):
     @cached_property
     def has_verified_email(self):
         return EmailAddress.objects.filter(user=self, verified=True).exists()
+
+
+class UserOnboarding(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='onboarding')
+    website = models.URLField(max_length=200, blank=True, null=True)
+    competitors = models.JSONField(default=list, blank=True)
+
+    def __str__(self):
+        return f"Onboarding info for {self.user}"
