@@ -86,8 +86,17 @@ const OnboardingPage = () => {
 
   return (
     <div className="min-h-screen w-full bg-background/50 flex flex-col relative">
+      {/* Header Logo */}
+      <header className="w-full flex justify-center pt-14 absolute top-0 z-20 pointer-events-none">
+        <img
+          src="/static/images/web/logo-brand-name.png"
+          alt="AdHeist"
+          className="h-12 w-auto object-contain"
+        />
+      </header>
+
       {/* Main Content Area */}
-      <main className="flex-grow flex flex-col relative z-10">
+      <main className="flex-grow flex flex-col relative z-10 pt-32">
         {renderStep()}
       </main>
 
