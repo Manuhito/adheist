@@ -8,7 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 
 const StepTwo = ({ onNext, initialData, setMascotMessageOverride }) => {
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState(null);
+  const [analyzing, setAnalyzing] = useState(true);
+  const [data, setData] = useState({ screenshot: null, brandData: null });
   const [error, setError] = useState(null);
 
   // Brand details state
@@ -61,19 +62,22 @@ const StepTwo = ({ onNext, initialData, setMascotMessageOverride }) => {
   }, [brandId, data]);
 
   useEffect(() => {
-    const loadData = async () => {
-      if (initialData?.promises) {
-        try {
-          const [screenshotData, analysisData] = await Promise.all([
-            initialData.promises.screenshot,
-            initialData.promises.analysis
-          ]);
+    if (initialData?.promises) {
+      // 1. Handle Screenshot - Unblocks the UI immediately
+      initialData.promises.screenshot
+        .then((screenshotData) => {
+          if (screenshotData.success) {
+            setData((prev) => ({ ...prev, screenshot: screenshotData.screenshot }));
+          }
+        })
+        .catch((err) => console.error("Screenshot error:", err))
+        .finally(() => setLoading(false));
 
+      // 2. Handle Analysis - Shows the modal when ready
+      initialData.promises.analysis
+        .then((analysisData) => {
           if (analysisData.success) {
-            setData({
-              screenshot: screenshotData.success ? screenshotData.screenshot : null,
-              brandData: analysisData
-            });
+            setData((prev) => ({ ...prev, brandData: analysisData }));
 
             const bName = analysisData.brand?.name || analysisData.brand_name || 'Your Brand';
             const bDesc = analysisData.brand?.product_description || analysisData.product_description || "No description available.";
@@ -82,35 +86,32 @@ const StepTwo = ({ onNext, initialData, setMascotMessageOverride }) => {
             setBrandName(bName);
             setProductDescription(bDesc);
             setBrandId(bId);
-            setLoading(false);
           } else {
             setError(analysisData.error || "Failed to analyze website");
-            setLoading(false);
           }
-        } catch (err) {
-          console.error("Error loading step two data:", err);
-          setError("An error occurred while loading data.");
-          setLoading(false);
-        }
-      } else if (initialData?.brandData) {
-        // Data already loaded (maybe revisiting step)
-        setData({
-          screenshot: initialData.screenshot,
-          brandData: initialData.brandData
-        });
+        })
+        .catch((err) => {
+          console.error("Analysis error:", err);
+          setError("An error occurred while analyzing.");
+        })
+        .finally(() => setAnalyzing(false));
+    } else if (initialData?.brandData) {
+      // Data already loaded (maybe revisiting step)
+      setData({
+        screenshot: initialData.screenshot,
+        brandData: initialData.brandData
+      });
 
-        const bName = initialData.brandData.brand?.name || initialData.brandData.brand_name || 'Your Brand';
-        const bDesc = initialData.brandData.brand?.product_description || initialData.brandData.product_description || "No description available.";
-        const bId = initialData.brandData.brand?.id || initialData.brandData.brand_id;
+      const bName = initialData.brandData.brand?.name || initialData.brandData.brand_name || 'Your Brand';
+      const bDesc = initialData.brandData.brand?.product_description || initialData.brandData.product_description || "No description available.";
+      const bId = initialData.brandData.brand?.id || initialData.brandData.brand_id;
 
-        setBrandName(bName);
-        setProductDescription(bDesc);
-        setBrandId(bId);
-        setLoading(false);
-      }
-    };
-
-    loadData();
+      setBrandName(bName);
+      setProductDescription(bDesc);
+      setBrandId(bId);
+      setLoading(false);
+      setAnalyzing(false);
+    }
   }, [initialData]);
 
   // Focus effects for editing
@@ -129,14 +130,16 @@ const StepTwo = ({ onNext, initialData, setMascotMessageOverride }) => {
   useEffect(() => {
     if (setMascotMessageOverride) {
       if (loading) {
-        setMascotMessageOverride("Analyzing your brand style...");
+        setMascotMessageOverride("Taking a snapshot of your website...");
       } else if (error) {
         setMascotMessageOverride("Oops! Something went wrong.");
+      } else if (analyzing) {
+        setMascotMessageOverride("Analyzing your brand style...");
       } else {
         setMascotMessageOverride("Look what I found! Is this correct?");
       }
     }
-  }, [loading, error, setMascotMessageOverride]);
+  }, [loading, analyzing, error, setMascotMessageOverride]);
 
   const getFaviconUrl = (url) => {
     try {
@@ -222,7 +225,7 @@ const StepTwo = ({ onNext, initialData, setMascotMessageOverride }) => {
         <div className="flex flex-col items-center gap-4">
           <Bars size={64} className="text-primary" />
           <p className="text-muted-foreground font-medium animate-pulse">
-            Extracting brand assets...
+            Taking a snapshot of your website...
           </p>
         </div>
       </div>
@@ -257,88 +260,90 @@ const StepTwo = ({ onNext, initialData, setMascotMessageOverride }) => {
             <img
               src={data.screenshot}
               alt="Website Screenshot"
-              className="w-full h-auto opacity-80 blur-[2px] transition-all duration-500"
+              className={`w-full h-auto opacity-80 transition-all duration-500 ${analyzing ? '' : 'blur-[2px]'}`}
             />
           </div>
         )}
 
         {/* Modal Overlay */}
         <div className="absolute inset-0 flex items-center justify-center z-10 p-4">
-          <Card className="w-full max-w-lg shadow-xl bg-background/95 backdrop-blur-sm border-primary/20">
-            <CardContent className="p-6 space-y-6">
-              {/* Header: Favicon + Name + URL */}
-              <div className="flex items-start gap-4">
-                {faviconUrl && (
-                  <div className="flex-shrink-0 bg-white p-2 rounded-lg border shadow-sm">
-                    <img src={faviconUrl} alt="Favicon" className="w-10 h-10 object-contain" />
-                  </div>
-                )}
-
-                <div className="flex-grow space-y-1">
-                  <div className="flex items-center gap-2 group">
-                    {isEditingName ? (
-                      <Input
-                        ref={nameInputRef}
-                        value={brandName}
-                        onChange={(e) => setBrandName(e.target.value)}
-                        onBlur={handleNameBlur}
-                        onKeyDown={(e) => e.key === 'Enter' && handleNameBlur()}
-                        className="h-8 text-lg font-bold px-2 -ml-2 w-full"
-                      />
-                    ) : (
-                      <>
-                        <h2 className="text-xl font-bold text-foreground">{brandName}</h2>
-                        <button
-                          onClick={() => setIsEditingName(true)}
-                          className="text-muted-foreground/40 hover:text-muted-foreground transition-colors"
-                        >
-                          <Pencil size={14} />
-                        </button>
-                      </>
-                    )}
-                  </div>
-                  <p className="text-sm text-muted-foreground truncate max-w-[300px]">
-                    {initialData?.url}
-                  </p>
-                </div>
-              </div>
-
-              {/* Divider */}
-              <div className="h-px bg-border w-full" />
-
-              {/* About Section */}
-              <div className="space-y-2">
-                <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">About</h3>
-                <div className="relative group border border-input rounded-md p-1 hover:border-primary/50 transition-colors">
-                  {isEditingDescription ? (
-                    <Textarea
-                      ref={descriptionInputRef}
-                      value={productDescription}
-                      onChange={(e) => setProductDescription(e.target.value)}
-                      onBlur={handleDescriptionBlur}
-                      className="min-h-[100px] border-none focus-visible:ring-0 resize-none p-2"
-                    />
-                  ) : (
-                    <div
-                      className="min-h-[100px] p-2 text-sm text-muted-foreground leading-relaxed cursor-text"
-                      onClick={() => setIsEditingDescription(true)}
-                    >
-                      {productDescription}
-                      <Pencil size={14} className="absolute top-3 right-3 text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+          {!analyzing && (
+            <Card className="w-full max-w-lg shadow-xl bg-background/95 backdrop-blur-sm border-primary/20">
+              <CardContent className="p-6 space-y-6">
+                {/* Header: Favicon + Name + URL */}
+                <div className="flex items-start gap-4">
+                  {faviconUrl && (
+                    <div className="flex-shrink-0 bg-white p-2 rounded-lg border shadow-sm">
+                      <img src={faviconUrl} alt="Favicon" className="w-10 h-10 object-contain" />
                     </div>
                   )}
-                </div>
-              </div>
 
-              {/* Footer Actions */}
-              <div className="flex justify-end pt-2">
-                <Button onClick={handleNext} className="group">
-                  Next
-                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+                  <div className="flex-grow space-y-1">
+                    <div className="flex items-center gap-2 group">
+                      {isEditingName ? (
+                        <Input
+                          ref={nameInputRef}
+                          value={brandName}
+                          onChange={(e) => setBrandName(e.target.value)}
+                          onBlur={handleNameBlur}
+                          onKeyDown={(e) => e.key === 'Enter' && handleNameBlur()}
+                          className="h-8 text-lg font-bold px-2 -ml-2 w-full"
+                        />
+                      ) : (
+                        <>
+                          <h2 className="text-xl font-bold text-foreground">{brandName}</h2>
+                          <button
+                            onClick={() => setIsEditingName(true)}
+                            className="text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+                          >
+                            <Pencil size={14} />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground truncate max-w-[300px]">
+                      {initialData?.url}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="h-px bg-border w-full" />
+
+                {/* About Section */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">About</h3>
+                  <div className="relative group border border-input rounded-md p-1 hover:border-primary/50 transition-colors">
+                    {isEditingDescription ? (
+                      <Textarea
+                        ref={descriptionInputRef}
+                        value={productDescription}
+                        onChange={(e) => setProductDescription(e.target.value)}
+                        onBlur={handleDescriptionBlur}
+                        className="min-h-[100px] border-none focus-visible:ring-0 resize-none p-2"
+                      />
+                    ) : (
+                      <div
+                        className="min-h-[100px] p-2 text-sm text-muted-foreground leading-relaxed cursor-text"
+                        onClick={() => setIsEditingDescription(true)}
+                      >
+                        {productDescription}
+                        <Pencil size={14} className="absolute top-3 right-3 text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Footer Actions */}
+                <div className="flex justify-end pt-2">
+                  <Button onClick={handleNext} className="group">
+                    Next
+                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>
