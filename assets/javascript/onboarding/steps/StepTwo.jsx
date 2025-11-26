@@ -252,29 +252,36 @@ const StepTwo = ({ onNext, initialData, setMascotMessageOverride }) => {
   const faviconUrl = getFaviconUrl(initialData?.url);
 
   return (
-    <div className="flex flex-col items-center justify-center w-full py-8 animate-in fade-in duration-500 relative">
-      <div className="w-full max-w-4xl px-4 relative">
+    <div className="flex flex-col items-center justify-start w-full pb-8 animate-in fade-in duration-500 relative">
+      <div className="w-full max-w-3xl px-4 relative mx-auto mt-8" style={{ perspective: '800px' }}>
         {/* Screenshot Background */}
         {data?.screenshot && (
-          <div className="relative w-full rounded-xl overflow-hidden shadow-md border bg-muted/50 mb-8">
+          <div
+            className={`relative w-full rounded-xl overflow-hidden shadow-md border bg-muted/50 mb-8 mx-auto transition-all duration-700 ease-out ${!analyzing ? 'opacity-90' : ''
+              }`}
+            style={{
+              transform: !analyzing ? 'rotateX(25deg) translateY(-100px) scale(1)' : 'none',
+              transformOrigin: 'center bottom'
+            }}
+          >
             <img
               src={data.screenshot}
               alt="Website Screenshot"
-              className={`w-full h-auto opacity-80 transition-all duration-500 ${analyzing ? '' : 'blur-[2px]'}`}
+              className="w-full h-auto object-contain"
             />
           </div>
         )}
 
         {/* Modal Overlay */}
-        <div className="absolute inset-0 flex items-center justify-center z-10 p-4">
+        <div className={`absolute inset-0 flex items-center justify-center z-10 p-4 ${!analyzing ? '-mt-16' : ''}`}>
           {!analyzing && (
             <Card className="w-full max-w-lg shadow-xl bg-background/95 backdrop-blur-sm border-primary/20">
               <CardContent className="p-6 space-y-6">
                 {/* Header: Favicon + Name + URL */}
                 <div className="flex items-start gap-4">
                   {faviconUrl && (
-                    <div className="flex-shrink-0 bg-white p-2 rounded-lg border shadow-sm">
-                      <img src={faviconUrl} alt="Favicon" className="w-10 h-10 object-contain" />
+                    <div className="flex-shrink-0 bg-white rounded-lg border shadow-sm w-10 h-10 overflow-hidden flex items-center justify-center">
+                      <img src={faviconUrl} alt="Favicon" className="w-full h-full object-contain" />
                     </div>
                   )}
 
@@ -291,7 +298,7 @@ const StepTwo = ({ onNext, initialData, setMascotMessageOverride }) => {
                         />
                       ) : (
                         <>
-                          <h2 className="text-xl font-bold text-foreground">{brandName}</h2>
+                          <h2 className="text-lg font-bold text-foreground">{brandName}</h2>
                           <button
                             onClick={() => setIsEditingName(true)}
                             className="text-muted-foreground/40 hover:text-muted-foreground transition-colors"
@@ -307,24 +314,21 @@ const StepTwo = ({ onNext, initialData, setMascotMessageOverride }) => {
                   </div>
                 </div>
 
-                {/* Divider */}
-                <div className="h-px bg-border w-full" />
-
                 {/* About Section */}
                 <div className="space-y-2">
-                  <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">About</h3>
-                  <div className="relative group border border-input rounded-md p-1 hover:border-primary/50 transition-colors">
+                  <h3 className="text-sm text-foreground">About</h3>
+                  <div className="relative group border border-primary rounded-md p-1 transition-colors">
                     {isEditingDescription ? (
                       <Textarea
                         ref={descriptionInputRef}
                         value={productDescription}
                         onChange={(e) => setProductDescription(e.target.value)}
                         onBlur={handleDescriptionBlur}
-                        className="min-h-[100px] border-none focus-visible:ring-0 resize-none p-2"
+                        className="min-h-[100px] border-none focus-visible:ring-0 resize-none p-2 text-black"
                       />
                     ) : (
                       <div
-                        className="min-h-[100px] p-2 text-sm text-muted-foreground leading-relaxed cursor-text"
+                        className="min-h-[100px] p-2 text-sm text-black leading-relaxed cursor-text"
                         onClick={() => setIsEditingDescription(true)}
                       >
                         {productDescription}
@@ -338,7 +342,6 @@ const StepTwo = ({ onNext, initialData, setMascotMessageOverride }) => {
                 <div className="flex justify-end pt-2">
                   <Button onClick={handleNext} className="group">
                     Next
-                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </Button>
                 </div>
               </CardContent>
