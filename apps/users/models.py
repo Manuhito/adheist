@@ -106,6 +106,17 @@ class UserOnboarding(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='onboarding')
     website = models.URLField(max_length=200, blank=True, null=True)
     competitors = models.JSONField(default=list, blank=True)
+    
+    # Competitor research status
+    competitor_research_completed = models.BooleanField(default=False)
+    selected_competitor_page = models.ForeignKey(
+        'apify.FacebookPage',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='onboarding_selections',
+        help_text="The competitor FacebookPage with available ads"
+    )
 
     def __str__(self):
         return f"Onboarding info for {self.user}"

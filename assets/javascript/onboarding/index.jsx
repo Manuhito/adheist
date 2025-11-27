@@ -4,6 +4,7 @@ import Mascot from './components/Mascot';
 import StepOne from './steps/StepOne';
 import StepTwo from './steps/StepTwo';
 import StepThree from './steps/StepThree';
+import StepFour from './steps/StepFour';
 
 const OnboardingPage = () => {
   const { currentStep: initialStep, user } = window.__ONBOARDING_DATA__ || {};
@@ -27,7 +28,13 @@ const OnboardingPage = () => {
   const handleStepThreeNext = (data) => {
     console.log('Step 3 submitted:', data);
     setFormData(prev => ({ ...prev, ...data }));
-    // setCurrentStep('STEP_4');
+    setCurrentStep('STEP_4');
+  };
+
+  const handleStepFourNext = (data) => {
+    console.log('Step 4 submitted:', data);
+    setFormData(prev => ({ ...prev, ...data }));
+    // Future steps...
   };
 
   const getMascotMessage = () => {
@@ -38,6 +45,8 @@ const OnboardingPage = () => {
         return "Great! Now tell me more about your products.";
       case 'STEP_3':
         return "Let's review the details I extracted. Make any changes you like!";
+      case 'STEP_4':
+        return "I found these ads from your competitors. Select one you'd like to use as inspiration!";
       default:
         return "We're making great progress!";
     }
@@ -66,6 +75,14 @@ const OnboardingPage = () => {
         return (
           <StepThree
             onNext={handleStepThreeNext}
+            initialData={formData}
+            setMascotMessageOverride={setMascotMessageOverride}
+          />
+        );
+      case 'STEP_4':
+        return (
+          <StepFour
+            onNext={handleStepFourNext}
             initialData={formData}
             setMascotMessageOverride={setMascotMessageOverride}
           />

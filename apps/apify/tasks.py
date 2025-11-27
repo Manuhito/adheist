@@ -1228,6 +1228,34 @@ def run_backload_queries(backload_ids):
         }
 
 
+def _send_competitor_research_sse(user_id: int, competitor_url: str, page_name: str, ads_count: int, success: bool = True):
+    """
+    Send SSE notification when competitor research completes.
+    """
+    try:
+        import redis
+        import json
+        from django.conf import settings
+        from django.utils import timezone
+        
+        redis_client = redis.from_url(settings.REDIS_URL)
+        
+        notification_data = {
+            'type': 'competitor_research_completed',
+            'success': success,
+            'competitor_url': competitor_url,
+            'page_name': page_name,
+            'ads_count': ads_count,
+            'timestamp': timezone.now().isoformat()
+        }
+        
+        channel = f"user:{user_id}:adrequest_updates"
+        redis_client.publish(channel, json.dumps(notification_data))
+        logger.info(f"Sent competitor research SSE notification to user {user_id} (success={success})")
+    except Exception as e:
+        logger.error(f"Error sending competitor research SSE notification: {str(e)}")
+
+
 @shared_task
 def competitor_research_task(user_id: int, website_url: str) -> Dict[str, Any]:
     """
@@ -1433,6 +1461,14 @@ def competitor_research_task(user_id: int, website_url: str) -> Dict[str, Any]:
                     logger.info(f"Backload successful: {result['processed_count']} ads found")
                     found_advertiser = True
                     successful_competitor = competitor_url
+                    # Save to UserOnboarding
+                    try:
+                        onboarding.selected_competitor_page = fb_page
+                        onboarding.competitor_research_completed = True
+                        onboarding.save(update_fields=['selected_competitor_page', 'competitor_research_completed'])
+                        logger.info(f"Saved competitor page {fb_page.page_id} to UserOnboarding")
+                    except Exception as e:
+                        logger.error(f"Error saving competitor to onboarding: {str(e)}")
                     break
                 else:
                     logger.info("Backload returned 0 ads, trying next competitor")
@@ -1445,7 +1481,24 @@ def competitor_research_task(user_id: int, website_url: str) -> Dict[str, Any]:
             found_advertiser = True
             successful_competitor = competitor_url
             logger.info("Advertiser already has ads, stopping research")
+            # Save to UserOnboarding
+            try:
+                onboarding.selected_competitor_page = fb_page
+                onboarding.competitor_research_completed = True
+                onboarding.save(update_fields=['selected_competitor_page', 'competitor_research_completed'])
+                logger.info(f"Saved competitor page {fb_page.page_id} to UserOnboarding")
+            except Exception as e:
+                logger.error(f"Error saving competitor to onboarding: {str(e)}")
             break
+    
+    # Mark as completed even if no ads found
+    if not found_advertiser:
+        try:
+            onboarding.competitor_research_completed = True
+            onboarding.save(update_fields=['competitor_research_completed'])
+            logger.info("Competitor research completed with no ads found")
+        except Exception as e:
+            logger.error(f"Error marking research as completed: {str(e)}")
             
     return {
         'success': found_advertiser,

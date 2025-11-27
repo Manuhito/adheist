@@ -173,6 +173,78 @@ def competitor_research(request):
 
 
 @login_required
+def get_competitor_ads(request):
+    """
+    Get ads from the selected competitor found during onboarding.
+    Returns status of competitor research and AdLibrary entries if completed.
+    """
+    from apps.users.models import UserOnboarding
+    
+    try:
+        try:
+            onboarding = UserOnboarding.objects.select_related('selected_competitor_page').get(user=request.user)
+        except UserOnboarding.DoesNotExist:
+            return JsonResponse({
+                'success': False, 
+                'completed': False,
+                'ads': [], 
+                'message': 'No onboarding data found'
+            })
+        
+        # Check if research is completed
+        if not onboarding.competitor_research_completed:
+            return JsonResponse({
+                'success': False,
+                'completed': False,
+                'ads': [],
+                'message': 'Competitor research still in progress'
+            })
+        
+        # Research completed but no competitor found
+        if not onboarding.selected_competitor_page:
+            return JsonResponse({
+                'success': False,
+                'completed': True,
+                'ads': [],
+                'message': 'No competitor with ads was found'
+            })
+        
+        fb_page = onboarding.selected_competitor_page
+        
+        # Get active ads from the selected competitor page
+        ads = AdLibrary.objects.filter(
+            facebook_page=fb_page,
+            meta_status=AdLibrary.STATUS_ACTIVE
+        ).order_by('-ad_delivery_start_time')[:20]
+        
+        ads_data = []
+        for ad in ads:
+            ads_data.append({
+                'id': ad.id,
+                'image_url': ad.ad_image.url if ad.ad_image else None,
+                'ad_copy': ad.ad_creative_bodies or '',
+                'page_name': fb_page.page_name or 'Unknown',
+                'page_url': fb_page.page_url or '',
+                'started_running_on': ad.ad_delivery_start_time.isoformat() if ad.ad_delivery_start_time else None,
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'completed': True,
+            'ads': ads_data,
+            'competitor_page': {
+                'id': fb_page.id,
+                'page_id': fb_page.page_id,
+                'page_name': fb_page.page_name,
+                'page_url': fb_page.page_url
+            }
+        })
+    except Exception as e:
+        logger.error(f"Error in get_competitor_ads: {str(e)}", exc_info=True)
+        return JsonResponse({'success': False, 'completed': False, 'ads': [], 'message': f'Server error: {str(e)}'})
+
+
+@login_required
 def provision_credit_package(request, user_id, product):
     """
     Asigna créditos al usuario basado en el paquete comprado.
