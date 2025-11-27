@@ -102,7 +102,7 @@ const OnboardingPage = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-background/50 flex flex-col relative">
+    <div className="h-screen w-full bg-background/50 flex flex-col relative overflow-hidden">
       {/* Header Logo */}
       <header className="w-full flex justify-center pt-14 absolute top-0 z-20 pointer-events-none">
         <img
@@ -113,7 +113,7 @@ const OnboardingPage = () => {
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-grow flex flex-col relative z-10 pt-32">
+      <main className="flex-1 flex flex-col relative z-10 pt-32 pb-8 overflow-hidden">
         {renderStep()}
       </main>
 

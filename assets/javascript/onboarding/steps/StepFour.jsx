@@ -4,102 +4,83 @@ import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
 import Bars from '../components/Bars';
 
-// Ad Copy Text Display component with Read More/Less functionality
+// Ad Copy Text Display component with Read More/Less functionality (matching discover-page MediaItem)
 const AdCopyTextDisplay = ({ text }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const CHAR_LIMIT = 150;
+  const CHAR_LIMIT = 80; // Same as MediaItem in discover-page
 
   if (!text) return null;
 
   const shouldTruncate = text.length > CHAR_LIMIT;
-  const displayText = isExpanded || !shouldTruncate
-    ? text
-    : text.substring(0, CHAR_LIMIT).trim();
 
   return (
     <div className="relative w-0 min-w-full">
-      <p className="text-xs text-foreground leading-relaxed break-words whitespace-pre-line">
-        {displayText}
-        {shouldTruncate && !isExpanded && (
-          <>
-            ...{' '}
+      {!isExpanded && shouldTruncate ? (
+        <p className="text-xs text-foreground leading-relaxed break-words whitespace-pre-line">
+          {text.substring(0, CHAR_LIMIT)}...{' '}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsExpanded(true);
+            }}
+            className="text-gray-500 hover:text-gray-700 text-xs underline inline"
+          >
+            read more
+          </button>
+        </p>
+      ) : (
+        <div>
+          <p className="text-xs text-foreground leading-relaxed break-words whitespace-pre-line">
+            {text}
+          </p>
+          {isExpanded && shouldTruncate && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                setIsExpanded(true);
+                setIsExpanded(false);
               }}
-              className="text-gray-500 hover:text-gray-700 text-xs underline inline"
+              className="text-gray-500 hover:text-gray-700 text-xs underline mt-1"
             >
-              read more
+              Read less
             </button>
-          </>
-        )}
-      </p>
-      {shouldTruncate && isExpanded && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsExpanded(false);
-          }}
-          className="text-gray-500 hover:text-gray-700 text-xs underline mt-1"
-        >
-          Read less
-        </button>
+          )}
+        </div>
       )}
     </div>
   );
 };
 
-// Competitor Ad Card - matching ad-request-versions-page.jsx style
+// Competitor Ad Card - matching discover-page MediaItem style
 const CompetitorAdCard = ({ ad, isSelected, onSelect }) => {
-  const getFaviconUrl = (url) => {
-    try {
-      if (!url) return null;
-      const u = new URL(url);
-      const host = u.hostname;
-      return `https://www.google.com/s2/favicons?domain=${host}&sz=64`;
-    } catch (_) {
-      return null;
-    }
+  const initial = (ad.page_name || '').trim().charAt(0).toUpperCase();
+
+  // Get avatar URL using twenty-icons service (same as discover-page)
+  const getAvatarUrl = (pageUrl) => {
+    if (!pageUrl) return null;
+    return `https://twenty-icons.com/${pageUrl.replace(/^https?:\/\//, '')}`;
   };
 
-  const favicon = getFaviconUrl(ad.page_url);
-  const initial = (ad.page_name || '').trim().charAt(0).toUpperCase();
+  const avatarUrl = getAvatarUrl(ad.page_url);
 
   return (
     <div
       onClick={() => onSelect(ad.id)}
-      className={`
-        relative bg-background rounded-xl overflow-hidden border transition-all cursor-pointer group
-        ${isSelected
-          ? 'border-primary ring-2 ring-primary/20 shadow-lg scale-[1.02]'
-          : 'border-border hover:border-primary/50 hover:shadow-md'
-        }
-      `}
+      className={`bg-background rounded-xl overflow-hidden border transition-colors cursor-pointer group ${isSelected ? 'border-primary' : 'border-border hover:border-primary/50'
+        }`}
     >
-      {/* Selection Indicator */}
-      <div className={`
-        absolute top-3 right-3 z-10 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200
-        ${isSelected
-          ? 'bg-primary text-primary-foreground scale-100 opacity-100'
-          : 'bg-black/20 backdrop-blur-sm border border-white/50 opacity-0 group-hover:opacity-100 scale-90'
-        }
-      `}>
-        <Check size={14} strokeWidth={3} />
-      </div>
-
-      {/* Brand header with avatar */}
+      {/* Header - matching MediaItem style */}
       <div className="p-3">
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          {/* Avatar */}
           <div className="w-8 h-8 rounded-full overflow-hidden bg-muted flex-shrink-0">
-            {favicon ? (
+            {avatarUrl ? (
               <img
-                src={favicon}
-                alt=""
+                src={avatarUrl}
+                alt={`${ad.page_name} logo`}
                 className="w-full h-full object-cover"
                 onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  e.currentTarget.parentNode.innerHTML = `<div class="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-xs">${initial || '?'}</div>`;
+                  e.target.style.display = 'none';
+                  e.target.parentNode.innerHTML = `<div class="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-xs">${initial || '?'}</div>`;
                 }}
               />
             ) : (
@@ -108,36 +89,48 @@ const CompetitorAdCard = ({ ad, isSelected, onSelect }) => {
               </div>
             )}
           </div>
-          <h3 className="text-sm font-semibold truncate">{ad.page_name || 'Brand'}</h3>
+          <h3 className="text-sm font-semibold break-words line-clamp-2 flex-1">{ad.page_name || 'Brand'}</h3>
         </div>
 
-        {/* Ad Copy Text */}
-        {ad.ad_copy ? (
+        {/* Ad Copy Text - use ad_creative_bodies if available, fallback to ad_copy */}
+        {(ad.ad_creative_bodies || ad.ad_copy) && (
           <div className="mt-2">
-            <AdCopyTextDisplay text={ad.ad_copy} />
-          </div>
-        ) : (
-          <div className="mt-2 text-xs text-muted-foreground">
-            No ad copy available
+            <AdCopyTextDisplay text={ad.ad_creative_bodies || ad.ad_copy} />
           </div>
         )}
       </div>
 
-      {/* Image */}
-      {ad.image_url ? (
-        <div className="relative aspect-square rounded-lg overflow-hidden mx-3 mb-3">
+      {/* Image Content - matching MediaItem style */}
+      <div className="relative aspect-square rounded-lg overflow-hidden mx-3">
+        {ad.image_url ? (
           <img
             src={ad.image_url}
             alt="Ad Creative"
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            loading="lazy"
+            decoding="async"
           />
-          <div className={`absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${isSelected ? 'opacity-30' : ''}`} />
-        </div>
-      ) : (
-        <div className="relative aspect-square rounded-lg overflow-hidden mx-3 mb-3 bg-muted flex items-center justify-center">
-          <div className="text-xs text-muted-foreground">No Image</div>
-        </div>
-      )}
+        ) : (
+          <div className="w-full h-full bg-muted flex items-center justify-center">
+            <span className="text-xs text-muted-foreground">No Image</span>
+          </div>
+        )}
+
+        {/* Selection indicator - matching MediaItem style */}
+        {isSelected && (
+          <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+            <div className="bg-background rounded-full p-1">
+              <Check className="w-5 h-5 text-primary" />
+            </div>
+          </div>
+        )}
+
+        {/* Gradient overlay on hover */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      </div>
+
+      {/* Bottom padding for image margin */}
+      <div className="pb-3" />
     </div>
   );
 };
@@ -225,13 +218,13 @@ const StepFour = ({ onNext, initialData, setMascotMessageOverride }) => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center w-full py-8 animate-in fade-in duration-500">
-      <div className="w-full max-w-6xl px-4">
-        <Card className="w-full shadow-xl bg-background/95 backdrop-blur-sm border-primary/20">
-          <CardContent className="p-6 space-y-6">
+    <div className="flex flex-col h-full w-full overflow-hidden animate-in fade-in duration-500">
+      <div className="w-full max-w-6xl mx-auto px-4 flex flex-col h-full overflow-hidden">
+        <Card className="w-full shadow-xl bg-background/95 backdrop-blur-sm border-primary/20 flex flex-col h-full overflow-hidden">
+          <CardContent className="p-6 flex flex-col h-full overflow-hidden">
 
-            {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            {/* Header Section - fixed height */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 flex-shrink-0 pb-4">
               <div>
                 <h2 className="text-2xl font-bold">Competitor Ads</h2>
                 <p className="text-muted-foreground mt-1">
@@ -265,37 +258,41 @@ const StepFour = ({ onNext, initialData, setMascotMessageOverride }) => {
               </div>
             </div>
 
-            {/* Grid Content */}
-            {isLoading ? (
-              <div className="min-h-[400px] flex items-center justify-center">
-                <div className="flex flex-col items-center gap-4">
-                  <Bars size={48} className="text-primary" />
-                  <p className="text-muted-foreground animate-pulse">Finding competitor ads...</p>
+            {/* Grid Content - scrollable container */}
+            <div className="flex-1 min-h-0 overflow-hidden">
+              {isLoading ? (
+                <div className="h-full flex items-center justify-center">
+                  <div className="flex flex-col items-center gap-4">
+                    <Bars size={48} className="text-primary" />
+                    <p className="text-muted-foreground animate-pulse">Finding competitor ads...</p>
+                  </div>
                 </div>
-              </div>
-            ) : ads.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[400px] max-h-[600px] overflow-y-auto pr-2 -mr-2">
-                {ads.map((ad) => (
-                  <CompetitorAdCard
-                    key={ad.id}
-                    ad={ad}
-                    isSelected={selectedAdId === ad.id}
-                    onSelect={(id) => setSelectedAdId(id === selectedAdId ? null : id)}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="min-h-[300px] flex items-center justify-center">
-                <div className="text-center">
-                  <p className="text-muted-foreground mb-4">
-                    {error || "No competitor ads found yet. The research might still be in progress."}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    You can skip this step and explore ads later in the Discover section.
-                  </p>
+              ) : ads.length > 0 ? (
+                <div className="h-full overflow-y-auto pr-2 -mr-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {ads.map((ad) => (
+                      <CompetitorAdCard
+                        key={ad.id}
+                        ad={ad}
+                        isSelected={selectedAdId === ad.id}
+                        onSelect={(id) => setSelectedAdId(id === selectedAdId ? null : id)}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="h-full flex items-center justify-center">
+                  <div className="text-center">
+                    <p className="text-muted-foreground mb-4">
+                      {error || "No competitor ads found yet. The research might still be in progress."}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      You can skip this step and explore ads later in the Discover section.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
 
           </CardContent>
         </Card>
