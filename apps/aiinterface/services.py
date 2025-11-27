@@ -408,3 +408,138 @@ class ReplicateImageGenerationService:
                 "error": error_msg,
                 "status_code": 500
             }
+
+
+class ReplicateTextGenerationService:
+    """Service for generating text using Replicate API (e.g., Gemini)."""
+
+    def __init__(self):
+        """Initialize the service with Replicate API configuration."""
+        self.api_key = settings.REPLICATE_API_KEY
+        
+        if not self.api_key:
+            raise ValueError("REPLICATE_API_KEY is not configured in settings")
+
+    def generate_competitors(self, website_url: str) -> List[str]:
+        """
+        Generate a list of competitors for a given website using Replicate.
+        
+        Args:
+            website_url: The website URL to analyze.
+            
+        Returns:
+            List of Facebook Page URLs of competitors.
+        """
+        logger.info(f"Starting competitor research for website: {website_url}")
+        
+        try:
+            import replicate
+        except ImportError:
+            logger.error("replicate package is not installed")
+            return []
+
+        # Get configuration
+        replicate_config = ReplicateConfiguration.get_replicate_config()
+        model = replicate_config.get('competitor_research_model', 'google/gemini-3-pro')
+        
+        try:
+            # Set API token
+            os.environ['REPLICATE_API_TOKEN'] = self.api_key
+            
+            prompt = f"""Your job is to find 5 competitors or larger companies for the website:
+{website_url}
+If it is a local business, search for a chain, franchise or larger USA version of the business like one in a very competitive location like New York.
+Prioritise sites that are known to run Facebook ads or have large marketing teams.
+Example: For 'Jims Coffee shop in Tralee', you can suggest Starbucks.
+You must go the website of the competitors, open the websites and find their facebook page from there.
+if the facebook page link is not listed in the website, you must do a google search but you must have 100% confidence the facebook page url from the google search matches the actual businesses.
+Output must be a valid JSON list of strings, where each string is a Facebook Page URL. Do not include markdown formatting like ```json.
+Example:
+[
+    "https://www.facebook.com/example1",
+    "https://www.facebook.com/example2"
+]
+Do not include any other text or commentary.
+"""
+            
+            logger.info(f"Calling Replicate with model: {model} for competitor research")
+            logger.info(f"Replicate prompt: {prompt}")
+            
+            # Run the model
+            output = replicate.run(
+                model,
+                input={
+                    "prompt": prompt,
+                    "max_tokens": 1024,
+                    "temperature": 0.5
+                }
+            )
+            
+            logger.info(f"Raw Replicate output type: {type(output)}")
+            logger.info(f"Raw Replicate output: {output}")
+            
+            # Handle output
+            response_text = ""
+            if isinstance(output, list):
+                # Handle potential non-string items (like FileOutput) in list
+                response_text = "".join([str(item) for item in output])
+            elif isinstance(output, str):
+                response_text = output
+            else:
+                # Some models return iterators
+                response_text = "".join([str(chunk) for chunk in output])
+                
+            logger.info(f"Replicate response: {response_text[:200]}...")
+            
+            valid_urls = []
+            
+            # Try to parse as JSON first
+            import json
+            import re
+            
+            # Clean markdown code blocks if present
+            cleaned_text = response_text.strip()
+            if cleaned_text.startswith("```json"):
+                cleaned_text = cleaned_text[7:]
+            elif cleaned_text.startswith("```"):
+                cleaned_text = cleaned_text[3:]
+            
+            if cleaned_text.endswith("```"):
+                cleaned_text = cleaned_text[:-3]
+                
+            cleaned_text = cleaned_text.strip()
+            
+            try:
+                json_urls = json.loads(cleaned_text)
+                if isinstance(json_urls, list):
+                    for url in json_urls:
+                        if isinstance(url, str) and "facebook.com" in url:
+                            valid_urls.append(url)
+                    logger.info(f"Successfully parsed JSON response with {len(valid_urls)} URLs")
+            except json.JSONDecodeError:
+                logger.warning("Failed to parse response as JSON, falling back to regex")
+                # Regex to find Facebook page URLs
+                url_pattern = r'https?://(?:www\.)?facebook\.com/[a-zA-Z0-9.]+'
+                urls = re.findall(url_pattern, response_text)
+                valid_urls.extend(urls)
+            
+            # Clean and deduplicate
+            final_urls = []
+            for url in valid_urls:
+                if "facebook.com" in url and not url.endswith("facebook.com") and not url.endswith("facebook.com/"):
+                    # Ensure https
+                    if url.startswith('http://'):
+                        url = 'https://' + url[7:]
+                    elif not url.startswith('https://'):
+                        url = 'https://' + url
+                    final_urls.append(url)
+            
+            # Deduplicate
+            final_urls = list(set(final_urls))
+            
+            logger.info(f"Found {len(final_urls)} competitor URLs: {final_urls}")
+            return final_urls
+            
+        except Exception as e:
+            logger.exception(f"Error in Replicate competitor research: {str(e)}")
+            return []

@@ -105,6 +105,15 @@ const StepOne = ({ onNext, initialData, user, setMascotMessageOverride }) => {
           body: formData
         }).then(res => res.json());
 
+        // Task 3: Competitor Research
+        const competitorResearchPromise = fetch('/ads/api/competitor-research/', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrfToken,
+          },
+          body: formData
+        }).then(res => res.json());
+
         // 2. Wait 3 seconds minimum before navigating
         await new Promise(resolve => setTimeout(resolve, 3000));
 
@@ -113,7 +122,8 @@ const StepOne = ({ onNext, initialData, user, setMascotMessageOverride }) => {
           url: processedUrl,
           promises: {
             screenshot: screenshotPromise,
-            analysis: analysisPromise
+            analysis: analysisPromise,
+            competitorResearch: competitorResearchPromise
           }
         });
 

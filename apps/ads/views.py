@@ -148,6 +148,30 @@ def track_adlibrary_click(request, adlibrary_id):
 
     return JsonResponse({'id': adlibrary_id, 'click_count': adlibrary.click_count})
 
+
+@require_POST
+@login_required
+def competitor_research(request):
+    """
+    Trigger competitor research task.
+    Expects 'website_url' in POST data.
+    """
+    from apps.apify.tasks import competitor_research_task
+    
+    website_url = request.POST.get('website_url')
+    if not website_url:
+        return JsonResponse({'error': 'Missing website_url'}, status=400)
+        
+    # Trigger task asynchronously
+    task = competitor_research_task.delay(request.user.id, website_url)
+    
+    return JsonResponse({
+        'success': True,
+        'task_id': task.id,
+        'message': 'Competitor research started'
+    })
+
+
 @login_required
 def provision_credit_package(request, user_id, product):
     """

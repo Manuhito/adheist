@@ -1226,3 +1226,229 @@ def run_backload_queries(backload_ids):
             'status': 'error',
             'message': error_msg
         }
+
+
+@shared_task
+def competitor_research_task(user_id: int, website_url: str) -> Dict[str, Any]:
+    """
+    Task to perform competitor research and find an advertiser with ads.
+    
+    Args:
+        user_id: ID of the user initiating the request
+        website_url: URL of the website to research
+        
+    Returns:
+        Dictionary with results
+    """
+    from django.contrib.auth import get_user_model
+    from apps.users.models import UserOnboarding
+    from apps.aiinterface.services import ReplicateTextGenerationService
+    from apps.apify.models import FacebookPage, Backload
+    from apps.ads.models import AdLibrary
+    import time
+    
+    User = get_user_model()
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        logger.error(f"User {user_id} not found for competitor research")
+        return {'success': False, 'error': 'User not found'}
+        
+    logger.info(f"Starting competitor research for user {user.email}, website: {website_url}")
+    
+    # 1. Call Replicate to get competitors
+    try:
+        service = ReplicateTextGenerationService()
+        competitors = service.generate_competitors(website_url)
+    except Exception as e:
+        logger.error(f"Error generating competitors: {str(e)}")
+        return {'success': False, 'error': f"Failed to generate competitors: {str(e)}"}
+        
+    if not competitors:
+        logger.warning("No competitors found by Replicate")
+        return {'success': False, 'error': 'No competitors found'}
+        
+    # Save competitors to UserOnboarding
+    try:
+        onboarding, created = UserOnboarding.objects.get_or_create(user=user)
+        # Append new competitors to existing list if any, or just replace? 
+        # User said "We will have a field... to save this list". Let's replace or append unique.
+        # For now, simple replacement or ensuring uniqueness.
+        current_competitors = onboarding.competitors or []
+        updated_competitors = list(set(current_competitors + competitors))
+        onboarding.competitors = updated_competitors
+        onboarding.website = website_url
+        onboarding.save()
+    except Exception as e:
+        logger.error(f"Error saving competitors to onboarding: {str(e)}")
+        # Continue anyway
+        
+    # 2. Go over list 1 by 1
+    found_advertiser = False
+    successful_competitor = None
+    
+    for competitor_url in competitors:
+        logger.info(f"Processing competitor: {competitor_url}")
+        
+        # Construct transparency URL
+        # Assuming url is like https://www.facebook.com/pagename/ or https://www.facebook.com/pagename
+        # Remove trailing slash
+        if competitor_url.endswith('/'):
+            competitor_url = competitor_url[:-1]
+            
+        transparency_url = f"{competitor_url}/about_profile_transparency"
+        
+        page_id = None
+        page_name = None
+        
+        # Scrape Facebook ID using Playwright
+        try:
+            with sync_playwright() as p:
+                browser = p.chromium.launch(headless=True)
+                context = browser.new_context(
+                    user_agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                )
+                page = context.new_page()
+                
+                logger.info(f"Navigating to {transparency_url}")
+                page.goto(transparency_url, timeout=30000, wait_until='domcontentloaded')
+                
+                # Wait a bit for dynamic content
+                time.sleep(3)
+                
+                # Try to find the ID. 
+                # The user provided class "x193iq5w xeuugli x13faqbe ..." but classes are often dynamic/minified in FB.
+                # A better strategy might be looking for specific text or structure if classes fail.
+                # But let's try to find a span that looks like an ID (all digits) inside the transparency section.
+                
+                # Strategy: Look for "Page ID" text and get the number next to it or below it.
+                # Or look for the specific class provided if it's consistent (unlikely long term but requested by user).
+                # User prompt: "get the facebookid from a container like this: <span class...>"
+                
+                # We can try to find any span that contains only digits and is of sufficient length (e.g. > 10 chars)
+                # usually Page IDs are 15+ digits.
+                
+                # Evaluate script to find the ID
+                page_id = page.evaluate("""() => {
+                    // Helper to check if string is all digits
+                    const isDigits = (str) => /^\\d+$/.test(str);
+                    
+                    // Try to find elements that look like Page ID
+                    // Often near "Page ID" label
+                    
+                    // Method 1: Look for specific text "Page ID"
+                    const labels = Array.from(document.querySelectorAll('span, div, h1, h2, h3, h4, h5, h6, p'));
+                    for (const label of labels) {
+                        if (label.innerText && (label.innerText.includes('Page ID') || label.innerText.includes('Identificador de la página'))) {
+                             // Look at siblings or children or parent's text
+                             // This is tricky.
+                        }
+                    }
+                    
+                    // Method 2: Look for any element with the specific class provided by user (fragile)
+                    const specificClass = document.querySelector('.x193iq5w.xeuugli.x13faqbe.x1vvkbs.xlh3980.xvmahel.x1n0sxbx.x1lliihq.x1s928wv.xhkezso.x1gmr53x.x1cpjm7i.x1fgarty.x1943h6x.x4zkp8e.x3x7a5m.x6prxxf.xvq8zen.xo1l8bm.xzsf02u');
+                    if (specificClass && isDigits(specificClass.innerText)) {
+                        return specificClass.innerText;
+                    }
+                    
+                    // Method 3: General search for long digit strings in likely containers
+                    // Facebook Page IDs are usually visible in the transparency section
+                    const candidates = Array.from(document.querySelectorAll('span[dir="auto"]'));
+                    for (const span of candidates) {
+                        if (isDigits(span.innerText) && span.innerText.length > 10) {
+                            return span.innerText;
+                        }
+                    }
+                    
+                    return null;
+                }""")
+                
+                if not page_id:
+                    logger.warning(f"Could not find Page ID on {transparency_url}")
+                else:
+                    logger.info(f"Found Page ID: {page_id}")
+                    
+                browser.close()
+                
+        except Exception as e:
+            logger.error(f"Error scraping {transparency_url}: {str(e)}")
+            continue
+            
+        if not page_id:
+            continue
+            
+        # 2. Do we have this advertiser?
+        # Check FacebookPage first
+        fb_page = FacebookPage.objects.filter(page_id=page_id).first()
+        
+        ads_count = 0
+        if fb_page:
+            # Check if we have active ads in AdLibrary
+            ads_count = AdLibrary.objects.filter(facebook_page=fb_page, meta_status=AdLibrary.STATUS_ACTIVE).count()
+            logger.info(f"Found existing FacebookPage {page_id} with {ads_count} active ads")
+        else:
+            # Create the page if it doesn't exist
+            fb_page = FacebookPage.objects.create(
+                page_id=page_id,
+                page_url=competitor_url,
+                page_name=f"New Import {page_id}", 
+                notes=f"Auto-created by Competitor Research for {website_url}"
+            )
+            logger.info(f"Created new FacebookPage for {page_id}")
+        
+        # If 0 ads (or just created), start backload
+        if ads_count == 0:
+            logger.info(f"Starting backload for Page ID {page_id}")
+            
+            # Create a Backload object to track this
+            backload = Backload.objects.create(
+                status=Backload.STATUS_PENDING,
+                error_log=f"Auto-generated from competitor research for {website_url} (User: {user.email})"
+            )
+            backload.pages.add(fb_page)
+            
+            # Call fetch_apify_ads synchronously (or wait for it)
+            # We need to construct the urls parameter for fetch_apify_ads
+            # "url": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=ALL&is_targeted_country=false&media_type=image_and_meme&search_type=page&view_all_page_id={page_id}"
+            
+            search_url = f"https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=ALL&is_targeted_country=false&media_type=image_and_meme&search_type=page&view_all_page_id={page_id}"
+            
+            try:
+                # Run fetch_apify_ads. Since it's a shared_task, calling it directly calls the function, not the task wrapper,
+                # IF we import it directly. But here it's decorated.
+                # To run synchronously we can call .apply() but that runs in the worker if configured.
+                # Safer to just call the underlying function logic if possible, or rely on the fact that
+                # calling a task function in python usually executes it if not using .delay()
+                
+                # Note: In Celery, calling task() directly (without delay/apply_async) executes it in the current process.
+                result = fetch_apify_ads(
+                    urls=[{"url": search_url}],
+                    page_id=page_id,
+                    backload_id=backload.id,
+                    is_automated=True,
+                    user_id=user.id
+                )
+                
+                if result.get('processed_count', 0) > 0:
+                    logger.info(f"Backload successful: {result['processed_count']} ads found")
+                    found_advertiser = True
+                    successful_competitor = competitor_url
+                    break
+                else:
+                    logger.info("Backload returned 0 ads, trying next competitor")
+                    
+            except Exception as e:
+                logger.error(f"Error running fetch_apify_ads: {str(e)}")
+                
+        else:
+            # We have ads already
+            found_advertiser = True
+            successful_competitor = competitor_url
+            logger.info("Advertiser already has ads, stopping research")
+            break
+            
+    return {
+        'success': found_advertiser,
+        'competitor': successful_competitor,
+        'processed_competitors': len(competitors)
+    }
