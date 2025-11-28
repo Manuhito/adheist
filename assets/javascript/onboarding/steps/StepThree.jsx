@@ -1,44 +1,88 @@
 import React, { useState, useEffect } from 'react';
-import { Pencil } from 'lucide-react';
+import { Pencil, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 
 const StepThree = ({ onNext, initialData, setMascotMessageOverride }) => {
-  const [brandData, setBrandData] = useState(initialData?.brandData?.brand || {});
-  const [brandId, setBrandId] = useState(brandData.id);
+  const [brandId, setBrandId] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Fields to display and edit
-  const [toneOfVoice, setToneOfVoice] = useState(brandData.tone_of_voice || '');
-  const [coreFeatures, setCoreFeatures] = useState(brandData.core_features || '');
-  const [functionalBenefits, setFunctionalBenefits] = useState(brandData.functional_benefits || '');
-  const [valuePropositions, setValuePropositions] = useState(brandData.value_propositions || '');
+  const [toneOfVoice, setToneOfVoice] = useState('');
+  const [coreFeatures, setCoreFeatures] = useState('');
+  const [functionalBenefits, setFunctionalBenefits] = useState('');
+  const [valuePropositions, setValuePropositions] = useState('');
 
+  // Extract brandId from initialData
   useEffect(() => {
-    console.log('StepThree received initialData:', initialData);
     if (initialData?.brandData) {
-      // Try to find the brand object in various possible locations
       const brandData = initialData.brandData;
-      const brand = brandData.brand || brandData.extracted_assets || brandData;
-
-      console.log('StepThree extracted brand object:', brand);
-
-      const getField = (field) => {
-        // Try finding field in the brand object, or top level brandData, or extracted_assets
-        return brand[field] ||
-          brandData[field] ||
-          (brandData.extracted_assets && brandData.extracted_assets[field]) ||
-          '';
-      };
-
-      setBrandId(brand.id || brandData.brand_id);
-      setToneOfVoice(getField('tone_of_voice'));
-      setCoreFeatures(getField('core_features'));
-      setFunctionalBenefits(getField('functional_benefits'));
-      setValuePropositions(getField('value_propositions'));
+      const id = brandData.brand?.id || brandData.brand_id;
+      if (id) {
+        setBrandId(id);
+      }
     }
   }, [initialData]);
+
+  // Helper to format list fields (Python lists or JSON arrays to newline-separated text)
+  const formatListField = (value) => {
+    if (!value) return '';
+
+    // Try JSON parse first
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) {
+        return parsed.filter(item => item).join('\n');
+      }
+    } catch {
+      // Not JSON, try Python list format
+    }
+
+    // Handle Python list format: ['item1', 'item2']
+    if (value.startsWith('[') && value.endsWith(']')) {
+      try {
+        // Replace single quotes with double quotes for JSON parsing
+        const jsonStr = value.replace(/'/g, '"');
+        const parsed = JSON.parse(jsonStr);
+        if (Array.isArray(parsed)) {
+          return parsed.filter(item => item).join('\n');
+        }
+      } catch {
+        // Still not parseable, return as-is
+      }
+    }
+
+    return value;
+  };
+
+  // Fetch brand details from server when brandId is available
+  useEffect(() => {
+    const fetchBrandDetails = async () => {
+      if (!brandId) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`/ads/api/brand-details/${brandId}/`);
+        const data = await response.json();
+
+        if (data.success && data.brand) {
+          setToneOfVoice(data.brand.tone_of_voice || '');
+          setCoreFeatures(formatListField(data.brand.core_features));
+          setFunctionalBenefits(formatListField(data.brand.functional_benefits));
+          setValuePropositions(formatListField(data.brand.value_propositions));
+        }
+      } catch (error) {
+        console.error('Error fetching brand details:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBrandDetails();
+  }, [brandId]);
 
   useEffect(() => {
     if (setMascotMessageOverride) {
@@ -72,9 +116,11 @@ const StepThree = ({ onNext, initialData, setMascotMessageOverride }) => {
     const updatedData = {
       ...initialData,
       brandData: {
-        ...initialData.brandData,
+        ...initialData?.brandData,
+        brand_id: brandId,
         brand: {
-          ...initialData.brandData.brand,
+          ...initialData?.brandData?.brand,
+          id: brandId,
           tone_of_voice: toneOfVoice,
           core_features: coreFeatures,
           functional_benefits: functionalBenefits,
@@ -84,6 +130,20 @@ const StepThree = ({ onNext, initialData, setMascotMessageOverride }) => {
     };
     onNext(updatedData);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center w-full py-8 animate-in fade-in duration-500">
+        <div className="w-full max-w-4xl px-4">
+          <Card className="w-full shadow-xl bg-background/95 backdrop-blur-sm border-primary/20">
+            <CardContent className="p-6 flex items-center justify-center min-h-[400px]">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center justify-center w-full py-8 animate-in fade-in duration-500">
