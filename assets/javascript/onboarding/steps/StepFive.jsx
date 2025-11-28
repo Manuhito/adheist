@@ -107,6 +107,28 @@ const StepFive = ({ onNext, initialData, setMascotMessageOverride }) => {
     }
   }, [setMascotMessageOverride]);
 
+  // Load saved assets on mount
+  useEffect(() => {
+    const loadAssets = async () => {
+      try {
+        const response = await fetch('/ads/api/get-assets-onboarding/');
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          if (result.data.asset_image_1) setImage1(result.data.asset_image_1);
+          if (result.data.asset_image_2) setImage2(result.data.asset_image_2);
+          if (result.data.asset_image_3) setImage3(result.data.asset_image_3);
+          if (result.data.canvas_size) setSelectedCanvasSize(result.data.canvas_size);
+          if (result.data.prompt) setPrompt(result.data.prompt);
+        }
+      } catch (error) {
+        console.error('Error loading assets:', error);
+      }
+    };
+
+    loadAssets();
+  }, []);
+
   // Save function for any field
   const saveToBackend = async (fieldName, value) => {
     try {

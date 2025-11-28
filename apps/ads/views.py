@@ -351,6 +351,45 @@ def save_assets_onboarding(request):
 
 
 @login_required
+@require_http_methods(["GET"])
+def get_assets_onboarding(request):
+    """
+    Get saved assets for Step 5 of onboarding.
+    """
+    from apps.users.models import UserOnboarding
+    
+    try:
+        onboarding = UserOnboarding.objects.filter(user=request.user).first()
+        
+        if not onboarding:
+            return JsonResponse({
+                'success': True,
+                'data': {
+                    'asset_image_1': None,
+                    'asset_image_2': None,
+                    'asset_image_3': None,
+                    'canvas_size': None,
+                    'prompt': None,
+                }
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'data': {
+                'asset_image_1': onboarding.asset_image_1.url if onboarding.asset_image_1 else None,
+                'asset_image_2': onboarding.asset_image_2.url if onboarding.asset_image_2 else None,
+                'asset_image_3': onboarding.asset_image_3.url if onboarding.asset_image_3 else None,
+                'canvas_size': onboarding.canvas_size,
+                'prompt': onboarding.prompt,
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in get_assets_onboarding: {str(e)}", exc_info=True)
+        return JsonResponse({'success': False, 'message': f'Server error: {str(e)}'}, status=500)
+
+
+@login_required
 def provision_credit_package(request, user_id, product):
     """
     Asigna créditos al usuario basado en el paquete comprado.
