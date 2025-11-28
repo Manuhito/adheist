@@ -276,13 +276,12 @@ def select_competitor_ad(request):
         onboarding.selected_ad_library = ad_library
         onboarding.save()
         
-        # Advance user to STEP_5
-        request.user.advance_onboarding()
+        # Note: advance_onboarding() is called by the frontend after this endpoint
+        # to avoid double-advancing the status
         
         return JsonResponse({
             'success': True,
-            'message': 'Ad selection saved',
-            'next_step': request.user.status
+            'message': 'Ad selection saved'
         })
         
     except json.JSONDecodeError:
@@ -299,28 +298,71 @@ def save_assets_onboarding(request):
     Save assets for Step 5 of onboarding.
     Handles: asset_image_1, asset_image_2, asset_image_3, canvas_size, prompt
     Each field is optional and saved independently.
+    Also creates UserBrandAssets records for uploaded images linked to the onboarding brand.
     """
     from apps.users.models import UserOnboarding
+    from PIL import Image as PILImage
+    from io import BytesIO
     
     try:
         # Get or create onboarding record
         onboarding, _ = UserOnboarding.objects.get_or_create(user=request.user)
         
+        # Helper to create UserBrandAssets from uploaded file
+        def create_brand_asset(uploaded_file, brand):
+            """Create a UserBrandAssets record for the uploaded file."""
+            if not brand:
+                return None
+            
+            try:
+                # Get image dimensions
+                img = PILImage.open(uploaded_file)
+                width, height = img.size
+                uploaded_file.seek(0)  # Reset file pointer after reading
+                
+                # Create the asset
+                asset = UserBrandAssets.objects.create(
+                    user=request.user,
+                    brand=brand,
+                    image=uploaded_file,
+                    category='assets',
+                    original_filename=uploaded_file.name,
+                    canvas_width=width,
+                    canvas_height=height,
+                    file_size=uploaded_file.size
+                )
+                return asset
+            except Exception as e:
+                logger.warning(f"Failed to create brand asset: {str(e)}")
+                return None
+        
         # Handle image uploads
         if 'asset_image_1' in request.FILES:
-            onboarding.asset_image_1 = request.FILES['asset_image_1']
+            uploaded_file = request.FILES['asset_image_1']
+            onboarding.asset_image_1 = uploaded_file
+            # Also create UserBrandAssets if brand exists
+            if onboarding.brand:
+                create_brand_asset(uploaded_file, onboarding.brand)
         elif 'asset_image_1' in request.POST and request.POST['asset_image_1'] == '':
             # Empty string means delete
             onboarding.asset_image_1 = None
             
         if 'asset_image_2' in request.FILES:
-            onboarding.asset_image_2 = request.FILES['asset_image_2']
+            uploaded_file = request.FILES['asset_image_2']
+            onboarding.asset_image_2 = uploaded_file
+            # Also create UserBrandAssets if brand exists
+            if onboarding.brand:
+                create_brand_asset(uploaded_file, onboarding.brand)
         elif 'asset_image_2' in request.POST and request.POST['asset_image_2'] == '':
             # Empty string means delete
             onboarding.asset_image_2 = None
             
         if 'asset_image_3' in request.FILES:
-            onboarding.asset_image_3 = request.FILES['asset_image_3']
+            uploaded_file = request.FILES['asset_image_3']
+            onboarding.asset_image_3 = uploaded_file
+            # Also create UserBrandAssets if brand exists
+            if onboarding.brand:
+                create_brand_asset(uploaded_file, onboarding.brand)
         elif 'asset_image_3' in request.POST and request.POST['asset_image_3'] == '':
             # Empty string means delete
             onboarding.asset_image_3 = None
