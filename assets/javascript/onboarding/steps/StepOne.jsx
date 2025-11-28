@@ -97,12 +97,16 @@ const StepOne = ({ onNext, initialData, user, setMascotMessageOverride }) => {
         }).then(res => res.json());
 
         // Task 2: Brand generation (Analyze website)
+        const analysisFormData = new FormData();
+        analysisFormData.append('website_url', processedUrl);
+        analysisFormData.append('is_onboarding', 'true');
+
         const analysisPromise = fetch('/ads/api/analyze-website/', {
           method: 'POST',
           headers: {
             'X-CSRFToken': csrfToken,
           },
-          body: formData
+          body: analysisFormData
         }).then(res => res.json());
 
         // Task 3: Competitor Research

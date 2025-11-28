@@ -25,27 +25,74 @@ const getCsrfToken = () => {
 };
 
 const OnboardingPage = () => {
-  const { currentStep: initialStep, user } = window.__ONBOARDING_DATA__ || {};
+  const { currentStep: initialStep, user, savedData } = window.__ONBOARDING_DATA__ || {};
+
+  // Debug: Log what we received from the backend
+  console.log('OnboardingPage init:', { initialStep, savedData, fullData: window.__ONBOARDING_DATA__ });
+
   // Use local state for immediate feedback, though ideally we sync with server
   const [currentStep, setCurrentStep] = useState(initialStep || 'STEP_1');
-  const [formData, setFormData] = useState({});
+  // Initialize formData with savedData if available (for page refresh scenarios)
+  const [formData, setFormData] = useState(savedData || {});
   const [mascotMessageOverride, setMascotMessageOverride] = useState(null);
 
-  const handleStepOneNext = (data) => {
+  const handleStepOneNext = async (data) => {
     console.log('Step 1 submitted:', data);
     setFormData(prev => ({ ...prev, ...data }));
+
+    // Advance onboarding status in backend
+    try {
+      await fetch('/users/api/advance-onboarding/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCsrfToken(),
+        },
+      });
+    } catch (error) {
+      console.error('Error advancing onboarding:', error);
+    }
+
     setCurrentStep('STEP_2');
   };
 
-  const handleStepTwoNext = (data) => {
+  const handleStepTwoNext = async (data) => {
     console.log('Step 2 submitted:', data);
     setFormData(prev => ({ ...prev, ...data }));
+
+    // Advance onboarding status in backend
+    try {
+      await fetch('/users/api/advance-onboarding/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCsrfToken(),
+        },
+      });
+    } catch (error) {
+      console.error('Error advancing onboarding:', error);
+    }
+
     setCurrentStep('STEP_3');
   };
 
-  const handleStepThreeNext = (data) => {
+  const handleStepThreeNext = async (data) => {
     console.log('Step 3 submitted:', data);
     setFormData(prev => ({ ...prev, ...data }));
+
+    // Advance onboarding status in backend
+    try {
+      await fetch('/users/api/advance-onboarding/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCsrfToken(),
+        },
+      });
+    } catch (error) {
+      console.error('Error advancing onboarding:', error);
+    }
+
     setCurrentStep('STEP_4');
   };
 
@@ -68,23 +115,48 @@ const OnboardingPage = () => {
         const result = await response.json();
         if (result.success) {
           console.log('Ad selection saved, advancing to step 5');
-          setCurrentStep('STEP_5');
         } else {
           console.error('Failed to save ad selection:', result.message);
         }
       } catch (error) {
         console.error('Error saving ad selection:', error);
       }
-    } else {
-      // User skipped, just advance to step 5
-      setCurrentStep('STEP_5');
     }
+
+    // Advance onboarding status in backend
+    try {
+      await fetch('/users/api/advance-onboarding/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCsrfToken(),
+        },
+      });
+    } catch (error) {
+      console.error('Error advancing onboarding:', error);
+    }
+
+    setCurrentStep('STEP_5');
   };
 
-  const handleStepFiveNext = (data) => {
+  const handleStepFiveNext = async (data) => {
     console.log('Step 5 submitted:', data);
     setFormData(prev => ({ ...prev, ...data }));
-    // Complete onboarding or go to next step
+
+    // Complete onboarding (advance to ONBOARDED status)
+    try {
+      await fetch('/users/api/advance-onboarding/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCsrfToken(),
+        },
+      });
+      // Redirect to main app after completing onboarding
+      window.location.href = '/ads/discover/';
+    } catch (error) {
+      console.error('Error completing onboarding:', error);
+    }
   };
 
   const getMascotMessage = () => {

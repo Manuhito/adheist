@@ -6,15 +6,15 @@ from .models import CustomUser, UserOnboarding
 
 @admin.register(UserOnboarding)
 class UserOnboardingAdmin(admin.ModelAdmin):
-    list_display = ("user", "website", "competitor_research_completed", "selected_competitor_page", "selected_ad_library", "canvas_size")
-    search_fields = ("user__email", "user__username", "website")
+    list_display = ("user", "website", "brand", "competitor_research_completed", "selected_competitor_page", "selected_ad_library", "canvas_size")
+    search_fields = ("user__email", "user__username", "website", "brand__brand_name")
     list_filter = ("competitor_research_completed", "canvas_size")
-    raw_id_fields = ("selected_competitor_page", "selected_ad_library")
-    readonly_fields = ("asset_image_1", "asset_image_2", "asset_image_3")
+    raw_id_fields = ("selected_competitor_page", "selected_ad_library", "brand")
+    readonly_fields = ("asset_image_1", "asset_image_2", "asset_image_3", "website_screenshot")
     
     fieldsets = (
         (None, {
-            'fields': ('user', 'website', 'competitors')
+            'fields': ('user', 'website', 'website_screenshot', 'brand', 'competitors')
         }),
         ('Competitor Research', {
             'fields': ('competitor_research_completed', 'selected_competitor_page', 'selected_ad_library')

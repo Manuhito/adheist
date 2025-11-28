@@ -6,6 +6,8 @@ from django.http.response import HttpResponseRedirect, JsonResponse, HttpRespons
 from django.core.cache import cache
 import logging
 
+log = logging.getLogger(__name__)
+
 # Importar el servicio de generación de imágenes
 from apps.aiinterface.services import ImageGenerationService
 from django.db.models import Q, Count, Sum, F, Exists, OuterRef, Subquery
@@ -4186,6 +4188,7 @@ def analyze_website_for_brand_assets(request):
     
     Args:
         request: Django request object with 'website_url' in POST data
+        Optional: 'is_onboarding' - if true, saves brand to UserOnboarding
         
     Returns:
         JsonResponse with extracted assets or error
@@ -4193,6 +4196,7 @@ def analyze_website_for_brand_assets(request):
     try:
         website_url = request.POST.get('website_url')
         ad_request_id = request.POST.get('ad_request_id')
+        is_onboarding = request.POST.get('is_onboarding', '').lower() == 'true'
         
         if not website_url:
             return JsonResponse({
@@ -4205,6 +4209,27 @@ def analyze_website_for_brand_assets(request):
         result = extract_brand_assets_from_website(request.user, website_url, ad_request_id)
         
         if result.get('success'):
+            # If called from onboarding, save brand to UserOnboarding and advance status
+            if is_onboarding and result.get('brand'):
+                try:
+                    from apps.users.models import UserOnboarding
+                    from apps.ads.models import UserBrand
+                    
+                    brand_id = result['brand'].get('id')
+                    log.info(f"DEBUG: is_onboarding={is_onboarding}, brand_id={brand_id}, result['brand']={result.get('brand')}")
+                    if brand_id:
+                        onboarding, _ = UserOnboarding.objects.get_or_create(user=request.user)
+                        onboarding.brand_id = brand_id
+                        onboarding.save()
+                        log.info(f"Saved brand {brand_id} to UserOnboarding for user {request.user.email}")
+                    else:
+                        log.warning(f"No brand_id found in result for user {request.user.email}")
+                    
+                    # Advance user from STEP_1 to STEP_2
+                    request.user.advance_onboarding()
+                except Exception as e:
+                    log.error(f"Error saving brand to UserOnboarding: {str(e)}")
+            
             return JsonResponse({
                 'success': True,
                 'extracted_assets': result.get('extracted_assets'),
@@ -4231,7 +4256,7 @@ def analyze_website_for_brand_assets(request):
 @require_http_methods(["POST"])
 def capture_website_screenshot(request):
     """
-    Capture a screenshot of a website.
+    Capture a screenshot of a website and save it to UserOnboarding.
     
     Args:
         request: Django request object with 'website_url' in POST data
@@ -4255,6 +4280,23 @@ def capture_website_screenshot(request):
         from .website_analysis import capture_screenshot_with_playwright
         
         screenshot_base64 = capture_screenshot_with_playwright(website_url)
+        
+        # Save screenshot to UserOnboarding
+        try:
+            from apps.users.models import UserOnboarding
+            from django.core.files.base import ContentFile
+            import base64
+            
+            onboarding, _ = UserOnboarding.objects.get_or_create(user=request.user)
+            
+            # Decode base64 and save as image file
+            screenshot_data = base64.b64decode(screenshot_base64)
+            filename = f"screenshot_{request.user.id}.png"
+            onboarding.website_screenshot.save(filename, ContentFile(screenshot_data), save=True)
+            
+        except Exception as save_error:
+            logging.error(f"Error saving screenshot to UserOnboarding: {str(save_error)}")
+            # Continue anyway - screenshot capture was successful
         
         return JsonResponse({
             'success': True,

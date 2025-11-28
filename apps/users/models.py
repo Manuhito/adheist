@@ -128,6 +128,19 @@ class UserOnboarding(models.Model):
         help_text="The AdLibrary entry selected by user to clone"
     )
     
+    # Brand created during onboarding
+    brand = models.ForeignKey(
+        'ads.UserBrand',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='onboarding_creations',
+        help_text="The brand created during website analysis in onboarding"
+    )
+    
+    # Website screenshot from Step 1
+    website_screenshot = models.ImageField(upload_to='onboarding_screenshots/', blank=True, null=True)
+    
     # Step 5: Assets for ad generation
     asset_image_1 = models.ImageField(upload_to='adrequest_assets/', blank=True, null=True)
     asset_image_2 = models.ImageField(upload_to='adrequest_assets/', blank=True, null=True)

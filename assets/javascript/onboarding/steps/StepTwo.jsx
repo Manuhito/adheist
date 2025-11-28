@@ -96,7 +96,7 @@ const StepTwo = ({ onNext, initialData, setMascotMessageOverride }) => {
         })
         .finally(() => setAnalyzing(false));
     } else if (initialData?.brandData) {
-      // Data already loaded (maybe revisiting step)
+      // Data already loaded (from page refresh or revisiting step)
       setData({
         screenshot: initialData.screenshot,
         brandData: initialData.brandData
@@ -111,6 +111,11 @@ const StepTwo = ({ onNext, initialData, setMascotMessageOverride }) => {
       setBrandId(bId);
       setLoading(false);
       setAnalyzing(false);
+    } else if (!initialData?.promises && !initialData?.brandData) {
+      // No data available - show error or redirect
+      setLoading(false);
+      setAnalyzing(false);
+      setError("No brand data available. Please start from the beginning.");
     }
   }, [initialData]);
 
@@ -249,7 +254,7 @@ const StepTwo = ({ onNext, initialData, setMascotMessageOverride }) => {
     );
   }
 
-  const faviconUrl = getFaviconUrl(initialData?.url);
+  const faviconUrl = getFaviconUrl(initialData?.url || initialData?.website);
 
   return (
     <div className="flex flex-col items-center justify-start w-full pb-8 animate-in fade-in duration-500 relative">
@@ -309,7 +314,7 @@ const StepTwo = ({ onNext, initialData, setMascotMessageOverride }) => {
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground truncate max-w-[300px]">
-                      {initialData?.url}
+                      {initialData?.url || initialData?.website}
                     </p>
                   </div>
                 </div>
