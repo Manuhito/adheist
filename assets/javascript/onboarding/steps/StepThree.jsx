@@ -12,8 +12,6 @@ const StepThree = ({ onNext, initialData, setMascotMessageOverride }) => {
   // Fields to display and edit
   const [toneOfVoice, setToneOfVoice] = useState(brandData.tone_of_voice || '');
   const [coreFeatures, setCoreFeatures] = useState(brandData.core_features || '');
-  const [targetAudience, setTargetAudience] = useState(brandData.target_audience || '');
-  const [proofPoints, setProofPoints] = useState(brandData.proof_points || '');
   const [functionalBenefits, setFunctionalBenefits] = useState(brandData.functional_benefits || '');
   const [valuePropositions, setValuePropositions] = useState(brandData.value_propositions || '');
 
@@ -37,8 +35,6 @@ const StepThree = ({ onNext, initialData, setMascotMessageOverride }) => {
       setBrandId(brand.id || brandData.brand_id);
       setToneOfVoice(getField('tone_of_voice'));
       setCoreFeatures(getField('core_features'));
-      setTargetAudience(getField('target_audience'));
-      setProofPoints(getField('proof_points'));
       setFunctionalBenefits(getField('functional_benefits'));
       setValuePropositions(getField('value_propositions'));
     }
@@ -81,8 +77,6 @@ const StepThree = ({ onNext, initialData, setMascotMessageOverride }) => {
           ...initialData.brandData.brand,
           tone_of_voice: toneOfVoice,
           core_features: coreFeatures,
-          target_audience: targetAudience,
-          proof_points: proofPoints,
           functional_benefits: functionalBenefits,
           value_propositions: valuePropositions
         }
@@ -118,20 +112,6 @@ const StepThree = ({ onNext, initialData, setMascotMessageOverride }) => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">Target Audience</label>
-                  <div className="relative group">
-                    <Textarea
-                      value={targetAudience}
-                      onChange={(e) => setTargetAudience(e.target.value)}
-                      onBlur={() => handleAutoSave('target_audience', targetAudience)}
-                      className="min-h-[100px] resize-none pr-8"
-                      placeholder="Who is your target audience?"
-                    />
-                    <Pencil size={14} className="absolute top-3 right-3 text-muted-foreground/40 pointer-events-none" />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
                   <label className="text-sm font-medium text-muted-foreground">Functional Benefits</label>
                   <div className="relative group">
                     <Textarea
@@ -157,20 +137,6 @@ const StepThree = ({ onNext, initialData, setMascotMessageOverride }) => {
                       onBlur={() => handleAutoSave('core_features', coreFeatures)}
                       className="min-h-[100px] resize-none pr-8"
                       placeholder="List your key features..."
-                    />
-                    <Pencil size={14} className="absolute top-3 right-3 text-muted-foreground/40 pointer-events-none" />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">Proof Points</label>
-                  <div className="relative group">
-                    <Textarea
-                      value={proofPoints}
-                      onChange={(e) => setProofPoints(e.target.value)}
-                      onBlur={() => handleAutoSave('proof_points', proofPoints)}
-                      className="min-h-[100px] resize-none pr-8"
-                      placeholder="Awards, testimonials, stats..."
                     />
                     <Pencil size={14} className="absolute top-3 right-3 text-muted-foreground/40 pointer-events-none" />
                   </div>
