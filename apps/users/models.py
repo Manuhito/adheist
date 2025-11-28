@@ -117,6 +117,23 @@ class UserOnboarding(models.Model):
         related_name='onboarding_selections',
         help_text="The competitor FacebookPage with available ads"
     )
+    
+    # Selected ad from competitor for cloning
+    selected_ad_library = models.ForeignKey(
+        'ads.AdLibrary',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='onboarding_selections',
+        help_text="The AdLibrary entry selected by user to clone"
+    )
+    
+    # Step 5: Assets for ad generation
+    asset_image_1 = models.ImageField(upload_to='adrequest_assets/', blank=True, null=True)
+    asset_image_2 = models.ImageField(upload_to='adrequest_assets/', blank=True, null=True)
+    asset_image_3 = models.ImageField(upload_to='adrequest_assets/', blank=True, null=True)
+    canvas_size = models.CharField(max_length=20, blank=True, null=True)
+    prompt = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return f"Onboarding info for {self.user}"

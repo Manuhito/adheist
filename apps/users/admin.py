@@ -6,10 +6,23 @@ from .models import CustomUser, UserOnboarding
 
 @admin.register(UserOnboarding)
 class UserOnboardingAdmin(admin.ModelAdmin):
-    list_display = ("user", "website", "competitor_research_completed", "selected_competitor_page")
+    list_display = ("user", "website", "competitor_research_completed", "selected_competitor_page", "selected_ad_library", "canvas_size")
     search_fields = ("user__email", "user__username", "website")
-    list_filter = ("competitor_research_completed",)
-    raw_id_fields = ("selected_competitor_page",)
+    list_filter = ("competitor_research_completed", "canvas_size")
+    raw_id_fields = ("selected_competitor_page", "selected_ad_library")
+    readonly_fields = ("asset_image_1", "asset_image_2", "asset_image_3")
+    
+    fieldsets = (
+        (None, {
+            'fields': ('user', 'website', 'competitors')
+        }),
+        ('Competitor Research', {
+            'fields': ('competitor_research_completed', 'selected_competitor_page', 'selected_ad_library')
+        }),
+        ('Step 5 Assets', {
+            'fields': ('asset_image_1', 'asset_image_2', 'asset_image_3', 'canvas_size', 'prompt')
+        }),
+    )
 
 
 @admin.register(CustomUser)

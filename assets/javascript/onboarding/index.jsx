@@ -5,6 +5,24 @@ import StepOne from './steps/StepOne';
 import StepTwo from './steps/StepTwo';
 import StepThree from './steps/StepThree';
 import StepFour from './steps/StepFour';
+import StepFive from './steps/StepFive';
+
+// Helper to get CSRF token
+const getCsrfToken = () => {
+  const name = 'csrftoken';
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+};
 
 const OnboardingPage = () => {
   const { currentStep: initialStep, user } = window.__ONBOARDING_DATA__ || {};
@@ -31,10 +49,42 @@ const OnboardingPage = () => {
     setCurrentStep('STEP_4');
   };
 
-  const handleStepFourNext = (data) => {
+  const handleStepFourNext = async (data) => {
     console.log('Step 4 submitted:', data);
     setFormData(prev => ({ ...prev, ...data }));
-    // Future steps...
+
+    // If user selected an ad, save it to the backend
+    if (data.selectedAd && data.selectedAd.id) {
+      try {
+        const response = await fetch('/ads/api/select-competitor-ad/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken(),
+          },
+          body: JSON.stringify({ ad_library_id: data.selectedAd.id }),
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          console.log('Ad selection saved, advancing to step 5');
+          setCurrentStep('STEP_5');
+        } else {
+          console.error('Failed to save ad selection:', result.message);
+        }
+      } catch (error) {
+        console.error('Error saving ad selection:', error);
+      }
+    } else {
+      // User skipped, just advance to step 5
+      setCurrentStep('STEP_5');
+    }
+  };
+
+  const handleStepFiveNext = (data) => {
+    console.log('Step 5 submitted:', data);
+    setFormData(prev => ({ ...prev, ...data }));
+    // Complete onboarding or go to next step
   };
 
   const getMascotMessage = () => {
@@ -47,6 +97,8 @@ const OnboardingPage = () => {
         return "Let's review the details I extracted. Make any changes you like!";
       case 'STEP_4':
         return "I found these ads from your competitors. Select one you'd like to use as inspiration!";
+      case 'STEP_5':
+        return "Okay, upload any images you think might help and click Generate!";
       default:
         return "We're making great progress!";
     }
@@ -83,6 +135,14 @@ const OnboardingPage = () => {
         return (
           <StepFour
             onNext={handleStepFourNext}
+            initialData={formData}
+            setMascotMessageOverride={setMascotMessageOverride}
+          />
+        );
+      case 'STEP_5':
+        return (
+          <StepFive
+            onNext={handleStepFiveNext}
             initialData={formData}
             setMascotMessageOverride={setMascotMessageOverride}
           />

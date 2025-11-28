@@ -245,6 +245,112 @@ def get_competitor_ads(request):
 
 
 @login_required
+@require_http_methods(["POST"])
+def select_competitor_ad(request):
+    """
+    Save the selected AdLibrary from competitor ads during onboarding.
+    Advances user to STEP_5.
+    """
+    from apps.users.models import UserOnboarding
+    import json
+    
+    try:
+        data = json.loads(request.body)
+        ad_library_id = data.get('ad_library_id')
+        
+        if not ad_library_id:
+            return JsonResponse({'success': False, 'message': 'ad_library_id is required'}, status=400)
+        
+        # Get or create onboarding record
+        onboarding, _ = UserOnboarding.objects.get_or_create(user=request.user)
+        
+        # Verify the AdLibrary exists
+        try:
+            ad_library = AdLibrary.objects.get(id=ad_library_id)
+        except AdLibrary.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'AdLibrary not found'}, status=404)
+        
+        # Save the selection
+        onboarding.selected_ad_library = ad_library
+        onboarding.save()
+        
+        # Advance user to STEP_5
+        request.user.advance_onboarding()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Ad selection saved',
+            'next_step': request.user.status
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'message': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        logger.error(f"Error in select_competitor_ad: {str(e)}", exc_info=True)
+        return JsonResponse({'success': False, 'message': f'Server error: {str(e)}'}, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def save_assets_onboarding(request):
+    """
+    Save assets for Step 5 of onboarding.
+    Handles: asset_image_1, asset_image_2, asset_image_3, canvas_size, prompt
+    Each field is optional and saved independently.
+    """
+    from apps.users.models import UserOnboarding
+    
+    try:
+        # Get or create onboarding record
+        onboarding, _ = UserOnboarding.objects.get_or_create(user=request.user)
+        
+        # Handle image uploads
+        if 'asset_image_1' in request.FILES:
+            onboarding.asset_image_1 = request.FILES['asset_image_1']
+        elif 'asset_image_1' in request.POST and request.POST['asset_image_1'] == '':
+            # Empty string means delete
+            onboarding.asset_image_1 = None
+            
+        if 'asset_image_2' in request.FILES:
+            onboarding.asset_image_2 = request.FILES['asset_image_2']
+        elif 'asset_image_2' in request.POST and request.POST['asset_image_2'] == '':
+            # Empty string means delete
+            onboarding.asset_image_2 = None
+            
+        if 'asset_image_3' in request.FILES:
+            onboarding.asset_image_3 = request.FILES['asset_image_3']
+        elif 'asset_image_3' in request.POST and request.POST['asset_image_3'] == '':
+            # Empty string means delete
+            onboarding.asset_image_3 = None
+        
+        # Handle canvas_size
+        if 'canvas_size' in request.POST:
+            onboarding.canvas_size = request.POST['canvas_size'] or None
+        
+        # Handle prompt
+        if 'prompt' in request.POST:
+            onboarding.prompt = request.POST['prompt'] or None
+        
+        onboarding.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Assets saved',
+            'data': {
+                'asset_image_1': onboarding.asset_image_1.url if onboarding.asset_image_1 else None,
+                'asset_image_2': onboarding.asset_image_2.url if onboarding.asset_image_2 else None,
+                'asset_image_3': onboarding.asset_image_3.url if onboarding.asset_image_3 else None,
+                'canvas_size': onboarding.canvas_size,
+                'prompt': onboarding.prompt,
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in save_assets_onboarding: {str(e)}", exc_info=True)
+        return JsonResponse({'success': False, 'message': f'Server error: {str(e)}'}, status=500)
+
+
+@login_required
 def provision_credit_package(request, user_id, product):
     """
     Asigna créditos al usuario basado en el paquete comprado.
