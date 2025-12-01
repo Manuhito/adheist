@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from 'react';
-import { Sparkles } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Sparkles, Target, RefreshCcw, Brain } from 'lucide-react';
+import Mascot from './Mascot';
 
 // SSE Event Handler hook - similar to GeneratingLoadingPage
 function useSSEListener(onEvent) {
@@ -53,6 +54,22 @@ function useSSEListener(onEvent) {
 }
 
 const OnboardingLoadingPage = ({ adRequestId }) => {
+  const MASCOT_MESSAGES = [
+    'Okay, let me get to work!',
+    'This will just take a minute…',
+    "Here’s how Ad heist works and what's happening right now",
+  ];
+
+  const [mascotMessageIndex, setMascotMessageIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMascotMessageIndex((prev) => (prev + 1) % MASCOT_MESSAGES.length);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   // Handle SSE events
   const handleSSEEvent = (eventType, data) => {
     console.log('Received SSE event:', eventType, data);
@@ -84,26 +101,66 @@ const OnboardingLoadingPage = ({ adRequestId }) => {
   useSSEListener(handleSSEEvent);
 
   return (
-    <div className="flex flex-col items-center justify-center h-full w-full animate-in fade-in duration-500">
-      <div className="flex flex-col items-center gap-8">
+    <div className="relative flex flex-col items-center justify-center h-full w-full px-4 animate-in fade-in duration-500">
+      <div className="flex flex-col items-center gap-8 w-full max-w-4xl text-center">
         {/* Sparkles Animation */}
-        <div className="relative">
-          <Sparkles className="w-16 h-16 text-primary animate-pulse" />
+        <div className="relative flex items-center justify-center">
+          <Sparkles className="w-10 h-10 text-primary animate-pulse" />
         </div>
 
         {/* Text */}
-        <div className="text-center max-w-md">
-          <h1 className="text-xl font-semibold text-primary mb-3">
-            Generating your first ad...
+        <div className="space-y-2">
+          <h1 className="text-3xl sm:text-4xl font-semibold text-foreground">
+            That&apos;s awesome!
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Our AI is crafting high-performing ads tailored to your brand.
+          <p className="text-sm sm:text-base text-muted-foreground">
+            Let us show what you can achieve with AdHeist by your side
           </p>
         </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full mt-2">
+          <div className="flex flex-col items-start gap-3 rounded-xl border bg-card p-5 text-left">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+              <Target className="w-5 h-5 text-primary" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-semibold text-foreground">Reverse-engineering</h3>
+              <p className="text-sm text-muted-foreground">
+                Our AI reviews the ad’s structure, message, style, and the psychology behind them to see why it might succeed.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col items-start gap-3 rounded-xl border bg-card p-5 text-left">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+              <RefreshCcw className="w-5 h-5 text-primary" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-semibold text-foreground">Re-applying success</h3>
+              <p className="text-sm text-muted-foreground">
+                Our system identifies the strongest elements that drive conversions and creates a structure to use these theme on your brand instead.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col items-start gap-3 rounded-xl border bg-card p-5 text-left">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+              <Brain className="w-5 h-5 text-primary" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-semibold text-foreground">Smart variations</h3>
+              <p className="text-sm text-muted-foreground">
+                You’ll get 3 fresh ad concepts—each with unique themes designed to outperform the original.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Loading spinner */}
-        <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+        <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin mt-4"></div>
       </div>
+
+      <Mascot message={MASCOT_MESSAGES[mascotMessageIndex]} />
     </div>
   );
 };
