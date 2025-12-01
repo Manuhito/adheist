@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { ImagePlus, Trash2, Check, Upload } from 'lucide-react';
+import { ImagePlus, Trash2, Check, Upload, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 // Helper to get CSRF token
@@ -90,12 +90,13 @@ const canvasSizes = [
   { id: "1024x1536", label: "Portrait", size: "1024×1536" },
 ];
 
-const StepFive = ({ onNext, initialData, setMascotMessageOverride }) => {
+const StepFive = ({ onNext, onGenerate, initialData, setMascotMessageOverride }) => {
   const [image1, setImage1] = useState(null);
   const [image2, setImage2] = useState(null);
   const [image3, setImage3] = useState(null);
   const [selectedCanvasSize, setSelectedCanvasSize] = useState(null);
   const [prompt, setPrompt] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const image1InputRef = useRef(null);
   const image2InputRef = useRef(null);
@@ -198,13 +199,40 @@ const StepFive = ({ onNext, initialData, setMascotMessageOverride }) => {
     saveToBackend('prompt', prompt);
   };
 
+  // Handle Generate button click
+  const handleGenerate = async () => {
+    if (!selectedCanvasSize || isGenerating) return;
+
+    setIsGenerating(true);
+
+    // Wait 3 seconds to show spinner, then call onGenerate
+    setTimeout(() => {
+      if (onGenerate) {
+        onGenerate({ canvasSize: selectedCanvasSize, prompt });
+      }
+    }, 3000);
+  };
+
   return (
     <div className="flex flex-col h-full w-full overflow-hidden animate-in fade-in duration-500">
       <div className="w-full max-w-2xl mx-auto px-4 flex flex-col h-full overflow-hidden">
         <Card className="w-full shadow-xl bg-background/95 backdrop-blur-sm border-primary/20">
           <CardContent className="p-6">
-            {/* Title */}
-            <h2 className="text-lg font-semibold text-foreground mb-4 text-center">Upload... Prompt...</h2>
+            {/* Title Row */}
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-foreground">Upload... Prompt...</h2>
+              <Button
+                onClick={handleGenerate}
+                disabled={!selectedCanvasSize || isGenerating}
+                className="min-w-[100px]"
+              >
+                {isGenerating ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  'Generate'
+                )}
+              </Button>
+            </div>
 
             {/* Row 1: Image Uploaders */}
             <div className="grid grid-cols-3 gap-3 mb-3 max-w-[300px] mx-auto">

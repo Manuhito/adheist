@@ -4642,3 +4642,196 @@ def delete_user_brand(request, brand_id):
             'success': False,
             'error': 'An error occurred while deleting the brand.'
         }, status=500)
+
+
+@login_required
+@require_POST
+def generate_onboarding_ad(request):
+    """
+    Generate an ad from onboarding data.
+    
+    This view:
+    1. Gets the brand from UserOnboarding
+    2. Creates a new AdRequest with AdRequestAssets
+    3. Assigns assets from the onboarding model
+    4. Starts a new generation of type initial
+    
+    Returns: JSON with the AdRequest ID and generation status
+    """
+    from apps.users.models import UserOnboarding
+    
+    try:
+        # Get user's onboarding data
+        try:
+            onboarding = UserOnboarding.objects.get(user=request.user)
+        except UserOnboarding.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'Onboarding data not found'
+            }, status=404)
+        
+        # Validate required data
+        if not onboarding.brand:
+            return JsonResponse({
+                'success': False,
+                'error': 'Brand not found in onboarding data'
+            }, status=400)
+        
+        if not onboarding.canvas_size:
+            return JsonResponse({
+                'success': False,
+                'error': 'Canvas size not selected'
+            }, status=400)
+        
+        # Check if user has available credits
+        if not can_create_ad_request(request.user):
+            return JsonResponse({
+                'success': False,
+                'error': 'You have reached your credit limit'
+            }, status=403)
+        
+        # Get or create AdRequestAssets for this brand
+        # Use website stored in UserOnboarding (UserBrand does not have a website field)
+        ad_request_assets, created = AdRequestAssets.objects.get_or_create(
+            user=request.user,
+            brand=onboarding.brand,
+            defaults={
+                'company_website': onboarding.website,
+            }
+        )
+        
+        # Create the AdRequest
+        ad_request = AdRequest.objects.create(
+            user=request.user,
+            base_assets=ad_request_assets,
+            canvas_size=onboarding.canvas_size,
+            status=AdRequest.STATUS_DRAFT,
+            ad_library=onboarding.selected_ad_library,  # Use the selected competitor ad if available
+        )
+        
+        # Assign onboarding assets to the AdRequest
+        # Copy images from onboarding to AdRequest overrides
+        if onboarding.asset_image_1:
+            ad_request.marketing_image_1_override = onboarding.asset_image_1
+        if onboarding.asset_image_2:
+            ad_request.marketing_image_2_override = onboarding.asset_image_2
+        if onboarding.asset_image_3:
+            ad_request.marketing_image_3_override = onboarding.asset_image_3
+        
+        # Save user prompt in asset_overrides
+        if onboarding.prompt:
+            ad_request.asset_overrides = ad_request.asset_overrides or {}
+            ad_request.asset_overrides['user_prompt'] = onboarding.prompt
+        
+        ad_request.save()
+        
+        # Move AdRequest from DRAFT to SUBMITTED so later transition to COMPLETED is valid
+        if ad_request.status == AdRequest.STATUS_DRAFT:
+            ad_request.status = AdRequest.STATUS_SUBMITTED
+            ad_request.save(update_fields=['status'])
+        
+        # Now create AdRequestVersions and start generation
+        # Similar to adrequest_version_create
+        user_prompt = onboarding.prompt or ''
+        
+        versions = []
+        for _ in range(3):
+            v = AdRequestVersion.objects.create(
+                ad_request=ad_request,
+                user_prompt=user_prompt,
+                status=AdRequestVersion.STATUS_UNASSIGNED,
+                is_primary=True
+            )
+            versions.append(v)
+            
+            # Track event in PostHog
+            posthog.capture(
+                request.user.id,
+                'Ad Version Created',
+                properties={
+                    'version_type': 'onboarding_initial',
+                    'ad_request_id': ad_request.id,
+                    'version_id': v.id,
+                    'has_user_prompt': bool(user_prompt),
+                    'timestamp': v.created_at.isoformat() if hasattr(v, 'created_at') else None
+                }
+            )
+        
+        # Collect image URLs for context
+        image_urls = []
+        
+        # Add ad_library image if present
+        if ad_request.ad_library and ad_request.ad_library.ad_image and ad_request.ad_library.ad_image.url:
+            image_urls.append(request.build_absolute_uri(ad_request.ad_library.ad_image.url))
+        
+        # Add override images
+        image_fields = [
+            'logo_override',
+            'product_image_1_override',
+            'product_image_2_override',
+            'app_image_1_override',
+            'app_image_2_override',
+            'marketing_image_1_override',
+            'marketing_image_2_override',
+            'marketing_image_3_override'
+        ]
+        
+        for field_name in image_fields:
+            image_field = getattr(ad_request, field_name)
+            if image_field and image_field.url:
+                image_urls.append(request.build_absolute_uri(image_field.url))
+        
+        # Get canvas size
+        canvas_size = ad_request.canvas_size or "1024x1024"
+        
+        # Start image generation task
+        from apps.aiinterface.tasks import generate_image_task_replicate
+        
+        # Update all versions status to processing
+        for v in versions:
+            v.status = "processing"
+            v.save(update_fields=['status'])
+        
+        # Launch the Celery task
+        task = generate_image_task_replicate.delay(
+            image_urls=image_urls,
+            canvas_size=canvas_size,
+            version_ids=[v.id for v in versions],
+            ad_request_id=ad_request.id,
+            version_type="initial"
+        )
+        
+        # Advance user onboarding status to ONBOARDED
+        request.user.status = request.user.ONBOARDED
+        request.user.save(update_fields=['status'])
+        
+        # Track onboarding completion
+        posthog.capture(
+            request.user.id,
+            'Onboarding Ad Generation Started',
+            properties={
+                'ad_request_id': ad_request.id,
+                'canvas_size': canvas_size,
+                'has_competitor_ad': bool(onboarding.selected_ad_library),
+                'num_images_uploaded': sum([
+                    1 if onboarding.asset_image_1 else 0,
+                    1 if onboarding.asset_image_2 else 0,
+                    1 if onboarding.asset_image_3 else 0,
+                ])
+            }
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'ad_request_id': ad_request.id,
+            'version_ids': [v.id for v in versions],
+            'task_id': task.id,
+            'message': 'Ad generation started successfully'
+        }, status=201)
+        
+    except Exception as e:
+        logging.error(f"Error in generate_onboarding_ad: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)

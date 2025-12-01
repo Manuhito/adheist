@@ -6,6 +6,7 @@ import StepTwo from './steps/StepTwo';
 import StepThree from './steps/StepThree';
 import StepFour from './steps/StepFour';
 import StepFive from './steps/StepFive';
+import OnboardingLoadingPage from './components/OnboardingLoadingPage';
 
 // Helper to get CSRF token
 const getCsrfToken = () => {
@@ -35,6 +36,7 @@ const OnboardingPage = () => {
   // Initialize formData with savedData if available (for page refresh scenarios)
   const [formData, setFormData] = useState(savedData || {});
   const [mascotMessageOverride, setMascotMessageOverride] = useState(null);
+  const [adRequestId, setAdRequestId] = useState(null);
 
   const handleStepOneNext = async (data) => {
     console.log('Step 1 submitted:', data);
@@ -159,6 +161,36 @@ const OnboardingPage = () => {
     }
   };
 
+  const handleGenerate = async (data) => {
+    console.log('Generate clicked:', data);
+
+    try {
+      // Call the generate onboarding ad endpoint
+      const response = await fetch('/ads/api/generate-onboarding-ad/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCsrfToken(),
+        },
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log('Ad generation started:', result);
+        setAdRequestId(result.ad_request_id);
+        setCurrentStep('GENERATING');
+        // Onboarding status is advanced in the backend
+      } else {
+        console.error('Failed to start ad generation:', result.error);
+        alert(result.error || 'Failed to start ad generation');
+      }
+    } catch (error) {
+      console.error('Error starting ad generation:', error);
+      alert('An error occurred while starting ad generation');
+    }
+  };
+
   const getMascotMessage = () => {
     switch (currentStep) {
       case 'STEP_1':
@@ -215,9 +247,14 @@ const OnboardingPage = () => {
         return (
           <StepFive
             onNext={handleStepFiveNext}
+            onGenerate={handleGenerate}
             initialData={formData}
             setMascotMessageOverride={setMascotMessageOverride}
           />
+        );
+      case 'GENERATING':
+        return (
+          <OnboardingLoadingPage adRequestId={adRequestId} />
         );
       default:
         return (
@@ -249,8 +286,10 @@ const OnboardingPage = () => {
         {renderStep()}
       </main>
 
-      {/* Mascot Layer */}
-      <Mascot message={mascotMessageOverride || getMascotMessage()} />
+      {/* Mascot Layer - hide during GENERATING state */}
+      {currentStep !== 'GENERATING' && (
+        <Mascot message={mascotMessageOverride || getMascotMessage()} />
+      )}
     </div>
   );
 };

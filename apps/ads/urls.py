@@ -62,4 +62,5 @@ urlpatterns = [
     path("api/get-assets-onboarding/", views.get_assets_onboarding, name="get_assets_onboarding"),
     path("api/update-user-brand/<int:brand_id>/", views.update_user_brand, name="update_user_brand"),
     path("api/brand-details/<int:brand_id>/", views.get_brand_details, name="get_brand_details"),
+    path("api/generate-onboarding-ad/", views.generate_onboarding_ad, name="generate_onboarding_ad"),
 ]
