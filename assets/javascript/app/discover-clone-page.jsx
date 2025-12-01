@@ -730,7 +730,7 @@ const DiscoverClonePageContent = () => {
               {/* Brand Selection Section */}
               <h2 className="text-lg text-primary">Brand</h2>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Which brand do you want to create ads for?
+                Choose or create your product/s brand assets
               </p>
               <div className="space-y-2">
                 <BrandDropdown
@@ -742,15 +742,12 @@ const DiscoverClonePageContent = () => {
                 {!selectedBrand && (
                   <p className="text-xs text-amber-500 mt-1">Please select a brand to add assets</p>
                 )}
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Brand changes not allowed after concept creation.
-                </p>
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Product image
+                Product images
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Pick an image for your ad — upload one or choose from suggestions. We'll clean up the background for you!
+                Upload your own images to mix up with AI
               </p>
               {/* Image Upload Section - 4 images in a row using original components */}
               <div className="grid grid-cols-2 gap-4 mt-0">
@@ -774,9 +771,9 @@ const DiscoverClonePageContent = () => {
                   />
                 </div>
               </div>
-              <h2 className="text-lg text-primary">Context</h2>
+              <h2 className="text-lg text-primary">Canvas</h2>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Platform Presets
+                Output image ratio
               </p>
 
               {/* Canvas Size Selection - same as StepOneComponent */}
@@ -832,10 +829,10 @@ const DiscoverClonePageContent = () => {
                   <p className="text-gray-500 dark:text-gray-400">No ad reference available</p>
                 </div>
               )}
-              <h2 className="text-lg text-primary">Advanced AI Copywriting</h2>
+              <h2 className="text-lg text-primary">Additional Prompt</h2>
               <textarea
                 className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-input dark:border-gray-600 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                placeholder="Outline the product range and services provided by the brand."
+                placeholder="Spec out here some additional context or instructions."
                 value={userPrompt}
                 onChange={handlePromptChange}
                 rows={4}
