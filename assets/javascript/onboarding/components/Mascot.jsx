@@ -43,7 +43,7 @@ const Mascot = ({ message }) => {
                   fill="hsl(var(--card))"
                   className=""
                 >
-                  <div className="text-sm font-bold text-gray-800 dark:text-gray-200 min-w-[60px] text-center">
+                  <div className="text-lg font-bold text-gray-800 dark:text-gray-200 min-w-[60px] text-center whitespace-nowrap">
                     {displayMessage}
                   </div>
                 </SpeechBubble>

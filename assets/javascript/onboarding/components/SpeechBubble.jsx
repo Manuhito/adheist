@@ -14,7 +14,6 @@ export default function SpeechBubble({
       className={`relative rounded-2xl p-5 shadow-sm ${className}`}
       style={{
         backgroundColor: fill,
-        maxWidth: "320px",
         width: "fit-content",
         transition: "all 0.2s ease-out"
       }}
