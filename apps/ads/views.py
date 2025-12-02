@@ -403,8 +403,8 @@ def get_assets_onboarding(request):
     from apps.users.models import UserOnboarding
     
     try:
-        onboarding = UserOnboarding.objects.filter(user=request.user).first()
-        
+        onboarding = UserOnboarding.objects.filter(user=request.user).select_related('selected_ad_library__facebook_page').first()
+
         if not onboarding:
             return JsonResponse({
                 'success': True,
@@ -414,9 +414,23 @@ def get_assets_onboarding(request):
                     'asset_image_3': None,
                     'canvas_size': None,
                     'prompt': None,
+                    'selected_ad': None,
                 }
             })
-        
+
+        selected_ad_data = None
+        if onboarding.selected_ad_library:
+            ad = onboarding.selected_ad_library
+            fb_page = getattr(ad, 'facebook_page', None)
+            selected_ad_data = {
+                'id': ad.id,
+                'image_url': ad.ad_image.url if ad.ad_image else None,
+                'ad_copy': ad.ad_creative_bodies or '',
+                'page_name': fb_page.page_name if fb_page and fb_page.page_name else 'Unknown',
+                'page_url': fb_page.page_url if fb_page and fb_page.page_url else '',
+                'started_running_on': ad.ad_delivery_start_time.isoformat() if ad.ad_delivery_start_time else None,
+            }
+
         return JsonResponse({
             'success': True,
             'data': {
@@ -425,6 +439,7 @@ def get_assets_onboarding(request):
                 'asset_image_3': onboarding.asset_image_3.url if onboarding.asset_image_3 else None,
                 'canvas_size': onboarding.canvas_size,
                 'prompt': onboarding.prompt,
+                'selected_ad': selected_ad_data,
             }
         })
         
@@ -4334,7 +4349,13 @@ def capture_website_screenshot(request):
             # Decode base64 and save as image file
             screenshot_data = base64.b64decode(screenshot_base64)
             filename = f"screenshot_{request.user.id}.png"
-            onboarding.website_screenshot.save(filename, ContentFile(screenshot_data), save=True)
+            onboarding.website_screenshot.save(filename, ContentFile(screenshot_data), save=False)
+            
+            # Also save as asset_image_1 for ad generation
+            asset_filename = f"asset_screenshot_{request.user.id}.png"
+            onboarding.asset_image_1.save(asset_filename, ContentFile(screenshot_data), save=False)
+            
+            onboarding.save()
             
         except Exception as save_error:
             logging.error(f"Error saving screenshot to UserOnboarding: {str(save_error)}")

@@ -273,16 +273,16 @@ const OnboardingPage = () => {
   return (
     <div className="h-screen w-full bg-background/50 flex flex-col relative overflow-hidden">
       {/* Header Logo */}
-      <header className="w-full flex justify-center pt-10 absolute top-0 z-20 pointer-events-none">
+      <header className="w-full flex justify-center pt-6 sm:pt-10 flex-shrink-0 z-20">
         <img
           src="/static/images/web/logo-brand-name.png"
           alt="AdHeist"
-          className="h-12 w-auto object-contain"
+          className="h-10 sm:h-12 w-auto object-contain"
         />
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col relative z-10 pt-28 pb-8 overflow-hidden">
+      <main className="flex-1 flex flex-col relative z-10 py-4 sm:py-6 min-h-0 overflow-hidden">
         {renderStep()}
       </main>
 
