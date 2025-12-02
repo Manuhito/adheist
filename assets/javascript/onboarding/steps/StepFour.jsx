@@ -252,8 +252,8 @@ const StepFour = ({ onNext, initialData, setMascotMessageOverride }) => {
   return (
     <div className="flex flex-col h-full w-full overflow-hidden animate-in fade-in duration-500">
       <div className="w-full max-w-6xl mx-auto px-4 flex flex-col h-full overflow-hidden">
-        <Card className="w-full shadow-xl bg-background/95 backdrop-blur-sm border-primary/20 flex flex-col h-full overflow-hidden">
-          <CardContent className="p-6 flex flex-col h-full overflow-hidden">
+        <Card className="w-full shadow-none bg-transparent backdrop-blur-none border-none flex flex-col h-full overflow-hidden">
+          <CardContent className="p-0 flex flex-col h-full overflow-hidden">
 
             {/* Header Section - fixed height */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 flex-shrink-0 pb-4">
@@ -262,31 +262,6 @@ const StepFour = ({ onNext, initialData, setMascotMessageOverride }) => {
                 <p className="text-muted-foreground mt-1">
                   Select an ad to use as a reference for your campaign
                 </p>
-              </div>
-              <div className="flex items-center gap-3">
-                {!isLoading && (
-                  <>
-                    <span className="text-sm text-muted-foreground">
-                      {selectedAdId ? '1 ad selected' : 'No ad selected'}
-                    </span>
-                    {ads.length > 0 ? (
-                      <Button
-                        onClick={handleClone}
-                        disabled={!selectedAdId}
-                        className="px-8 min-w-[140px]"
-                      >
-                        Clone this ad
-                      </Button>
-                    ) : (
-                      <Button
-                        onClick={handleSkip}
-                        className="px-8 min-w-[140px]"
-                      >
-                        Skip for now
-                      </Button>
-                    )}
-                  </>
-                )}
               </div>
             </div>
 
@@ -300,7 +275,7 @@ const StepFour = ({ onNext, initialData, setMascotMessageOverride }) => {
                   </div>
                 </div>
               ) : ads.length > 0 ? (
-                <div className="h-full overflow-y-auto pr-2 -mr-2">
+                <div className="h-full overflow-y-auto pr-2 -mr-2 bg-transparent">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {ads.map((ad) => (
                       <CompetitorAdCard
@@ -325,7 +300,29 @@ const StepFour = ({ onNext, initialData, setMascotMessageOverride }) => {
                 </div>
               )}
             </div>
-
+            {/* Footer actions: Clone / Skip */}
+            <div className="flex justify-end pt-4 flex-shrink-0">
+              {!isLoading && (
+                <>
+                  {ads.length > 0 ? (
+                    <Button
+                      onClick={handleClone}
+                      disabled={!selectedAdId}
+                      className="px-8 min-w-[140px]"
+                    >
+                      Clone this ad
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={handleSkip}
+                      className="px-8 min-w-[140px]"
+                    >
+                      Skip for now
+                    </Button>
+                  )}
+                </>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
