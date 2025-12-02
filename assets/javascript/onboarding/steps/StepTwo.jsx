@@ -135,16 +135,23 @@ const StepTwo = ({ onNext, initialData, setMascotMessageOverride }) => {
   useEffect(() => {
     if (setMascotMessageOverride) {
       if (loading) {
-        setMascotMessageOverride("Taking a snapshot of your website...");
+        setMascotMessageOverride("Okay, let's take a look...");
       } else if (error) {
         setMascotMessageOverride("Oops! Something went wrong.");
+      } else if (analyzing && data?.screenshot) {
+        // Screenshot visible, still analyzing brand
+        setMascotMessageOverride("Hey, Nice website!");
       } else if (analyzing) {
+        // No screenshot yet, still analyzing
         setMascotMessageOverride("Analyzing your brand style...");
+      } else if (data?.screenshot) {
+        // Modal with brand info is now visible
+        setMascotMessageOverride("How does this look? Feel free to make any changes.");
       } else {
-        setMascotMessageOverride("Look what I found! Is this correct?");
+        setMascotMessageOverride(null);
       }
     }
-  }, [loading, analyzing, error, setMascotMessageOverride]);
+  }, [loading, analyzing, error, data, setMascotMessageOverride]);
 
   const getFaviconUrl = (url) => {
     try {

@@ -145,11 +145,9 @@ const StepOne = ({ onNext, initialData, user, setMascotMessageOverride }) => {
 
   useEffect(() => {
     if (setMascotMessageOverride) {
-      if (isLoading) {
-        setMascotMessageOverride("Checking your website... Hang tight!");
-      } else if (isUrlValid) {
+      if (isUrlValid && !isLoading) {
         setMascotMessageOverride("Is this your website?");
-      } else {
+      } else if (!isLoading) {
         setMascotMessageOverride(null);
       }
     }

@@ -195,16 +195,48 @@ const StepFour = ({ onNext, initialData, setMascotMessageOverride }) => {
   }, []);
 
   useEffect(() => {
-    if (setMascotMessageOverride) {
-      if (isLoading) {
-        setMascotMessageOverride("Searching for ads from your competitors... This might take a moment!");
-      } else if (error || ads.length === 0) {
-        setMascotMessageOverride("I couldn't find any competitor ads yet. You can skip this step or try again later.");
-      } else {
-        setMascotMessageOverride("I found these ads from your competitors. Select one you'd like to use as inspiration!");
-      }
+    if (!setMascotMessageOverride) return;
+
+    const timeouts = [];
+
+    if (isLoading) {
+      // Loading competitors: show two messages sequentially, then keep last
+      const loadingMessages = [
+        "Okay, one last thing..",
+        "We are going to build your first ad!"
+      ];
+      setMascotMessageOverride(loadingMessages[0]);
+
+      timeouts.push(
+        setTimeout(() => {
+          setMascotMessageOverride(loadingMessages[1]);
+        }, 5000)
+      );
+    } else if (error || ads.length === 0) {
+      // Research finished but no ads / error
+      setMascotMessageOverride("I couldn't find any competitor ads yet. You can skip this step or try again later.");
+    } else if (selectedAdId) {
+      // User has picked an ad
+      setMascotMessageOverride("Nice Pick!");
+    } else {
+      // Ads loaded successfully: show two messages sequentially, then keep last
+      const loadedMessages = [
+        "I found some ads that may be relevant to your niche...",
+        "Pick a reference ad to get started"
+      ];
+      setMascotMessageOverride(loadedMessages[0]);
+
+      timeouts.push(
+        setTimeout(() => {
+          setMascotMessageOverride(loadedMessages[1]);
+        }, 5000)
+      );
     }
-  }, [isLoading, error, ads.length, setMascotMessageOverride]);
+
+    return () => {
+      timeouts.forEach((id) => clearTimeout(id));
+    };
+  }, [isLoading, error, ads.length, selectedAdId, setMascotMessageOverride]);
 
   const handleClone = () => {
     if (selectedAdId) {

@@ -194,11 +194,11 @@ const OnboardingPage = () => {
   const getMascotMessage = () => {
     switch (currentStep) {
       case 'STEP_1':
-        return `Hi ${user?.firstName ? user.firstName : 'there'}! To get started, I need your brand's website URL.`;
+        return 'Lets get Started';
       case 'STEP_2':
-        return "Great! Now tell me more about your products.";
+        return "Okay, how does this look?";
       case 'STEP_3':
-        return "Let's review the details I extracted. Make any changes you like!";
+        return "Awesome!";
       case 'STEP_4':
         return "I found these ads from your competitors. Select one you'd like to use as inspiration!";
       case 'STEP_5':
