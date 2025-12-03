@@ -34,6 +34,12 @@ class FacebookPage(BaseModel):
         unique=True,
         help_text="Unique Facebook page ID"
     )
+    fb_name = models.CharField(
+        max_length=255,
+        blank=True,
+        db_index=True,
+        help_text="Facebook page username/slug extracted from URL (e.g., 'starbucks' from facebook.com/starbucks)"
+    )
     page_name = models.CharField(
         max_length=255, 
         blank=True,
