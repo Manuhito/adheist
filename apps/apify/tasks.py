@@ -1439,7 +1439,7 @@ def competitor_research_task(user_id: int, website_url: str) -> Dict[str, Any]:
             # We need to construct the urls parameter for fetch_apify_ads
             # "url": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=ALL&is_targeted_country=false&media_type=image_and_meme&search_type=page&view_all_page_id={page_id}"
             
-            search_url = f"https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=ALL&is_targeted_country=false&media_type=image_and_meme&search_type=page&view_all_page_id={page_id}"
+            search_url = backload.get_facebook_ads_url_for_page(page_id)
             
             try:
                 # Run fetch_apify_ads. Since it's a shared_task, calling it directly calls the function, not the task wrapper,
