@@ -4268,25 +4268,29 @@ def analyze_website_for_brand_assets(request):
         
         if result.get('success'):
             # If called from onboarding, save brand to UserOnboarding and advance status
+            log.info(f"DEBUG ONBOARDING: is_onboarding={is_onboarding}, result.keys={result.keys()}, brand_in_result={result.get('brand') is not None}")
             if is_onboarding and result.get('brand'):
                 try:
                     from apps.users.models import UserOnboarding
                     from apps.ads.models import UserBrand
                     
-                    brand_id = result['brand'].get('id')
-                    log.info(f"DEBUG: is_onboarding={is_onboarding}, brand_id={brand_id}, result['brand']={result.get('brand')}")
+                    brand_data = result['brand']
+                    brand_id = brand_data.get('id') if isinstance(brand_data, dict) else None
+                    log.info(f"DEBUG ONBOARDING: brand_data type={type(brand_data)}, brand_id={brand_id}, brand_data={brand_data}")
                     if brand_id:
                         onboarding, _ = UserOnboarding.objects.get_or_create(user=request.user)
                         onboarding.brand_id = brand_id
                         onboarding.save()
-                        log.info(f"Saved brand {brand_id} to UserOnboarding for user {request.user.email}")
+                        log.info(f"SUCCESS: Saved brand {brand_id} to UserOnboarding for user {request.user.email}")
                     else:
-                        log.warning(f"No brand_id found in result for user {request.user.email}")
+                        log.warning(f"No brand_id found in result for user {request.user.email}. brand_data={brand_data}")
                     
                     # Advance user from STEP_1 to STEP_2
                     request.user.advance_onboarding()
                 except Exception as e:
-                    log.error(f"Error saving brand to UserOnboarding: {str(e)}")
+                    log.error(f"Error saving brand to UserOnboarding: {str(e)}", exc_info=True)
+            elif is_onboarding:
+                log.warning(f"DEBUG ONBOARDING: is_onboarding=True but no brand in result. result={result}")
             
             return JsonResponse({
                 'success': True,
@@ -4356,7 +4360,7 @@ def capture_website_screenshot(request):
             asset_filename = f"asset_screenshot_{request.user.id}.png"
             onboarding.asset_image_1.save(asset_filename, ContentFile(screenshot_data), save=False)
             
-            onboarding.save()
+            onboarding.save(update_fields=['website_screenshot', 'asset_image_1'])
             
         except Exception as save_error:
             logging.error(f"Error saving screenshot to UserOnboarding: {str(save_error)}")

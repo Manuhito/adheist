@@ -1447,7 +1447,7 @@ def competitor_research_task(user_id: int, website_url: str) -> Dict[str, Any]:
         updated_competitors = list(set(current_competitors + competitors))
         onboarding.competitors = updated_competitors
         onboarding.website = website_url
-        onboarding.save()
+        onboarding.save(update_fields=['competitors', 'website'])
     except Exception as e:
         logger.error(f"Error saving competitors to onboarding: {str(e)}")
         

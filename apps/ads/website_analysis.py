@@ -114,10 +114,23 @@ def extract_text_from_html(html_content: bytes) -> str:
 def download_website_content_with_playwright(url: str) -> str:
     """
     Download and extract text content from a website using Playwright.
+    Includes anti-detection strategies to avoid bot blocking.
     """
     with sync_playwright() as p:
-        browser = p.chromium.launch()
-        page = browser.new_page()
+        browser = p.chromium.launch(
+            headless=True,
+            args=['--disable-blink-features=AutomationControlled']
+        )
+        context = browser.new_context(
+            viewport={"width": 1280, "height": 800},
+            screen={"width": 1920, "height": 1080},
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            locale="en-US",
+        )
+        page = context.new_page()
+        
+        # Hide webdriver flag to avoid detection
+        page.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
         
         # Navigate and wait for network to be idle (content fully loaded)
         page.goto(url, wait_until='networkidle')
@@ -133,14 +146,24 @@ def download_website_content_with_playwright(url: str) -> str:
 def capture_screenshot_with_playwright(url: str) -> str:
     """
     Capture a screenshot of a website using Playwright and return as base64 string.
+    Includes anti-detection strategies to avoid bot blocking.
     """
     import base64
     with sync_playwright() as p:
-        browser = p.chromium.launch()
-        page = browser.new_page()
+        browser = p.chromium.launch(
+            headless=True,
+            args=['--disable-blink-features=AutomationControlled']
+        )
+        context = browser.new_context(
+            viewport={"width": 1280, "height": 800},
+            screen={"width": 1920, "height": 1080},
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            locale="en-US",
+        )
+        page = context.new_page()
         
-        # Set viewport size to desktop
-        page.set_viewport_size({"width": 1280, "height": 800})
+        # Hide webdriver flag to avoid detection
+        page.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
         
         # Navigate and wait for network to be idle
         page.goto(url, wait_until='networkidle')
@@ -563,7 +586,7 @@ def extract_brand_assets_from_website(user, website_url: str, ad_request_id: str
                 "User": user.email,
                 "Website URL": website_url,
             }
-            send_slack_notification.delay(
+            send_slack_notification(
                 title="Brand Asset Extraction Failed",
                 error_message=error_message,
                 context=context
