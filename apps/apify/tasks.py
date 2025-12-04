@@ -554,7 +554,8 @@ def fetch_apify_ads(
     page_id: str = None,
     backload_id: int = None,
     is_automated: bool = False,
-    user_id: int = None
+    user_id: int = None,
+    limit_per_source: int = None
 ) -> Dict[str, Any]:
     """
     Celery task to fetch ads from Apify API.
@@ -569,6 +570,7 @@ def fetch_apify_ads(
         page_id: ID de la página de Facebook asociada a esta tarea
         backload_id: ID of the Backload object to update with error logs
         is_automated: Si True, extrae datos adicionales para completar FacebookPage
+        limit_per_source: Límite de registros a recibir de Apify (opcional)
     
     Returns:
         Dictionary with task execution information
@@ -608,6 +610,10 @@ def fetch_apify_ads(
             "scrapePageAds.activeStatus": "all",  # Fixed value as per API requirements
             "period": period,
         }
+        
+        # Add limit if specified
+        if limit_per_source is not None:
+            run_input["limitPerSource"] = limit_per_source
         
         logger.info(f"Calling Apify actor {actor_id} with input: {run_input}")
         
@@ -1503,7 +1509,8 @@ def competitor_research_task(user_id: int, website_url: str) -> Dict[str, Any]:
                     page_id=fb_page.page_id,
                     backload_id=backload.id,
                     is_automated=True,
-                    user_id=user.id
+                    user_id=user.id,
+                    limit_per_source=2000
                 )
                 
                 if result.get('processed_count', 0) > 0:

@@ -3261,7 +3261,8 @@ def request_brand(request):
             page_id=facebook_page_id,
             backload_id=backload.pk,
             is_automated=True,
-            user_id=request.user.id
+            user_id=request.user.id,
+            limit_per_source=1000
         )
         
         # Send Slack notification for tracking

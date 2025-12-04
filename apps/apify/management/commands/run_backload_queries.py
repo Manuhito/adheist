@@ -85,7 +85,8 @@ class Command(BaseCommand):
                 output_dir=f"{output_dir}_{page.page_id}",
                 urls=[{'url': url}],
                 page_id=page.page_id,
-                backload_id=obj.pk
+                backload_id=obj.pk,
+                limit_per_source=1000
             )
             tasks_launched += 1
         
