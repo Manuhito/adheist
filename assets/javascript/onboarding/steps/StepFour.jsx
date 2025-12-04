@@ -1,8 +1,59 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
 import Bars from '../components/Bars';
+
+// SSE Event Handler hook for real-time ad updates
+function useSSEListener(onEvent) {
+  const eventSourceRef = useRef(null);
+
+  useEffect(() => {
+    // Create EventSource connection to the SSE endpoint
+    const eventSource = new EventSource('/ads/sse/adrequest-updates/');
+    eventSourceRef.current = eventSource;
+
+    // Connection opened
+    eventSource.addEventListener('connected', (event) => {
+      console.log('SSE connected:', event.data);
+      onEvent('connected', JSON.parse(event.data));
+    });
+
+    // New ad created during onboarding
+    eventSource.addEventListener('onboarding_ad_created', (event) => {
+      console.log('SSE onboarding_ad_created:', event.data);
+      onEvent('onboarding_ad_created', JSON.parse(event.data));
+    });
+
+    // Competitor research completed
+    eventSource.addEventListener('competitor_research_completed', (event) => {
+      console.log('SSE competitor_research_completed:', event.data);
+      onEvent('competitor_research_completed', JSON.parse(event.data));
+    });
+
+    // Error handling
+    eventSource.onerror = (error) => {
+      console.error('SSE error:', error);
+      setTimeout(() => {
+        if (eventSourceRef.current) {
+          eventSourceRef.current.close();
+          eventSourceRef.current = null;
+        }
+      }, 5000);
+    };
+
+    // Cleanup on component unmount
+    return () => {
+      console.log('Cleaning up SSE connection');
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
+    };
+  }, [onEvent]);
+
+  return eventSourceRef.current;
+}
 
 // Ad Copy Text Display component with Read More/Less functionality (matching discover-page MediaItem)
 const AdCopyTextDisplay = ({ text }) => {
@@ -140,58 +191,68 @@ const StepFour = ({ onNext, initialData, setMascotMessageOverride }) => {
   const [ads, setAds] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [researchCompleted, setResearchCompleted] = useState(false);
 
+  // Handle SSE events
+  const handleSSEEvent = useCallback((eventType, data) => {
+    console.log('SSE Event received:', eventType, data);
+
+    if (eventType === 'onboarding_ad_created' && data.ad) {
+      // Add new ad to the list (avoid duplicates)
+      setAds(prevAds => {
+        const exists = prevAds.some(ad => ad.id === data.ad.id);
+        if (exists) return prevAds;
+        return [...prevAds, data.ad];
+      });
+      // Stop loading once we have at least one ad
+      setIsLoading(false);
+    }
+
+    if (eventType === 'competitor_research_completed') {
+      setResearchCompleted(true);
+      if (!data.success || data.ads_count === 0) {
+        // Only show error if we have no ads at all
+        setAds(prevAds => {
+          if (prevAds.length === 0) {
+            setError('No competitor ads were found. You can skip this step and explore ads later.');
+          }
+          return prevAds;
+        });
+      }
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Set up SSE listener
+  useSSEListener(handleSSEEvent);
+
+  // Initial check for already completed research (in case user refreshes page)
   useEffect(() => {
-    let pollingInterval = null;
-    let isMounted = true;
-
-    // Function to check competitor research status
-    const checkStatus = async () => {
+    const checkInitialStatus = async () => {
       try {
         const response = await fetch('/ads/api/competitor-ads/', {
           credentials: 'same-origin'
         });
         const data = await response.json();
 
-        if (!isMounted) return;
+        console.log('Initial competitor research status:', data);
 
-        console.log('Competitor research status:', data);
-
-        // Check if research is completed
         if (data.completed) {
-          // Stop polling
-          if (pollingInterval) {
-            clearInterval(pollingInterval);
-            pollingInterval = null;
-          }
-
+          setResearchCompleted(true);
           if (data.success && data.ads && data.ads.length > 0) {
             setAds(data.ads);
-            setIsLoading(false);
           } else {
-            // Research completed but no ads found
             setError('No competitor ads were found. You can skip this step and explore ads later.');
-            setIsLoading(false);
           }
+          setIsLoading(false);
         }
-        // If not completed, polling continues
+        // If not completed, SSE will handle updates
       } catch (e) {
-        console.error('Error checking competitor research status:', e);
+        console.error('Error checking initial competitor research status:', e);
       }
     };
 
-    // Check immediately
-    checkStatus();
-
-    // Poll every 3 seconds
-    pollingInterval = setInterval(checkStatus, 3000);
-
-    return () => {
-      isMounted = false;
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
-      }
-    };
+    checkInitialStatus();
   }, []);
 
   useEffect(() => {

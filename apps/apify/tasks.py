@@ -18,7 +18,7 @@ from apps.aiinterface.tasks import send_slack_notification
 logger = logging.getLogger(__name__)
 
 
-def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int = None, page_id: str = None, is_automated: bool = False) -> dict:
+def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int = None, page_id: str = None, is_automated: bool = False, user_id: int = None, is_onboarding: bool = False) -> dict:
     """
     Procesa los items de un dataset de Apify y crea entradas en AdLibrary para cada anuncio.
     
@@ -28,6 +28,8 @@ def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int
         backload_id: ID del Backload asociado a esta ejecución
         page_id: ID de la página de Facebook asociada a esta tarea
         is_automated: Si True, extrae datos adicionales para completar FacebookPage
+        user_id: ID del usuario (para notificaciones SSE en onboarding)
+        is_onboarding: Si True, envía notificaciones SSE por cada anuncio creado
         
     Returns:
         Diccionario con estadísticas de procesamiento
@@ -179,7 +181,7 @@ def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int
             # Check if this is an item with cards (multiple ads)
             if item.get('snapshot') and item['snapshot'].get('cards'):
                 logger.info(f"Processing item with cards: {meta_ad_id}")
-                result = create_adlibrary_from_cards(item, media_type, content_languages)
+                result = create_adlibrary_from_cards(item, media_type, content_languages, user_id=user_id, is_onboarding=is_onboarding)
                 processed_count += result['processed_count']
                 failed_count += result['failed_count']
                 errors.extend(result['errors'])
@@ -188,7 +190,7 @@ def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int
             # Process as a regular single ad item
             else:
                 logger.info(f"Processing item: {meta_ad_id}")
-                result = create_adlibrary_from_single_ad(item, media_type, content_languages)
+                result = create_adlibrary_from_single_ad(item, media_type, content_languages, user_id=user_id, is_onboarding=is_onboarding)
                 processed_count += result['processed_count']
                 failed_count += result['failed_count']
                 errors.extend(result['errors'])
@@ -213,7 +215,7 @@ def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int
     }
 
 
-def create_adlibrary_from_single_ad(item: dict, media_type: str, content_languages: list) -> Dict[str, Any]:
+def create_adlibrary_from_single_ad(item: dict, media_type: str, content_languages: list, user_id: int = None, is_onboarding: bool = False) -> Dict[str, Any]:
     """
     Create an AdLibrary entry from a single ad item without cards.
     
@@ -221,6 +223,8 @@ def create_adlibrary_from_single_ad(item: dict, media_type: str, content_languag
         item: Diccionario con datos del anuncio de Apify sin cards
         media_type: Tipo de medio del anuncio
         content_languages: Lista de idiomas del contenido
+        user_id: ID del usuario (para notificaciones SSE en onboarding)
+        is_onboarding: Si True, envía notificación SSE al crear el anuncio
         
     Returns:
         Diccionario con estadísticas de procesamiento
@@ -368,6 +372,10 @@ def create_adlibrary_from_single_ad(item: dict, media_type: str, content_languag
         processed_count += 1
         logger.info(f"Successfully created AdLibrary entry for ad ID {meta_ad_id}")
         
+        # Send SSE notification if onboarding
+        if is_onboarding and user_id:
+            send_onboarding_ad_created_notification(user_id, ad_library)
+        
     except Exception as e:
         error_msg = f"Error processing ad ID {meta_ad_id}: {str(e)}"
         logger.error(error_msg)
@@ -381,7 +389,7 @@ def create_adlibrary_from_single_ad(item: dict, media_type: str, content_languag
     }
 
 
-def create_adlibrary_from_cards(item: dict, media_type: str, content_languages: List[str]) -> dict:
+def create_adlibrary_from_cards(item: dict, media_type: str, content_languages: List[str], user_id: int = None, is_onboarding: bool = False) -> dict:
     """
     Crea entradas de AdLibrary a partir de un item que contiene múltiples cards.
     
@@ -389,6 +397,8 @@ def create_adlibrary_from_cards(item: dict, media_type: str, content_languages: 
         item: Diccionario con datos del anuncio de Apify que contiene cards
         media_type: Tipo de medio del anuncio
         content_languages: Lista de idiomas del contenido
+        user_id: ID del usuario (para notificaciones SSE en onboarding)
+        is_onboarding: Si True, envía notificación SSE al crear cada anuncio
         
     Returns:
         Diccionario con estadísticas de procesamiento
@@ -532,6 +542,10 @@ def create_adlibrary_from_cards(item: dict, media_type: str, content_languages: 
             processed_count += 1
             logger.info(f"Successfully created AdLibrary entry for card {index} in ad ID {meta_ad_id}")
             
+            # Send SSE notification if onboarding
+            if is_onboarding and user_id:
+                send_onboarding_ad_created_notification(user_id, ad_library)
+            
         except Exception as e:
             error_msg = f"Error processing card {index} in ad ID {meta_ad_id}: {str(e)}"
             logger.error(error_msg)
@@ -555,7 +569,8 @@ def fetch_apify_ads(
     backload_id: int = None,
     is_automated: bool = False,
     user_id: int = None,
-    limit_per_source: int = None
+    limit_per_source: int = None,
+    is_onboarding: bool = False
 ) -> Dict[str, Any]:
     """
     Celery task to fetch ads from Apify API.
@@ -571,6 +586,7 @@ def fetch_apify_ads(
         backload_id: ID of the Backload object to update with error logs
         is_automated: Si True, extrae datos adicionales para completar FacebookPage
         limit_per_source: Límite de registros a recibir de Apify (opcional)
+        is_onboarding: Si True, envía notificaciones SSE por cada anuncio creado
     
     Returns:
         Dictionary with task execution information
@@ -720,7 +736,7 @@ def fetch_apify_ads(
                 logger.error(f"Error sending SSE fetch-completed notification: {str(e)}")
         
         # Fetch and process items from the dataset
-        processing_result = process_apify_dataset(dataset_id, client, backload_id, page_id, is_automated)
+        processing_result = process_apify_dataset(dataset_id, client, backload_id, page_id, is_automated, user_id=user_id, is_onboarding=is_onboarding)
         
         # Update Backload status to SUCCESS
         if backload_id:
@@ -1262,6 +1278,79 @@ def _send_competitor_research_sse(user_id: int, competitor_url: str, page_name: 
         logger.error(f"Error sending competitor research SSE notification: {str(e)}")
 
 
+def send_existing_ads_notifications(user_id: int, fb_page) -> int:
+    """
+    Send SSE notifications for existing ads when a competitor with ads is found.
+    This is used when ads already exist in the database and don't need to be created.
+    
+    Args:
+        user_id: ID of the user to notify
+        fb_page: The FacebookPage instance with existing ads
+        
+    Returns:
+        Number of ads sent
+    """
+    from apps.ads.models import AdLibrary
+    
+    try:
+        # Get active ads for this page (limit to avoid overwhelming the frontend)
+        ads = AdLibrary.objects.filter(
+            facebook_page=fb_page,
+            meta_status=AdLibrary.STATUS_ACTIVE,
+            ad_image__isnull=False
+        ).exclude(ad_image='').order_by('-ad_delivery_start_time')[:20]
+        
+        sent_count = 0
+        for ad_library in ads:
+            send_onboarding_ad_created_notification(user_id, ad_library)
+            sent_count += 1
+            
+        logger.info(f"Sent {sent_count} existing ad notifications to user {user_id}")
+        return sent_count
+    except Exception as e:
+        logger.error(f"Error sending existing ads notifications: {str(e)}")
+        return 0
+
+
+def send_onboarding_ad_created_notification(user_id: int, ad_library) -> None:
+    """
+    Send SSE notification when a new ad is created during onboarding.
+    
+    Args:
+        user_id: ID of the user to notify
+        ad_library: The AdLibrary instance that was created
+    """
+    try:
+        import redis
+        import json
+        from django.conf import settings
+        from django.utils import timezone
+        
+        redis_client = redis.from_url(settings.REDIS_URL)
+        
+        # Build ad data for frontend
+        ad_data = {
+            'id': ad_library.id,
+            'image_url': ad_library.ad_image.url if ad_library.ad_image else None,
+            'ad_copy': ad_library.ad_creative_bodies or '',
+            'page_name': ad_library.facebook_page.page_name if ad_library.facebook_page else 'Unknown',
+            'page_url': ad_library.facebook_page.page_url if ad_library.facebook_page else '',
+            'started_running_on': ad_library.ad_delivery_start_time.isoformat() if ad_library.ad_delivery_start_time else None,
+        }
+        
+        notification_data = {
+            'type': 'onboarding_ad_created',
+            'ad': ad_data,
+            'timestamp': timezone.now().isoformat()
+        }
+        
+        channel = f"user:{user_id}:adrequest_updates"
+        redis_client.publish(channel, json.dumps(notification_data))
+        logger.info(f"Sent onboarding ad created SSE notification to user {user_id} for ad {ad_library.id}")
+    except Exception as e:
+        logger.error(f"Error sending onboarding ad created SSE notification: {str(e)}")
+
+
 def extract_fb_name_from_url(url: str) -> Optional[str]:
     """
     Extract the Facebook page name/slug from a Facebook URL.
@@ -1393,7 +1482,10 @@ def competitor_research_task(user_id: int, website_url: str) -> Dict[str, Any]:
                 logger.info(f"FacebookPage {fb_page.page_id} has {ads_count} active ads")
                 
                 if ads_count > 0:
-                    # Found ads! Save and return
+                    # Found ads! Send SSE notifications for existing ads
+                    send_existing_ads_notifications(user_id, fb_page)
+                    
+                    # Save and return
                     found_advertiser = True
                     successful_competitor = competitor_url
                     try:
@@ -1403,6 +1495,15 @@ def competitor_research_task(user_id: int, website_url: str) -> Dict[str, Any]:
                         logger.info(f"Saved competitor page {fb_page.page_id} to UserOnboarding")
                     except Exception as e:
                         logger.error(f"Error saving competitor to onboarding: {str(e)}")
+                    
+                    # Send completion notification
+                    _send_competitor_research_sse(
+                        user_id=user_id,
+                        competitor_url=competitor_url,
+                        page_name=fb_page.page_name,
+                        ads_count=ads_count,
+                        success=True
+                    )
                     break
                 else:
                     # Page exists but no ads - skip to next competitor
@@ -1510,7 +1611,8 @@ def competitor_research_task(user_id: int, website_url: str) -> Dict[str, Any]:
                     backload_id=backload.id,
                     is_automated=True,
                     user_id=user.id,
-                    limit_per_source=2000
+                    limit_per_source=2000,
+                    is_onboarding=True
                 )
                 
                 if result.get('processed_count', 0) > 0:
@@ -1524,6 +1626,15 @@ def competitor_research_task(user_id: int, website_url: str) -> Dict[str, Any]:
                         logger.info(f"Saved competitor page {fb_page.page_id} to UserOnboarding")
                     except Exception as e:
                         logger.error(f"Error saving competitor to onboarding: {str(e)}")
+                    
+                    # Send completion notification (ads were already sent via is_onboarding=True)
+                    _send_competitor_research_sse(
+                        user_id=user_id,
+                        competitor_url=competitor_url,
+                        page_name=fb_page.page_name,
+                        ads_count=result.get('processed_count', 0),
+                        success=True
+                    )
                     break
                 else:
                     logger.info("Backload returned 0 ads, trying next competitor")
@@ -1532,7 +1643,9 @@ def competitor_research_task(user_id: int, website_url: str) -> Dict[str, Any]:
                 logger.error(f"Error running fetch_apify_ads: {str(e)}")
                 
         else:
-            # We have ads already
+            # We have ads already - send SSE notifications for existing ads
+            send_existing_ads_notifications(user_id, fb_page)
+            
             found_advertiser = True
             successful_competitor = competitor_url
             logger.info("Advertiser already has ads, stopping research")
@@ -1543,6 +1656,15 @@ def competitor_research_task(user_id: int, website_url: str) -> Dict[str, Any]:
                 logger.info(f"Saved competitor page {fb_page.page_id} to UserOnboarding")
             except Exception as e:
                 logger.error(f"Error saving competitor to onboarding: {str(e)}")
+            
+            # Send completion notification
+            _send_competitor_research_sse(
+                user_id=user_id,
+                competitor_url=competitor_url,
+                page_name=fb_page.page_name,
+                ads_count=ads_count,
+                success=True
+            )
             break
     
     # Mark as completed even if no ads found
@@ -1551,6 +1673,15 @@ def competitor_research_task(user_id: int, website_url: str) -> Dict[str, Any]:
             onboarding.competitor_research_completed = True
             onboarding.save(update_fields=['competitor_research_completed'])
             logger.info("Competitor research completed with no ads found")
+            
+            # Send failure notification
+            _send_competitor_research_sse(
+                user_id=user_id,
+                competitor_url='',
+                page_name='',
+                ads_count=0,
+                success=False
+            )
         except Exception as e:
             logger.error(f"Error marking research as completed: {str(e)}")
             
