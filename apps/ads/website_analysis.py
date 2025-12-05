@@ -143,15 +143,19 @@ def download_website_content_with_playwright(url: str) -> str:
         # Navigate and wait for network to be idle (content fully loaded)
         page.goto(url, wait_until='networkidle')
         
-        # Try to accept cookie banners
-        try:
-            page.click('button:has-text("Accept")', timeout=2000)
-        except:
-            pass
-        try:
-            page.click('button:has-text("Aceptar")', timeout=1000)
-        except:
-            pass
+        # Try to accept cookie banners (multiple languages)
+        cookie_buttons = [
+            'Accept', 'Accept All', 'Accept Cookies', 'I Accept', 'OK', 'Got it',
+            'Aceptar', 'Aceptar todo', 'Aceptar cookies',
+            'Akzeptieren', 'Alle akzeptieren',
+            'Accepter', 'Tout accepter',
+        ]
+        for btn_text in cookie_buttons:
+            try:
+                page.click(f'button:has-text("{btn_text}")', timeout=500)
+                break
+            except:
+                pass
         
         # Additional wait for dynamic content to render
         page.wait_for_timeout(2000)  # Wait 2 seconds for JS to execute
@@ -186,15 +190,19 @@ def capture_screenshot_with_playwright(url: str) -> str:
         # Navigate and wait for network to be idle
         page.goto(url, wait_until='networkidle')
         
-        # Try to accept cookie banners
-        try:
-            page.click('button:has-text("Accept")', timeout=2000)
-        except:
-            pass
-        try:
-            page.click('button:has-text("Aceptar")', timeout=1000)
-        except:
-            pass
+        # Try to accept cookie banners (multiple languages)
+        cookie_buttons = [
+            'Accept', 'Accept All', 'Accept Cookies', 'I Accept', 'OK', 'Got it',
+            'Aceptar', 'Aceptar todo', 'Aceptar cookies',
+            'Akzeptieren', 'Alle akzeptieren',
+            'Accepter', 'Tout accepter',
+        ]
+        for btn_text in cookie_buttons:
+            try:
+                page.click(f'button:has-text("{btn_text}")', timeout=500)
+                break
+            except:
+                pass
         
         # Additional wait for dynamic content to render
         page.wait_for_timeout(2000)
