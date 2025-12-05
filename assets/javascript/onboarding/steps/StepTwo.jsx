@@ -236,9 +236,6 @@ const StepTwo = ({ onNext, initialData, setMascotMessageOverride }) => {
       <div className="flex flex-col items-center justify-center min-h-[60vh] w-full">
         <div className="flex flex-col items-center gap-4">
           <Bars size={64} className="text-primary" />
-          <p className="text-muted-foreground font-medium animate-pulse">
-            Taking a snapshot of your website...
-          </p>
         </div>
       </div>
     );

@@ -126,7 +126,7 @@ def download_website_content_with_playwright(url: str) -> str:
     """
     with sync_playwright() as p:
         browser = p.chromium.launch(
-            headless="new",  # New headless mode, harder to detect
+            headless=True,
             args=['--disable-blink-features=AutomationControlled']
         )
         context = browser.new_context(
@@ -173,7 +173,7 @@ def capture_screenshot_with_playwright(url: str) -> str:
     import base64
     with sync_playwright() as p:
         browser = p.chromium.launch(
-            headless="new",  # New headless mode, harder to detect
+            headless=True,
             args=['--disable-blink-features=AutomationControlled']
         )
         context = browser.new_context(
