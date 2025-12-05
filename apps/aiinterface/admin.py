@@ -10,6 +10,7 @@ class ReplicateConfigurationAdmin(admin.ModelAdmin):
     list_display = (
         'image_replicate_model',
         'image_replicate_model_version',
+        'competitor_research_model',
         'image_generation_price',
         'timeout_seconds',
         'polling_interval_seconds',
@@ -19,6 +20,10 @@ class ReplicateConfigurationAdmin(admin.ModelAdmin):
         ('Replicate Image Model Configuration', {
             'fields': ('image_replicate_model', 'image_replicate_model_version'),
             'description': 'Configure Replicate model for image generation. Format: owner/model-name. Leave version empty to use latest.'
+        }),
+        ('Competitor Research Configuration', {
+            'fields': ('competitor_research_model',),
+            'description': 'Configure Replicate model used for competitor research (e.g., google/gemini-3-pro).'
         }),
         ('Pricing Configuration', {
             'fields': ('image_generation_price',),
