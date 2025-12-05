@@ -111,6 +111,14 @@ def extract_text_from_html(html_content: bytes) -> str:
         return html_content[:10000]  # Fallback to raw HTML truncated
 
 
+# Anti-fingerprinting script to inject into pages
+ANTI_FINGERPRINT_SCRIPT = """
+    Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+    Object.defineProperty(navigator, 'plugins', {get: () => [1, 2, 3, 4, 5]});
+    Object.defineProperty(navigator, 'languages', {get: () => ['en-US', 'en']});
+    window.chrome = { runtime: {} };
+"""
+
 def download_website_content_with_playwright(url: str) -> str:
     """
     Download and extract text content from a website using Playwright.
@@ -118,7 +126,7 @@ def download_website_content_with_playwright(url: str) -> str:
     """
     with sync_playwright() as p:
         browser = p.chromium.launch(
-            headless=True,
+            headless="new",  # New headless mode, harder to detect
             args=['--disable-blink-features=AutomationControlled']
         )
         context = browser.new_context(
@@ -129,11 +137,21 @@ def download_website_content_with_playwright(url: str) -> str:
         )
         page = context.new_page()
         
-        # Hide webdriver flag to avoid detection
-        page.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+        # Inject anti-fingerprinting script
+        page.add_init_script(ANTI_FINGERPRINT_SCRIPT)
         
         # Navigate and wait for network to be idle (content fully loaded)
         page.goto(url, wait_until='networkidle')
+        
+        # Try to accept cookie banners
+        try:
+            page.click('button:has-text("Accept")', timeout=2000)
+        except:
+            pass
+        try:
+            page.click('button:has-text("Aceptar")', timeout=1000)
+        except:
+            pass
         
         # Additional wait for dynamic content to render
         page.wait_for_timeout(2000)  # Wait 2 seconds for JS to execute
@@ -151,7 +169,7 @@ def capture_screenshot_with_playwright(url: str) -> str:
     import base64
     with sync_playwright() as p:
         browser = p.chromium.launch(
-            headless=True,
+            headless="new",  # New headless mode, harder to detect
             args=['--disable-blink-features=AutomationControlled']
         )
         context = browser.new_context(
@@ -162,11 +180,21 @@ def capture_screenshot_with_playwright(url: str) -> str:
         )
         page = context.new_page()
         
-        # Hide webdriver flag to avoid detection
-        page.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+        # Inject anti-fingerprinting script
+        page.add_init_script(ANTI_FINGERPRINT_SCRIPT)
         
         # Navigate and wait for network to be idle
         page.goto(url, wait_until='networkidle')
+        
+        # Try to accept cookie banners
+        try:
+            page.click('button:has-text("Accept")', timeout=2000)
+        except:
+            pass
+        try:
+            page.click('button:has-text("Aceptar")', timeout=1000)
+        except:
+            pass
         
         # Additional wait for dynamic content to render
         page.wait_for_timeout(2000)
