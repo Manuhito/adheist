@@ -11,10 +11,13 @@ const STORAGE_KEY = 'requestBrandProgressState';
 const initialState = {
   backloadId: null,
   pageId: null,
+  pageName: null,
   hasProcessedAds: false,
+  adsCount: 0,
   progressPhase: 'idle', // 'idle' | 'searching' | 'saving' | 'done'
   progressValue: 0,
   canCloseProgress: false,
+  canViewAds: false,
 };
 
 let state = { ...initialState };
@@ -24,22 +27,40 @@ let progressContainer = null;
 let progressRoot = null;
 let requestStateListener = null;
 
-const RequestBrandProgressAlert = ({ phase, progress, canClose, onClose, pageId, hasAds }) => {
+const RequestBrandProgressAlert = ({
+  phase,
+  progress,
+  canClose,
+  onClose,
+  pageId,
+  pageName,
+  hasAds,
+  adsCount,
+  canViewAds,
+}) => {
   let message = '';
 
   if (phase === 'searching') {
     message = 'Searching ads for the requested advertiser';
   } else if (phase === 'saving') {
-    message = 'Saving the ads we found';
+    if (pageName) {
+      message = `Saving ads from ${pageName}${adsCount > 0 ? ` (${adsCount} found)` : ''}`;
+    } else {
+      message = 'Saving the ads we found';
+    }
   } else if (phase === 'done') {
     if (hasAds) {
-      message = 'The ads are now available';
+      message = pageName
+        ? `${adsCount} ads from ${pageName} are now available`
+        : 'The ads are now available';
     } else {
       message = "We couldn't extract any ads for this advertiser.";
     }
   }
 
   if (!message) return null;
+
+  const showViewAdsButton = canViewAds && pageId && (phase === 'saving' || phase === 'done');
 
   return (
     <div className="fixed bottom-6 right-6 z-50 w-[380px] animate-in fade-in slide-in-from-bottom-5">
@@ -72,17 +93,29 @@ const RequestBrandProgressAlert = ({ phase, progress, canClose, onClose, pageId,
       >
         <div className="flex flex-col w-full">
           <p className="text-sm mb-2">{message}</p>
-          {phase === 'done' && hasAds && pageId && (
+          {showViewAdsButton && (
             <div className="mt-1 flex justify-end">
-              <button
-                type="button"
-                className="text-xs font-medium text-blue-600 hover:text-blue-700 underline"
-                onClick={() => {
-                  window.location.href = `/ads/discover/?company=${pageId}`;
-                }}
-              >
-                Go to discover
-              </button>
+              {phase === 'saving' ? (
+                <button
+                  type="button"
+                  className="text-xs font-medium text-blue-600 hover:text-blue-700 underline"
+                  onClick={() => {
+                    window.location.href = `/ads/discover/?page_id=${pageId}&live=true`;
+                  }}
+                >
+                  View Ads Live
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="text-xs font-medium text-blue-600 hover:text-blue-700 underline"
+                  onClick={() => {
+                    window.location.href = `/ads/discover/?page_id=${pageId}`;
+                  }}
+                >
+                  Go to discover
+                </button>
+              )}
             </div>
           )}
           <div className="mt-2 h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -102,10 +135,13 @@ function persistState() {
     const dataToStore = {
       backloadId: state.backloadId,
       pageId: state.pageId,
+      pageName: state.pageName,
       hasProcessedAds: state.hasProcessedAds,
+      adsCount: state.adsCount,
       progressPhase: state.progressPhase,
       progressValue: state.progressValue,
       canCloseProgress: state.canCloseProgress,
+      canViewAds: state.canViewAds,
     };
     if (!dataToStore.backloadId) {
       window.localStorage.removeItem(STORAGE_KEY);
@@ -193,7 +229,10 @@ function renderProgressAlert() {
       canClose={state.canCloseProgress}
       onClose={handleProgressClose}
       pageId={state.pageId}
+      pageName={state.pageName}
       hasAds={state.hasProcessedAds}
+      adsCount={state.adsCount}
+      canViewAds={state.canViewAds}
     />
   );
 }
@@ -242,12 +281,53 @@ function initSSE() {
 
   eventSource = new EventSource('/ads/sse/adrequest-updates/');
 
+  // Brand info available - we now have the page name and can show View Ads button
+  eventSource.addEventListener('brand_info_available', (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      if (data.backload_id === state.backloadId) {
+        state.pageName = data.page_name;
+        state.pageId = data.page_id || state.pageId;
+        state.canViewAds = true;
+        persistState();
+        renderProgressAlert();
+      }
+    } catch (e) {
+      // Ignore parse errors for unrelated events
+    }
+  });
+
+  // New ad created during request brand process
+  eventSource.addEventListener('request_brand_ad_created', (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      if (data.backload_id === state.backloadId) {
+        state.adsCount += 1;
+        state.hasProcessedAds = true;
+        if (data.ad && data.ad.page_name) {
+          state.pageName = data.ad.page_name;
+        }
+        if (data.ad && data.ad.page_id) {
+          state.pageId = data.ad.page_id;
+        }
+        state.canViewAds = true;
+        persistState();
+        renderProgressAlert();
+      }
+    } catch (e) {
+      // Ignore parse errors for unrelated events
+    }
+  });
+
   eventSource.addEventListener('backload_fetch_completed', (event) => {
     try {
       const data = JSON.parse(event.data);
       if (data.backload_id === state.backloadId) {
         state.progressPhase = 'saving';
         state.progressValue = Math.max(state.progressValue, 50);
+        if (data.page_name) {
+          state.pageName = data.page_name;
+        }
         persistState();
         startPhaseAnimation('saving');
         renderProgressAlert();
@@ -266,8 +346,12 @@ function initSSE() {
 
         if (data.processed_count && data.processed_count > 0) {
           state.hasProcessedAds = true;
+          state.adsCount = data.processed_count;
           if (data.page_id) {
             state.pageId = data.page_id;
+          }
+          if (data.page_name) {
+            state.pageName = data.page_name;
           }
         } else {
           state.hasProcessedAds = false;
@@ -303,10 +387,13 @@ export function startRequestBrandProgress({ backloadId, pageId }) {
 
   state.backloadId = backloadId;
   state.pageId = pageId || null;
+  state.pageName = null;
   state.hasProcessedAds = false;
+  state.adsCount = 0;
   state.progressPhase = 'searching';
   state.progressValue = 0;
   state.canCloseProgress = false;
+  state.canViewAds = false;
 
   persistState();
   renderProgressAlert();

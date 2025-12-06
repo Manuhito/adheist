@@ -127,6 +127,34 @@ def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int
                     facebook_page.save(update_fields=['page_name'])
                     page_name_updated = True
                     logger.info(f"Updated FacebookPage.page_name to: {item.get('page_name')}")
+
+                    # Notificar vía SSE que ya tenemos información de la marca (nombre de la página)
+                    if is_automated and user_id:
+                        try:
+                            import redis
+                            import json
+                            from django.conf import settings
+                            from django.utils import timezone
+
+                            redis_client = redis.from_url(settings.REDIS_URL)
+
+                            notification_data = {
+                                "type": "brand_info_available",
+                                "backload_id": backload_id,
+                                "page_id": page_id,
+                                "page_name": item.get("page_name"),
+                                "timestamp": timezone.now().isoformat(),
+                            }
+
+                            channel = f"user:{user_id}:adrequest_updates"
+                            redis_client.publish(channel, json.dumps(notification_data))
+                            logger.info(
+                                f"Sent SSE brand_info_available notification to user {user_id} for page {page_id}"
+                            )
+                        except Exception as e:
+                            logger.error(
+                                f"Error sending SSE brand_info_available notification: {str(e)}"
+                            )
                 
                 # 2. Extraer industries desde page_categories dentro de snapshot (solo si no es UNKNOWN)
                 if not industries_updated and snapshot.get('page_categories'):
@@ -181,7 +209,15 @@ def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int
             # Check if this is an item with cards (multiple ads)
             if item.get('snapshot') and item['snapshot'].get('cards'):
                 logger.info(f"Processing item with cards: {meta_ad_id}")
-                result = create_adlibrary_from_cards(item, media_type, content_languages, user_id=user_id, is_onboarding=is_onboarding)
+                result = create_adlibrary_from_cards(
+                    item,
+                    media_type,
+                    content_languages,
+                    user_id=user_id,
+                    is_onboarding=is_onboarding,
+                    is_automated=is_automated,
+                    backload_id=backload_id,
+                )
                 processed_count += result['processed_count']
                 failed_count += result['failed_count']
                 errors.extend(result['errors'])
@@ -190,7 +226,15 @@ def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int
             # Process as a regular single ad item
             else:
                 logger.info(f"Processing item: {meta_ad_id}")
-                result = create_adlibrary_from_single_ad(item, media_type, content_languages, user_id=user_id, is_onboarding=is_onboarding)
+                result = create_adlibrary_from_single_ad(
+                    item,
+                    media_type,
+                    content_languages,
+                    user_id=user_id,
+                    is_onboarding=is_onboarding,
+                    is_automated=is_automated,
+                    backload_id=backload_id,
+                )
                 processed_count += result['processed_count']
                 failed_count += result['failed_count']
                 errors.extend(result['errors'])
@@ -215,7 +259,15 @@ def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int
     }
 
 
-def create_adlibrary_from_single_ad(item: dict, media_type: str, content_languages: list, user_id: int = None, is_onboarding: bool = False) -> Dict[str, Any]:
+def create_adlibrary_from_single_ad(
+    item: dict,
+    media_type: str,
+    content_languages: list,
+    user_id: int = None,
+    is_onboarding: bool = False,
+    is_automated: bool = False,
+    backload_id: int = None,
+) -> Dict[str, Any]:
     """
     Create an AdLibrary entry from a single ad item without cards.
     
@@ -223,8 +275,10 @@ def create_adlibrary_from_single_ad(item: dict, media_type: str, content_languag
         item: Diccionario con datos del anuncio de Apify sin cards
         media_type: Tipo de medio del anuncio
         content_languages: Lista de idiomas del contenido
-        user_id: ID del usuario (para notificaciones SSE en onboarding)
-        is_onboarding: Si True, envía notificación SSE al crear el anuncio
+        user_id: ID del usuario (para notificaciones SSE en onboarding / request brand)
+        is_onboarding: Si True, envía notificación SSE al crear el anuncio (onboarding)
+        is_automated: Si True, envía notificación SSE para request brand
+        backload_id: ID del backload para filtrar notificaciones
         
     Returns:
         Diccionario con estadísticas de procesamiento
@@ -375,6 +429,10 @@ def create_adlibrary_from_single_ad(item: dict, media_type: str, content_languag
         # Send SSE notification if onboarding
         if is_onboarding and user_id:
             send_onboarding_ad_created_notification(user_id, ad_library)
+
+        # Send SSE notification if this ad comes from an automated request brand backload
+        if is_automated and user_id:
+            send_request_brand_ad_created_notification(user_id, ad_library, backload_id)
         
     except Exception as e:
         error_msg = f"Error processing ad ID {meta_ad_id}: {str(e)}"
@@ -389,7 +447,15 @@ def create_adlibrary_from_single_ad(item: dict, media_type: str, content_languag
     }
 
 
-def create_adlibrary_from_cards(item: dict, media_type: str, content_languages: List[str], user_id: int = None, is_onboarding: bool = False) -> dict:
+def create_adlibrary_from_cards(
+    item: dict,
+    media_type: str,
+    content_languages: List[str],
+    user_id: int = None,
+    is_onboarding: bool = False,
+    is_automated: bool = False,
+    backload_id: int = None,
+) -> dict:
     """
     Crea entradas de AdLibrary a partir de un item que contiene múltiples cards.
     
@@ -397,8 +463,10 @@ def create_adlibrary_from_cards(item: dict, media_type: str, content_languages: 
         item: Diccionario con datos del anuncio de Apify que contiene cards
         media_type: Tipo de medio del anuncio
         content_languages: Lista de idiomas del contenido
-        user_id: ID del usuario (para notificaciones SSE en onboarding)
-        is_onboarding: Si True, envía notificación SSE al crear cada anuncio
+        user_id: ID del usuario (para notificaciones SSE en onboarding / request brand)
+        is_onboarding: Si True, envía notificación SSE al crear cada anuncio (onboarding)
+        is_automated: Si True, envía notificación SSE para request brand
+        backload_id: ID del backload para filtrar notificaciones
         
     Returns:
         Diccionario con estadísticas de procesamiento
@@ -545,6 +613,10 @@ def create_adlibrary_from_cards(item: dict, media_type: str, content_languages: 
             # Send SSE notification if onboarding
             if is_onboarding and user_id:
                 send_onboarding_ad_created_notification(user_id, ad_library)
+
+            # Send SSE notification if this ad comes from an automated request brand backload
+            if is_automated and user_id:
+                send_request_brand_ad_created_notification(user_id, ad_library, backload_id)
             
         except Exception as e:
             error_msg = f"Error processing card {index} in ad ID {meta_ad_id}: {str(e)}"
@@ -1349,6 +1421,47 @@ def send_onboarding_ad_created_notification(user_id: int, ad_library) -> None:
         logger.info(f"Sent onboarding ad created SSE notification to user {user_id} for ad {ad_library.id}")
     except Exception as e:
         logger.error(f"Error sending onboarding ad created SSE notification: {str(e)}")
+
+
+def send_request_brand_ad_created_notification(user_id: int, ad_library, backload_id: int = None) -> None:
+    """Send SSE notification when a new ad is created during request brand process."""
+    try:
+        import redis
+        import json
+        from django.conf import settings
+        from django.utils import timezone
+
+        redis_client = redis.from_url(settings.REDIS_URL)
+
+        ad_data = {
+            "id": ad_library.id,
+            "image_url": ad_library.ad_image.url if ad_library.ad_image else None,
+            "ad_copy": ad_library.ad_creative_bodies or "",
+            "ad_creative_bodies": ad_library.ad_creative_bodies or "",
+            "page_name": ad_library.facebook_page.page_name if ad_library.facebook_page else "Unknown",
+            "page_id": ad_library.facebook_page.page_id if ad_library.facebook_page else None,
+            "page_url": ad_library.facebook_page.page_url if ad_library.facebook_page else "",
+            "started_running_on": ad_library.ad_delivery_start_time.isoformat()
+            if ad_library.ad_delivery_start_time
+            else None,
+        }
+
+        notification_data = {
+            "type": "request_brand_ad_created",
+            "backload_id": backload_id,
+            "ad": ad_data,
+            "timestamp": timezone.now().isoformat(),
+        }
+
+        channel = f"user:{user_id}:adrequest_updates"
+        redis_client.publish(channel, json.dumps(notification_data))
+        logger.info(
+            f"Sent request_brand ad created SSE notification to user {user_id} for ad {ad_library.id}"
+        )
+    except Exception as e:
+        logger.error(
+            f"Error sending request_brand ad created SSE notification: {str(e)}"
+        )
 
 
 def extract_fb_name_from_url(url: str) -> Optional[str]:
