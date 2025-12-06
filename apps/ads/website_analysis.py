@@ -4,7 +4,7 @@ import logging
 import re
 from typing import Dict, Any, Optional
 from urllib.parse import urlparse
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 from bs4 import BeautifulSoup
 import openai
 from django.conf import settings
@@ -124,46 +124,75 @@ def download_website_content_with_playwright(url: str) -> str:
     Download and extract text content from a website using Playwright.
     Includes anti-detection strategies to avoid bot blocking.
     """
+    """Download HTML using Playwright with resilient timeout handling.
+
+    Tries a strict "networkidle" wait first and, on timeout, falls back
+    to a more permissive "load" event before continuing. Never raises
+    for timeout alone; callers can still fall back to requests.
+    """
     with sync_playwright() as p:
         browser = p.chromium.launch(
             headless=True,
             args=['--disable-blink-features=AutomationControlled']
         )
-        context = browser.new_context(
-            viewport={"width": 1280, "height": 800},
-            screen={"width": 1920, "height": 1080},
-            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            locale="en-US",
-        )
-        page = context.new_page()
-        
-        # Inject anti-fingerprinting script
-        page.add_init_script(ANTI_FINGERPRINT_SCRIPT)
-        
-        # Navigate and wait for network to be idle (content fully loaded)
-        page.goto(url, wait_until='networkidle')
-        
-        # Try to accept cookie banners (multiple languages)
-        cookie_buttons = [
-            'Accept', 'Accept All', 'Accept Cookies', 'I Accept', 'OK', 'Got it',
-            'Aceptar', 'Aceptar todo', 'Aceptar cookies',
-            'Akzeptieren', 'Alle akzeptieren',
-            'Accepter', 'Tout accepter',
-        ]
-        for btn_text in cookie_buttons:
+        try:
+            context = browser.new_context(
+                viewport={"width": 1280, "height": 800},
+                screen={"width": 1920, "height": 1080},
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                locale="en-US",
+            )
+            page = context.new_page()
+            
+            # Inject anti-fingerprinting script
+            page.add_init_script(ANTI_FINGERPRINT_SCRIPT)
+            
+            # Navigate and wait for content. Prefer networkidle but degrade
+            # gracefully on timeout.
             try:
-                page.click(f'button:has-text("{btn_text}")', timeout=500)
-                break
-            except:
-                pass
-        
-        # Additional wait for dynamic content to render
-        page.wait_for_timeout(2000)  # Wait 2 seconds for JS to execute
-        
-        content = page.content()
-        log.info(f"Playwright captured {len(content)} characters of HTML")
-        browser.close()
-        return content
+                log.info(f"Playwright navigating to %s with wait_until='networkidle'", url)
+                page.goto(url, wait_until='networkidle', timeout=30000)
+            except PlaywrightTimeoutError as e:
+                log.warning(
+                    "Playwright networkidle timeout for %s: %s. Falling back to wait_until='load'",
+                    url,
+                    str(e),
+                )
+                try:
+                    page.goto(url, wait_until='load', timeout=15000)
+                except PlaywrightTimeoutError as e2:
+                    # Even 'load' timed out; log and continue with whatever HTML we have.
+                    log.error(
+                        "Playwright load timeout for %s: %s. Proceeding with partial/empty content.",
+                        url,
+                        str(e2),
+                    )
+            
+            # Try to accept cookie banners (multiple languages)
+            cookie_buttons = [
+                'Accept', 'Accept All', 'Accept Cookies', 'I Accept', 'OK', 'Got it',
+                'Aceptar', 'Aceptar todo', 'Aceptar cookies',
+                'Akzeptieren', 'Alle akzeptieren',
+                'Accepter', 'Tout accepter',
+            ]
+            for btn_text in cookie_buttons:
+                try:
+                    page.click(f'button:has-text("{btn_text}")', timeout=500)
+                    break
+                except Exception:
+                    pass
+            
+            # Additional wait for dynamic content to render
+            page.wait_for_timeout(2000)  # Wait 2 seconds for JS to execute
+            
+            content = page.content()
+            log.info(f"Playwright captured {len(content)} characters of HTML")
+            return content
+        finally:
+            try:
+                browser.close()
+            except Exception as close_error:
+                log.warning(f"Error closing Playwright browser for {url}: {str(close_error)}")
 
 def capture_screenshot_with_playwright(url: str) -> str:
     """
@@ -171,52 +200,77 @@ def capture_screenshot_with_playwright(url: str) -> str:
     Includes anti-detection strategies to avoid bot blocking.
     """
     import base64
-    with sync_playwright() as p:
-        browser = p.chromium.launch(
-            headless=True,
-            args=['--disable-blink-features=AutomationControlled']
-        )
-        context = browser.new_context(
-            viewport={"width": 1280, "height": 800},
-            screen={"width": 1920, "height": 1080},
-            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            locale="en-US",
-        )
-        page = context.new_page()
-        
-        # Inject anti-fingerprinting script
-        page.add_init_script(ANTI_FINGERPRINT_SCRIPT)
-        
-        # Navigate and wait for network to be idle
-        page.goto(url, wait_until='networkidle')
-        
-        # Try to accept cookie banners (multiple languages)
-        cookie_buttons = [
-            'Accept', 'Accept All', 'Accept Cookies', 'I Accept', 'OK', 'Got it',
-            'Aceptar', 'Aceptar todo', 'Aceptar cookies',
-            'Akzeptieren', 'Alle akzeptieren',
-            'Accepter', 'Tout accepter',
-        ]
-        for btn_text in cookie_buttons:
+    log.info(f"Starting screenshot capture with Playwright for URL: {url}")
+    screenshot_bytes = None
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(
+                headless=True,
+                args=['--disable-blink-features=AutomationControlled']
+            )
             try:
-                page.click(f'button:has-text("{btn_text}")', timeout=500)
-                break
-            except:
-                pass
-        
-        # Additional wait for dynamic content to render
-        page.wait_for_timeout(2000)
-        
-        # Take screenshot
-        screenshot_bytes = page.screenshot(full_page=False)
-        browser.close()
-        
-        # Convert to base64
-        return base64.b64encode(screenshot_bytes).decode('utf-8')
+                context = browser.new_context(
+                    viewport={"width": 1280, "height": 800},
+                    screen={"width": 1920, "height": 1080},
+                    user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                    locale="en-US",
+                )
+                page = context.new_page()
+                
+                # Inject anti-fingerprinting script
+                page.add_init_script(ANTI_FINGERPRINT_SCRIPT)
+
+                log.info(f"Playwright navigating to URL for screenshot: {url}")
+                try:
+                    page.goto(url, wait_until='networkidle')
+                except PlaywrightTimeoutError as e:
+                    log.error(f"Playwright timeout while loading URL for screenshot {url}: {str(e)}", exc_info=True)
+                    raise
+                
+                # Try to accept cookie banners (multiple languages)
+                cookie_buttons = [
+                    'Accept', 'Accept All', 'Accept Cookies', 'I Accept', 'OK', 'Got it',
+                    'Aceptar', 'Aceptar todo', 'Aceptar cookies',
+                    'Akzeptieren', 'Alle akzeptieren',
+                    'Accepter', 'Tout accepter',
+                ]
+                for btn_text in cookie_buttons:
+                    try:
+                        page.click(f'button:has-text("{btn_text}")', timeout=500)
+                        break
+                    except Exception:
+                        pass
+                
+                # Additional wait for dynamic content to render
+                page.wait_for_timeout(2000)
+                
+                # Take screenshot
+                screenshot_bytes = page.screenshot(full_page=False)
+                log.info(f"Screenshot captured for URL {url}, size={len(screenshot_bytes)} bytes")
+            finally:
+                try:
+                    browser.close()
+                except Exception as close_error:
+                    log.warning(f"Error while closing Playwright browser after screenshot for {url}: {str(close_error)}")
+    except Exception as e:
+        log.error(f"Error capturing screenshot for URL {url}: {str(e)}", exc_info=True)
+        raise
+
+    if not screenshot_bytes:
+        raise Exception(f"Screenshot capture returned empty bytes for URL {url}")
+
+    return base64.b64encode(screenshot_bytes).decode('utf-8')
 
 def download_website_content(url: str, selectors: list) -> str:
     """
     Download and extract text content from a website.
+    """
+    """Download and extract text content from a website.
+
+    This function is designed to be *best-effort* and avoid raising errors
+    for transient network / Playwright issues. It prefers Playwright for
+    JS-heavy sites but gracefully falls back to plain requests and, in the
+    worst case, returns a minimal placeholder string instead of raising.
     """
     try:
         # Ensure URL has a scheme
@@ -238,10 +292,33 @@ def download_website_content(url: str, selectors: list) -> str:
         decision = decide_scrape_mode(url, selectors)
         log.info(f"Scraping decision for {url}: {decision}")
 
+        text_content = ""
+
         if decision['mode'] == 'use_playwright':
             log.info(f"Using Playwright to download content from {url}")
-            html_content = download_website_content_with_playwright(url)
-            text_content = extract_text_from_html(html_content.encode('utf-8'))
+            try:
+                html_content = download_website_content_with_playwright(url)
+                text_content = extract_text_from_html(html_content.encode('utf-8'))
+            except Exception as e:
+                # If Playwright fails (timeouts, browser issues, etc.),
+                # fall back to plain requests instead of aborting.
+                log.warning(
+                    f"Playwright failed for {url} with error: {str(e)}. Falling back to requests-only.",
+                    exc_info=True,
+                )
+                try:
+                    response = requests.get(url, timeout=20, headers=headers, allow_redirects=True)
+                    response.raise_for_status()
+                    detected_encoding = response.apparent_encoding
+                    final_encoding = detected_encoding or 'utf-8'
+                    log.info(f"[fallback] Detected encoding: {detected_encoding}. Using: {final_encoding}")
+                    response.encoding = final_encoding
+                    text_content = extract_text_from_html(response.text.encode(final_encoding))
+                except Exception as req_e:
+                    log.error(
+                        f"Both Playwright and requests failed for {url}: {str(req_e)}",
+                        exc_info=True,
+                    )
         else:
             log.info(f"Using requests to download content from {url}")
             response = requests.get(url, timeout=15, headers=headers, allow_redirects=True)
@@ -256,15 +333,21 @@ def download_website_content(url: str, selectors: list) -> str:
             # Use response.text to get properly decoded content (requests handles decompression)
             text_content = extract_text_from_html(response.text.encode(final_encoding))
         
+        if not text_content:
+            log.warning(f"No text content extracted for {url}. Returning minimal placeholder.")
+            return f"No readable content could be extracted from {url}."
+        
         log.info(f"Successfully downloaded content from {url}, extracted {len(text_content)} characters")
         return text_content
         
     except requests.exceptions.RequestException as e:
-        log.error(f"Error downloading website {url}: {str(e)}")
-        raise Exception(f"Failed to download website content: {str(e)}")
+        log.error(f"Error downloading website {url}: {str(e)}", exc_info=True)
+        # Best-effort fallback: return an explanatory string instead of raising.
+        return f"Failed to download website content for {url}: {str(e)}"
     except Exception as e:
-        log.error(f"Unexpected error downloading website {url}: {str(e)}")
-        raise Exception(f"Unexpected error: {str(e)}")
+        log.error(f"Unexpected error downloading website {url}: {str(e)}", exc_info=True)
+        # Final fallback: never raise, always return some text so analysis can proceed.
+        return f"Unexpected error while downloading website content for {url}: {str(e)}"
 
 
 def analyze_website_with_openai(website_content: str, url: str) -> Dict[str, Any]:

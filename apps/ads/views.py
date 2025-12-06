@@ -4317,66 +4317,107 @@ def analyze_website_for_brand_assets(request):
 @login_required
 @require_http_methods(["POST"])
 def capture_website_screenshot(request):
-    """
-    Capture a screenshot of a website and save it to UserOnboarding.
-    
-    Args:
-        request: Django request object with 'website_url' in POST data
-        
-    Returns:
-        JsonResponse with base64 screenshot or error
+    """Capture a screenshot of a website and save it to UserOnboarding.
+
+    Expects ``website_url`` in POST data.
+    Returns a data URL with the screenshot or an error JSON.
     """
     try:
-        website_url = request.POST.get('website_url')
-        
+        website_url = request.POST.get("website_url")
+        logger.info(
+            "[capture_website_screenshot] Received request for website_url='%s' from user_id=%s",
+            website_url,
+            request.user.id,
+        )
+
         if not website_url:
-            return JsonResponse({
-                'success': False,
-                'error': 'Website URL is required'
-            }, status=400)
-            
+            logger.warning("[capture_website_screenshot] Missing website_url in POST data")
+            return JsonResponse(
+                {"success": False, "error": "Website URL is required"}, status=400
+            )
+
         # Ensure URL has scheme
-        if not website_url.startswith(('http://', 'https://')):
-            website_url = 'https://' + website_url
-            
+        original_url = website_url
+        if not website_url.startswith(("http://", "https://")):
+            website_url = "https://" + website_url
+            logger.info(
+                "[capture_website_screenshot] Normalized URL from '%s' to '%s'",
+                original_url,
+                website_url,
+            )
+        else:
+            logger.info(
+                "[capture_website_screenshot] Using provided URL '%s' without normalization",
+                website_url,
+            )
+
         from .website_analysis import capture_screenshot_with_playwright
-        
+
+        logger.info(
+            "[capture_website_screenshot] Calling capture_screenshot_with_playwright for URL '%s'",
+            website_url,
+        )
         screenshot_base64 = capture_screenshot_with_playwright(website_url)
-        
+        logger.info(
+            "[capture_website_screenshot] Screenshot captured for URL '%s', base64 length=%d",
+            website_url,
+            len(screenshot_base64),
+        )
+
         # Save screenshot to UserOnboarding
         try:
             from apps.users.models import UserOnboarding
             from django.core.files.base import ContentFile
             import base64
-            
+
+            logger.info(
+                "[capture_website_screenshot] Saving screenshot to UserOnboarding for user_id=%s",
+                request.user.id,
+            )
             onboarding, _ = UserOnboarding.objects.get_or_create(user=request.user)
-            
+
             # Decode base64 and save as image file
             screenshot_data = base64.b64decode(screenshot_base64)
             filename = f"screenshot_{request.user.id}.png"
-            onboarding.website_screenshot.save(filename, ContentFile(screenshot_data), save=False)
-            
+            onboarding.website_screenshot.save(
+                filename, ContentFile(screenshot_data), save=False
+            )
+
             # Also save as asset_image_1 for ad generation
             asset_filename = f"asset_screenshot_{request.user.id}.png"
-            onboarding.asset_image_1.save(asset_filename, ContentFile(screenshot_data), save=False)
-            
-            onboarding.save(update_fields=['website_screenshot', 'asset_image_1'])
-            
-        except Exception as save_error:
-            logging.error(f"Error saving screenshot to UserOnboarding: {str(save_error)}")
+            onboarding.asset_image_1.save(
+                asset_filename, ContentFile(screenshot_data), save=False
+            )
+
+            onboarding.save(update_fields=["website_screenshot", "asset_image_1"])
+            logger.info(
+                "[capture_website_screenshot] Screenshot saved successfully to UserOnboarding for user_id=%s",
+                request.user.id,
+            )
+
+        except Exception as save_error:  # noqa: BLE001
+            logger.error(
+                "[capture_website_screenshot] Error saving screenshot to UserOnboarding for user_id=%s, url='%s': %s",
+                request.user.id,
+                website_url,
+                save_error,
+                exc_info=True,
+            )
             # Continue anyway - screenshot capture was successful
-        
-        return JsonResponse({
-            'success': True,
-            'screenshot': f"data:image/png;base64,{screenshot_base64}"
-        })
-            
-    except Exception as e:
-        logging.error(f"Error capturing screenshot: {str(e)}")
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=500)
+
+        return JsonResponse(
+            {"success": True, "screenshot": f"data:image/png;base64,{screenshot_base64}"}
+        )
+
+    except Exception as e:  # noqa: BLE001
+        logger.error(
+            "[capture_website_screenshot] Error capturing screenshot for raw_url='%s', normalized_url='%s': %s",
+            request.POST.get("website_url"),
+            locals().get("website_url", None),
+            e,
+            exc_info=True,
+        )
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
 
 @login_required
 @require_http_methods(["PUT", "POST"])  # Allow POST for multipart data
