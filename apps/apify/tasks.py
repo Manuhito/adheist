@@ -208,8 +208,8 @@ def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int
             
             # Check if this is an item with cards (multiple ads)
             if item.get('snapshot') and item['snapshot'].get('cards'):
-                logger.info(f"Processing item with cards: {meta_ad_id}")
-                result = create_adlibrary_from_cards(
+                logger.info(f"Launching async task for item with cards: {meta_ad_id}")
+                create_adlibrary_from_cards_task.delay(
                     item,
                     media_type,
                     content_languages,
@@ -218,15 +218,11 @@ def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int
                     is_automated=is_automated,
                     backload_id=backload_id,
                 )
-                processed_count += result['processed_count']
-                failed_count += result['failed_count']
-                errors.extend(result['errors'])
-                continue
-            
-            # Process as a regular single ad item
+                processed_count += 1
             else:
-                logger.info(f"Processing item: {meta_ad_id}")
-                result = create_adlibrary_from_single_ad(
+                # Process as a regular single ad item
+                logger.info(f"Launching async task for item: {meta_ad_id}")
+                create_adlibrary_from_single_ad_task.delay(
                     item,
                     media_type,
                     content_languages,
@@ -235,25 +231,19 @@ def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int
                     is_automated=is_automated,
                     backload_id=backload_id,
                 )
-                processed_count += result['processed_count']
-                failed_count += result['failed_count']
-                errors.extend(result['errors'])
-            
-            # Note: Since create_ad_library_entry is a Celery task,
-            # we're not waiting for the result here. Each task will run
-            # independently and handle its own success/failure.
-            processed_count += 1
+                processed_count += 1
             
         except Exception as e:
-            error_msg = f"Error processing item {item.get('id', 'unknown')}: {str(e)}"
+            error_msg = f"Error launching task for item {item.get('id', 'unknown')}: {str(e)}"
             logger.error(error_msg)
             errors.append(error_msg)
             failed_count += 1
     
+    logger.info(f"Launched {processed_count} async tasks for AdLibrary creation")
+    
     return {
         'item_count': len(items),
-        'processed_count': processed_count,
-        'failed_count': failed_count,
+        'tasks_launched': processed_count,
         'skipped_count': skipped_count,
         'errors': errors
     }
@@ -632,6 +622,46 @@ def create_adlibrary_from_cards(
 
 
 @shared_task
+def create_adlibrary_from_single_ad_task(
+    item: dict,
+    media_type: str,
+    content_languages: list,
+    user_id: int = None,
+    is_onboarding: bool = False,
+    is_automated: bool = False,
+    backload_id: int = None,
+) -> Dict[str, Any]:
+    """
+    Celery task wrapper para create_adlibrary_from_single_ad.
+    Permite ejecución paralela de múltiples items.
+    """
+    return create_adlibrary_from_single_ad(
+        item, media_type, content_languages,
+        user_id, is_onboarding, is_automated, backload_id
+    )
+
+
+@shared_task
+def create_adlibrary_from_cards_task(
+    item: dict,
+    media_type: str,
+    content_languages: list,
+    user_id: int = None,
+    is_onboarding: bool = False,
+    is_automated: bool = False,
+    backload_id: int = None,
+) -> Dict[str, Any]:
+    """
+    Celery task wrapper para create_adlibrary_from_cards.
+    Permite ejecución paralela de múltiples items.
+    """
+    return create_adlibrary_from_cards(
+        item, media_type, content_languages,
+        user_id, is_onboarding, is_automated, backload_id
+    )
+
+
+@shared_task
 def fetch_apify_ads(
     output_dir: str = "apify_ads_results",
     urls: List[Dict[str, str]] = None,
@@ -816,7 +846,7 @@ def fetch_apify_ads(
                 backload = Backload.objects.get(id=backload_id)
                 backload.status = Backload.STATUS_SUCCESS
                 # Guardar información de procesamiento en el error_log para referencia
-                backload.error_log = f"Procesados: {processing_result['processed_count']}, Fallidos: {processing_result['failed_count']}, Omitidos: {processing_result['skipped_count']}"
+                backload.error_log = f"Tasks lanzadas: {processing_result['tasks_launched']}, Omitidos: {processing_result['skipped_count']}"
                 backload.save()
                 logger.info(f"Updated Backload {backload_id} status to SUCCESS")
             except Exception as be:
@@ -847,8 +877,7 @@ def fetch_apify_ads(
                     'backload_id': backload_id,
                     'page_id': page_id,
                     'page_name': page_name,
-                    'processed_count': processing_result['processed_count'],
-                    'failed_count': processing_result['failed_count'],
+                    'tasks_launched': processing_result['tasks_launched'],
                     'skipped_count': processing_result['skipped_count'],
                     'timestamp': timezone.now().isoformat()
                 }
@@ -864,8 +893,7 @@ def fetch_apify_ads(
             'backload_id': backload_id,
             'dataset_id': dataset_id,
             'item_count': processing_result['item_count'],
-            'processed_count': processing_result['processed_count'],
-            'failed_count': processing_result['failed_count'],
+            'tasks_launched': processing_result['tasks_launched'],
             'skipped_count': processing_result['skipped_count'],
             'errors': processing_result['errors'][:10] if processing_result['errors'] else []  # Incluir solo los primeros 10 errores para evitar respuestas demasiado grandes
         }
@@ -1728,8 +1756,8 @@ def competitor_research_task(user_id: int, website_url: str) -> Dict[str, Any]:
                     is_onboarding=True
                 )
                 
-                if result.get('processed_count', 0) > 0:
-                    logger.info(f"Backload successful: {result['processed_count']} ads found")
+                if result.get('tasks_launched', 0) > 0:
+                    logger.info(f"Backload successful: {result['tasks_launched']} tasks launched for ads")
                     found_advertiser = True
                     successful_competitor = competitor_url
                     try:
@@ -1745,12 +1773,12 @@ def competitor_research_task(user_id: int, website_url: str) -> Dict[str, Any]:
                         user_id=user_id,
                         competitor_url=competitor_url,
                         page_name=fb_page.page_name,
-                        ads_count=result.get('processed_count', 0),
+                        ads_count=result.get('tasks_launched', 0),
                         success=True
                     )
                     break
                 else:
-                    logger.info("Backload returned 0 ads, trying next competitor")
+                    logger.info("Backload returned 0 tasks, trying next competitor")
                     
             except Exception as e:
                 logger.error(f"Error running fetch_apify_ads: {str(e)}")

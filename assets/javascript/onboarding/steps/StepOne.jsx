@@ -86,49 +86,46 @@ const StepOne = ({ onNext, initialData, user, setMascotMessageOverride }) => {
         const formData = new FormData();
         formData.append('website_url', processedUrl);
 
-        // 1. Trigger tasks in parallel immediately
-        // Task 1: Take screenshot
-        const screenshotPromise = fetch('/ads/api/capture-screenshot/', {
-          method: 'POST',
-          headers: {
-            'X-CSRFToken': csrfToken,
-          },
-          body: formData
-        }).then(res => res.json());
+        // 1. Trigger all 3 tasks in parallel (all are now async Celery tasks)
+        // Results will arrive via SSE notifications
 
-        // Task 2: Brand generation (Analyze website)
+        // Task 1: Take screenshot (async)
+        fetch('/ads/api/capture-screenshot/', {
+          method: 'POST',
+          headers: { 'X-CSRFToken': csrfToken },
+          body: formData
+        }).then(res => res.json()).then(data => {
+          console.log('Screenshot task launched:', data);
+        });
+
+        // Task 2: Brand generation (async)
         const analysisFormData = new FormData();
         analysisFormData.append('website_url', processedUrl);
         analysisFormData.append('is_onboarding', 'true');
 
-        const analysisPromise = fetch('/ads/api/analyze-website/', {
+        fetch('/ads/api/analyze-website/', {
           method: 'POST',
-          headers: {
-            'X-CSRFToken': csrfToken,
-          },
+          headers: { 'X-CSRFToken': csrfToken },
           body: analysisFormData
-        }).then(res => res.json());
+        }).then(res => res.json()).then(data => {
+          console.log('Analysis task launched:', data);
+        });
 
-        // Task 3: Competitor Research
-        const competitorResearchPromise = fetch('/ads/api/competitor-research/', {
+        // Task 3: Competitor Research (async)
+        fetch('/ads/api/competitor-research/', {
           method: 'POST',
-          headers: {
-            'X-CSRFToken': csrfToken,
-          },
+          headers: { 'X-CSRFToken': csrfToken },
           body: formData
-        }).then(res => res.json());
+        }).then(res => res.json()).then(data => {
+          console.log('Competitor research task launched:', data);
+        });
 
-        // 2. Wait 3 seconds minimum before navigating
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        // 2. Wait 2 seconds for visual feedback, then navigate
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
-        // 3. Navigate to next step, passing the pending promises
+        // 3. Navigate to next step (no promises needed - SSE will deliver results)
         onNext({
-          url: processedUrl,
-          promises: {
-            screenshot: screenshotPromise,
-            analysis: analysisPromise,
-            competitorResearch: competitorResearchPromise
-          }
+          url: processedUrl
         });
 
       } catch (error) {

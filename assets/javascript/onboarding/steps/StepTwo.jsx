@@ -6,6 +6,45 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
+// SSE Event Handler hook for real-time updates
+function useOnboardingSSE(onScreenshot, onAnalysis) {
+  const eventSourceRef = useRef(null);
+
+  useEffect(() => {
+    const eventSource = new EventSource('/ads/sse/adrequest-updates/');
+    eventSourceRef.current = eventSource;
+
+    eventSource.addEventListener('connected', (event) => {
+      console.log('StepTwo SSE connected:', event.data);
+    });
+
+    eventSource.addEventListener('screenshot_completed', (event) => {
+      console.log('SSE screenshot_completed:', event.data);
+      const data = JSON.parse(event.data);
+      onScreenshot(data);
+    });
+
+    eventSource.addEventListener('analysis_completed', (event) => {
+      console.log('SSE analysis_completed:', event.data);
+      const data = JSON.parse(event.data);
+      onAnalysis(data);
+    });
+
+    eventSource.onerror = (error) => {
+      console.error('StepTwo SSE error:', error);
+    };
+
+    return () => {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
+    };
+  }, [onScreenshot, onAnalysis]);
+
+  return eventSourceRef.current;
+}
+
 const StepTwo = ({ onNext, initialData, setMascotMessageOverride }) => {
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(true);
@@ -61,42 +100,48 @@ const StepTwo = ({ onNext, initialData, setMascotMessageOverride }) => {
     }
   }, [brandId, data]);
 
+  // SSE handlers for screenshot and analysis results
+  const handleScreenshotSSE = useCallback((sseData) => {
+    if (sseData.success && sseData.screenshot) {
+      setData((prev) => ({ ...prev, screenshot: sseData.screenshot }));
+      setLoading(false);
+    } else if (!sseData.success) {
+      console.error("Screenshot failed:", sseData.error);
+      // Don't block on screenshot failure - continue with analysis
+      setLoading(false);
+    }
+  }, []);
+
+  const handleAnalysisSSE = useCallback((sseData) => {
+    if (sseData.success) {
+      // Store brand data immediately
+      setData((prev) => ({ ...prev, brandData: sseData }));
+
+      const bName = sseData.brand?.name || sseData.brand_name || 'Your Brand';
+      const bDesc = sseData.brand?.product_description || sseData.product_description || "No description available.";
+      const bId = sseData.brand?.id || sseData.brand_id;
+
+      setBrandName(bName);
+      setProductDescription(bDesc);
+      setBrandId(bId);
+
+      // Delay showing modal to allow screenshot to appear first
+      // This creates a nicer visual sequence
+      setTimeout(() => {
+        setAnalyzing(false);
+      }, 800);
+    } else {
+      setError(sseData.error || "Failed to analyze website");
+      setAnalyzing(false);
+    }
+  }, []);
+
+  // Set up SSE listener
+  useOnboardingSSE(handleScreenshotSSE, handleAnalysisSSE);
+
   useEffect(() => {
-    if (initialData?.promises) {
-      // 1. Handle Screenshot - Unblocks the UI immediately
-      initialData.promises.screenshot
-        .then((screenshotData) => {
-          if (screenshotData.success) {
-            setData((prev) => ({ ...prev, screenshot: screenshotData.screenshot }));
-          }
-        })
-        .catch((err) => console.error("Screenshot error:", err))
-        .finally(() => setLoading(false));
-
-      // 2. Handle Analysis - Shows the modal when ready
-      initialData.promises.analysis
-        .then((analysisData) => {
-          if (analysisData.success) {
-            setData((prev) => ({ ...prev, brandData: analysisData }));
-
-            const bName = analysisData.brand?.name || analysisData.brand_name || 'Your Brand';
-            const bDesc = analysisData.brand?.product_description || analysisData.product_description || "No description available.";
-            const bId = analysisData.brand?.id || analysisData.brand_id;
-
-            setBrandName(bName);
-            setProductDescription(bDesc);
-            setBrandId(bId);
-          } else {
-            setError(analysisData.error || "Failed to analyze website");
-          }
-        })
-        .catch((err) => {
-          console.error("Analysis error:", err);
-          setError("An error occurred while analyzing.");
-        })
-        .finally(() => setAnalyzing(false));
-    } else if (initialData?.brandData) {
-      // Data already loaded (from page refresh or revisiting step)
+    // Check if data already loaded (from page refresh or revisiting step)
+    if (initialData?.brandData) {
       setData({
         screenshot: initialData.screenshot,
         brandData: initialData.brandData
@@ -111,12 +156,8 @@ const StepTwo = ({ onNext, initialData, setMascotMessageOverride }) => {
       setBrandId(bId);
       setLoading(false);
       setAnalyzing(false);
-    } else if (!initialData?.promises && !initialData?.brandData) {
-      // No data available - show error or redirect
-      setLoading(false);
-      setAnalyzing(false);
-      setError("No brand data available. Please start from the beginning.");
     }
+    // Otherwise, SSE will deliver the results
   }, [initialData]);
 
   // Focus effects for editing

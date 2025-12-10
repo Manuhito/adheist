@@ -211,15 +211,18 @@ const StepFour = ({ onNext, initialData, setMascotMessageOverride }) => {
     if (eventType === 'competitor_research_completed') {
       setResearchCompleted(true);
       if (!data.success || data.ads_count === 0) {
-        // Only show error if we have no ads at all
+        // Research failed or no ads found - show error and stop loading
         setAds(prevAds => {
           if (prevAds.length === 0) {
             setError('No competitor ads were found. You can skip this step and explore ads later.');
           }
           return prevAds;
         });
+        setIsLoading(false);
       }
-      setIsLoading(false);
+      // If success=true and ads_count > 0, DON'T stop loading here.
+      // Loading will stop when the first ad arrives via 'onboarding_ad_created'.
+      // This prevents showing "no ads" before async tasks complete.
     }
   }, []);
 

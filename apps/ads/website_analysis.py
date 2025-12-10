@@ -197,7 +197,7 @@ def download_website_content_with_playwright(url: str) -> str:
 def capture_screenshot_with_playwright(url: str) -> str:
     """
     Capture a screenshot of a website using Playwright and return as base64 string.
-    Includes anti-detection strategies to avoid bot blocking.
+    Optimized for speed while maintaining quality.
     """
     import base64
     log.info(f"Starting screenshot capture with Playwright for URL: {url}")
@@ -206,7 +206,11 @@ def capture_screenshot_with_playwright(url: str) -> str:
         with sync_playwright() as p:
             browser = p.chromium.launch(
                 headless=True,
-                args=['--disable-blink-features=AutomationControlled']
+                args=[
+                    '--disable-blink-features=AutomationControlled',
+                    '--disable-dev-shm-usage',  # Faster in Docker
+                    '--no-sandbox',
+                ]
             )
             try:
                 context = browser.new_context(
@@ -222,27 +226,37 @@ def capture_screenshot_with_playwright(url: str) -> str:
 
                 log.info(f"Playwright navigating to URL for screenshot: {url}")
                 try:
-                    page.goto(url, wait_until='networkidle')
+                    # Use 'domcontentloaded' instead of 'networkidle' - much faster
+                    # networkidle waits for all requests to finish (analytics, trackers, etc.)
+                    page.goto(url, wait_until='domcontentloaded', timeout=15000)
                 except PlaywrightTimeoutError as e:
                     log.error(f"Playwright timeout while loading URL for screenshot {url}: {str(e)}", exc_info=True)
                     raise
                 
-                # Try to accept cookie banners (multiple languages)
-                cookie_buttons = [
-                    'Accept', 'Accept All', 'Accept Cookies', 'I Accept', 'OK', 'Got it',
-                    'Aceptar', 'Aceptar todo', 'Aceptar cookies',
-                    'Akzeptieren', 'Alle akzeptieren',
-                    'Accepter', 'Tout accepter',
-                ]
-                for btn_text in cookie_buttons:
-                    try:
-                        page.click(f'button:has-text("{btn_text}")', timeout=500)
-                        break
-                    except Exception:
-                        pass
+                # Quick cookie banner dismissal - try common selectors in parallel
+                # Use a single JavaScript call instead of multiple click attempts
+                page.evaluate("""() => {
+                    const selectors = [
+                        'button[id*="accept"]', 'button[id*="cookie"]', 'button[id*="consent"]',
+                        'button[class*="accept"]', 'button[class*="cookie"]', 'button[class*="consent"]',
+                        '[data-testid*="accept"]', '[data-testid*="cookie"]',
+                        'button:has-text("Accept")', 'button:has-text("OK")', 'button:has-text("Got it")',
+                        'button:has-text("Aceptar")', 'button:has-text("Akzeptieren")', 'button:has-text("Accepter")'
+                    ];
+                    for (const sel of selectors) {
+                        try {
+                            const btn = document.querySelector(sel);
+                            if (btn && btn.offsetParent !== null) {
+                                btn.click();
+                                return true;
+                            }
+                        } catch (e) {}
+                    }
+                    return false;
+                }""")
                 
-                # Additional wait for dynamic content to render
-                page.wait_for_timeout(2000)
+                # Brief wait for content to stabilize (reduced from 2000ms)
+                page.wait_for_timeout(500)
                 
                 # Take screenshot
                 screenshot_bytes = page.screenshot(full_page=False)
