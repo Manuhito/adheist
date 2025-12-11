@@ -148,6 +148,9 @@ class FacebookPageAdmin(admin.ModelAdmin):
         ("Additional Information", {
             "fields": ("industries", "country", "notes")
         }),
+        ("Apify Settings", {
+            "fields": ("apify_api_key",)
+        }),
         ("Audit Information", {
             "fields": ("created_at", "updated_at"),
             "classes": ("collapse",)
