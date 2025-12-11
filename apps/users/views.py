@@ -249,8 +249,15 @@ def onboarding_view(request):
         return redirect('ads:discover_page')
         
     current_step = request.user.current_onboarding_step
-    
-    google_account = SocialAccount.objects.filter(user=request.user, provider='google').first()
+
+    social_accounts = SocialAccount.objects.filter(user=request.user)
+    google_account = None
+    for account in social_accounts:
+        provider_id = getattr(account, "provider", "") or ""
+        if provider_id.lower() == "google":
+            google_account = account
+            break
+
     is_google_login = google_account is not None
     google_hd = google_account.extra_data.get('hd') if is_google_login and google_account.extra_data else None
 
