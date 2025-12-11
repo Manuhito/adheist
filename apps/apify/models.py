@@ -57,6 +57,11 @@ class FacebookPage(BaseModel):
         default=True,
         help_text="Indicates if this page should be included in queries"
     )
+    apify_api_key = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Optional Apify API token for this page. If empty, the global APIFY_API_KEY will be used."
+    )
     
     class Meta:
         verbose_name = "Página de Facebook"
@@ -67,6 +72,20 @@ class FacebookPage(BaseModel):
         if self.page_name:
             return f"{self.page_name} ({self.page_id})"
         return self.page_id
+
+    def get_apify_api_key(self) -> str:
+        """Return the Apify API key for this page, falling back to the global setting.
+
+        The priority is:
+        1. Per-page key stored in apify_api_key.
+        2. Global APIFY_API_KEY setting from Django settings.
+        """
+        if self.apify_api_key:
+            return self.apify_api_key
+
+        from django.conf import settings
+
+        return getattr(settings, "APIFY_API_KEY", "")
 
 
 class Backload(BaseModel):
