@@ -1002,22 +1002,6 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
             </div>
           </div>
         </div>
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={onClose}
-            disabled={isSubmitting}
-            className="hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-200 dark:hover:border-red-800 hover:text-red-600 dark:hover:text-red-400 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300"
-          >
-            {t('common.cancel', 'Cancel')}
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? t('common.saving', 'Saving...') : (createdBrandId ? t('common.update', 'Update') : t('common.save', 'Save'))}
-          </Button>
-        </DialogFooter>
       </DialogContent>
 
       {/* Hidden file input for logo upload */}

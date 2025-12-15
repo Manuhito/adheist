@@ -46,7 +46,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    command: celery -A adheist worker -l INFO --beat --pool=solo
+    command: celery -A adheist worker -l INFO --beat --pool=prefork --concurrency=4
     volumes:
       - .:/code
     environment:
