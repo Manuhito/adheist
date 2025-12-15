@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:${POSTGRES_IMAGE_TAG:-17}
+    image: postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     environment:
@@ -15,7 +15,7 @@ services:
     restart: unless-stopped
 
   redis:
-    image: redis:7
+    image: redis:latest
     command: redis-server --appendonly yes
     volumes:
       - redis_data:/data
