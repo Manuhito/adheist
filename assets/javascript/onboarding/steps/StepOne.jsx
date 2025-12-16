@@ -9,6 +9,7 @@ import Bars from '../components/Bars';
 const StepOne = ({ onNext, initialData, user, setMascotMessageOverride }) => {
   const [url, setUrl] = useState(initialData?.url || '');
   const [isLoading, setIsLoading] = useState(false);
+  const [validationError, setValidationError] = useState(null);
 
   useEffect(() => {
     // If user logged in via Google and we don't have a URL yet
@@ -74,6 +75,7 @@ const StepOne = ({ onNext, initialData, user, setMascotMessageOverride }) => {
     e.preventDefault();
     if (validateUrl(url) && !isLoading) {
       setIsLoading(true);
+      setValidationError(null);
 
       // Ensure URL has protocol
       const processedUrl = /^https?:\/\//i.test(url) ? url : `https://${url}`;
@@ -82,9 +84,31 @@ const StepOne = ({ onNext, initialData, user, setMascotMessageOverride }) => {
         // Get CSRF token
         const csrfToken = document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
 
+        const validateFormData = new FormData();
+        validateFormData.append('website_url', processedUrl);
+
+        const validateResponse = await fetch('/ads/api/validate-url/', {
+          method: 'POST',
+          headers: { 'X-CSRFToken': csrfToken },
+          body: validateFormData
+        });
+
+        const validateData = await validateResponse.json().catch(() => null);
+        if (!validateResponse.ok || !validateData?.ok) {
+          const errorMessage = validateData?.error || 'This website URL is not valid. Please try a different URL.';
+          setValidationError(errorMessage);
+          setIsLoading(false);
+          if (setMascotMessageOverride) {
+            setMascotMessageOverride(errorMessage);
+          }
+          return;
+        }
+
+        const finalUrl = validateData?.final_url || processedUrl;
+
         // Prepare form data
         const formData = new FormData();
-        formData.append('website_url', processedUrl);
+        formData.append('website_url', finalUrl);
 
         // 1. Trigger all 3 tasks in parallel (all are now async Celery tasks)
         // Results will arrive via SSE notifications
@@ -100,7 +124,7 @@ const StepOne = ({ onNext, initialData, user, setMascotMessageOverride }) => {
 
         // Task 2: Brand generation (async)
         const analysisFormData = new FormData();
-        analysisFormData.append('website_url', processedUrl);
+        analysisFormData.append('website_url', finalUrl);
         analysisFormData.append('is_onboarding', 'true');
 
         fetch('/ads/api/analyze-website/', {
@@ -120,12 +144,9 @@ const StepOne = ({ onNext, initialData, user, setMascotMessageOverride }) => {
           console.log('Competitor research task launched:', data);
         });
 
-        // 2. Wait 2 seconds for visual feedback, then navigate
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        // 3. Navigate to next step (no promises needed - SSE will deliver results)
+        // Navigate to next step (no promises needed - SSE will deliver results)
         onNext({
-          url: processedUrl
+          url: finalUrl
         });
 
       } catch (error) {
@@ -167,12 +188,18 @@ const StepOne = ({ onNext, initialData, user, setMascotMessageOverride }) => {
                 type="url"
                 placeholder="https://example.com"
                 value={url}
-                onChange={(e) => setUrl(e.target.value)}
+                onChange={(e) => {
+                  setUrl(e.target.value);
+                  if (validationError) setValidationError(null);
+                }}
                 className="block w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-primary focus:ring-2 focus:ring-primary focus:ring-opacity-50 sm:text-sm h-auto"
                 autoFocus
                 required
                 disabled={isLoading}
               />
+              {validationError ? (
+                <p className="text-sm text-red-600 dark:text-red-400 mt-2">{validationError}</p>
+              ) : null}
             </div>
 
             <div className="flex justify-end">

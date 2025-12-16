@@ -23,6 +23,8 @@ import json
 import requests
 from django.core.serializers.json import DjangoJSONEncoder
 import urllib.parse
+import ipaddress
+import socket
 import os
 from django.conf import settings
 from apps.users.decorators import onboarding_required
@@ -4317,6 +4319,125 @@ def capture_website_screenshot(request):
         "task_id": task.id,
         "message": "Screenshot capture started"
     })
+
+
+@login_required
+@require_http_methods(["POST"])
+def validate_url(request):
+    website_url = request.POST.get("website_url")
+    if not website_url:
+        return JsonResponse({"ok": False, "error": "Website URL is required"}, status=400)
+
+    if not website_url.startswith(("http://", "https://")):
+        website_url = "https://" + website_url
+
+    try:
+        parsed = urllib.parse.urlsplit(website_url)
+    except Exception:
+        return JsonResponse({"ok": False, "error": "Invalid URL"}, status=400)
+
+    if parsed.scheme not in {"http", "https"}:
+        return JsonResponse({"ok": False, "error": "Invalid URL scheme"}, status=400)
+
+    if parsed.username or parsed.password:
+        return JsonResponse({"ok": False, "error": "Invalid URL"}, status=400)
+
+    if not parsed.hostname:
+        return JsonResponse({"ok": False, "error": "Invalid URL"}, status=400)
+
+    if parsed.port and parsed.port not in {80, 443}:
+        return JsonResponse({"ok": False, "error": "Invalid URL port"}, status=400)
+
+    def _is_ip_blocked(ip_str: str) -> bool:
+        ip = ipaddress.ip_address(ip_str)
+        return (
+            ip.is_private
+            or ip.is_loopback
+            or ip.is_link_local
+            or ip.is_multicast
+            or ip.is_reserved
+            or ip.is_unspecified
+        )
+
+    def _hostname_is_safe(hostname: str) -> bool:
+        try:
+            _ = ipaddress.ip_address(hostname)
+            return not _is_ip_blocked(hostname)
+        except ValueError:
+            pass
+
+        try:
+            addrinfo = socket.getaddrinfo(hostname, None)
+        except Exception:
+            return False
+
+        ips = {item[4][0] for item in addrinfo if item and item[4] and item[4][0]}
+        if not ips:
+            return False
+
+        try:
+            return all(not _is_ip_blocked(ip) for ip in ips)
+        except Exception:
+            return False
+
+    if not _hostname_is_safe(parsed.hostname):
+        return JsonResponse({"ok": False, "error": "Invalid URL"}, status=400)
+
+    session = requests.Session()
+    timeout_seconds = 6
+
+    def _check_response_urls_safe(response: requests.Response) -> bool:
+        for resp in list(getattr(response, "history", [])) + [response]:
+            try:
+                resp_parsed = urllib.parse.urlsplit(resp.url)
+            except Exception:
+                return False
+
+            if resp_parsed.scheme not in {"http", "https"}:
+                return False
+            if not resp_parsed.hostname:
+                return False
+            if resp_parsed.port and resp_parsed.port not in {80, 443}:
+                return False
+            if not _hostname_is_safe(resp_parsed.hostname):
+                return False
+
+        return True
+
+    try:
+        try:
+            response = session.head(
+                website_url,
+                allow_redirects=True,
+                timeout=timeout_seconds,
+                headers={"User-Agent": "Mozilla/5.0"},
+            )
+        except Exception:
+            response = session.get(
+                website_url,
+                allow_redirects=True,
+                timeout=timeout_seconds,
+                headers={"User-Agent": "Mozilla/5.0"},
+                stream=True,
+            )
+            response.close()
+
+        if not _check_response_urls_safe(response):
+            return JsonResponse({"ok": False, "error": "Invalid URL"}, status=400)
+
+        status_code = int(getattr(response, "status_code", 0) or 0)
+        ok = 200 <= status_code < 400
+
+        return JsonResponse(
+            {
+                "ok": ok,
+                "status": status_code,
+                "final_url": response.url,
+            },
+            status=200,
+        )
+    except requests.exceptions.RequestException:
+        return JsonResponse({"ok": False, "error": "Website could not be reached"}, status=200)
 
 @login_required
 @require_http_methods(["PUT", "POST"])  # Allow POST for multipart data

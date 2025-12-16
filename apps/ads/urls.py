@@ -53,6 +53,7 @@ urlpatterns = [
     path("generated/<int:version_id>/", views.generated_ad_page, name="generated_ad_page"),
     path("generated/versions/<int:primary_version_id>/", views.generated_versions_page, name="generated_versions_page"),
     path("adrequest/<int:ad_request_id>/versions/", views.ad_request_versions_page, name="ad_request_versions_page"),
+    path("api/validate-url/", views.validate_url, name="validate_url"),
     path("api/analyze-website/", views.analyze_website_for_brand_assets, name="analyze_website_for_brand_assets"),
     path("api/capture-screenshot/", views.capture_website_screenshot, name="capture_website_screenshot"),
     path("api/competitor-research/", views.competitor_research, name="competitor_research"),
