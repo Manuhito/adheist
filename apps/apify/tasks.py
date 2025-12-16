@@ -12,13 +12,57 @@ from django.core.management import call_command
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 from apify_client import ApifyClient
 
-from apps.apify.models import Backload
+from apps.apify.models import Backload, FacebookPage
 from apps.aiinterface.tasks import send_slack_notification
 
 logger = logging.getLogger(__name__)
 
 
-def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int = None, page_id: str = None, is_automated: bool = False, user_id: int = None, is_onboarding: bool = False) -> dict:
+def resolve_apify_api_key(page_id: Optional[str], backload_id: Optional[int], urls: Optional[List[Dict[str, str]]]) -> str:
+    """Resolve the Apify API key for a task.
+
+    Priority:
+    1. Per-page key stored in FacebookPage.apify_api_key when page_id is provided.
+    2. Global APIFY_API_KEY from Django settings.
+
+    If no key is available, sends a Slack notification and raises a ValueError.
+    """
+    from django.conf import settings
+
+    page_key = None
+    if page_id:
+        try:
+            facebook_page = FacebookPage.objects.only("apify_api_key", "page_name").get(page_id=page_id)
+            page_key = facebook_page.get_apify_api_key()
+        except FacebookPage.DoesNotExist:
+            logger.warning(f"FacebookPage with page_id {page_id} not found when resolving Apify API key")
+
+    if page_key:
+        return page_key
+
+    global_key = getattr(settings, "APIFY_API_KEY", "")
+    if global_key:
+        return global_key
+
+    # No key configured: notify via Slack and raise
+    error_message = "No Apify API key configured (neither per-page nor global APIFY_API_KEY)."
+    logger.error(error_message)
+
+    context = {
+        "backload_id": backload_id,
+        "page_id": page_id,
+        "urls": str(urls)[:200] if urls else None,
+    }
+    send_slack_notification(
+        error_message=error_message,
+        context=context,
+        title="Missing Apify API Key",
+    )
+
+    raise ValueError(error_message)
+
+
+def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int = None, page_id: str = None, is_automated: bool = False) -> dict:
     """
     Procesa los items de un dataset de Apify y crea entradas en AdLibrary para cada anuncio.
     
@@ -708,10 +752,6 @@ def fetch_apify_ads(
             # Continue execution without a Backload object
             backload_id = None
     
-    # API key should be stored in settings or environment variables
-    # For now, we'll use a placeholder that should be replaced in production
-    api_key = "apify_api_fz8hiOfkgiMWMSdOQC7iqSq0fdoeOU07N0iZ"  # Replace with actual API key from settings
-    
     # Default URLs if none provided
     if not urls:
         urls = [
@@ -719,6 +759,9 @@ def fetch_apify_ads(
         ]
     
     try:
+        # Resolve API key (per-page or global)
+        api_key = resolve_apify_api_key(page_id=page_id, backload_id=backload_id, urls=urls)
+        
         # Initialize the ApifyClient with API token
         client = ApifyClient(api_key)
         

@@ -12,25 +12,55 @@
         <br />
         Converts
       </h1>
-      <p
-        class="mt-6 text-2xl font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300 max-w-2xl text-center">
-        The ultimate AI tool to create, optimize, and scale your ad creatives with a user-friendly interface.
-      </p>
-      <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-        <a href="{% url 'account_signup' %}"
-          class="inline-flex items-center justify-center rounded-lg px-6 py-3 text-base font-medium text-white shadow-sm"
-          style="background-color: #5C67F2;">
-          Start Free Trial
-        </a>
-        <form method="post" action="{% provider_login_url 'google' %}">
-          {% csrf_token %}
-          <button type="submit"
-            class="inline-flex items-center justify-center rounded-lg border border-neutral-300 bg-white px-6 py-3 text-base font-medium text-neutral-700 hover:bg-neutral-100 w-full sm:w-auto">
-            <img src="{% static 'images/socialauth/google-logo.svg' %}" alt="Google" class="h-5 w-5 mr-3">
-            Login with Google
-          </button>
-        </form>
+      <!-- aqui empieza contenido switcher -->
+      <div class="mt-8 inline-flex items-center justify-center rounded-xl bg-primary/10 p-1">
+        <button type="button"
+          class="rounded-lg px-4 py-2 text-sm font-medium text-primary bg-white shadow-sm dark:bg-neutral-900"
+          data-hero-option="diy" aria-pressed="true">
+          DIY AI Software
+        </button>
+        <button type="button" class="rounded-lg px-4 py-2 text-sm font-medium text-primary" data-hero-option="agency"
+          aria-pressed="false">
+          Growth Agency
+        </button>
       </div>
+
+      <div data-hero-panel="diy">
+        <p
+          class="mt-6 text-2xl font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300 max-w-2xl text-center">
+          The ultimate AI tool to create, optimize, and scale your ad creatives with a user-friendly interface.
+        </p>
+        <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <a href="{% url 'account_signup' %}"
+            class="inline-flex items-center justify-center rounded-lg px-6 py-3 text-base font-medium text-white shadow-sm"
+            style="background-color: #5C67F2;">
+            Start Free Trial
+          </a>
+          <form method="post" action="{% provider_login_url 'google' %}">
+            {% csrf_token %}
+            <button type="submit"
+              class="inline-flex items-center justify-center rounded-lg border border-neutral-300 bg-white px-6 py-3 text-base font-medium text-neutral-700 hover:bg-neutral-100 w-full sm:w-auto">
+              <img src="{% static 'images/socialauth/google-logo.svg' %}" alt="Google" class="h-5 w-5 mr-3">
+              Login with Google
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div data-hero-panel="agency" class="hidden">
+        <p
+          class="mt-6 text-2xl font-light leading-relaxed tracking-normal text-neutral-600 dark:text-neutral-300 max-w-2xl text-center">
+          We help you scale high-performing ad creatives end-to-end.
+        </p>
+        <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <a href="https://calendly.com/adheist/discovery"
+            class="inline-flex items-center justify-center rounded-lg px-6 py-3 text-base font-medium text-white shadow-sm"
+            style="background-color: #5C67F2;">
+            Book a strategy call
+          </a>
+        </div>
+      </div>
+      <!-- aqui termina contenido switcher -->
       <div class="mt-8 flex flex-col items-center">
         <div class="flex items-center">
           <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
@@ -498,4 +528,39 @@
 
 {% block extra_js %}
 <script src="{% static 'js/landing-page-bundle.js' %}?v={{ STATIC_VERSION }}"></script>
+<script>
+  (() => {
+    if (window.__landingHeroSwitcherInitialized) return;
+    window.__landingHeroSwitcherInitialized = true;
+
+    const setHeroOption = (option) => {
+      const panels = Array.from(document.querySelectorAll('[data-hero-panel]'));
+      const buttons = Array.from(document.querySelectorAll('[data-hero-option]'));
+
+      panels.forEach((panel) => {
+        const isActive = panel.getAttribute('data-hero-panel') === option;
+        panel.classList.toggle('hidden', !isActive);
+      });
+
+      buttons.forEach((button) => {
+        const isActive = button.getAttribute('data-hero-option') === option;
+        button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        button.classList.toggle('bg-white', isActive);
+        button.classList.toggle('shadow-sm', isActive);
+        button.classList.toggle('dark:bg-neutral-900', isActive);
+      });
+    };
+
+    document.addEventListener('click', (event) => {
+      const target = event.target instanceof Element ? event.target.closest('[data-hero-option]') : null;
+      if (!target) return;
+
+      event.preventDefault();
+      const option = target.getAttribute('data-hero-option');
+      if (!option) return;
+
+      setHeroOption(option);
+    });
+  })();
+</script>
 {% endblock %}

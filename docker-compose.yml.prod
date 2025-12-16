@@ -61,7 +61,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.prod
-    command: celery -A adheist worker -l INFO --beat --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    command: celery -A adheist worker -l INFO --beat --scheduler django_celery_beat.schedulers:DatabaseScheduler --pool=prefork --concurrency=4
     volumes:
       - .:/code
     environment:
