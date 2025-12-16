@@ -22,6 +22,7 @@ module.exports = {
     'payment': './assets/javascript/payment.js',  // entry point for the payment page
     'update-payment-method': './assets/javascript/update-payment-method.js',  // entry point for the payment method update page
     'profile': './assets/javascript/profile/index.js',  // entry point for the user profile page
+    'onboarding': './assets/javascript/onboarding/index.jsx',  // entry point for the onboarding page
     'discover-page': './assets/javascript/app/discover-page.jsx',  // entry point for the discover page
     'discover-clone': './assets/javascript/app/discover-clone-page.jsx',  // entry point for the discover clone page
     'brands-page': './assets/javascript/app/brands-page.jsx',  // entry point for the brands page

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import * as ReactDOM from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import InteractiveBentoGallery from '../components/ui/interactive-bento-gallery.jsx';
@@ -6,6 +6,57 @@ import { useTranslation } from '../lib/useTranslation.ts';
 import { motion, AnimatePresence } from 'framer-motion';
 import DiscoverSearchBar from './components/DiscoverSearchBar.jsx';
 import RequestBrandModal from './components/RequestBrandModal.jsx';
+
+// SSE Event Handler hook for real-time ad updates (shared endpoint, filtered by event type)
+function useSSEListener(onEvent, enabled = false) {
+  const eventSourceRef = useRef(null);
+
+  useEffect(() => {
+    if (!enabled) {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
+      return;
+    }
+
+    const eventSource = new EventSource('/ads/sse/adrequest-updates/');
+    eventSourceRef.current = eventSource;
+
+    // New ad created during request brand process
+    eventSource.addEventListener('request_brand_ad_created', (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        onEvent('request_brand_ad_created', data);
+      } catch (e) {
+        console.error('Error parsing SSE request_brand_ad_created:', e);
+      }
+    });
+
+    // Backload completed (no more ads expected)
+    eventSource.addEventListener('backload_completed', (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        onEvent('backload_completed', data);
+      } catch (e) {
+        console.error('Error parsing SSE backload_completed:', e);
+      }
+    });
+
+    eventSource.onerror = (error) => {
+      console.error('SSE error in discover-page:', error);
+    };
+
+    return () => {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
+    };
+  }, [onEvent, enabled]);
+
+  return eventSourceRef.current;
+}
 
 // Function to get CSRF token from cookie
 const getCsrfToken = () => {
@@ -39,6 +90,47 @@ function DiscoverContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isRequestBrandOpen, setIsRequestBrandOpen] = useState(false);
   const [activeFilterParams, setActiveFilterParams] = useState("");
+
+  // Live mode state - for real-time ad updates via SSE
+  const [isLiveMode, setIsLiveMode] = useState(false);
+  const [livePageId, setLivePageId] = useState(null);
+
+  const handleSSEEvent = useCallback(
+    (eventType, data) => {
+      if (eventType === 'request_brand_ad_created' && data.ad) {
+        if (!livePageId || data.ad.page_id !== livePageId) {
+          return;
+        }
+
+        const newAd = {
+          id: data.ad.id,
+          company_name: data.ad.page_name || 'Unknown',
+          ad_image: data.ad.image_url,
+          ad_creative_bodies: data.ad.ad_creative_bodies || data.ad.ad_copy || '',
+          page_url: data.ad.page_url || '',
+          is_fav: false,
+          meta_status: 'ACTIVE',
+        };
+
+        setFilteredResults((prev) => {
+          const exists = prev.some((ad) => ad.id === newAd.id);
+          if (exists) return prev;
+          return [newAd, ...prev];
+        });
+      }
+
+      if (eventType === 'backload_completed') {
+        // When backload for this page_id finishes, exit live mode (hide banner)
+        if (livePageId && data.page_id === livePageId) {
+          setIsLiveMode(false);
+          setLivePageId(null);
+        }
+      }
+    },
+    [livePageId]
+  );
+
+  useSSEListener(handleSSEEvent, isLiveMode && !!livePageId);
 
   // Function to fetch ad libraries from the API with explicit query parameter
   const fetchFilteredResultsWithQuery = (page = 1, append = false, queryOverride = null) => {
@@ -283,23 +375,37 @@ function DiscoverContent() {
     };
   }, []);
 
-  // Check for company parameter in URL on mount
+  // Check for URL parameters on mount (company, page_id, live)
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const companyParam = urlParams.get('company');
-    
-    if (companyParam) {
-      console.log(`🔗 Found company parameter in URL: ${companyParam}`);
-      // Set the search query and trigger search
-      setSearchQuery(companyParam);
-      fetchFilteredResultsWithQuery(1, false, companyParam);
-      
-      // Clean the URL by removing the company parameter
+    const pageIdParam = urlParams.get('page_id');
+    const liveParam = urlParams.get('live');
+
+    // Live mode: page_id + live=true
+    if (pageIdParam && liveParam === 'true') {
+      setLivePageId(pageIdParam);
+      setIsLiveMode(true);
+      setSearchQuery(pageIdParam);
+      fetchFilteredResultsWithQuery(1, false, pageIdParam);
+      return;
+    }
+
+    // Just page_id filter (no live mode)
+    if (pageIdParam) {
+      setSearchQuery(pageIdParam);
+      fetchFilteredResultsWithQuery(1, false, pageIdParam);
       const cleanUrl = window.location.pathname;
       window.history.replaceState({}, '', cleanUrl);
-      console.log(`🧹 Cleaned URL, removed company parameter`);
+      return;
+    }
+
+    if (companyParam) {
+      setSearchQuery(companyParam);
+      fetchFilteredResultsWithQuery(1, false, companyParam);
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, '', cleanUrl);
     } else if (!searchQuery) {
-      console.log(`🚀 Initial load: calling fetchFilteredResultsWithQuery`);
       fetchFilteredResultsWithQuery(1, false, null);
     }
   }, []);
@@ -399,7 +505,27 @@ function DiscoverContent() {
   }, [isLoading, isLoadingMore, hasMorePages, currentPage]);
 
   return (
-    <div className="flex-1">
+    <div className="flex-1 px-4 md:px-8">
+      {/* Live Mode Indicator (green) */}
+      {isLiveMode && (
+        <div className="mb-4 mx-auto max-w-4xl px-4 py-2 bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800 rounded-lg flex items-center gap-2">
+          <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+          <span className="text-sm text-emerald-700 dark:text-emerald-200">
+            Live Mode - New ads for this advertiser will appear automatically as they are processed.
+          </span>
+          <button
+            onClick={() => {
+              setIsLiveMode(false);
+              setLivePageId(null);
+              const cleanUrl = window.location.pathname;
+              window.history.replaceState({}, '', cleanUrl);
+            }}
+            className="ml-auto text-xs text-emerald-700 hover:text-emerald-900 dark:text-emerald-300 dark:hover:text-emerald-100 underline"
+          >
+            Exit Live Mode
+          </button>
+        </div>
+      )}
       {isLoading ? (
         <div className="flex justify-center items-center h-full py-20">
           <div className="flex flex-col items-center">

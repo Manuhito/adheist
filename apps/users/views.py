@@ -8,7 +8,7 @@ from decimal import Decimal
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.utils import translation, timezone
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
@@ -39,7 +39,7 @@ def json_safe_data(data):
 
 from .forms import CustomUserChangeForm, UploadAvatarForm
 from .helpers import require_email_confirmation, user_has_confirmed_email_address
-from .models import CustomUser
+from .models import CustomUser, UserOnboarding
 
 
 @login_required
@@ -217,3 +217,106 @@ def upload_profile_image(request):
     else:
         readable_errors = ", ".join(str(error) for key, errors in form.errors.items() for error in errors)
         return JsonResponse(status=403, data={"errors": readable_errors})
+
+
+@login_required
+@require_POST
+def advance_onboarding_step(request):
+    """
+    API endpoint to advance the user's onboarding status to the next step.
+    """
+    user = request.user
+    
+    if user.has_completed_onboarding:
+        return JsonResponse({'success': False, 'message': 'Already onboarded'})
+    
+    previous_step = user.current_onboarding_step
+    user.advance_onboarding()
+    
+    return JsonResponse({
+        'success': True,
+        'previous_step': previous_step,
+        'current_step': user.current_onboarding_step,
+    })
+
+
+@login_required
+def onboarding_view(request):
+    """
+    View to handle the onboarding process.
+    """
+    if request.user.has_completed_onboarding:
+        return redirect('ads:discover_page')
+        
+    current_step = request.user.current_onboarding_step
+
+    social_accounts = SocialAccount.objects.filter(user=request.user)
+    google_account = None
+    for account in social_accounts:
+        provider_id = getattr(account, "provider", "") or ""
+        if provider_id.lower() == "google":
+            google_account = account
+            break
+
+    is_google_login = google_account is not None
+    google_hd = google_account.extra_data.get('hd') if is_google_login and google_account.extra_data else None
+
+    onboarding_data = {
+        'currentStep': current_step,
+        'user': {
+            'username': request.user.username,
+            'email': request.user.email,
+            'firstName': request.user.first_name,
+            'isGoogleLogin': is_google_login,
+            'googleHd': google_hd,
+        }
+    }
+    
+    # Load saved onboarding data if user is past STEP_1
+    if current_step != 'STEP_1':
+        try:
+            user_onboarding = UserOnboarding.objects.select_related('brand').get(user=request.user)
+            print(f"DEBUG: Found UserOnboarding for {request.user.email}, brand={user_onboarding.brand}, website={user_onboarding.website}")
+            saved_data = {
+                'website': user_onboarding.website,
+            }
+            
+            # Add screenshot if available
+            if user_onboarding.website_screenshot:
+                saved_data['screenshot'] = user_onboarding.website_screenshot.url
+            
+            # Add brand data if available
+            if user_onboarding.brand:
+                from apps.ads.models import AdRequestAssets
+                brand = user_onboarding.brand
+                saved_data['brandData'] = {
+                    'brand_id': brand.id,
+                    'brand_name': brand.brand_name,
+                    'brand': {
+                        'id': brand.id,
+                        'name': brand.brand_name,
+                    }
+                }
+                
+                # Get AdRequestAssets for additional brand details
+                try:
+                    assets = AdRequestAssets.objects.get(brand=brand)
+                    saved_data['brandData']['brand']['product_description'] = assets.product_description
+                    saved_data['brandData']['brand']['industry'] = assets.industry
+                    saved_data['brandData']['brand']['website'] = assets.company_website
+                    saved_data['brandData']['product_description'] = assets.product_description
+                except AdRequestAssets.DoesNotExist:
+                    pass
+            
+            onboarding_data['savedData'] = saved_data
+        except UserOnboarding.DoesNotExist:
+            pass
+    
+    return render(
+        request,
+        "onboarding/onboarding.html",
+        {
+            "onboarding_data": json.dumps(onboarding_data),
+            "page_title": "Onboarding",
+        },
+    )

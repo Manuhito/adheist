@@ -24,6 +24,29 @@ class CustomUser(SubscriptionModelBase, AbstractUser):
     language = models.CharField(max_length=10, blank=True, null=True)
     timezone = models.CharField(max_length=100, blank=True, default="")
 
+    # Onboarding Status Constants
+    ONBOARDING_STEP_1 = 'STEP_1'
+    ONBOARDING_STEP_2 = 'STEP_2'
+    ONBOARDING_STEP_3 = 'STEP_3'
+    ONBOARDING_STEP_4 = 'STEP_4'
+    ONBOARDING_STEP_5 = 'STEP_5'
+    ONBOARDED = 'ONBOARDED'
+
+    STATUS_CHOICES = [
+        (ONBOARDING_STEP_1, 'Step 1'),
+        (ONBOARDING_STEP_2, 'Step 2'),
+        (ONBOARDING_STEP_3, 'Step 3'),
+        (ONBOARDING_STEP_4, 'Step 4'),
+        (ONBOARDING_STEP_5, 'Step 5'),
+        (ONBOARDED, 'Onboarded'),
+    ]
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=ONBOARDING_STEP_1
+    )
+
     def __str__(self):
         return f"{self.get_full_name()} <{self.email or self.username}>"
 
@@ -31,6 +54,36 @@ class CustomUser(SubscriptionModelBase, AbstractUser):
         if self.get_full_name().strip():
             return self.get_full_name()
         return self.email or self.username
+
+    @property
+    def has_completed_onboarding(self):
+        return self.status == self.ONBOARDED
+
+    @property
+    def current_onboarding_step(self):
+        return self.status
+
+    def advance_onboarding(self):
+        """
+        Advances the onboarding status to the next step.
+        Returns True if updated, False if already onboarded.
+        """
+        if self.status == self.ONBOARDED:
+            return False
+        
+        if self.status == self.ONBOARDING_STEP_1:
+            self.status = self.ONBOARDING_STEP_2
+        elif self.status == self.ONBOARDING_STEP_2:
+            self.status = self.ONBOARDING_STEP_3
+        elif self.status == self.ONBOARDING_STEP_3:
+            self.status = self.ONBOARDING_STEP_4
+        elif self.status == self.ONBOARDING_STEP_4:
+            self.status = self.ONBOARDING_STEP_5
+        elif self.status == self.ONBOARDING_STEP_5:
+            self.status = self.ONBOARDED
+            
+        self.save(update_fields=['status'])
+        return True
 
     @property
     def avatar_url(self) -> str:
@@ -47,3 +100,53 @@ class CustomUser(SubscriptionModelBase, AbstractUser):
     @cached_property
     def has_verified_email(self):
         return EmailAddress.objects.filter(user=self, verified=True).exists()
+
+
+class UserOnboarding(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='onboarding')
+    website = models.URLField(max_length=200, blank=True, null=True)
+    competitors = models.JSONField(default=list, blank=True)
+    
+    # Competitor research status
+    competitor_research_completed = models.BooleanField(default=False)
+    selected_competitor_page = models.ForeignKey(
+        'apify.FacebookPage',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='onboarding_selections',
+        help_text="The competitor FacebookPage with available ads"
+    )
+    
+    # Selected ad from competitor for cloning
+    selected_ad_library = models.ForeignKey(
+        'ads.AdLibrary',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='onboarding_selections',
+        help_text="The AdLibrary entry selected by user to clone"
+    )
+    
+    # Brand created during onboarding
+    brand = models.ForeignKey(
+        'ads.UserBrand',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='onboarding_creations',
+        help_text="The brand created during website analysis in onboarding"
+    )
+    
+    # Website screenshot from Step 1
+    website_screenshot = models.ImageField(upload_to='onboarding_screenshots/', blank=True, null=True)
+    
+    # Step 5: Assets for ad generation
+    asset_image_1 = models.ImageField(upload_to='adrequest_assets/', blank=True, null=True)
+    asset_image_2 = models.ImageField(upload_to='adrequest_assets/', blank=True, null=True)
+    asset_image_3 = models.ImageField(upload_to='adrequest_assets/', blank=True, null=True)
+    canvas_size = models.CharField(max_length=20, blank=True, null=True)
+    prompt = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"Onboarding info for {self.user}"

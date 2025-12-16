@@ -19,6 +19,13 @@ class ReplicateConfiguration(models.Model):
         blank=True,
         help_text="Specific version hash of the model (optional, uses latest if empty)"
     )
+
+    # Competitor Research Configuration
+    competitor_research_model = models.CharField(
+        max_length=200,
+        default="google/gemini-3-pro",
+        help_text="Replicate model to use for competitor research (e.g., google/gemini-3-pro)"
+    )
     
     # Image generation pricing (in USD)
     image_generation_price = models.DecimalField(
@@ -97,6 +104,7 @@ class ReplicateConfiguration(models.Model):
         return {
             'image_replicate_model': config.image_replicate_model,
             'image_replicate_model_version': config.image_replicate_model_version,
+            'competitor_research_model': config.competitor_research_model,
             'image_generation_price': config.image_generation_price,
             'timeout_seconds': config.timeout_seconds,
             'polling_interval_seconds': config.polling_interval_seconds,
