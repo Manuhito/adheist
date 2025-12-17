@@ -62,7 +62,7 @@ def resolve_apify_api_key(page_id: Optional[str], backload_id: Optional[int], ur
     raise ValueError(error_message)
 
 
-def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int = None, page_id: str = None, is_automated: bool = False) -> dict:
+def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int = None, page_id: str = None, is_automated: bool = False, user_id: int = None, is_onboarding: bool = False) -> dict:
     """
     Procesa los items de un dataset de Apify y crea entradas en AdLibrary para cada anuncio.
     
