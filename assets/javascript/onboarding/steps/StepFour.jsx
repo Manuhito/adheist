@@ -319,16 +319,6 @@ const StepFour = ({ onNext, initialData, setMascotMessageOverride }) => {
         <Card className="w-full shadow-none bg-transparent backdrop-blur-none border-none flex flex-col h-full overflow-hidden">
           <CardContent className="p-0 flex flex-col h-full overflow-hidden">
 
-            {/* Header Section - fixed height */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 flex-shrink-0 pb-4">
-              <div>
-                <h2 className="text-2xl font-bold">Competitor Ads</h2>
-                <p className="text-muted-foreground mt-1">
-                  Select an ad to use as a reference for your campaign
-                </p>
-              </div>
-            </div>
-
             {/* Grid Content - scrollable container */}
             <div className="flex-1 min-h-0 overflow-hidden">
               {isLoading ? (
