@@ -55,6 +55,41 @@ function useSSEListener(onEvent) {
 }
 
 const GeneratingLoadingPage = ({ adRequestId }) => {
+  const hasRedirectedRef = useRef(false);
+  const fallbackRedirectTimeoutRef = useRef(null);
+
+  const redirectToVersions = (id) => {
+    if (hasRedirectedRef.current) return;
+    hasRedirectedRef.current = true;
+
+    if (fallbackRedirectTimeoutRef.current) {
+      clearTimeout(fallbackRedirectTimeoutRef.current);
+      fallbackRedirectTimeoutRef.current = null;
+    }
+
+    if (id) {
+      window.location.href = `/ads/adrequest/${id}/versions/`;
+      return;
+    }
+
+    window.location.href = '/ads/my-ads/';
+  };
+
+  useEffect(() => {
+    if (!adRequestId) return;
+
+    fallbackRedirectTimeoutRef.current = setTimeout(() => {
+      redirectToVersions(adRequestId);
+    }, 5000);
+
+    return () => {
+      if (fallbackRedirectTimeoutRef.current) {
+        clearTimeout(fallbackRedirectTimeoutRef.current);
+        fallbackRedirectTimeoutRef.current = null;
+      }
+    };
+  }, [adRequestId]);
+
   // Handle SSE events
   const handleSSEEvent = (eventType, data) => {
     console.log('Received SSE event:', eventType, data);
@@ -71,26 +106,14 @@ const GeneratingLoadingPage = ({ adRequestId }) => {
           console.log('AdRequest completed! Redirecting to generated ad page...');
           // Small delay to let user see the completion
           setTimeout(() => {
-            // Get the latest version ID from the data if available, otherwise construct URL with adRequestId
-            if (data.ad_request_id) {
-              window.location.href = `/ads/adrequest/${data.ad_request_id}/versions/`;
-            } else {
-              // Fallback: redirect to my ads page if we don't have version_id
-              window.location.href = '/ads/my-ads/';
-            }
+            redirectToVersions(data.ad_request_id || adRequestId);
           }, 1500);
         }
       } else if (eventType === 'completion') {
         console.log('Completion event received! Redirecting to generated ad page...');
         // Small delay to let user see the completion
         setTimeout(() => {
-          // Get the latest version ID from the data if available, otherwise fallback
-          if (data.ad_request_id) {
-            window.location.href = `/ads/adrequest/${data.ad_request_id}/versions/`;
-          } else {
-            // Fallback: redirect to my ads page if we don't have version_id
-            window.location.href = '/ads/my-ads/';
-          }
+          redirectToVersions(data.ad_request_id || adRequestId);
         }, 1500);
       }
     }
