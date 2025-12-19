@@ -102,6 +102,23 @@ const OnboardingPage = () => {
     console.log('Step 4 submitted:', data);
     setFormData(prev => ({ ...prev, ...data }));
 
+    if (!data.selectedAd) {
+      try {
+        await fetch('/users/api/complete-onboarding/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken(),
+          },
+        });
+      } catch (error) {
+        console.error('Error completing onboarding:', error);
+      }
+
+      window.location.href = '/ads/discover/';
+      return;
+    }
+
     // If user selected an ad, save it to the backend
     if (data.selectedAd && data.selectedAd.id) {
       try {
@@ -147,7 +164,7 @@ const OnboardingPage = () => {
 
     // Complete onboarding (advance to ONBOARDED status)
     try {
-      await fetch('/users/api/advance-onboarding/', {
+      await fetch('/users/api/complete-onboarding/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
