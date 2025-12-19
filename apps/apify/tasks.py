@@ -62,7 +62,7 @@ def resolve_apify_api_key(page_id: Optional[str], backload_id: Optional[int], ur
     raise ValueError(error_message)
 
 
-def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int = None, page_id: str = None, is_automated: bool = False) -> dict:
+def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int = None, page_id: str = None, is_automated: bool = False, user_id: int = None, is_onboarding: bool = False) -> dict:
     """
     Procesa los items de un dataset de Apify y crea entradas en AdLibrary para cada anuncio.
     
@@ -72,6 +72,8 @@ def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int
         backload_id: ID del Backload asociado a esta ejecución
         page_id: ID de la página de Facebook asociada a esta tarea
         is_automated: Si True, extrae datos adicionales para completar FacebookPage
+        user_id: ID del usuario (para notificaciones SSE en onboarding)
+        is_onboarding: Si True, envía notificaciones SSE por cada anuncio creado
         
     Returns:
         Diccionario con estadísticas de procesamiento
@@ -169,6 +171,34 @@ def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int
                     facebook_page.save(update_fields=['page_name'])
                     page_name_updated = True
                     logger.info(f"Updated FacebookPage.page_name to: {item.get('page_name')}")
+
+                    # Notificar vía SSE que ya tenemos información de la marca (nombre de la página)
+                    if is_automated and user_id:
+                        try:
+                            import redis
+                            import json
+                            from django.conf import settings
+                            from django.utils import timezone
+
+                            redis_client = redis.from_url(settings.REDIS_URL)
+
+                            notification_data = {
+                                "type": "brand_info_available",
+                                "backload_id": backload_id,
+                                "page_id": page_id,
+                                "page_name": item.get("page_name"),
+                                "timestamp": timezone.now().isoformat(),
+                            }
+
+                            channel = f"user:{user_id}:adrequest_updates"
+                            redis_client.publish(channel, json.dumps(notification_data))
+                            logger.info(
+                                f"Sent SSE brand_info_available notification to user {user_id} for page {page_id}"
+                            )
+                        except Exception as e:
+                            logger.error(
+                                f"Error sending SSE brand_info_available notification: {str(e)}"
+                            )
                 
                 # 2. Extraer industries desde page_categories dentro de snapshot (solo si no es UNKNOWN)
                 if not industries_updated and snapshot.get('page_categories'):
@@ -222,42 +252,56 @@ def process_apify_dataset(dataset_id: str, client: ApifyClient, backload_id: int
             
             # Check if this is an item with cards (multiple ads)
             if item.get('snapshot') and item['snapshot'].get('cards'):
-                logger.info(f"Processing item with cards: {meta_ad_id}")
-                result = create_adlibrary_from_cards(item, media_type, content_languages)
-                processed_count += result['processed_count']
-                failed_count += result['failed_count']
-                errors.extend(result['errors'])
-                continue
-            
-            # Process as a regular single ad item
+                logger.info(f"Launching async task for item with cards: {meta_ad_id}")
+                create_adlibrary_from_cards_task.delay(
+                    item,
+                    media_type,
+                    content_languages,
+                    user_id=user_id,
+                    is_onboarding=is_onboarding,
+                    is_automated=is_automated,
+                    backload_id=backload_id,
+                )
+                processed_count += 1
             else:
-                logger.info(f"Processing item: {meta_ad_id}")
-                result = create_adlibrary_from_single_ad(item, media_type, content_languages)
-                processed_count += result['processed_count']
-                failed_count += result['failed_count']
-                errors.extend(result['errors'])
-            
-            # Note: Since create_ad_library_entry is a Celery task,
-            # we're not waiting for the result here. Each task will run
-            # independently and handle its own success/failure.
-            processed_count += 1
+                # Process as a regular single ad item
+                logger.info(f"Launching async task for item: {meta_ad_id}")
+                create_adlibrary_from_single_ad_task.delay(
+                    item,
+                    media_type,
+                    content_languages,
+                    user_id=user_id,
+                    is_onboarding=is_onboarding,
+                    is_automated=is_automated,
+                    backload_id=backload_id,
+                )
+                processed_count += 1
             
         except Exception as e:
-            error_msg = f"Error processing item {item.get('id', 'unknown')}: {str(e)}"
+            error_msg = f"Error launching task for item {item.get('id', 'unknown')}: {str(e)}"
             logger.error(error_msg)
             errors.append(error_msg)
             failed_count += 1
     
+    logger.info(f"Launched {processed_count} async tasks for AdLibrary creation")
+    
     return {
         'item_count': len(items),
-        'processed_count': processed_count,
-        'failed_count': failed_count,
+        'tasks_launched': processed_count,
         'skipped_count': skipped_count,
         'errors': errors
     }
 
 
-def create_adlibrary_from_single_ad(item: dict, media_type: str, content_languages: list) -> Dict[str, Any]:
+def create_adlibrary_from_single_ad(
+    item: dict,
+    media_type: str,
+    content_languages: list,
+    user_id: int = None,
+    is_onboarding: bool = False,
+    is_automated: bool = False,
+    backload_id: int = None,
+) -> Dict[str, Any]:
     """
     Create an AdLibrary entry from a single ad item without cards.
     
@@ -265,6 +309,10 @@ def create_adlibrary_from_single_ad(item: dict, media_type: str, content_languag
         item: Diccionario con datos del anuncio de Apify sin cards
         media_type: Tipo de medio del anuncio
         content_languages: Lista de idiomas del contenido
+        user_id: ID del usuario (para notificaciones SSE en onboarding / request brand)
+        is_onboarding: Si True, envía notificación SSE al crear el anuncio (onboarding)
+        is_automated: Si True, envía notificación SSE para request brand
+        backload_id: ID del backload para filtrar notificaciones
         
     Returns:
         Diccionario con estadísticas de procesamiento
@@ -412,6 +460,14 @@ def create_adlibrary_from_single_ad(item: dict, media_type: str, content_languag
         processed_count += 1
         logger.info(f"Successfully created AdLibrary entry for ad ID {meta_ad_id}")
         
+        # Send SSE notification if onboarding
+        if is_onboarding and user_id:
+            send_onboarding_ad_created_notification(user_id, ad_library)
+
+        # Send SSE notification if this ad comes from an automated request brand backload
+        if is_automated and user_id:
+            send_request_brand_ad_created_notification(user_id, ad_library, backload_id)
+        
     except Exception as e:
         error_msg = f"Error processing ad ID {meta_ad_id}: {str(e)}"
         logger.error(error_msg)
@@ -425,7 +481,15 @@ def create_adlibrary_from_single_ad(item: dict, media_type: str, content_languag
     }
 
 
-def create_adlibrary_from_cards(item: dict, media_type: str, content_languages: List[str]) -> dict:
+def create_adlibrary_from_cards(
+    item: dict,
+    media_type: str,
+    content_languages: List[str],
+    user_id: int = None,
+    is_onboarding: bool = False,
+    is_automated: bool = False,
+    backload_id: int = None,
+) -> dict:
     """
     Crea entradas de AdLibrary a partir de un item que contiene múltiples cards.
     
@@ -433,6 +497,10 @@ def create_adlibrary_from_cards(item: dict, media_type: str, content_languages: 
         item: Diccionario con datos del anuncio de Apify que contiene cards
         media_type: Tipo de medio del anuncio
         content_languages: Lista de idiomas del contenido
+        user_id: ID del usuario (para notificaciones SSE en onboarding / request brand)
+        is_onboarding: Si True, envía notificación SSE al crear cada anuncio (onboarding)
+        is_automated: Si True, envía notificación SSE para request brand
+        backload_id: ID del backload para filtrar notificaciones
         
     Returns:
         Diccionario con estadísticas de procesamiento
@@ -576,6 +644,14 @@ def create_adlibrary_from_cards(item: dict, media_type: str, content_languages: 
             processed_count += 1
             logger.info(f"Successfully created AdLibrary entry for card {index} in ad ID {meta_ad_id}")
             
+            # Send SSE notification if onboarding
+            if is_onboarding and user_id:
+                send_onboarding_ad_created_notification(user_id, ad_library)
+
+            # Send SSE notification if this ad comes from an automated request brand backload
+            if is_automated and user_id:
+                send_request_brand_ad_created_notification(user_id, ad_library, backload_id)
+            
         except Exception as e:
             error_msg = f"Error processing card {index} in ad ID {meta_ad_id}: {str(e)}"
             logger.error(error_msg)
@@ -590,6 +666,46 @@ def create_adlibrary_from_cards(item: dict, media_type: str, content_languages: 
 
 
 @shared_task
+def create_adlibrary_from_single_ad_task(
+    item: dict,
+    media_type: str,
+    content_languages: list,
+    user_id: int = None,
+    is_onboarding: bool = False,
+    is_automated: bool = False,
+    backload_id: int = None,
+) -> Dict[str, Any]:
+    """
+    Celery task wrapper para create_adlibrary_from_single_ad.
+    Permite ejecución paralela de múltiples items.
+    """
+    return create_adlibrary_from_single_ad(
+        item, media_type, content_languages,
+        user_id, is_onboarding, is_automated, backload_id
+    )
+
+
+@shared_task
+def create_adlibrary_from_cards_task(
+    item: dict,
+    media_type: str,
+    content_languages: list,
+    user_id: int = None,
+    is_onboarding: bool = False,
+    is_automated: bool = False,
+    backload_id: int = None,
+) -> Dict[str, Any]:
+    """
+    Celery task wrapper para create_adlibrary_from_cards.
+    Permite ejecución paralela de múltiples items.
+    """
+    return create_adlibrary_from_cards(
+        item, media_type, content_languages,
+        user_id, is_onboarding, is_automated, backload_id
+    )
+
+
+@shared_task
 def fetch_apify_ads(
     output_dir: str = "apify_ads_results",
     urls: List[Dict[str, str]] = None,
@@ -598,7 +714,9 @@ def fetch_apify_ads(
     page_id: str = None,
     backload_id: int = None,
     is_automated: bool = False,
-    user_id: int = None
+    user_id: int = None,
+    limit_per_source: int = None,
+    is_onboarding: bool = False
 ) -> Dict[str, Any]:
     """
     Celery task to fetch ads from Apify API.
@@ -613,6 +731,8 @@ def fetch_apify_ads(
         page_id: ID de la página de Facebook asociada a esta tarea
         backload_id: ID of the Backload object to update with error logs
         is_automated: Si True, extrae datos adicionales para completar FacebookPage
+        limit_per_source: Límite de registros a recibir de Apify (opcional)
+        is_onboarding: Si True, envía notificaciones SSE por cada anuncio creado
     
     Returns:
         Dictionary with task execution information
@@ -651,6 +771,10 @@ def fetch_apify_ads(
             "scrapePageAds.activeStatus": "all",  # Fixed value as per API requirements
             "period": period,
         }
+        
+        # Add limit if specified
+        if limit_per_source is not None:
+            run_input["limitPerSource"] = limit_per_source
         
         logger.info(f"Calling Apify actor {actor_id} with input: {run_input}")
         
@@ -757,7 +881,7 @@ def fetch_apify_ads(
                 logger.error(f"Error sending SSE fetch-completed notification: {str(e)}")
         
         # Fetch and process items from the dataset
-        processing_result = process_apify_dataset(dataset_id, client, backload_id, page_id, is_automated)
+        processing_result = process_apify_dataset(dataset_id, client, backload_id, page_id, is_automated, user_id=user_id, is_onboarding=is_onboarding)
         
         # Update Backload status to SUCCESS
         if backload_id:
@@ -765,7 +889,7 @@ def fetch_apify_ads(
                 backload = Backload.objects.get(id=backload_id)
                 backload.status = Backload.STATUS_SUCCESS
                 # Guardar información de procesamiento en el error_log para referencia
-                backload.error_log = f"Procesados: {processing_result['processed_count']}, Fallidos: {processing_result['failed_count']}, Omitidos: {processing_result['skipped_count']}"
+                backload.error_log = f"Tasks lanzadas: {processing_result['tasks_launched']}, Omitidos: {processing_result['skipped_count']}"
                 backload.save()
                 logger.info(f"Updated Backload {backload_id} status to SUCCESS")
             except Exception as be:
@@ -796,8 +920,7 @@ def fetch_apify_ads(
                     'backload_id': backload_id,
                     'page_id': page_id,
                     'page_name': page_name,
-                    'processed_count': processing_result['processed_count'],
-                    'failed_count': processing_result['failed_count'],
+                    'tasks_launched': processing_result['tasks_launched'],
                     'skipped_count': processing_result['skipped_count'],
                     'timestamp': timezone.now().isoformat()
                 }
@@ -813,8 +936,7 @@ def fetch_apify_ads(
             'backload_id': backload_id,
             'dataset_id': dataset_id,
             'item_count': processing_result['item_count'],
-            'processed_count': processing_result['processed_count'],
-            'failed_count': processing_result['failed_count'],
+            'tasks_launched': processing_result['tasks_launched'],
             'skipped_count': processing_result['skipped_count'],
             'errors': processing_result['errors'][:10] if processing_result['errors'] else []  # Incluir solo los primeros 10 errores para evitar respuestas demasiado grandes
         }
@@ -1269,3 +1391,486 @@ def run_backload_queries(backload_ids):
             'status': 'error',
             'message': error_msg
         }
+
+
+def _send_competitor_research_sse(user_id: int, competitor_url: str, page_name: str, ads_count: int, success: bool = True):
+    """
+    Send SSE notification when competitor research completes.
+    """
+    try:
+        import redis
+        import json
+        from django.conf import settings
+        from django.utils import timezone
+        
+        redis_client = redis.from_url(settings.REDIS_URL)
+        
+        notification_data = {
+            'type': 'competitor_research_completed',
+            'success': success,
+            'competitor_url': competitor_url,
+            'page_name': page_name,
+            'ads_count': ads_count,
+            'timestamp': timezone.now().isoformat()
+        }
+        
+        channel = f"user:{user_id}:adrequest_updates"
+        redis_client.publish(channel, json.dumps(notification_data))
+        logger.info(f"Sent competitor research SSE notification to user {user_id} (success={success})")
+    except Exception as e:
+        logger.error(f"Error sending competitor research SSE notification: {str(e)}")
+
+
+def send_existing_ads_notifications(user_id: int, fb_page) -> int:
+    """
+    Send SSE notifications for existing ads when a competitor with ads is found.
+    This is used when ads already exist in the database and don't need to be created.
+    
+    Args:
+        user_id: ID of the user to notify
+        fb_page: The FacebookPage instance with existing ads
+        
+    Returns:
+        Number of ads sent
+    """
+    from apps.ads.models import AdLibrary
+    
+    try:
+        # Get active ads for this page (limit to avoid overwhelming the frontend)
+        ads = AdLibrary.objects.filter(
+            facebook_page=fb_page,
+            meta_status=AdLibrary.STATUS_ACTIVE,
+            ad_image__isnull=False
+        ).exclude(ad_image='').order_by('-ad_delivery_start_time')[:20]
+        
+        sent_count = 0
+        for ad_library in ads:
+            send_onboarding_ad_created_notification(user_id, ad_library)
+            sent_count += 1
+            
+        logger.info(f"Sent {sent_count} existing ad notifications to user {user_id}")
+        return sent_count
+    except Exception as e:
+        logger.error(f"Error sending existing ads notifications: {str(e)}")
+        return 0
+
+
+def send_onboarding_ad_created_notification(user_id: int, ad_library) -> None:
+    """
+    Send SSE notification when a new ad is created during onboarding.
+    
+    Args:
+        user_id: ID of the user to notify
+        ad_library: The AdLibrary instance that was created
+    """
+    try:
+        import redis
+        import json
+        from django.conf import settings
+        from django.utils import timezone
+        
+        redis_client = redis.from_url(settings.REDIS_URL)
+        
+        # Build ad data for frontend
+        ad_data = {
+            'id': ad_library.id,
+            'image_url': ad_library.ad_image.url if ad_library.ad_image else None,
+            'ad_copy': ad_library.ad_creative_bodies or '',
+            'page_name': ad_library.facebook_page.page_name if ad_library.facebook_page else 'Unknown',
+            'page_url': ad_library.facebook_page.page_url if ad_library.facebook_page else '',
+            'started_running_on': ad_library.ad_delivery_start_time.isoformat() if ad_library.ad_delivery_start_time else None,
+        }
+        
+        notification_data = {
+            'type': 'onboarding_ad_created',
+            'ad': ad_data,
+            'timestamp': timezone.now().isoformat()
+        }
+        
+        channel = f"user:{user_id}:adrequest_updates"
+        redis_client.publish(channel, json.dumps(notification_data))
+        logger.info(f"Sent onboarding ad created SSE notification to user {user_id} for ad {ad_library.id}")
+    except Exception as e:
+        logger.error(f"Error sending onboarding ad created SSE notification: {str(e)}")
+
+
+def send_request_brand_ad_created_notification(user_id: int, ad_library, backload_id: int = None) -> None:
+    """Send SSE notification when a new ad is created during request brand process."""
+    try:
+        import redis
+        import json
+        from django.conf import settings
+        from django.utils import timezone
+
+        redis_client = redis.from_url(settings.REDIS_URL)
+
+        ad_data = {
+            "id": ad_library.id,
+            "image_url": ad_library.ad_image.url if ad_library.ad_image else None,
+            "ad_copy": ad_library.ad_creative_bodies or "",
+            "ad_creative_bodies": ad_library.ad_creative_bodies or "",
+            "page_name": ad_library.facebook_page.page_name if ad_library.facebook_page else "Unknown",
+            "page_id": ad_library.facebook_page.page_id if ad_library.facebook_page else None,
+            "page_url": ad_library.facebook_page.page_url if ad_library.facebook_page else "",
+            "started_running_on": ad_library.ad_delivery_start_time.isoformat()
+            if ad_library.ad_delivery_start_time
+            else None,
+        }
+
+        notification_data = {
+            "type": "request_brand_ad_created",
+            "backload_id": backload_id,
+            "ad": ad_data,
+            "timestamp": timezone.now().isoformat(),
+        }
+
+        channel = f"user:{user_id}:adrequest_updates"
+        redis_client.publish(channel, json.dumps(notification_data))
+        logger.info(
+            f"Sent request_brand ad created SSE notification to user {user_id} for ad {ad_library.id}"
+        )
+    except Exception as e:
+        logger.error(
+            f"Error sending request_brand ad created SSE notification: {str(e)}"
+        )
+
+
+def extract_fb_name_from_url(url: str) -> Optional[str]:
+    """
+    Extract the Facebook page name/slug from a Facebook URL.
+    
+    Examples:
+        - https://www.facebook.com/starbucks -> starbucks
+        - https://facebook.com/starbucks/ -> starbucks
+        - https://www.facebook.com/profile.php?id=123 -> None (numeric ID, not a name)
+    
+    Args:
+        url: Facebook page URL
+        
+    Returns:
+        The fb_name or None if not extractable
+    """
+    import re
+    
+    if not url:
+        return None
+        
+    # Remove trailing slash
+    url = url.rstrip('/')
+    
+    # Pattern to extract the page name from Facebook URL
+    # Matches: facebook.com/pagename or www.facebook.com/pagename
+    pattern = r'(?:https?://)?(?:www\.)?facebook\.com/([a-zA-Z0-9.]+)/?$'
+    match = re.match(pattern, url)
+    
+    if match:
+        fb_name = match.group(1)
+        # Exclude profile.php and other non-page URLs
+        if fb_name in ('profile.ph p', 'pages', 'groups', 'events', 'watch', 'marketplace'):
+            return None
+        # Exclude numeric-only names (these are page IDs, not names)
+        if fb_name.isdigit():
+            return None
+        return fb_name.lower()
+    
+    return None
+
+
+@shared_task
+def competitor_research_task(user_id: int, website_url: str) -> Dict[str, Any]:
+    """
+    Task to perform competitor research and find an advertiser with ads.
+    
+    Flow:
+    1. Get competitor URLs from Replicate
+    2. For each URL, extract fb_name and try to find existing FacebookPage
+    3. If found by fb_name, check for ads
+    4. If not found, scrape with Playwright to get page_id
+    5. Save fb_name to FacebookPage for future lookups
+    6. Check for ads or run backload if needed
+    
+    Args:
+        user_id: ID of the user initiating the request
+        website_url: URL of the website to research
+        
+    Returns:
+        Dictionary with results
+    """
+    from django.contrib.auth import get_user_model
+    from apps.users.models import UserOnboarding
+    from apps.aiinterface.services import ReplicateTextGenerationService
+    from apps.apify.models import FacebookPage, Backload
+    from apps.ads.models import AdLibrary
+    import time
+    
+    User = get_user_model()
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        logger.error(f"User {user_id} not found for competitor research")
+        return {'success': False, 'error': 'User not found'}
+        
+    logger.info(f"Starting competitor research for user {user.email}, website: {website_url}")
+    
+    # 1. Call Replicate to get competitors
+    try:
+        service = ReplicateTextGenerationService()
+        competitors = service.generate_competitors(website_url)
+    except Exception as e:
+        logger.error(f"Error generating competitors: {str(e)}")
+        return {'success': False, 'error': f"Failed to generate competitors: {str(e)}"}
+        
+    if not competitors:
+        logger.warning("No competitors found by Replicate")
+        return {'success': False, 'error': 'No competitors found'}
+        
+    # Save competitors to UserOnboarding
+    try:
+        onboarding, created = UserOnboarding.objects.get_or_create(user=user)
+        current_competitors = onboarding.competitors or []
+        updated_competitors = list(set(current_competitors + competitors))
+        onboarding.competitors = updated_competitors
+        onboarding.website = website_url
+        onboarding.save(update_fields=['competitors', 'website'])
+    except Exception as e:
+        logger.error(f"Error saving competitors to onboarding: {str(e)}")
+        
+    # 2. Go over list 1 by 1
+    found_advertiser = False
+    successful_competitor = None
+    
+    for competitor_url in competitors:
+        logger.info(f"Processing competitor: {competitor_url}")
+        
+        # Remove trailing slash for consistency
+        if competitor_url.endswith('/'):
+            competitor_url = competitor_url[:-1]
+        
+        # Extract fb_name from URL
+        fb_name = extract_fb_name_from_url(competitor_url)
+        logger.info(f"Extracted fb_name: {fb_name} from {competitor_url}")
+        
+        fb_page = None
+        page_id = None
+        ads_count = 0
+        
+        # Step 1: Try to find by fb_name first (fast path - no scraping needed)
+        if fb_name:
+            fb_page = FacebookPage.objects.filter(fb_name__iexact=fb_name).first()
+            if fb_page:
+                logger.info(f"Found existing FacebookPage by fb_name: {fb_name} (page_id: {fb_page.page_id})")
+                ads_count = AdLibrary.objects.filter(
+                    facebook_page=fb_page, 
+                    meta_status=AdLibrary.STATUS_ACTIVE
+                ).count()
+                logger.info(f"FacebookPage {fb_page.page_id} has {ads_count} active ads")
+                
+                if ads_count > 0:
+                    # Found ads! Send SSE notifications for existing ads
+                    send_existing_ads_notifications(user_id, fb_page)
+                    
+                    # Save and return
+                    found_advertiser = True
+                    successful_competitor = competitor_url
+                    try:
+                        onboarding.selected_competitor_page = fb_page
+                        onboarding.competitor_research_completed = True
+                        onboarding.save(update_fields=['selected_competitor_page', 'competitor_research_completed'])
+                        logger.info(f"Saved competitor page {fb_page.page_id} to UserOnboarding")
+                    except Exception as e:
+                        logger.error(f"Error saving competitor to onboarding: {str(e)}")
+                    
+                    # Send completion notification
+                    _send_competitor_research_sse(
+                        user_id=user_id,
+                        competitor_url=competitor_url,
+                        page_name=fb_page.page_name,
+                        ads_count=ads_count,
+                        success=True
+                    )
+                    break
+                else:
+                    # Page exists but no ads - skip to next competitor
+                    # No point in scraping or backloading since we already tried before
+                    logger.info(f"FacebookPage {fb_page.page_id} exists but has no ads, skipping to next competitor")
+                    continue
+        
+        # Step 2: fb_name not found in DB, scrape with Playwright to get page_id
+        if not fb_page:
+            transparency_url = f"{competitor_url}/about_profile_transparency"
+            
+            try:
+                with sync_playwright() as p:
+                    browser = p.chromium.launch(headless=True)
+                    context = browser.new_context(
+                        user_agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                    )
+                    page = context.new_page()
+                    
+                    logger.info(f"Navigating to {transparency_url}")
+                    page.goto(transparency_url, timeout=30000, wait_until='domcontentloaded')
+                    
+                    time.sleep(3)
+                    
+                    page_id = page.evaluate("""() => {
+                        const isDigits = (str) => /^\\d+$/.test(str);
+                        
+                        const specificClass = document.querySelector('.x193iq5w.xeuugli.x13faqbe.x1vvkbs.xlh3980.xvmahel.x1n0sxbx.x1lliihq.x1s928wv.xhkezso.x1gmr53x.x1cpjm7i.x1fgarty.x1943h6x.x4zkp8e.x3x7a5m.x6prxxf.xvq8zen.xo1l8bm.xzsf02u');
+                        if (specificClass && isDigits(specificClass.innerText)) {
+                            return specificClass.innerText;
+                        }
+                        
+                        const candidates = Array.from(document.querySelectorAll('span[dir="auto"]'));
+                        for (const span of candidates) {
+                            if (isDigits(span.innerText) && span.innerText.length > 10) {
+                                return span.innerText;
+                            }
+                        }
+                        
+                        return null;
+                    }""")
+                    
+                    if not page_id:
+                        logger.warning(f"Could not find Page ID on {transparency_url}")
+                    else:
+                        logger.info(f"Found Page ID: {page_id}")
+                        
+                    browser.close()
+                    
+            except Exception as e:
+                logger.error(f"Error scraping {transparency_url}: {str(e)}")
+                continue
+                
+            if not page_id:
+                continue
+            
+            # Step 3: Find or create FacebookPage by page_id and update fb_name
+            fb_page = FacebookPage.objects.filter(page_id=page_id).first()
+            
+            if fb_page:
+                # Update fb_name if we have it and it's not set
+                if fb_name and not fb_page.fb_name:
+                    fb_page.fb_name = fb_name.lower()
+                    fb_page.save(update_fields=['fb_name'])
+                    logger.info(f"Updated FacebookPage {page_id} with fb_name: {fb_name}")
+                    
+                ads_count = AdLibrary.objects.filter(
+                    facebook_page=fb_page, 
+                    meta_status=AdLibrary.STATUS_ACTIVE
+                ).count()
+                logger.info(f"Found existing FacebookPage {page_id} with {ads_count} active ads")
+                
+                if ads_count == 0:
+                    # Page exists but no ads - skip to next competitor
+                    logger.info(f"FacebookPage {page_id} exists but has no ads, skipping to next competitor")
+                    continue
+            else:
+                # Create new FacebookPage with fb_name - will need backload
+                fb_page = FacebookPage.objects.create(
+                    page_id=page_id,
+                    fb_name=fb_name.lower() if fb_name else '',
+                    page_url=competitor_url,
+                    page_name=f"New Import {page_id}", 
+                    notes=f"Auto-created by Competitor Research for {website_url}"
+                )
+                logger.info(f"Created new FacebookPage for {page_id} with fb_name: {fb_name}")
+                ads_count = 0  # New page, needs backload
+        
+        # Step 4: If 0 ads, start backload
+        if ads_count == 0:
+            logger.info(f"Starting backload for Page ID {fb_page.page_id}")
+            
+            backload = Backload.objects.create(
+                status=Backload.STATUS_PENDING,
+                error_log=f"Auto-generated from competitor research for {website_url} (User: {user.email})"
+            )
+            backload.pages.add(fb_page)
+            
+            search_url = backload.get_facebook_ads_url_for_page(fb_page.page_id)
+            
+            try:
+                result = fetch_apify_ads(
+                    urls=[{"url": search_url}],
+                    page_id=fb_page.page_id,
+                    backload_id=backload.id,
+                    is_automated=True,
+                    user_id=user.id,
+                    limit_per_source=2000,
+                    is_onboarding=True
+                )
+                
+                if result.get('tasks_launched', 0) > 0:
+                    logger.info(f"Backload successful: {result['tasks_launched']} tasks launched for ads")
+                    found_advertiser = True
+                    successful_competitor = competitor_url
+                    try:
+                        onboarding.selected_competitor_page = fb_page
+                        onboarding.competitor_research_completed = True
+                        onboarding.save(update_fields=['selected_competitor_page', 'competitor_research_completed'])
+                        logger.info(f"Saved competitor page {fb_page.page_id} to UserOnboarding")
+                    except Exception as e:
+                        logger.error(f"Error saving competitor to onboarding: {str(e)}")
+                    
+                    # Send completion notification (ads were already sent via is_onboarding=True)
+                    _send_competitor_research_sse(
+                        user_id=user_id,
+                        competitor_url=competitor_url,
+                        page_name=fb_page.page_name,
+                        ads_count=result.get('tasks_launched', 0),
+                        success=True
+                    )
+                    break
+                else:
+                    logger.info("Backload returned 0 tasks, trying next competitor")
+                    
+            except Exception as e:
+                logger.error(f"Error running fetch_apify_ads: {str(e)}")
+                
+        else:
+            # We have ads already - send SSE notifications for existing ads
+            send_existing_ads_notifications(user_id, fb_page)
+            
+            found_advertiser = True
+            successful_competitor = competitor_url
+            logger.info("Advertiser already has ads, stopping research")
+            try:
+                onboarding.selected_competitor_page = fb_page
+                onboarding.competitor_research_completed = True
+                onboarding.save(update_fields=['selected_competitor_page', 'competitor_research_completed'])
+                logger.info(f"Saved competitor page {fb_page.page_id} to UserOnboarding")
+            except Exception as e:
+                logger.error(f"Error saving competitor to onboarding: {str(e)}")
+            
+            # Send completion notification
+            _send_competitor_research_sse(
+                user_id=user_id,
+                competitor_url=competitor_url,
+                page_name=fb_page.page_name,
+                ads_count=ads_count,
+                success=True
+            )
+            break
+    
+    # Mark as completed even if no ads found
+    if not found_advertiser:
+        try:
+            onboarding.competitor_research_completed = True
+            onboarding.save(update_fields=['competitor_research_completed'])
+            logger.info("Competitor research completed with no ads found")
+            
+            # Send failure notification
+            _send_competitor_research_sse(
+                user_id=user_id,
+                competitor_url='',
+                page_name='',
+                ads_count=0,
+                success=False
+            )
+        except Exception as e:
+            logger.error(f"Error marking research as completed: {str(e)}")
+            
+    return {
+        'success': found_advertiser,
+        'competitor': successful_competitor,
+        'processed_competitors': len(competitors)
+    }

@@ -6,6 +6,8 @@ from django.http.response import HttpResponseRedirect, JsonResponse, HttpRespons
 from django.core.cache import cache
 import logging
 
+log = logging.getLogger(__name__)
+
 # Importar el servicio de generación de imágenes
 from apps.aiinterface.services import ImageGenerationService
 from django.db.models import Q, Count, Sum, F, Exists, OuterRef, Subquery
@@ -21,8 +23,11 @@ import json
 import requests
 from django.core.serializers.json import DjangoJSONEncoder
 import urllib.parse
+import ipaddress
+import socket
 import os
 from django.conf import settings
+from apps.users.decorators import onboarding_required
 import posthog
 from django.utils import timezone
 from apps.aiinterface.tasks import send_slack_notification
@@ -146,6 +151,304 @@ def track_adlibrary_click(request, adlibrary_id):
         pass
 
     return JsonResponse({'id': adlibrary_id, 'click_count': adlibrary.click_count})
+
+
+@require_POST
+@login_required
+def competitor_research(request):
+    """
+    Trigger competitor research task.
+    Expects 'website_url' in POST data.
+    """
+    from apps.apify.tasks import competitor_research_task
+    
+    website_url = request.POST.get('website_url')
+    if not website_url:
+        return JsonResponse({'error': 'Missing website_url'}, status=400)
+        
+    # Trigger task asynchronously
+    task = competitor_research_task.delay(request.user.id, website_url)
+    
+    return JsonResponse({
+        'success': True,
+        'task_id': task.id,
+        'message': 'Competitor research started'
+    })
+
+
+@login_required
+def get_competitor_ads(request):
+    """
+    Get ads from the selected competitor found during onboarding.
+    Returns status of competitor research and AdLibrary entries if completed.
+    """
+    from apps.users.models import UserOnboarding
+    
+    try:
+        try:
+            onboarding = UserOnboarding.objects.select_related('selected_competitor_page').get(user=request.user)
+        except UserOnboarding.DoesNotExist:
+            return JsonResponse({
+                'success': False, 
+                'completed': False,
+                'ads': [], 
+                'message': 'No onboarding data found'
+            })
+        
+        # Check if research is completed
+        if not onboarding.competitor_research_completed:
+            return JsonResponse({
+                'success': False,
+                'completed': False,
+                'ads': [],
+                'message': 'Competitor research still in progress'
+            })
+        
+        # Research completed but no competitor found
+        if not onboarding.selected_competitor_page:
+            return JsonResponse({
+                'success': False,
+                'completed': True,
+                'ads': [],
+                'message': 'No competitor with ads was found'
+            })
+        
+        fb_page = onboarding.selected_competitor_page
+        
+        # Get active ads from the selected competitor page
+        ads = AdLibrary.objects.filter(
+            facebook_page=fb_page,
+            meta_status=AdLibrary.STATUS_ACTIVE
+        ).order_by('-ad_delivery_start_time')[:20]
+        
+        ads_data = []
+        for ad in ads:
+            ads_data.append({
+                'id': ad.id,
+                'image_url': ad.ad_image.url if ad.ad_image else None,
+                'ad_copy': ad.ad_creative_bodies or '',
+                'page_name': fb_page.page_name or 'Unknown',
+                'page_url': fb_page.page_url or '',
+                'started_running_on': ad.ad_delivery_start_time.isoformat() if ad.ad_delivery_start_time else None,
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'completed': True,
+            'ads': ads_data,
+            'competitor_page': {
+                'id': fb_page.id,
+                'page_id': fb_page.page_id,
+                'page_name': fb_page.page_name,
+                'page_url': fb_page.page_url
+            }
+        })
+    except Exception as e:
+        logger.error(f"Error in get_competitor_ads: {str(e)}", exc_info=True)
+        return JsonResponse({'success': False, 'completed': False, 'ads': [], 'message': f'Server error: {str(e)}'})
+
+
+@login_required
+@require_http_methods(["POST"])
+def select_competitor_ad(request):
+    """
+    Save the selected AdLibrary from competitor ads during onboarding.
+    Advances user to STEP_5.
+    """
+    from apps.users.models import UserOnboarding
+    import json
+    
+    try:
+        data = json.loads(request.body)
+        ad_library_id = data.get('ad_library_id')
+        
+        if not ad_library_id:
+            return JsonResponse({'success': False, 'message': 'ad_library_id is required'}, status=400)
+        
+        # Get or create onboarding record
+        onboarding, _ = UserOnboarding.objects.get_or_create(user=request.user)
+        
+        # Verify the AdLibrary exists
+        try:
+            ad_library = AdLibrary.objects.get(id=ad_library_id)
+        except AdLibrary.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'AdLibrary not found'}, status=404)
+        
+        # Save the selection
+        onboarding.selected_ad_library = ad_library
+        onboarding.save()
+        
+        # Note: advance_onboarding() is called by the frontend after this endpoint
+        # to avoid double-advancing the status
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Ad selection saved'
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'message': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        logger.error(f"Error in select_competitor_ad: {str(e)}", exc_info=True)
+        return JsonResponse({'success': False, 'message': f'Server error: {str(e)}'}, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def save_assets_onboarding(request):
+    """
+    Save assets for Step 5 of onboarding.
+    Handles: asset_image_1, asset_image_2, asset_image_3, canvas_size, prompt
+    Each field is optional and saved independently.
+    Also creates UserBrandAssets records for uploaded images linked to the onboarding brand.
+    """
+    from apps.users.models import UserOnboarding
+    from PIL import Image as PILImage
+    from io import BytesIO
+    
+    try:
+        # Get or create onboarding record
+        onboarding, _ = UserOnboarding.objects.get_or_create(user=request.user)
+        
+        # Helper to create UserBrandAssets from uploaded file
+        def create_brand_asset(uploaded_file, brand):
+            """Create a UserBrandAssets record for the uploaded file."""
+            if not brand:
+                return None
+            
+            try:
+                # Get image dimensions
+                img = PILImage.open(uploaded_file)
+                width, height = img.size
+                uploaded_file.seek(0)  # Reset file pointer after reading
+                
+                # Create the asset
+                asset = UserBrandAssets.objects.create(
+                    user=request.user,
+                    brand=brand,
+                    image=uploaded_file,
+                    category='assets',
+                    original_filename=uploaded_file.name,
+                    canvas_width=width,
+                    canvas_height=height,
+                    file_size=uploaded_file.size
+                )
+                return asset
+            except Exception as e:
+                logger.warning(f"Failed to create brand asset: {str(e)}")
+                return None
+        
+        # Handle image uploads
+        if 'asset_image_1' in request.FILES:
+            uploaded_file = request.FILES['asset_image_1']
+            onboarding.asset_image_1 = uploaded_file
+            # Also create UserBrandAssets if brand exists
+            if onboarding.brand:
+                create_brand_asset(uploaded_file, onboarding.brand)
+        elif 'asset_image_1' in request.POST and request.POST['asset_image_1'] == '':
+            # Empty string means delete
+            onboarding.asset_image_1 = None
+            
+        if 'asset_image_2' in request.FILES:
+            uploaded_file = request.FILES['asset_image_2']
+            onboarding.asset_image_2 = uploaded_file
+            # Also create UserBrandAssets if brand exists
+            if onboarding.brand:
+                create_brand_asset(uploaded_file, onboarding.brand)
+        elif 'asset_image_2' in request.POST and request.POST['asset_image_2'] == '':
+            # Empty string means delete
+            onboarding.asset_image_2 = None
+            
+        if 'asset_image_3' in request.FILES:
+            uploaded_file = request.FILES['asset_image_3']
+            onboarding.asset_image_3 = uploaded_file
+            # Also create UserBrandAssets if brand exists
+            if onboarding.brand:
+                create_brand_asset(uploaded_file, onboarding.brand)
+        elif 'asset_image_3' in request.POST and request.POST['asset_image_3'] == '':
+            # Empty string means delete
+            onboarding.asset_image_3 = None
+        
+        # Handle canvas_size
+        if 'canvas_size' in request.POST:
+            onboarding.canvas_size = request.POST['canvas_size'] or None
+        
+        # Handle prompt
+        if 'prompt' in request.POST:
+            onboarding.prompt = request.POST['prompt'] or None
+        
+        onboarding.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Assets saved',
+            'data': {
+                'asset_image_1': onboarding.asset_image_1.url if onboarding.asset_image_1 else None,
+                'asset_image_2': onboarding.asset_image_2.url if onboarding.asset_image_2 else None,
+                'asset_image_3': onboarding.asset_image_3.url if onboarding.asset_image_3 else None,
+                'canvas_size': onboarding.canvas_size,
+                'prompt': onboarding.prompt,
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in save_assets_onboarding: {str(e)}", exc_info=True)
+        return JsonResponse({'success': False, 'message': f'Server error: {str(e)}'}, status=500)
+
+
+@login_required
+@require_http_methods(["GET"])
+def get_assets_onboarding(request):
+    """
+    Get saved assets for Step 5 of onboarding.
+    """
+    from apps.users.models import UserOnboarding
+    
+    try:
+        onboarding = UserOnboarding.objects.filter(user=request.user).select_related('selected_ad_library__facebook_page').first()
+
+        if not onboarding:
+            return JsonResponse({
+                'success': True,
+                'data': {
+                    'asset_image_1': None,
+                    'asset_image_2': None,
+                    'asset_image_3': None,
+                    'canvas_size': None,
+                    'prompt': None,
+                    'selected_ad': None,
+                }
+            })
+
+        selected_ad_data = None
+        if onboarding.selected_ad_library:
+            ad = onboarding.selected_ad_library
+            fb_page = getattr(ad, 'facebook_page', None)
+            selected_ad_data = {
+                'id': ad.id,
+                'image_url': ad.ad_image.url if ad.ad_image else None,
+                'ad_copy': ad.ad_creative_bodies or '',
+                'page_name': fb_page.page_name if fb_page and fb_page.page_name else 'Unknown',
+                'page_url': fb_page.page_url if fb_page and fb_page.page_url else '',
+                'started_running_on': ad.ad_delivery_start_time.isoformat() if ad.ad_delivery_start_time else None,
+            }
+
+        return JsonResponse({
+            'success': True,
+            'data': {
+                'asset_image_1': onboarding.asset_image_1.url if onboarding.asset_image_1 else None,
+                'asset_image_2': onboarding.asset_image_2.url if onboarding.asset_image_2 else None,
+                'asset_image_3': onboarding.asset_image_3.url if onboarding.asset_image_3 else None,
+                'canvas_size': onboarding.canvas_size,
+                'prompt': onboarding.prompt,
+                'selected_ad': selected_ad_data,
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in get_assets_onboarding: {str(e)}", exc_info=True)
+        return JsonResponse({'success': False, 'message': f'Server error: {str(e)}'}, status=500)
+
 
 @login_required
 def provision_credit_package(request, user_id, product):
@@ -542,7 +845,7 @@ def payment_success(request):
             'debug_info': f"Payment processing error: {str(e)}"
         })
 
-
+@onboarding_required
 @login_required
 def discover_page(request):
     """
@@ -559,7 +862,7 @@ def discover_page(request):
     
     return TemplateResponse(request, template, context)
 
-
+@onboarding_required
 @login_required
 def brands_page(request):
     """
@@ -604,6 +907,7 @@ def brands_page(request):
     return TemplateResponse(request, template, context)
 
 
+@onboarding_required
 @login_required
 def home(request):
     template = "ads/ads_home.html"
@@ -794,8 +1098,6 @@ def _extract_cta_link(adlibrary):
     
     logger.info("No URL found in any field, returning 'Unknown'")
     return 'Unknown'
-
-
 
 
 def get_adlibrary_by_id(request, adlibrary_id):
@@ -2334,7 +2636,6 @@ def adrequest_version_get(request, version_id):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-
 def billing_page(request):
     """
     Render the billing page with pricing information.
@@ -2962,7 +3263,8 @@ def request_brand(request):
             page_id=facebook_page_id,
             backload_id=backload.pk,
             is_automated=True,
-            user_id=request.user.id
+            user_id=request.user.id,
+            limit_per_source=1000
         )
         
         # Send Slack notification for tracking
@@ -3246,7 +3548,7 @@ def deactivate_image(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-
+@onboarding_required
 @login_required
 def discover_clone_adrequest_page(request, pk):
     """
@@ -3301,7 +3603,7 @@ def discover_clone_adrequest_page(request, pk):
     except AdRequest.DoesNotExist:
         return redirect('ads:discover_page')
 
-
+@onboarding_required
 @login_required
 def my_ads_page(request):
     """
@@ -3364,7 +3666,7 @@ def my_ads_page(request):
     
     return TemplateResponse(request, template, context)
 
-
+@onboarding_required
 @login_required
 def assets_page(request):
     """
@@ -3424,6 +3726,7 @@ def assets_page(request):
     return TemplateResponse(request, template, context)
 
 
+@onboarding_required
 @login_required
 def folder_assets_detail(request, folder_id):
     """
@@ -3490,7 +3793,7 @@ def folder_assets_detail(request, folder_id):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-
+@onboarding_required
 @login_required
 def folder_assets_detail_page(request, folder_id):
     """
@@ -3590,7 +3893,7 @@ def create_folder(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-
+@onboarding_required
 @login_required
 def brand_assets_detail(request, brand_id):
     """
@@ -3652,7 +3955,7 @@ def brand_assets_detail(request, brand_id):
     except UserBrand.DoesNotExist:
         return JsonResponse({'error': 'Brand not found'}, status=404)
 
-
+@onboarding_required
 @login_required
 def brand_assets_detail_page(request, brand_id):
     """
@@ -3761,7 +4064,7 @@ def upload_folder_assets(request, folder_id):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-
+@onboarding_required
 @login_required
 def generated_ad_page(request, version_id):
     """
@@ -3813,7 +4116,7 @@ def generated_ad_page(request, version_id):
     except AdRequestVersion.DoesNotExist:
         return redirect('ads:my_ads_page')
 
-
+@onboarding_required
 @login_required
 def ad_request_versions_page(request, ad_request_id):
     """
@@ -3866,7 +4169,7 @@ def ad_request_versions_page(request, ad_request_id):
     except AdRequest.DoesNotExist:
         return redirect('ads:my_ads_page')
 
-
+@onboarding_required
 @login_required
 def generated_versions_page(request, primary_version_id):
     """
@@ -3945,46 +4248,196 @@ def analyze_website_for_brand_assets(request):
     
     Args:
         request: Django request object with 'website_url' in POST data
+        Optional: 'is_onboarding' - if true, saves brand to UserOnboarding
         
-    Returns:
-        JsonResponse with extracted assets or error
+    Launches async Celery task and returns immediately.
+    Result will be sent via SSE notification.
     """
-    try:
-        website_url = request.POST.get('website_url')
-        ad_request_id = request.POST.get('ad_request_id')
-        
-        if not website_url:
-            return JsonResponse({
-                'success': False,
-                'error': 'Website URL is required'
-            }, status=400)
-        
-        from .website_analysis import extract_brand_assets_from_website
-        
-        result = extract_brand_assets_from_website(request.user, website_url, ad_request_id)
-        
-        if result.get('success'):
-            return JsonResponse({
-                'success': True,
-                'extracted_assets': result.get('extracted_assets'),
-                'brand_created': result.get('brand_created', False),
-                'brand': result.get('brand'),
-                'cost': result.get('cost')
-            })
-        else:
-            error_message = result.get('error', 'An unknown error occurred')
-            if 'insufficient credits' in error_message.lower():
-                return JsonResponse({'error': error_message}, status=402)
-            return JsonResponse({'error': error_message}, status=400)
-            
-    except Exception as e:
-        error_message = str(e)
-        if 'insufficient credits' in error_message.lower():
-            return JsonResponse({'error': error_message}, status=402)
+    from .tasks import analyze_website_task
+    
+    website_url = request.POST.get('website_url')
+    is_onboarding = request.POST.get('is_onboarding', '').lower() == 'true'
+    
+    if not website_url:
         return JsonResponse({
             'success': False,
-            'error': f'Unexpected error: {str(e)}'
-        }, status=500)
+            'error': 'Website URL is required'
+        }, status=400)
+    
+    # Ensure URL has scheme
+    if not website_url.startswith(("http://", "https://")):
+        website_url = "https://" + website_url
+    
+    # Launch async task
+    task = analyze_website_task.delay(request.user.id, website_url, is_onboarding)
+    log.info(f"[analyze_website_for_brand_assets] Launched async task {task.id} for user_id={request.user.id}")
+    
+    return JsonResponse({
+        'success': True,
+        'task_id': task.id,
+        'message': 'Website analysis started'
+    })
+
+@login_required
+@require_http_methods(["POST"])
+def capture_website_screenshot(request):
+    """Capture a screenshot of a website and save it to UserOnboarding.
+
+    Expects ``website_url`` in POST data.
+    Launches async Celery task and returns immediately.
+    Result will be sent via SSE notification.
+    """
+    from .tasks import capture_screenshot_task
+    
+    website_url = request.POST.get("website_url")
+    logger.info(
+        "[capture_website_screenshot] Received request for website_url='%s' from user_id=%s",
+        website_url,
+        request.user.id,
+    )
+
+    if not website_url:
+        logger.warning("[capture_website_screenshot] Missing website_url in POST data")
+        return JsonResponse(
+            {"success": False, "error": "Website URL is required"}, status=400
+        )
+
+    # Ensure URL has scheme
+    if not website_url.startswith(("http://", "https://")):
+        website_url = "https://" + website_url
+
+    # Launch async task
+    task = capture_screenshot_task.delay(request.user.id, website_url)
+    logger.info(
+        "[capture_website_screenshot] Launched async task %s for user_id=%s",
+        task.id,
+        request.user.id,
+    )
+
+    return JsonResponse({
+        "success": True,
+        "task_id": task.id,
+        "message": "Screenshot capture started"
+    })
+
+
+@login_required
+@require_http_methods(["POST"])
+def validate_url(request):
+    website_url = request.POST.get("website_url")
+    if not website_url:
+        return JsonResponse({"ok": False, "error": "Website URL is required"}, status=400)
+
+    if not website_url.startswith(("http://", "https://")):
+        website_url = "https://" + website_url
+
+    try:
+        parsed = urllib.parse.urlsplit(website_url)
+    except Exception:
+        return JsonResponse({"ok": False, "error": "Invalid URL"}, status=400)
+
+    if parsed.scheme not in {"http", "https"}:
+        return JsonResponse({"ok": False, "error": "Invalid URL scheme"}, status=400)
+
+    if parsed.username or parsed.password:
+        return JsonResponse({"ok": False, "error": "Invalid URL"}, status=400)
+
+    if not parsed.hostname:
+        return JsonResponse({"ok": False, "error": "Invalid URL"}, status=400)
+
+    if parsed.port and parsed.port not in {80, 443}:
+        return JsonResponse({"ok": False, "error": "Invalid URL port"}, status=400)
+
+    def _is_ip_blocked(ip_str: str) -> bool:
+        ip = ipaddress.ip_address(ip_str)
+        return (
+            ip.is_private
+            or ip.is_loopback
+            or ip.is_link_local
+            or ip.is_multicast
+            or ip.is_reserved
+            or ip.is_unspecified
+        )
+
+    def _hostname_is_safe(hostname: str) -> bool:
+        try:
+            _ = ipaddress.ip_address(hostname)
+            return not _is_ip_blocked(hostname)
+        except ValueError:
+            pass
+
+        try:
+            addrinfo = socket.getaddrinfo(hostname, None)
+        except Exception:
+            return False
+
+        ips = {item[4][0] for item in addrinfo if item and item[4] and item[4][0]}
+        if not ips:
+            return False
+
+        try:
+            return all(not _is_ip_blocked(ip) for ip in ips)
+        except Exception:
+            return False
+
+    if not _hostname_is_safe(parsed.hostname):
+        return JsonResponse({"ok": False, "error": "Invalid URL"}, status=400)
+
+    session = requests.Session()
+    timeout_seconds = 6
+
+    def _check_response_urls_safe(response: requests.Response) -> bool:
+        for resp in list(getattr(response, "history", [])) + [response]:
+            try:
+                resp_parsed = urllib.parse.urlsplit(resp.url)
+            except Exception:
+                return False
+
+            if resp_parsed.scheme not in {"http", "https"}:
+                return False
+            if not resp_parsed.hostname:
+                return False
+            if resp_parsed.port and resp_parsed.port not in {80, 443}:
+                return False
+            if not _hostname_is_safe(resp_parsed.hostname):
+                return False
+
+        return True
+
+    try:
+        try:
+            response = session.head(
+                website_url,
+                allow_redirects=True,
+                timeout=timeout_seconds,
+                headers={"User-Agent": "Mozilla/5.0"},
+            )
+        except Exception:
+            response = session.get(
+                website_url,
+                allow_redirects=True,
+                timeout=timeout_seconds,
+                headers={"User-Agent": "Mozilla/5.0"},
+                stream=True,
+            )
+            response.close()
+
+        if not _check_response_urls_safe(response):
+            return JsonResponse({"ok": False, "error": "Invalid URL"}, status=400)
+
+        status_code = int(getattr(response, "status_code", 0) or 0)
+        ok = 200 <= status_code < 400
+
+        return JsonResponse(
+            {
+                "ok": ok,
+                "status": status_code,
+                "final_url": response.url,
+            },
+            status=200,
+        )
+    except requests.exceptions.RequestException:
+        return JsonResponse({"ok": False, "error": "Website could not be reached"}, status=200)
 
 @login_required
 @require_http_methods(["PUT", "POST"])  # Allow POST for multipart data
@@ -4275,4 +4728,197 @@ def delete_user_brand(request, brand_id):
         return JsonResponse({
             'success': False,
             'error': 'An error occurred while deleting the brand.'
+        }, status=500)
+
+
+@login_required
+@require_POST
+def generate_onboarding_ad(request):
+    """
+    Generate an ad from onboarding data.
+    
+    This view:
+    1. Gets the brand from UserOnboarding
+    2. Creates a new AdRequest with AdRequestAssets
+    3. Assigns assets from the onboarding model
+    4. Starts a new generation of type initial
+    
+    Returns: JSON with the AdRequest ID and generation status
+    """
+    from apps.users.models import UserOnboarding
+    
+    try:
+        # Get user's onboarding data
+        try:
+            onboarding = UserOnboarding.objects.get(user=request.user)
+        except UserOnboarding.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'Onboarding data not found'
+            }, status=404)
+        
+        # Validate required data
+        if not onboarding.brand:
+            return JsonResponse({
+                'success': False,
+                'error': 'Brand not found in onboarding data'
+            }, status=400)
+        
+        if not onboarding.canvas_size:
+            return JsonResponse({
+                'success': False,
+                'error': 'Canvas size not selected'
+            }, status=400)
+        
+        # Check if user has available credits
+        if not can_create_ad_request(request.user):
+            return JsonResponse({
+                'success': False,
+                'error': 'You have reached your credit limit'
+            }, status=403)
+        
+        # Get or create AdRequestAssets for this brand
+        # Use website stored in UserOnboarding (UserBrand does not have a website field)
+        ad_request_assets, created = AdRequestAssets.objects.get_or_create(
+            user=request.user,
+            brand=onboarding.brand,
+            defaults={
+                'company_website': onboarding.website,
+            }
+        )
+        
+        # Create the AdRequest
+        ad_request = AdRequest.objects.create(
+            user=request.user,
+            base_assets=ad_request_assets,
+            canvas_size=onboarding.canvas_size,
+            status=AdRequest.STATUS_DRAFT,
+            ad_library=onboarding.selected_ad_library,  # Use the selected competitor ad if available
+        )
+        
+        # Assign onboarding assets to the AdRequest
+        # Copy images from onboarding to AdRequest overrides
+        if onboarding.asset_image_1:
+            ad_request.marketing_image_1_override = onboarding.asset_image_1
+        if onboarding.asset_image_2:
+            ad_request.marketing_image_2_override = onboarding.asset_image_2
+        if onboarding.asset_image_3:
+            ad_request.marketing_image_3_override = onboarding.asset_image_3
+        
+        # Save user prompt in asset_overrides
+        if onboarding.prompt:
+            ad_request.asset_overrides = ad_request.asset_overrides or {}
+            ad_request.asset_overrides['user_prompt'] = onboarding.prompt
+        
+        ad_request.save()
+        
+        # Move AdRequest from DRAFT to SUBMITTED so later transition to COMPLETED is valid
+        if ad_request.status == AdRequest.STATUS_DRAFT:
+            ad_request.status = AdRequest.STATUS_SUBMITTED
+            ad_request.save(update_fields=['status'])
+        
+        # Now create AdRequestVersions and start generation
+        # Similar to adrequest_version_create
+        user_prompt = onboarding.prompt or ''
+        
+        versions = []
+        for _ in range(3):
+            v = AdRequestVersion.objects.create(
+                ad_request=ad_request,
+                user_prompt=user_prompt,
+                status=AdRequestVersion.STATUS_UNASSIGNED,
+                is_primary=True
+            )
+            versions.append(v)
+            
+            # Track event in PostHog
+            posthog.capture(
+                request.user.id,
+                'Ad Version Created',
+                properties={
+                    'version_type': 'onboarding_initial',
+                    'ad_request_id': ad_request.id,
+                    'version_id': v.id,
+                    'has_user_prompt': bool(user_prompt),
+                    'timestamp': v.created_at.isoformat() if hasattr(v, 'created_at') else None
+                }
+            )
+        
+        # Collect image URLs for context
+        image_urls = []
+        
+        # Add ad_library image if present
+        if ad_request.ad_library and ad_request.ad_library.ad_image and ad_request.ad_library.ad_image.url:
+            image_urls.append(request.build_absolute_uri(ad_request.ad_library.ad_image.url))
+        
+        # Add override images
+        image_fields = [
+            'logo_override',
+            'product_image_1_override',
+            'product_image_2_override',
+            'app_image_1_override',
+            'app_image_2_override',
+            'marketing_image_1_override',
+            'marketing_image_2_override',
+            'marketing_image_3_override'
+        ]
+        
+        for field_name in image_fields:
+            image_field = getattr(ad_request, field_name)
+            if image_field and image_field.url:
+                image_urls.append(request.build_absolute_uri(image_field.url))
+        
+        # Get canvas size
+        canvas_size = ad_request.canvas_size or "1024x1024"
+        
+        # Start image generation task
+        from apps.aiinterface.tasks import generate_image_task_replicate
+        
+        # Update all versions status to processing
+        for v in versions:
+            v.status = "processing"
+            v.save(update_fields=['status'])
+        
+        # Launch the Celery task
+        task = generate_image_task_replicate.delay(
+            image_urls=image_urls,
+            canvas_size=canvas_size,
+            version_ids=[v.id for v in versions],
+            ad_request_id=ad_request.id,
+            version_type="initial"
+        )
+        
+        # Advance user onboarding status to ONBOARDED
+        request.user.status = request.user.ONBOARDED
+        request.user.save(update_fields=['status'])
+        
+        # Track onboarding completion
+        posthog.capture(
+            request.user.id,
+            'Onboarding Ad Generation Started',
+            properties={
+                'ad_request_id': ad_request.id,
+                'canvas_size': canvas_size,
+                'has_competitor_ad': bool(onboarding.selected_ad_library),
+                'num_images_uploaded': sum([
+                    1 if onboarding.asset_image_1 else 0,
+                    1 if onboarding.asset_image_2 else 0,
+                    1 if onboarding.asset_image_3 else 0,
+                ])
+            }
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'ad_request_id': ad_request.id,
+            'version_ids': [v.id for v in versions],
+            'task_id': task.id,
+            'message': 'Ad generation started successfully'
+        }, status=201)
+        
+    except Exception as e:
+        logging.error(f"Error in generate_onboarding_ad: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
         }, status=500)

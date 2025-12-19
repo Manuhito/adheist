@@ -1,24 +1,45 @@
 <!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-  })(window,document,'script','dataLayer','{{GOOGLE_ANALYTICS_ID}}');</script>
+<script>(function (w, d, s, l, i) {
+    w[l] = w[l] || []; w[l].push({
+      'gtm.start':
+        new Date().getTime(), event: 'gtm.js'
+    }); var f = d.getElementsByTagName(s)[0],
+      j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+        'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+  })(window, document, 'script', 'dataLayer', '{{GOOGLE_ANALYTICS_ID}}');</script>
 <!-- End Google Tag Manager -->
 
 <!-- PostHog User Identification and Tracking -->
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
     if (typeof posthog !== 'undefined') {
       {% if user.is_authenticated %}
       // Identify user by email
-      posthog.identify('{{ user.email }}', {
-        name: '{{ user.get_full_name|default:user.username }}',
-        email: '{{ user.email }}',
-        id: '{{ user.id }}',
-        last_login: '{{ user.last_login|date:"c" }}'
-      });
-      
+      (function () {
+        const distinctId = '{{ user.id }}';
+        const email = '{{ user.email }}';
+
+        try {
+          if (typeof posthog.get_distinct_id === 'function') {
+            const currentId = posthog.get_distinct_id();
+            const aliasKey = `ph_alias_${distinctId}`;
+            const hasAliased = window.localStorage && window.localStorage.getItem(aliasKey) === '1';
+
+            if (!hasAliased && typeof posthog.alias === 'function' && currentId === email && currentId !== distinctId) {
+              posthog.alias(distinctId, currentId);
+              if (window.localStorage) window.localStorage.setItem(aliasKey, '1');
+            }
+          }
+        } catch (e) { }
+
+        posthog.identify(distinctId, {
+          name: '{{ user.get_full_name|default:user.username }}',
+          email: '{{ user.email }}',
+          id: '{{ user.id }}',
+          last_login: '{{ user.last_login|date:"c" }}'
+        });
+      })();
+
       // Set user properties
       posthog.people.set({
         $name: '{{ user.get_full_name|default:user.username }}',
@@ -27,15 +48,14 @@
         date_joined: '{{ user.date_joined|date:"c" }}'
       });
       {% endif %}
-      
+
       // Automatic page view tracking from middleware
       {% if posthog_tracking and posthog_tracking.event == 'page_view' %}
       posthog.capture(
-        '{% if user.is_authenticated %}{{ user.email }}{% else %}anonymous_user{% endif %}',
         'Page View',
-        {{ posthog_tracking.properties|safe }}
+        {{ posthog_tracking.properties | safe }}
       );
-      {% endif %}
+  {% endif %}
     }
   });
 </script>

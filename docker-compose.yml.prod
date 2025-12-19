@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:${POSTGRES_IMAGE_TAG:-17}
+    image: postgres:17.7
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     environment:

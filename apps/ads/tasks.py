@@ -1,0 +1,219 @@
+"""
+Celery tasks for the Ads app.
+
+This module contains Celery tasks for background processing of website analysis
+and screenshot capture during onboarding.
+"""
+
+import logging
+from typing import Dict, Any
+
+from celery import shared_task
+
+logger = logging.getLogger(__name__)
+
+
+@shared_task
+def capture_screenshot_task(user_id: int, website_url: str) -> Dict[str, Any]:
+    """
+    Celery task to capture a website screenshot and save it to UserOnboarding.
+    Sends SSE notification when complete.
+    
+    Args:
+        user_id: ID of the user
+        website_url: URL of the website to screenshot
+        
+    Returns:
+        Dictionary with success status and screenshot data
+    """
+    from apps.users.models import UserOnboarding
+    from django.core.files.base import ContentFile
+    from .website_analysis import capture_screenshot_with_playwright
+    import base64
+    
+    logger.info(f"[capture_screenshot_task] Starting for user_id={user_id}, url={website_url}")
+    
+    try:
+        # Ensure URL has scheme
+        if not website_url.startswith(("http://", "https://")):
+            website_url = "https://" + website_url
+        
+        # Capture screenshot
+        screenshot_base64 = capture_screenshot_with_playwright(website_url)
+        logger.info(f"[capture_screenshot_task] Screenshot captured, base64 length={len(screenshot_base64)}")
+        
+        # Save to UserOnboarding
+        onboarding, _ = UserOnboarding.objects.get_or_create(user_id=user_id)
+        
+        # Decode base64 and save as file
+        image_data = base64.b64decode(screenshot_base64)
+        filename = f"screenshot_{user_id}_{onboarding.id}.png"
+        onboarding.website_screenshot.save(filename, ContentFile(image_data), save=False)
+        
+        # Also save as asset_image_1 for ad generation
+        asset_filename = f"asset_screenshot_{user_id}.png"
+        onboarding.asset_image_1.save(asset_filename, ContentFile(image_data), save=False)
+        
+        onboarding.save(update_fields=["website_screenshot", "asset_image_1"])
+        
+        logger.info(f"[capture_screenshot_task] Screenshot saved to UserOnboarding for user_id={user_id}")
+        
+        # Send SSE notification
+        _send_screenshot_sse(user_id, screenshot_base64, success=True)
+        
+        return {
+            'success': True,
+            'screenshot': f"data:image/png;base64,{screenshot_base64}"
+        }
+        
+    except Exception as e:
+        logger.error(f"[capture_screenshot_task] Error for user_id={user_id}: {str(e)}", exc_info=True)
+        _send_screenshot_sse(user_id, None, success=False, error=str(e))
+        return {
+            'success': False,
+            'error': str(e)
+        }
+
+
+@shared_task
+def analyze_website_task(user_id: int, website_url: str, is_onboarding: bool = False) -> Dict[str, Any]:
+    """
+    Celery task to analyze a website and extract brand assets.
+    Sends SSE notification when complete.
+    
+    Args:
+        user_id: ID of the user
+        website_url: URL of the website to analyze
+        is_onboarding: If True, saves brand to UserOnboarding
+        
+    Returns:
+        Dictionary with success status and extracted assets
+    """
+    from django.contrib.auth import get_user_model
+    from apps.users.models import UserOnboarding
+    from .website_analysis import extract_brand_assets_from_website
+    
+    User = get_user_model()
+    
+    logger.info(f"[analyze_website_task] Starting for user_id={user_id}, url={website_url}")
+    
+    try:
+        user = User.objects.get(id=user_id)
+        
+        # Extract brand assets
+        result = extract_brand_assets_from_website(user, website_url, ad_request_id=None)
+        
+        if result.get('success'):
+            logger.info(f"[analyze_website_task] Analysis successful for user_id={user_id}")
+            
+            # If onboarding, save brand to UserOnboarding
+            if is_onboarding and result.get('brand'):
+                try:
+                    brand_data = result['brand']
+                    brand_id = brand_data.get('id') if isinstance(brand_data, dict) else None
+                    
+                    if brand_id:
+                        onboarding, _ = UserOnboarding.objects.get_or_create(user=user)
+                        onboarding.brand_id = brand_id
+                        onboarding.save()
+                        logger.info(f"[analyze_website_task] Saved brand {brand_id} to UserOnboarding")
+                        
+                        # Advance user onboarding step
+                        user.advance_onboarding()
+                except Exception as e:
+                    logger.error(f"[analyze_website_task] Error saving brand to UserOnboarding: {str(e)}")
+            
+            # Send SSE notification
+            _send_analysis_sse(
+                user_id=user_id,
+                success=True,
+                extracted_assets=result.get('extracted_assets'),
+                brand=result.get('brand'),
+                brand_created=result.get('brand_created', False),
+                cost=result.get('cost')
+            )
+            
+            return {
+                'success': True,
+                'extracted_assets': result.get('extracted_assets'),
+                'brand_created': result.get('brand_created', False),
+                'brand': result.get('brand'),
+                'cost': result.get('cost')
+            }
+        else:
+            error_message = result.get('error', 'Unknown error')
+            logger.error(f"[analyze_website_task] Analysis failed for user_id={user_id}: {error_message}")
+            _send_analysis_sse(user_id=user_id, success=False, error=error_message)
+            return {
+                'success': False,
+                'error': error_message
+            }
+            
+    except Exception as e:
+        logger.error(f"[analyze_website_task] Error for user_id={user_id}: {str(e)}", exc_info=True)
+        _send_analysis_sse(user_id=user_id, success=False, error=str(e))
+        return {
+            'success': False,
+            'error': str(e)
+        }
+
+
+def _send_screenshot_sse(user_id: int, screenshot_base64: str, success: bool, error: str = None):
+    """Send SSE notification when screenshot capture completes."""
+    try:
+        import redis
+        import json
+        from django.conf import settings
+        from django.utils import timezone
+        
+        redis_client = redis.from_url(settings.REDIS_URL)
+        
+        notification_data = {
+            'type': 'screenshot_completed',
+            'success': success,
+            'timestamp': timezone.now().isoformat()
+        }
+        
+        if success and screenshot_base64:
+            notification_data['screenshot'] = f"data:image/png;base64,{screenshot_base64}"
+        if error:
+            notification_data['error'] = error
+        
+        channel = f"user:{user_id}:adrequest_updates"
+        redis_client.publish(channel, json.dumps(notification_data))
+        logger.info(f"[_send_screenshot_sse] Sent notification to user {user_id} (success={success})")
+    except Exception as e:
+        logger.error(f"[_send_screenshot_sse] Error sending SSE: {str(e)}")
+
+
+def _send_analysis_sse(user_id: int, success: bool, extracted_assets: dict = None, 
+                       brand: dict = None, brand_created: bool = False, 
+                       cost: dict = None, error: str = None):
+    """Send SSE notification when website analysis completes."""
+    try:
+        import redis
+        import json
+        from django.conf import settings
+        from django.utils import timezone
+        
+        redis_client = redis.from_url(settings.REDIS_URL)
+        
+        notification_data = {
+            'type': 'analysis_completed',
+            'success': success,
+            'timestamp': timezone.now().isoformat()
+        }
+        
+        if success:
+            notification_data['extracted_assets'] = extracted_assets
+            notification_data['brand'] = brand
+            notification_data['brand_created'] = brand_created
+            notification_data['cost'] = cost
+        if error:
+            notification_data['error'] = error
+        
+        channel = f"user:{user_id}:adrequest_updates"
+        redis_client.publish(channel, json.dumps(notification_data))
+        logger.info(f"[_send_analysis_sse] Sent notification to user {user_id} (success={success})")
+    except Exception as e:
+        logger.error(f"[_send_analysis_sse] Error sending SSE: {str(e)}")
