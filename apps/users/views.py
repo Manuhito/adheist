@@ -241,6 +241,25 @@ def advance_onboarding_step(request):
 
 
 @login_required
+@require_POST
+def complete_onboarding(request):
+    user = request.user
+
+    if user.has_completed_onboarding:
+        return JsonResponse({'success': True, 'current_step': user.current_onboarding_step})
+
+    previous_step = user.current_onboarding_step
+    user.status = CustomUser.ONBOARDED
+    user.save(update_fields=['status'])
+
+    return JsonResponse({
+        'success': True,
+        'previous_step': previous_step,
+        'current_step': user.current_onboarding_step,
+    })
+
+
+@login_required
 def onboarding_view(request):
     """
     View to handle the onboarding process.
