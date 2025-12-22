@@ -1439,7 +1439,7 @@ def send_existing_ads_notifications(user_id: int, fb_page) -> int:
         # Get active ads for this page (limit to avoid overwhelming the frontend)
         ads = AdLibrary.objects.filter(
             facebook_page=fb_page,
-            meta_status=AdLibrary.STATUS_ACTIVE,
+            meta_status__in=[AdLibrary.STATUS_ACTIVE, AdLibrary.STATUS_INACTIVE],
             ad_image__isnull=False
         ).exclude(ad_image='').order_by('-ad_delivery_start_time')[:20]
         
@@ -1660,10 +1660,11 @@ def competitor_research_task(user_id: int, website_url: str) -> Dict[str, Any]:
             if fb_page:
                 logger.info(f"Found existing FacebookPage by fb_name: {fb_name} (page_id: {fb_page.page_id})")
                 ads_count = AdLibrary.objects.filter(
-                    facebook_page=fb_page, 
-                    meta_status=AdLibrary.STATUS_ACTIVE
-                ).count()
-                logger.info(f"FacebookPage {fb_page.page_id} has {ads_count} active ads")
+                    facebook_page=fb_page,
+                    meta_status__in=[AdLibrary.STATUS_ACTIVE, AdLibrary.STATUS_INACTIVE],
+                    ad_image__isnull=False,
+                ).exclude(ad_image='').count()
+                logger.info(f"FacebookPage {fb_page.page_id} has {ads_count} ads")
                 
                 if ads_count > 0:
                     # Found ads! Send SSE notifications for existing ads
@@ -1755,10 +1756,11 @@ def competitor_research_task(user_id: int, website_url: str) -> Dict[str, Any]:
                     logger.info(f"Updated FacebookPage {page_id} with fb_name: {fb_name}")
                     
                 ads_count = AdLibrary.objects.filter(
-                    facebook_page=fb_page, 
-                    meta_status=AdLibrary.STATUS_ACTIVE
-                ).count()
-                logger.info(f"Found existing FacebookPage {page_id} with {ads_count} active ads")
+                    facebook_page=fb_page,
+                    meta_status__in=[AdLibrary.STATUS_ACTIVE, AdLibrary.STATUS_INACTIVE],
+                    ad_image__isnull=False,
+                ).exclude(ad_image='').count()
+                logger.info(f"Found existing FacebookPage {page_id} with {ads_count} ads")
                 
                 if ads_count == 0:
                     # Page exists but no ads - skip to next competitor
@@ -1782,6 +1784,7 @@ def competitor_research_task(user_id: int, website_url: str) -> Dict[str, Any]:
             
             backload = Backload.objects.create(
                 status=Backload.STATUS_PENDING,
+                ad_active_status=Backload.AD_ALL,
                 error_log=f"Auto-generated from competitor research for {website_url} (User: {user.email})"
             )
             backload.pages.add(fb_page)

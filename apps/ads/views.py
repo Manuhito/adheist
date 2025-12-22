@@ -218,8 +218,9 @@ def get_competitor_ads(request):
         # Get active ads from the selected competitor page
         ads = AdLibrary.objects.filter(
             facebook_page=fb_page,
-            meta_status=AdLibrary.STATUS_ACTIVE
-        ).order_by('-ad_delivery_start_time')[:20]
+            meta_status__in=[AdLibrary.STATUS_ACTIVE, AdLibrary.STATUS_INACTIVE],
+            ad_image__isnull=False,
+        ).exclude(ad_image='').order_by('-ad_delivery_start_time')
         
         ads_data = []
         for ad in ads:
