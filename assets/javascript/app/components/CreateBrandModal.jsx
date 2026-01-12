@@ -171,41 +171,15 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
     if (analysisError) setAnalysisError('');
   };
 
-  // Function to analyze website and populate form fields
-  const handleAnalyzeWebsite = async () => {
-    if (!websiteUrl.trim()) {
-      setAnalysisError('Please enter a website URL');
-      return;
-    }
+  // SSE listener for website analysis completion
+  useEffect(() => {
+    if (!isAnalyzing) return;
 
-    setIsAnalyzing(true);
-    setAnalysisError('');
+    const eventSource = new EventSource('/ads/sse/adrequest-updates/');
 
-    try {
-      const formData = new FormData();
-      formData.append('website_url', websiteUrl.trim());
-      if (adRequestId) {
-        formData.append('ad_request_id', adRequestId);
-      }
-
-      const response = await fetch('/ads/api/analyze-website/', {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': getCsrfToken(),
-        },
-        body: formData,
-      });
-
-      if (!response.ok) {
-        if (response.status === 402) {
-          setAnalysisError('credits');
-        } else {
-          setAnalysisError('generic');
-        }
-        return; // Stop execution on error
-      }
-
-      const data = await response.json();
+    eventSource.addEventListener('analysis_completed', (event) => {
+      const data = JSON.parse(event.data);
+      console.log('Received analysis_completed event:', data);
 
       if (data.success && data.extracted_assets) {
         const assets = data.extracted_assets;
@@ -243,11 +217,9 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
           }
 
           // Show success message but keep modal open
-          // Create a temporary notification container
           const notificationContainer = document.createElement('div');
           document.body.appendChild(notificationContainer);
 
-          // Import and render AlertNotification
           import('@/components/ui/alert-notification.tsx').then(({ AlertNotification }) => {
             const { createRoot } = require('react-dom/client');
             const root = createRoot(notificationContainer);
@@ -267,24 +239,76 @@ const CreateBrandModal = ({ isOpen, onClose, onBrandCreated, onBrandUpdated, adR
 
           // Store the created brand ID for later updates
           setCreatedBrandId(data.brand.id);
-
-          // Don't close modal - let user edit the created brand
-          console.log('Brand created successfully - modal remains open for editing');
-          return; // Exit early since brand was created
-        } else if (data.brand_created === false && data.brand_creation_error) {
-          console.warn('Brand creation failed:', data.brand_creation_error);
-          // Continue with form population even if brand creation failed
         }
 
         console.log('Website analysis completed successfully - form populated');
-      } else {
-        throw new Error('No data extracted from website');
+        setIsAnalyzing(false);
+      } else if (!data.success) {
+        console.error('Website analysis failed:', data.error);
+        setAnalysisError('generic');
+        setIsAnalyzing(false);
       }
+    });
+
+    eventSource.onerror = (error) => {
+      console.error('SSE error:', error);
+      eventSource.close();
+    };
+
+    return () => {
+      eventSource.close();
+    };
+  }, [isAnalyzing, websiteUrl, adRequestId, onBrandCreated]);
+
+  // Function to analyze website and populate form fields
+  const handleAnalyzeWebsite = async () => {
+    if (!websiteUrl.trim()) {
+      setAnalysisError('Please enter a website URL');
+      return;
+    }
+
+    setIsAnalyzing(true);
+    setAnalysisError('');
+
+    try {
+      const formData = new FormData();
+      formData.append('website_url', websiteUrl.trim());
+      if (adRequestId) {
+        formData.append('ad_request_id', adRequestId);
+      }
+
+      const response = await fetch('/ads/api/analyze-website/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCsrfToken(),
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        if (response.status === 402) {
+          setAnalysisError('credits');
+        } else {
+          setAnalysisError('generic');
+        }
+        setIsAnalyzing(false);
+        return;
+      }
+
+      const data = await response.json();
+
+      if (!data.success) {
+        setAnalysisError('generic');
+        setIsAnalyzing(false);
+        return;
+      }
+
+      // Task started successfully, now wait for SSE notification
+      console.log('Website analysis task started, waiting for SSE notification...');
 
     } catch (err) {
       console.error('Website analysis error:', err);
-      setAnalysisError('generic'); // Catch any other unexpected errors
-    } finally {
+      setAnalysisError('generic');
       setIsAnalyzing(false);
     }
   };
