@@ -1192,8 +1192,19 @@ def get_adlibrary_filters(request):
     publisher_platform = request.GET.get('publisher_platform', '')  # New parameter for platform
     meta_status = request.GET.get('meta_status', '')  # New parameter for meta status
     
-    # DEBUG: Print all received parameters
-    print(f"DEBUG: Received parameters - media_type='{media_type}', meta_status='{meta_status}', has_filters check will be: {bool(company_name or page_id or industries or tags or media_type or publisher_platform or meta_status)}")
+    # DEBUG: Print ALL request parameters
+    print(f"\n{'='*80}")
+    print(f"DEBUG: ALL REQUEST PARAMETERS:")
+    print(f"  Full query string: {request.GET.urlencode()}")
+    print(f"  company_name: '{company_name}'")
+    print(f"  page_id: '{page_id}'")
+    print(f"  industries: {industries}")
+    print(f"  tags: {tags}")
+    print(f"  media_type: '{media_type}'")
+    print(f"  publisher_platform: '{publisher_platform}'")
+    print(f"  meta_status: '{meta_status}'")
+    print(f"  has_filters will be: {bool(company_name or page_id or industries or tags or media_type or publisher_platform or meta_status)}")
+    print(f"{'='*80}\n")
     
     # Get is_active filter parameter (default to True if not provided)
     is_active_param = request.GET.get('is_active', 'true').lower()
@@ -1220,14 +1231,14 @@ def get_adlibrary_filters(request):
         tags = [request.GET.get('tag')]
     
     # Check if any filter parameters are provided
-    has_filters = company_name or page_id or industries or tags or media_type or publisher_platform or meta_status
+    # Note: meta_status being empty means "all" status, which is still a valid filter state
+    has_filters = company_name or page_id or industries or tags or media_type or publisher_platform or (meta_status is not None)
     print(f"DEBUG: has_filters = {has_filters}")
     
     if has_filters:
         # Comenzar con una consulta base con filtros básicos de estado
+        # is_active filter: always True (transparent to user, shows ads active in our web)
         base_filters = Q(is_active=True)
-        if is_active:
-            base_filters &= Q(meta_status=AdLibrary.STATUS_ACTIVE)
         
         adlibraries = AdLibrary.objects.filter(base_filters)
         

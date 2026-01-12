@@ -89,7 +89,7 @@ function DiscoverContent() {
   const [selectedAdLibrary, setSelectedAdLibrary] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isRequestBrandOpen, setIsRequestBrandOpen] = useState(false);
-  const [activeFilterParams, setActiveFilterParams] = useState("");
+  const [activeFilterParams, setActiveFilterParams] = useState("meta_status=ACTIVE"); // Default filter on initial load
 
   // Live mode state - for real-time ad updates via SSE
   const [isLiveMode, setIsLiveMode] = useState(false);

@@ -29,6 +29,14 @@ function DiscoverSearchBar({ onSearch, onFiltersApply }) {
   // Ref to access DiscoverFilterModal methods
   const filterModalRef = useRef(null);
 
+  // Trigger filter modal to apply filters when selectedCompany changes
+  useEffect(() => {
+    if (selectedCompany && filterModalRef.current) {
+      // Trigger the modal to apply filters with the new selectedCompany
+      filterModalRef.current.applyFiltersWithCompany();
+    }
+  }, [selectedCompany]);
+
   // Cargar la lista de empresas al montar el componente
   useEffect(() => {
     setIsLoading(true);
@@ -123,12 +131,10 @@ function DiscoverSearchBar({ onSearch, onFiltersApply }) {
       return;
     }
 
-    // Cuando se selecciona una empresa, filtrar por su ID
+    // When an advertiser is selected, update selectedCompany state
+    // The useEffect will trigger the filter modal to apply filters
     setSelectedCompany(selectedAction);
     setKeywordSearch(null); // Clear keyword search
-    if (onSearch && selectedAction.pageId) {
-      onSearch(selectedAction.pageId);
-    }
   };
 
   const handleClearFilters = (skipApiCall = false) => {
@@ -191,9 +197,9 @@ function DiscoverSearchBar({ onSearch, onFiltersApply }) {
         </div>
         <DiscoverFilterModal
           ref={filterModalRef}
-          selectedCompany={selectedCompany}
           onFiltersApply={onFiltersApply}
           onFiltersChange={setModalFiltersApplied}
+          selectedCompany={selectedCompany}
         />
         {/* Clear All Filters Button */}
         {(keywordSearch || selectedCompany || modalFiltersApplied) && (
