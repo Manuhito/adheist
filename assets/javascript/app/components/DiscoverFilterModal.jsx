@@ -16,7 +16,7 @@ import { Label } from "../../components/ui/label";
  * Componente de filtros para la página Discover
  * Muestra un icono de embudo que abre un modal con opciones de filtrado
  */
-const DiscoverFilterModal = forwardRef(({ selectedCompany, onFiltersApply, onFiltersChange }, ref) => {
+const DiscoverFilterModal = forwardRef(({ onFiltersApply, onFiltersChange, selectedCompany }, ref) => {
   const [isOpen, setIsOpen] = useState(false);
   const allPlatformsValue = 'FACEBOOK,INSTAGRAM,AUDIENCE_NETWORK,MESSENGER,THREADS';
 
@@ -26,7 +26,7 @@ const DiscoverFilterModal = forwardRef(({ selectedCompany, onFiltersApply, onFil
     status: 'active',
     sortBy: ''
   });
-  
+
   const createClearFilters = () => ({
     platform: allPlatformsValue,
     industry: 'all',
@@ -45,21 +45,25 @@ const DiscoverFilterModal = forwardRef(({ selectedCompany, onFiltersApply, onFil
     (!appliedFilters.status || appliedFilters.status === 'all') &&
     !appliedFilters.sortBy
   );
-  
-  // Expose clearFilters method to parent via ref
+
+  // Expose methods to parent via ref
   useImperativeHandle(ref, () => ({
     clearFilters: () => {
       const clearedFilters = createClearFilters();
       setFilters(clearedFilters);
       setAppliedFilters(clearedFilters);
-      
+
       // Apply cleared filters immediately - don't send any filter params
       if (onFiltersApply) {
         onFiltersApply('');
       }
+    },
+    applyFiltersWithCompany: () => {
+      // Apply current filters with the selectedCompany
+      applyCurrentFilters();
     }
   }));
-  
+
   // Notify parent when filters change
   useEffect(() => {
     if (onFiltersChange) {
@@ -89,24 +93,25 @@ const DiscoverFilterModal = forwardRef(({ selectedCompany, onFiltersApply, onFil
     }));
   };
 
-  const handleApplyFilters = () => {
+  // Helper function to build and apply filters
+  const applyCurrentFilters = () => {
     const filterParams = new URLSearchParams();
-    
+
     // Add selected company if available
     if (selectedCompany && selectedCompany.pageId) {
       filterParams.append('page_id', selectedCompany.pageId);
     }
-    
+
     // Add platform filter - only if not "All"
     if (filters.platform && filters.platform !== allPlatformsValue) {
       filterParams.append('publisher_platform', filters.platform);
     }
-    
+
     // Add industry filter
     if (filters.industry && filters.industry !== 'all') {
       filterParams.append('industries', filters.industry);
     }
-    
+
     // Add status filter - only if not "all"
     if (filters.status && filters.status !== 'all') {
       filterParams.append('meta_status', filters.status.toUpperCase());
@@ -116,22 +121,25 @@ const DiscoverFilterModal = forwardRef(({ selectedCompany, onFiltersApply, onFil
     if (filters.sortBy) {
       filterParams.append('sort_by', filters.sortBy);
     }
-    
+
     setAppliedFilters({ ...filters });
 
     // Call parent callback with filters
     if (onFiltersApply) {
       onFiltersApply(filterParams.toString());
     }
-    
+  };
+
+  const handleApplyFilters = () => {
+    applyCurrentFilters();
     setIsOpen(false);
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           size="sm"
           className="group relative h-9 px-3 ml-2 rounded-lg"
         >
@@ -152,8 +160,8 @@ const DiscoverFilterModal = forwardRef(({ selectedCompany, onFiltersApply, onFil
           {/* Platform Filter */}
           <div className="space-y-2">
             <Label htmlFor="platform">Platform</Label>
-            <SimpleSelect 
-              value={filters.platform} 
+            <SimpleSelect
+              value={filters.platform}
               onValueChange={(value) => handleFilterChange('platform', value)}
               placeholder="Select platform"
             >
@@ -169,8 +177,8 @@ const DiscoverFilterModal = forwardRef(({ selectedCompany, onFiltersApply, onFil
           {/* Industry Filter */}
           <div className="space-y-2">
             <Label htmlFor="industry">Industry</Label>
-            <SimpleSelect 
-              value={filters.industry} 
+            <SimpleSelect
+              value={filters.industry}
               onValueChange={(value) => handleFilterChange('industry', value)}
               placeholder="Select industry"
             >
@@ -190,8 +198,8 @@ const DiscoverFilterModal = forwardRef(({ selectedCompany, onFiltersApply, onFil
           {/* Status Filter */}
           <div className="space-y-2">
             <Label htmlFor="status">Status</Label>
-            <SimpleSelect 
-              value={filters.status} 
+            <SimpleSelect
+              value={filters.status}
               onValueChange={(value) => handleFilterChange('status', value)}
               placeholder="Select status"
             >
@@ -204,8 +212,8 @@ const DiscoverFilterModal = forwardRef(({ selectedCompany, onFiltersApply, onFil
           {/* Sort By Filter */}
           <div className="space-y-2">
             <Label htmlFor="sortBy">Sort by</Label>
-            <SimpleSelect 
-              value={filters.sortBy} 
+            <SimpleSelect
+              value={filters.sortBy}
               onValueChange={(value) => handleFilterChange('sortBy', value)}
               placeholder="Select sort option"
             >

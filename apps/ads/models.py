@@ -323,7 +323,7 @@ class AppConfiguration(BaseModel):
 class AdRequestAssets(BaseModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="asset_collections", null=True, blank=True)
     brand = models.ForeignKey('UserBrand', on_delete=models.CASCADE, related_name="assets", null=True, blank=True, help_text="Brand associated with these assets")
-    company_website = models.URLField(null=True, blank=True)
+    company_website = models.URLField(max_length=500, null=True, blank=True)
     logo = models.ImageField(upload_to="adrequest_assets/", null=True, blank=True)
     main_hex_color = models.TextField(null=True, blank=True, help_text="Brand colors in hex format (JSON string or single color)")
     key_benefits = models.TextField(null=True, blank=True)
@@ -1206,6 +1206,7 @@ class BrandAssetExtraction(BaseModel):
         help_text="Brand created from this extraction (if any)"
     )
     website_url = models.URLField(
+        max_length=500,
         help_text="The website URL that was analyzed"
     )
     
