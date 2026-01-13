@@ -290,12 +290,8 @@ const OnboardingPage = () => {
   return (
     <div className="h-screen w-full bg-background/50 flex flex-col relative overflow-hidden">
       {/* Header Logo */}
-      <header className="w-full flex justify-center pt-6 sm:pt-10 flex-shrink-0 z-20">
-        <img
-          src="/static/images/web/logo-brand-name.png"
-          alt="AdHeist"
-          className="h-10 sm:h-12 w-auto object-contain"
-        />
+      <header className="w-full flex justify-center items-center gap-3 pt-6 sm:pt-10 flex-shrink-0 z-20">
+        <span className="text-4xl sm:text-5xl font-bold text-primary leading-none">AdHeist</span>
       </header>
 
       {/* Main Content Area */}

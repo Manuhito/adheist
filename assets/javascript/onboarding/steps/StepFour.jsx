@@ -198,11 +198,11 @@ const StepFour = ({ onNext, initialData, setMascotMessageOverride }) => {
     console.log('SSE Event received:', eventType, data);
 
     if (eventType === 'onboarding_ad_created' && data.ad) {
-      // Add new ad to the TOP of the list (avoid duplicates)
+      // Add new ad to the END of the list (avoid duplicates)
       setAds(prevAds => {
         const exists = prevAds.some(ad => ad.id === data.ad.id);
         if (exists) return prevAds;
-        return [data.ad, ...prevAds];
+        return [...prevAds, data.ad];
       });
       // Stop loading once we have at least one ad
       setIsLoading(false);
