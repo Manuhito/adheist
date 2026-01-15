@@ -344,16 +344,21 @@ function initSSE() {
         closeEventSource();
         clearPhaseAnimation();
 
-        if (data.processed_count && data.processed_count > 0) {
+        // Backend sends 'tasks_launched' on success, 'processed_count' on error
+        const processedCount = data.tasks_launched || data.processed_count || 0;
+
+        if (processedCount > 0) {
           state.hasProcessedAds = true;
-          state.adsCount = data.processed_count;
+          // Only update count if it's higher than what we already have from SSE events
+          state.adsCount = Math.max(state.adsCount, processedCount);
           if (data.page_id) {
             state.pageId = data.page_id;
           }
           if (data.page_name) {
             state.pageName = data.page_name;
           }
-        } else {
+        } else if (!state.hasProcessedAds) {
+          // Only set to false if we haven't already processed ads via SSE
           state.hasProcessedAds = false;
         }
 
