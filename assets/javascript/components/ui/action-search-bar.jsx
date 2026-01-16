@@ -9,6 +9,7 @@ import {
     Video,
     PlaneTakeoff,
     AudioLines,
+    Plus,
 } from "lucide-react";
 
 function useDebounce(value, delay = 500) {
@@ -262,8 +263,21 @@ function ActionSearchBar({ actions = allActions, onSearch, onActionSelect, onKey
             isKeywordSearch: true
         };
 
-        // Combine keyword search with filtered actions
-        const allResults = [keywordSearchItem, ...filteredActions];
+        // Create "Request a new advertiser" item when no results
+        const requestAdvertiserItem = {
+            id: "request-advertiser",
+            label: "Request a new advertiser",
+            icon: <Plus className="h-4 w-4 text-gray-400 dark:text-gray-500" />,
+            description: "",
+            short: "",
+            end: "",
+            isRequestAdvertiser: true
+        };
+
+        // Combine keyword search with filtered actions, add request button if no results
+        const allResults = filteredActions.length === 0
+            ? [keywordSearchItem, requestAdvertiserItem]
+            : [keywordSearchItem, ...filteredActions];
         setResult({ actions: allResults });
 
         // Notify parent component about search
@@ -401,6 +415,12 @@ function ActionSearchBar({ actions = allActions, onSearch, onActionSelect, onKey
                                                 variants={item}
                                                 layout
                                                 onClick={() => {
+                                                    // Handle "Request a new advertiser" click
+                                                    if (action.isRequestAdvertiser) {
+                                                        window.location.href = '/ads/request-brand/';
+                                                        return;
+                                                    }
+
                                                     setSelectedAction(action);
                                                     if (onActionSelect) {
                                                         onActionSelect(action);
@@ -451,8 +471,8 @@ function ActionSearchBar({ actions = allActions, onSearch, onActionSelect, onKey
                                                     </span>
                                                 </div>
                                             </motion.li>
-                                            {/* Add separator after keyword search item */}
-                                            {action.isKeywordSearch && result.actions.length > 1 && (
+                                            {/* Add separator after keyword search item or request advertiser item */}
+                                            {(action.isKeywordSearch || action.isRequestAdvertiser) && index < result.actions.length - 1 && (
                                                 <div className="border-t border-gray-200 dark:border-gray-700 mx-2 my-1"></div>
                                             )}
                                         </React.Fragment>
