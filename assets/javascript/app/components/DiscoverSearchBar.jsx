@@ -179,6 +179,7 @@ function DiscoverSearchBar({ onSearch, onFiltersApply }) {
             onSearch={handleSearch}
             onActionSelect={handleCompanySelect}
             onKeywordSearch={handleKeywordSearch}
+            onRequestAdvertiser={() => setIsRequestModalOpen(true)}
             hideIcons={keywordSearch || selectedCompany}
             clearInput={shouldClearInput}
             placeholder={placeholder}

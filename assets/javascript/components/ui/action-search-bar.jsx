@@ -218,7 +218,7 @@ function LazyFavicon({ iconUrl, labelInitial, forceLoad }) {
     );
 }
 
-function ActionSearchBar({ actions = allActions, onSearch, onActionSelect, onKeywordSearch, hideIcons = false, clearInput = false, placeholder = "Search for a brand name or keywords...." }) {
+function ActionSearchBar({ actions = allActions, onSearch, onActionSelect, onKeywordSearch, onRequestAdvertiser, hideIcons = false, clearInput = false, placeholder = "Search for a brand name or keywords...." }) {
     const [query, setQuery] = useState("");
     const [result, setResult] = useState(null);
     const [isFocused, setIsFocused] = useState(false);
@@ -417,7 +417,9 @@ function ActionSearchBar({ actions = allActions, onSearch, onActionSelect, onKey
                                                 onClick={() => {
                                                     // Handle "Request a new advertiser" click
                                                     if (action.isRequestAdvertiser) {
-                                                        window.location.href = '/ads/request-brand/';
+                                                        if (onRequestAdvertiser) {
+                                                            onRequestAdvertiser();
+                                                        }
                                                         return;
                                                     }
 

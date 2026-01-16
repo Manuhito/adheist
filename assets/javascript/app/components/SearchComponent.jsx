@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover.tsx';
 import { Input } from '../../components/ui/input.tsx';
 import { Button } from '../../components/ui/button.tsx';
-import { Search, Check, ChevronDown, Building, Factory, Plus } from 'lucide-react';
+import { Search, Check, ChevronDown, Building, Factory } from 'lucide-react';
 import { useTranslation } from '../../lib/useTranslation';
 
 /**
@@ -64,11 +64,6 @@ export const SearchComponent = ({ selectedCompany, onCompanyChange }) => {
     }
   };
 
-  const handleRequestNewAdvertiser = () => {
-    setIsOpen(false);
-    window.location.href = '/ads/request-brand/';
-  };
-
   return (
     <div className="w-full max-w-md space-y-2">
       <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -114,17 +109,8 @@ export const SearchComponent = ({ selectedCompany, onCompanyChange }) => {
                   {t('search.loading_companies', 'Loading companies...')}
                 </div>
               ) : filteredCompanies.length === 0 ? (
-                <div className="py-2">
-                  <div className="px-2 py-1.5 text-center text-sm text-muted-foreground mb-2">
-                    {t('search.no_companies', 'No companies found.')}
-                  </div>
-                  <div
-                    className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground transition-colors"
-                    onClick={handleRequestNewAdvertiser}
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    <span>{t('search.request_new_advertiser', 'Request a new advertiser')}</span>
-                  </div>
+                <div className="py-6 text-center text-sm">
+                  {t('search.no_companies', 'No companies found.')}
                 </div>
               ) : (
                 <div className="py-2">
