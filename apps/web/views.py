@@ -819,3 +819,88 @@ def marketing_pages_index(request):
         "marketing_pages": marketing_pages
     })
 
+
+def facebook_ads_calculator(request):
+    """
+    Render the Facebook Ads Cost Calculator page.
+    """
+    # Get all active FAQ items
+    faq_items = FAQ.objects.filter(is_active=True).order_by('order', 'created_at')
+    
+    faq_data = [{
+        'id': item.id,
+        'question': item.question,
+        'answer': item.answer,
+        'order': item.order
+    } for item in faq_items]
+    
+    logo_list = [
+        "images/landing/brands-icons/hello-fresh-logo.svg",
+        "images/landing/brands-icons/true-classic.svg",
+        "images/landing/brands-icons/huel.svg",
+        "images/landing/brands-icons/ag1-logo.svg",
+        "images/landing/brands-icons/logo-clickup.svg",
+        "images/landing/brands-icons/monday.svg",
+        "images/landing/brands-icons/calm.svg",
+        "images/landing/brands-icons/lululemon.svg",
+        "images/landing/brands-icons/magicspoon.svg",
+        "images/landing/brands-icons/gymshark.svg",
+        "images/landing/brands-icons/canva.svg",
+        "images/landing/brands-icons/the-ridge.svg",
+    ]
+
+    feature_cards = [
+        {"icon_name": "clock-9", "title": "Stop wasting valuable time on poor-performing ads", "text": "Use AI-generated copy based on proven conversion patterns to dramatically increase your campaign goals."},
+        {"icon_name": "refresh-cw", "title": "Recover from failed campaigns quickly", "text": "Analyze what went wrong and generate new creatives that address performance issues."},
+        {"icon_name": "rocket", "title": "Scale your ad production 10x faster", "text": "Create hundreds of professional ads in the time it takes a design team to make one."},
+        {"icon_name": "target", "title": "Identify your best results", "text": "Discover which visual styles, layouts, and messaging combinations work best for small business owners."},
+        {"icon_name": "maximize", "title": "Dominate any platform with perfect formatting", "text": "Never worry about aspect ratios, text limits, or image specifications again—take your marketing efforts to the next level."},
+        {"icon_name": "trending-up", "title": "Improve your digital marketing ROI instantly", "text": "Cut design costs while increasing real results with ads scientifically optimized for performance marketers."}
+    ]
+
+    # Simplified pricing data
+    products_with_metadata = list(get_active_products_with_metadata())
+    product_mapping = {
+        'pro': {'display_name': 'Pro'},
+        'starter': {'display_name': 'Starter'},
+    }
+
+    tiers = [{
+        "name": "Free",
+        "description": "Perfect for testing Ad Heist with your first campaigns",
+        "price": 0,
+        "features": [
+            "Search 1M+ Ads Library",
+            "Unlimited Ads (Providing Feedback)",
+            "20 BrandKits",
+            "5 GB of assets"
+        ],
+    }]
+
+    for product in products_with_metadata:
+        slug = product.metadata.slug
+        if slug in product_mapping:
+            monthly_price = product._get_price(PlanInterval.month, fail_hard=False)
+            price = int(monthly_price.unit_amount / 100) if monthly_price else 'Custom'
+            tiers.append({
+                "name": product_mapping[slug]['display_name'],
+                "description": product.metadata.description,
+                "price": price,
+                "features": product.metadata.features,
+            })
+    
+    tier_order = ["Free", "Starter", "Pro"]
+    sorted_tiers = sorted(
+        tiers,
+        key=lambda x: tier_order.index(x["name"]) if x["name"] in tier_order else 999
+    )
+    
+    pricing_data = {"tiers": sorted_tiers}
+
+    return render(request, "calculators/facebook_ads_calculator.html", {
+        "faq_data": faq_data,
+        "logo_list": logo_list,
+        "feature_cards": feature_cards,
+        "pricing_data": pricing_data,
+    })
+
