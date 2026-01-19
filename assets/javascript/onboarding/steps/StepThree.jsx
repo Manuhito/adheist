@@ -146,17 +146,17 @@ const StepThree = ({ onNext, initialData, setMascotMessageOverride }) => {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center w-full py-8 animate-in fade-in duration-500">
-      <div className="w-full max-w-4xl px-4">
+    <div className="flex flex-col items-center justify-center w-full py-4 sm:py-8 animate-in fade-in duration-500">
+      <div className="w-full max-w-4xl px-2 sm:px-4">
         <Card className="w-full shadow-xl bg-background/95 backdrop-blur-sm border-primary/20">
-          <CardContent className="p-6 space-y-6">
+          <CardContent className="p-4 sm:p-6 space-y-3 sm:space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold">Brand Details</h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6">
               {/* Left Column */}
-              <div className="space-y-6">
+              <div className="space-y-3 sm:space-y-6">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-muted-foreground">Tone of Voice</label>
                   <div className="relative group">
@@ -164,7 +164,7 @@ const StepThree = ({ onNext, initialData, setMascotMessageOverride }) => {
                       value={toneOfVoice}
                       onChange={(e) => setToneOfVoice(e.target.value)}
                       onBlur={() => handleAutoSave('tone_of_voice', toneOfVoice)}
-                      className="min-h-[100px] resize-none pr-8"
+                      className="min-h-[70px] sm:min-h-[100px] resize-none pr-8"
                       placeholder="Describe your brand's voice..."
                     />
                     <Pencil size={14} className="absolute top-3 right-3 text-muted-foreground/40 pointer-events-none" />
@@ -178,7 +178,7 @@ const StepThree = ({ onNext, initialData, setMascotMessageOverride }) => {
                       value={functionalBenefits}
                       onChange={(e) => setFunctionalBenefits(e.target.value)}
                       onBlur={() => handleAutoSave('functional_benefits', functionalBenefits)}
-                      className="min-h-[100px] resize-none pr-8"
+                      className="min-h-[70px] sm:min-h-[100px] resize-none pr-8"
                       placeholder="What are the practical benefits?"
                     />
                     <Pencil size={14} className="absolute top-3 right-3 text-muted-foreground/40 pointer-events-none" />
@@ -187,7 +187,7 @@ const StepThree = ({ onNext, initialData, setMascotMessageOverride }) => {
               </div>
 
               {/* Right Column */}
-              <div className="space-y-6">
+              <div className="space-y-3 sm:space-y-6">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-muted-foreground">Core Features</label>
                   <div className="relative group">
@@ -195,7 +195,7 @@ const StepThree = ({ onNext, initialData, setMascotMessageOverride }) => {
                       value={coreFeatures}
                       onChange={(e) => setCoreFeatures(e.target.value)}
                       onBlur={() => handleAutoSave('core_features', coreFeatures)}
-                      className="min-h-[100px] resize-none pr-8"
+                      className="min-h-[70px] sm:min-h-[100px] resize-none pr-8"
                       placeholder="List your key features..."
                     />
                     <Pencil size={14} className="absolute top-3 right-3 text-muted-foreground/40 pointer-events-none" />
@@ -209,7 +209,7 @@ const StepThree = ({ onNext, initialData, setMascotMessageOverride }) => {
                       value={valuePropositions}
                       onChange={(e) => setValuePropositions(e.target.value)}
                       onBlur={() => handleAutoSave('value_propositions', valuePropositions)}
-                      className="min-h-[100px] resize-none pr-8"
+                      className="min-h-[70px] sm:min-h-[100px] resize-none pr-8"
                       placeholder="Why should customers choose you?"
                     />
                     <Pencil size={14} className="absolute top-3 right-3 text-muted-foreground/40 pointer-events-none" />
@@ -218,7 +218,7 @@ const StepThree = ({ onNext, initialData, setMascotMessageOverride }) => {
               </div>
             </div>
 
-            <div className="flex justify-end pt-4">
+            <div className="flex justify-end pt-3 sm:pt-4 pb-20 sm:pb-0">
               <Button onClick={handleNext} className="px-8">
                 Next
               </Button>

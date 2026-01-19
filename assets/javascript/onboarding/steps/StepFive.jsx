@@ -90,7 +90,7 @@ const canvasSizes = [
   { id: "1024x1536", label: "Portrait", size: "1024×1536" },
 ];
 
-// Read more/less text for selected ad preview (mirrors StepFour behavior)
+// Read more/less text for selected ad preview - no expansion on mobile
 const SelectedAdText = ({ text }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const CHAR_LIMIT = 80;
@@ -101,19 +101,25 @@ const SelectedAdText = ({ text }) => {
 
   return (
     <div className="relative w-0 min-w-full">
+      {/* Mobile: always truncated without read more */}
       {!isExpanded && shouldTruncate ? (
-        <p className="text-xs text-muted-foreground leading-relaxed break-words whitespace-pre-line">
-          {text.substring(0, CHAR_LIMIT)}...{' '}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsExpanded(true);
-            }}
-            className="text-gray-500 hover:text-gray-700 text-xs underline inline"
-          >
-            read more
-          </button>
-        </p>
+        <>
+          <p className="md:hidden text-xs text-muted-foreground leading-relaxed break-words whitespace-pre-line line-clamp-2">
+            {text.substring(0, CHAR_LIMIT)}...
+          </p>
+          <p className="hidden md:block text-xs text-muted-foreground leading-relaxed break-words whitespace-pre-line">
+            {text.substring(0, CHAR_LIMIT)}...{' '}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsExpanded(true);
+              }}
+              className="text-gray-500 hover:text-gray-700 text-xs underline inline"
+            >
+              read more
+            </button>
+          </p>
+        </>
       ) : (
         <div>
           <p className="text-xs text-muted-foreground leading-relaxed break-words whitespace-pre-line">
@@ -263,23 +269,23 @@ const StepFive = ({ onNext, onGenerate, initialData, setMascotMessageOverride, a
 
   return (
     <div className="flex flex-col w-full h-full min-h-0 animate-in fade-in duration-500">
-      <div className="w-full max-w-4xl mx-auto px-4 h-full min-h-0 flex flex-col">
-        <Card className="w-full shadow-xl bg-background/95 backdrop-blur-sm border-primary/20 flex-1 min-h-0 max-h-[500px] flex flex-col">
-          <CardContent className="p-4 sm:p-6 flex-1 min-h-0 flex flex-col">
+      <div className="w-full max-w-4xl mx-auto px-2 sm:px-4 h-full min-h-0 flex flex-col">
+        <Card className="w-full shadow-xl bg-background/95 backdrop-blur-sm border-primary/20 flex-1 min-h-0 md:max-h-[500px] flex flex-col">
+          <CardContent className="p-3 sm:p-4 md:p-6 flex-1 min-h-0 flex flex-col">
             {/* Title Row */}
-            <div className="flex items-center justify-between mb-3 flex-shrink-0">
-              <h2 className="text-base sm:text-lg font-semibold text-foreground">Upload... Prompt...</h2>
+            <div className="flex items-center justify-between mb-2 sm:mb-3 flex-shrink-0">
+              <h2 className="text-sm sm:text-base md:text-lg font-semibold text-foreground">Upload... Prompt...</h2>
             </div>
 
             {/* Content area: config + reference + prompt */}
-            <div className="flex-1 min-h-0 flex flex-col gap-3">
-              {/* Config + Reference: left pickers + right selected ad preview */}
-              <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 gap-3 items-stretch">
+            <div className="flex-1 min-h-0 overflow-y-auto md:overflow-visible flex flex-col gap-2">
+              {/* Mobile: All stacked vertically | Desktop: Grid 2 columns */}
+              <div className="flex-1 min-h-0 flex flex-col md:grid md:grid-cols-2 gap-2 md:gap-3">
                 {/* Left: Image pickers + canvas size */}
-                <div className="flex flex-col justify-center gap-3">
+                <div className="flex flex-col gap-2 sm:gap-3 flex-shrink-0 md:flex-shrink md:justify-center">
                   {/* Image Uploaders Container */}
-                  <div className="border border-border rounded-lg p-3">
-                    <div className="grid grid-cols-3 gap-2 max-w-[280px] mx-auto">
+                  <div className="border border-border rounded-lg p-2 sm:p-3">
+                    <div className="grid grid-cols-3 gap-1.5 sm:gap-2 max-w-[280px] mx-auto">
                       <ImageUploader
                         image={image1}
                         onUpload={handleImage1Upload}
@@ -302,8 +308,8 @@ const StepFive = ({ onNext, onGenerate, initialData, setMascotMessageOverride, a
                   </div>
 
                   {/* Canvas Size Container */}
-                  <div className="border border-border rounded-lg p-3">
-                    <div className="grid grid-cols-3 gap-2 max-w-[280px] mx-auto">
+                  <div className="border border-border rounded-lg p-2 sm:p-3">
+                    <div className="grid grid-cols-3 gap-1.5 sm:gap-2 max-w-[280px] mx-auto">
                       {canvasSizes.map((item) => (
                         <button
                           key={item.id}
@@ -320,26 +326,26 @@ const StepFive = ({ onNext, onGenerate, initialData, setMascotMessageOverride, a
                           )}
 
                           {item.id === "1024x1024" && (
-                            <div className="w-5 h-5 bg-primary/70 rounded mb-0.5"></div>
+                            <div className="w-4 h-4 sm:w-5 sm:h-5 bg-primary/70 rounded mb-0.5"></div>
                           )}
                           {item.id === "1536x1024" && (
-                            <div className="w-7 h-4 bg-primary/70 rounded mb-0.5"></div>
+                            <div className="w-6 h-3 sm:w-7 sm:h-4 bg-primary/70 rounded mb-0.5"></div>
                           )}
                           {item.id === "1024x1536" && (
-                            <div className="w-4 h-7 bg-primary/70 rounded mb-0.5"></div>
+                            <div className="w-3 h-6 sm:w-4 sm:h-7 bg-primary/70 rounded mb-0.5"></div>
                           )}
 
-                          <span className="text-[9px] font-medium text-foreground">{item.label}</span>
+                          <span className="text-[8px] sm:text-[9px] font-medium text-foreground">{item.label}</span>
                         </button>
                       ))}
                     </div>
                   </div>
                 </div>
 
-                {/* Right: Selected ad preview */}
+                {/* Right: Selected ad preview - compact on mobile */}
                 {selectedAd && (
-                  <div className="h-full min-h-0 flex items-center justify-center">
-                    <Card className="aspect-[3/4] max-h-[280px] bg-background rounded-xl border overflow-hidden flex flex-col">
+                  <div className="flex-shrink-0 md:h-full md:min-h-0 flex items-center justify-center">
+                    <Card className="w-full max-w-[200px] md:max-w-none aspect-[3/4] md:max-h-[280px] bg-background rounded-xl border overflow-hidden flex flex-col mx-auto">
                       <CardContent className="p-2 flex-1 min-h-0 flex flex-col gap-1.5 overflow-hidden">
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <div className="w-6 h-6 rounded-full overflow-hidden bg-muted flex-shrink-0">
@@ -381,19 +387,19 @@ const StepFive = ({ onNext, onGenerate, initialData, setMascotMessageOverride, a
                 )}
               </div>
 
-              {/* Row 3: Prompt Input */}
+              {/* Row 3: Prompt Input - taller on mobile */}
               <textarea
-                className="w-full p-2.5 bg-muted/30 border border-input rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-foreground placeholder-muted-foreground text-sm flex-shrink-0"
+                className="w-full p-2 sm:p-2.5 bg-muted/30 border border-input rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-foreground placeholder-muted-foreground text-xs sm:text-sm flex-shrink-0"
                 placeholder="Any special requests for your ad? (optional)"
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 onBlur={handlePromptBlur}
-                rows={2}
+                rows={3}
               />
             </div>
 
             {/* Footer: Generate button bottom-right */}
-            <div className="mt-3 flex justify-end flex-shrink-0">
+            <div className="mt-2 sm:mt-3 pb-20 md:pb-0 flex justify-end flex-shrink-0">
               <Button
                 onClick={handleGenerate}
                 disabled={!selectedCanvasSize || isGenerating}

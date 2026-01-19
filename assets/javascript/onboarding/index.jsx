@@ -290,12 +290,12 @@ const OnboardingPage = () => {
   return (
     <div className="h-screen w-full bg-background/50 flex flex-col relative overflow-hidden">
       {/* Header Logo */}
-      <header className="w-full flex justify-center items-center gap-3 pt-6 sm:pt-10 flex-shrink-0 z-20">
-        <span className="text-4xl sm:text-5xl font-bold text-primary leading-none">AdHeist</span>
+      <header className="w-full flex justify-center items-center gap-3 pt-4 sm:pt-6 md:pt-10 flex-shrink-0 z-20">
+        <span className="text-3xl sm:text-4xl md:text-5xl font-bold text-primary leading-none">AdHeist</span>
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col relative z-10 py-4 sm:py-6 min-h-0 overflow-hidden">
+      <main className="flex-1 flex flex-col relative z-10 py-2 sm:py-4 md:py-6 min-h-0 overflow-hidden">
         {renderStep()}
       </main>
 
