@@ -27,7 +27,7 @@
 
       <div data-hero-panel="diy">
         <p
-          class="mt-6 text-2xl font-light leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300 max-w-2xl text-center">
+          class="mt-6 text-2xl font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300 max-w-2xl text-center">
           The ultimate AI tool to create, optimize, and scale your ad creatives with a user-friendly interface.
         </p>
         <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -49,7 +49,7 @@
 
       <div data-hero-panel="agency" class="hidden">
         <p
-          class="mt-6 text-2xl font-light leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300 max-w-2xl text-center">
+          class="mt-6 text-2xl font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300 max-w-2xl text-center">
           We help you scale high-performing ad creatives end-to-end.
         </p>
         <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -90,7 +90,7 @@
           </svg>
           <span class="ml-2 text-base font-medium text-neutral-800 dark:text-white">5.0</span>
         </div>
-        <p class="mt-2 text-sm font-light leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-400">From
+        <p class="mt-2 text-sm font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-400">From
           80+ reviews</p>
       </div>
     </div>
@@ -147,7 +147,7 @@
       <h2 class="text-4xl font-bold tracking-tight text-primary sm:text-5xl">
         More Than Just An Ad Creator
       </h2>
-      <p class="mt-6 text-lg font-light leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+      <p class="mt-6 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
         Generate conversion-focused AI-generated ads in seconds, analyze what's working in your industry, and clone
         successful competitor ad campaigns with one click.
       </p>
@@ -165,7 +165,7 @@
         </div>
         <div>
           <h3 class="text-2xl font-medium text-primary pt-2">{{ card.title }}</h3>
-          <p class="mt-3 text-lg font-light leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">{{ card.text }}</p>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">{{ card.text }}</p>
         </div>
       </div>
       {% endfor %}
@@ -174,21 +174,11 @@
   <!-- CTA Section -->
   <section class="container mx-auto py-3 px-4 md:px-6 text-center">
     <div class="flex flex-col items-center space-y-6">
-      <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-        <a href="{% url 'account_signup' %}"
-          class="inline-flex items-center justify-center rounded-lg px-8 py-4 text-lg font-medium text-white shadow-sm"
-          style="background-color: #5C67F2;">
-          Start Free Trial
-        </a>
-        <form method="post" action="{% provider_login_url 'google' %}">
-          {% csrf_token %}
-          <button type="submit"
-            class="inline-flex items-center justify-center rounded-lg border border-neutral-300 bg-white px-8 py-4 text-lg font-medium text-neutral-700 hover:bg-neutral-100 w-full sm:w-auto">
-            <img src="{% static 'images/socialauth/google-logo.svg' %}" alt="Google" class="h-5 w-5 mr-3">
-            Login with Google
-          </button>
-        </form>
-      </div>
+      <a href="{% url 'account_signup' %}"
+        class="inline-flex items-center justify-center rounded-lg px-8 py-4 text-lg font-medium text-white shadow-sm"
+        style="background-color: #5C67F2;">
+        Start Free Trial
+      </a>
       <div class="flex flex-col md:flex-row items-center justify-center gap-x-8 gap-y-2 pt-4">
         <div class="flex items-center gap-2">
           <i data-lucide="check" class="w-5 h-5 text-primary"></i>
@@ -213,7 +203,7 @@
       <div class="space-y-12">
         <div>
           <h2 class="text-4xl font-bold text-primary leading-tight">Instant Brand Understanding</h2>
-          <p class="mt-4 text-lg font-light leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+          <p class="mt-4 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
             Simply enter your product URL and our AI will
             automatically scan your website to understand your brand identity, color schemes, messaging style, and
             visual elements.</p>
@@ -225,7 +215,7 @@
             </div>
             <div>
               <h3 class="font-semibold text-primary text-lg">Smart Website Analysis</h3>
-              <p class="mt-2 font-light leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">Our AI
+              <p class="mt-2 font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">Our AI
                 scans your product page to extract key
                 selling points, imagery, and brand elements, ensuring your ads remain consistent with your existing
                 marketing strategy.</p>
@@ -237,7 +227,7 @@
             </div>
             <div>
               <h3 class="font-semibold text-primary text-lg">Brand Voice Identification</h3>
-              <p class="mt-2 font-light leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">The
+              <p class="mt-2 font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">The
                 system analyzes your website copy to capture
                 your unique tone and messaging approach, then applies it to all your ad copies for seamless brand
                 consistency.</p>
@@ -265,7 +255,7 @@
       <div class="space-y-12">
         <div>
           <h2 class="text-4xl font-bold text-primary leading-tight">Generate effective ads that convert</h2>
-          <p class="mt-4 text-lg font-light leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+          <p class="mt-4 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
             Transform basic product images into
             scroll-stopping ad designs with AI that understands what drives clicks and conversions for your target
             audience.</p>
@@ -277,7 +267,7 @@
             </div>
             <div>
               <h3 class="font-semibold text-primary text-lg">AI-Powered Creative Generators</h3>
-              <p class="mt-2 font-light leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+              <p class="mt-2 font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
                 Struggling with design expertise? Our platform
                 creates professional AI ads for various platforms in seconds, with intelligent text placement and
                 perfect aspect ratios that converts.</p>
@@ -289,7 +279,7 @@
             </div>
             <div>
               <h3 class="font-semibold text-primary text-lg">Massive Template Library</h3>
-              <p class="mt-2 font-light leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">Access
+              <p class="mt-2 font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">Access
                 over 1,000,000 pre-designed ad templates
                 with brand kits across all industries, optimized for performance and ready to customize with your brand
                 voice.</p>
@@ -307,7 +297,7 @@
       <div class="space-y-12">
         <div>
           <h2 class="text-4xl font-bold text-primary leading-tight">Leverage competitor intelligence</h2>
-          <p class="mt-4 text-lg font-light leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+          <p class="mt-4 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
             Wondering why competitors are outperforming
             you? Discover the exact ad formats and messaging driving their success, then make them work for your digital
             marketing.</p>
@@ -319,7 +309,7 @@
             </div>
             <div>
               <h3 class="font-semibold text-primary text-lg">Competitor Ad Analysis</h3>
-              <p class="mt-2 font-light leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">Scrape
+              <p class="mt-2 font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">Scrape
                 and analyze your competitors' top-performing
                 social media ads to understand consumer behavior in your niche right now.</p>
             </div>
@@ -330,7 +320,7 @@
             </div>
             <div>
               <h3 class="font-semibold text-primary text-lg">One-Click Ad Cloning</h3>
-              <p class="mt-2 font-light leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">See a
+              <p class="mt-2 font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">See a
                 winning competitor ad? Clone it instantly
                 with your own branding, messaging, and products while keeping the proven format that converts.</p>
             </div>
@@ -348,21 +338,11 @@
   <!-- CTA Section -->
   <section class="container mx-auto py-3 px-4 md:px-6 text-center">
     <div class="flex flex-col items-center space-y-6">
-      <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-        <a href="{% url 'account_signup' %}"
-          class="inline-flex items-center justify-center rounded-lg px-8 py-4 text-lg font-medium text-white shadow-sm"
-          style="background-color: #5C67F2;">
-          Start Free Trial
-        </a>
-        <form method="post" action="{% provider_login_url 'google' %}">
-          {% csrf_token %}
-          <button type="submit"
-            class="inline-flex items-center justify-center rounded-lg border border-neutral-300 bg-white px-8 py-4 text-lg font-medium text-neutral-700 hover:bg-neutral-100 w-full sm:w-auto">
-            <img src="{% static 'images/socialauth/google-logo.svg' %}" alt="Google" class="h-5 w-5 mr-3">
-            Login with Google
-          </button>
-        </form>
-      </div>
+      <a href="{% url 'account_signup' %}"
+        class="inline-flex items-center justify-center rounded-lg px-8 py-4 text-lg font-medium text-white shadow-sm"
+        style="background-color: #5C67F2;">
+        Start Free Trial
+      </a>
       <div class="flex flex-col md:flex-row items-center justify-center gap-x-8 gap-y-2 pt-4">
         <div class="flex items-center gap-2">
           <i data-lucide="check" class="w-5 h-5 text-primary"></i>
@@ -380,70 +360,43 @@
     </div>
   </section>
 
-  <!-- All-in-One Ad Growth Suite Section -->
-  <section class="container mx-auto py-16 px-4 md:px-6 text-center">
-    <div class="max-w-3xl mx-auto">
-      <h2 class="text-4xl font-bold text-primary">All-in-One Ad Growth Suite</h2>
-      <p class="mt-4 text-lg font-light leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
-        From creating ads to tracking performance, gaining insights, and scaling campaigns — everything you need to run
-        winning ads in one platform.
-      </p>
-      <div class="mt-8 inline-flex items-center justify-center rounded-xl bg-primary/10 p-1" data-tab-buttons>
-        <button data-tab="generation" class="rounded-lg px-6 py-2 text-sm font-medium text-primary">Generation</button>
-        <button data-tab="analytics" class="rounded-lg px-6 py-2 text-sm font-medium text-primary">Analytics</button>
-        <button data-tab="intelligence"
-          class="rounded-lg px-6 py-2 text-sm font-medium text-primary">Intelligence</button>
-        <button data-tab="scaling" class="rounded-lg px-6 py-2 text-sm font-medium text-primary">Scaling</button>
-      </div>
-
-      <div class="mt-8 w-full bg-primary/5 dark:bg-primary/10 rounded-3xl p-8 md:p-12" data-tab-content>
-        <div data-tab-panel="generation" class="text-center space-y-4">
-          <h3 class="text-3xl font-bold text-primary">AI-Powered Ad Generation</h3>
-          <p
-            class="font-light leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300 max-w-2xl mx-auto">
-            Create high-converting ads in seconds. Our AI analyzes your brand and generates multiple ad variations
-            tailored to your audience and platform.</p>
-        </div>
-        <div data-tab-panel="analytics" class="text-center space-y-4 hidden">
-          <h3 class="text-3xl font-bold text-primary">In-Depth Performance Analytics</h3>
-          <p
-            class="font-light leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300 max-w-2xl mx-auto">
-            Track your ad performance with detailed analytics, providing insights into what works and what doesn't,
-            helping you optimize for better results.</p>
-        </div>
-        <div data-tab-panel="intelligence" class="text-center space-y-4 hidden">
-          <h3 class="text-3xl font-bold text-primary">Competitor Intelligence</h3>
-          <p
-            class="font-light leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300 max-w-2xl mx-auto">
-            Analyze competitor strategies and successful ads to gain a competitive edge and discover new opportunities
-            in your market.</p>
-        </div>
-        <div data-tab-panel="scaling" class="text-center space-y-4 hidden">
-          <h3 class="text-3xl font-bold text-primary">Effortless Campaign Scaling</h3>
-          <p
-            class="font-light leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300 max-w-2xl mx-auto">
-            Scale your advertising efforts with bulk ad generation and smart adaptation tools that ensure brand
-            consistency across all platforms.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- FAQ Section -->
-  <section class="container mx-auto py-3 px-4 md:px-6">
-    <div class="text-center mb-12">
-      <h2 class="text-3xl font-bold tracking-tight">Frequently Asked Questions</h2>
-    </div>
+  <section class="container mx-auto py-16 px-4 md:px-6">
+    <div class="grid md:grid-cols-2 gap-12 max-w-6xl mx-auto">
+      <!-- Left side: Title and description -->
+      <div>
+        <h2 class="text-4xl md:text-5xl tracking-tight">
+          <span class="text-primary font-normal">Frequently </span>
+          <span class="text-primary font-bold">Asked Questions</span>
+        </h2>
+        <p class="mt-4 text-lg font-medium text-neutral-600 dark:text-neutral-400">
+          Everything you need to know about the product and billing.
+        </p>
+      </div>
 
-    <div class="max-w-3xl mx-auto">
-      {% for faq in faq_data %}
-      <div class="mb-4 border-b border-border pb-4">
-        <h3 class="text-lg font-medium mb-2">{{ faq.question }}</h3>
-        <div class="prose prose-sm dark:prose-invert">
-          {{ faq.answer|safe }}
+      <!-- Right side: Accordion -->
+      <div class="space-y-3">
+        {% for faq in faq_data %}
+        <details
+          class="bg-neutral-50 dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden">
+          <summary
+            class="flex items-center justify-between cursor-pointer px-6 py-4 text-base font-medium text-neutral-900 dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
+            <span>{{ faq.question }}</span>
+            <span class="faq-icon-plus text-2xl text-neutral-600 dark:text-neutral-400">+</span>
+            <span class="faq-icon-minus text-2xl text-neutral-600 dark:text-neutral-400">−</span>
+          </summary>
+          <div
+            class="px-6 pb-4 pt-2 text-neutral-700 dark:text-neutral-300 prose prose-sm dark:prose-invert max-w-none">
+            {{ faq.answer|safe }}
+          </div>
+        </details>
+        {% endfor %}
+
+        <div class="mt-6 text-center">
+          <span class="text-neutral-900 dark:text-white">Have more questions? </span>
+          <a href="mailto:hey@adheist.ai" class="text-primary font-medium hover:underline">Contact us</a>
         </div>
       </div>
-      {% endfor %}
     </div>
   </section>
 
@@ -451,7 +404,7 @@
   <section class="container mx-auto py-16 px-4 md:px-6">
     <div class="text-center mb-12">
       <h2 class="text-4xl font-bold text-primary">Simple, transparent pricing</h2>
-      <p class="mt-4 text-lg font-light leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">Choose
+      <p class="mt-4 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">Choose
         the plan that fits your needs. All plans include a 14-day free trial.</p>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
@@ -464,7 +417,7 @@
         <p class="text-sm text-neutral-700 mt-1">* No credit card required</p>
         {% endif %}
         <div class="mt-6">
-          <span class="text-4xl font-bold">${{ tier.price }}</span>
+          <span class="text-4xl font-bold text-primary">{{ tier.price }}</span>
           <span class="text-neutral-700">/ month</span>
         </div>
         <a href="{% url 'account_signup' %}"
@@ -493,20 +446,12 @@
       <p class="mt-4 text-lg text-neutral-700 dark:text-neutral-300 max-w-2xl mx-auto">
         Join thousands of marketers who are creating high-converting ads with AI. Start your free trial today.
       </p>
-      <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+      <div class="mt-8">
         <a href="{% url 'account_signup' %}"
           class="inline-flex items-center justify-center rounded-lg px-8 py-4 text-lg font-medium text-white shadow-sm"
           style="background-color: #5C67F2;">
           Start Free Trial
         </a>
-        <form method="post" action="{% provider_login_url 'google' %}">
-          {% csrf_token %}
-          <button type="submit"
-            class="inline-flex items-center justify-center rounded-lg border border-neutral-300 bg-white px-8 py-4 text-lg font-medium text-neutral-700 hover:bg-neutral-100 w-full sm:w-auto">
-            <img src="{% static 'images/socialauth/google-logo.svg' %}" alt="Google" class="h-5 w-5 mr-3">
-            Login with Google
-          </button>
-        </form>
       </div>
       <div class="flex flex-col md:flex-row items-center justify-center gap-x-8 gap-y-2 pt-4">
         <div class="flex items-center gap-2">
@@ -525,6 +470,19 @@
     </div>
   </section>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* FAQ Accordion: Hide + when open, show - */
+  details[open] .faq-icon-plus {
+    display: none;
+  }
+
+  details:not([open]) .faq-icon-minus {
+    display: none;
+  }
+</style>
 {% endblock %}
 
 {% block extra_js %}
