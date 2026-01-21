@@ -22,6 +22,7 @@ urlpatterns = [
         name="shadcn",
     ),
     path("pricing/", views.pricing_page, name="pricing_page"),
+    path("facebook-ads-cost/", views.facebook_ads_calculator, name="facebook_ads_calculator"),
     path("industries/", views.marketing_pages_index, name="marketing_pages_index"),
     path("industry/create-ngo-ads/", TemplateView.as_view(template_name="marketing_pages/ngo.html"), name="ngo_page"),
     path("industry/create-pharmacy-ads/", TemplateView.as_view(template_name="marketing_pages/pharmacy.html"), name="pharmacy_page"),

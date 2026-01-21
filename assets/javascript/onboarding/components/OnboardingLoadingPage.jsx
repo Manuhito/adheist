@@ -115,8 +115,8 @@ const OnboardingLoadingPage = ({ adRequestId }) => {
   useSSEListener(handleSSEEvent);
 
   return (
-    <div className="relative flex flex-col items-center justify-center h-full w-full px-4 animate-in fade-in duration-500">
-      <div className="flex flex-col items-center gap-8 w-full max-w-4xl text-center">
+    <div className="relative flex flex-col items-center justify-center h-full w-full px-4 pb-24 md:pb-0 animate-in fade-in duration-500">
+      <div className="flex flex-col items-center gap-6 sm:gap-8 w-full max-w-4xl text-center">
         {/* Text */}
         <div className="space-y-2">
           <h1 className="text-3xl sm:text-4xl font-semibold text-foreground">
@@ -127,7 +127,7 @@ const OnboardingLoadingPage = ({ adRequestId }) => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full mt-2">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 w-full mt-2">
           <div className="flex flex-col items-center gap-3 rounded-xl border bg-card p-5 text-center">
             <Target className="w-7 h-7 text-primary" />
             <div className="space-y-1">
@@ -161,8 +161,8 @@ const OnboardingLoadingPage = ({ adRequestId }) => {
           </div>
         </div>
 
-        {/* Loading spinner */}
-        <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin mt-4"></div>
+        {/* Loading spinner - larger and more visible */}
+        <div className="w-12 h-12 sm:w-10 sm:h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin mt-4"></div>
       </div>
 
       <Mascot message={MASCOT_MESSAGES[mascotMessageIndex]} />

@@ -174,7 +174,7 @@ const StepOne = ({ onNext, initialData, user, setMascotMessageOverride }) => {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] w-full px-4">
       {/* Matching login form container width */}
-      <Card className="w-96 border shadow-none bg-white dark:bg-card">
+      <Card className="w-full max-w-96 border shadow-none bg-white dark:bg-card">
         <CardContent className="p-[18px]">
           <form onSubmit={handleSubmit} className="space-y-6" noValidate>
             <div className="space-y-1">

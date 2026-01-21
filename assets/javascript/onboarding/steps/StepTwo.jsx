@@ -302,15 +302,15 @@ const StepTwo = ({ onNext, initialData, setMascotMessageOverride }) => {
   const faviconUrl = getFaviconUrl(initialData?.url || initialData?.website);
 
   return (
-    <div className="flex flex-col items-center justify-start w-full pb-8 animate-in fade-in duration-500 relative">
-      <div className="w-full max-w-3xl px-4 relative mx-auto mt-8" style={{ perspective: '800px' }}>
+    <div className="flex flex-col items-center justify-center w-full py-4 sm:py-8 animate-in fade-in duration-500 relative min-h-[calc(100vh-12rem)] sm:min-h-0">
+      <div className="w-full max-w-3xl px-2 sm:px-4 relative mx-auto" style={{ perspective: '800px' }}>
         {/* Screenshot Background */}
         {data?.screenshot && (
           <div
-            className={`relative w-full rounded-xl overflow-hidden shadow-md border bg-muted/50 mb-8 mx-auto transition-all duration-700 ease-out ${!analyzing ? 'opacity-90' : ''
+            className={`relative w-full rounded-xl overflow-hidden shadow-md border bg-muted/50 mb-4 sm:mb-8 mx-auto transition-all duration-700 ease-out ${!analyzing ? 'opacity-90' : ''
               }`}
             style={{
-              transform: !analyzing ? 'rotateX(25deg) translateY(-100px) scale(1)' : 'none',
+              transform: !analyzing ? 'rotateX(25deg) translateY(-50px) sm:translateY(-100px) scale(1)' : 'none',
               transformOrigin: 'center bottom'
             }}
           >
@@ -323,10 +323,10 @@ const StepTwo = ({ onNext, initialData, setMascotMessageOverride }) => {
         )}
 
         {/* Modal Overlay */}
-        <div className={`absolute inset-0 flex items-center justify-center z-10 p-4 ${!analyzing ? '-mt-16' : ''}`}>
+        <div className={`absolute inset-0 flex items-center justify-center z-10 p-2 sm:p-4 ${!analyzing ? 'mt-0' : ''}`}>
           {!analyzing && (
-            <Card className="w-full max-w-lg shadow-xl bg-background/95 backdrop-blur-sm border-primary/20">
-              <CardContent className="p-6 space-y-6">
+            <Card className="w-full max-w-[95%] sm:max-w-lg shadow-xl bg-background/95 backdrop-blur-sm border-primary/20">
+              <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
                 {/* Header: Favicon + Name + URL */}
                 <div className="flex items-start gap-4">
                   {faviconUrl && (
@@ -358,7 +358,7 @@ const StepTwo = ({ onNext, initialData, setMascotMessageOverride }) => {
                         </>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground truncate max-w-[300px]">
+                    <p className="text-xs sm:text-sm text-muted-foreground truncate max-w-[200px] sm:max-w-[300px]">
                       {initialData?.url || initialData?.website}
                     </p>
                   </div>

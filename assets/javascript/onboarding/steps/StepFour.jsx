@@ -315,7 +315,7 @@ const StepFour = ({ onNext, initialData, setMascotMessageOverride }) => {
 
   return (
     <div className="flex flex-col h-full w-full overflow-hidden animate-in fade-in duration-500">
-      <div className="w-full max-w-6xl mx-auto px-4 flex flex-col h-full overflow-hidden">
+      <div className="w-full max-w-6xl mx-auto px-2 sm:px-4 flex flex-col h-full overflow-hidden">
         <Card className="w-full shadow-none bg-transparent backdrop-blur-none border-none flex flex-col h-full overflow-hidden">
           <CardContent className="p-0 flex flex-col h-full overflow-hidden">
 
@@ -329,8 +329,8 @@ const StepFour = ({ onNext, initialData, setMascotMessageOverride }) => {
                   </div>
                 </div>
               ) : ads.length > 0 ? (
-                <div className="h-full overflow-y-auto pr-2 -mr-2 bg-transparent">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="h-full overflow-y-auto pr-1 sm:pr-2 -mr-1 sm:-mr-2 bg-transparent">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                     {ads.map((ad) => (
                       <CompetitorAdCard
                         key={ad.id}
@@ -355,7 +355,7 @@ const StepFour = ({ onNext, initialData, setMascotMessageOverride }) => {
               )}
             </div>
             {/* Footer actions: Clone / Skip */}
-            <div className="flex justify-end pt-4 flex-shrink-0">
+            <div className="flex justify-end pt-3 sm:pt-4 pb-20 sm:pb-0 flex-shrink-0">
               {!isLoading && (
                 <>
                   {ads.length > 0 ? (
