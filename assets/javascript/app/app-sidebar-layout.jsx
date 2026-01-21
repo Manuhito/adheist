@@ -303,7 +303,7 @@ function ConditionalHeader({ content, customComponent, hideLogo = false }) {
   };
 
   return (
-    <header className="flex h-20 shrink-0 items-center px-6 py-4">
+    <header className="flex h-auto shrink-0 items-center px-6 py-6 md:h-20 md:py-4">
       {/* En móviles siempre mostrar trigger, en desktop solo cuando está cerrado */}
       {(isMobile || !open) && (
         <CustomSidebarTrigger className="-ml-1 mr-2">
@@ -311,8 +311,8 @@ function ConditionalHeader({ content, customComponent, hideLogo = false }) {
         </CustomSidebarTrigger>
       )}
 
-      {/* Logo de la app - se oculta si hideLogo es true */}
-      {!hideLogo && (
+      {/* Logo de la app - se oculta si hideLogo es true o si estamos en móviles */}
+      {!hideLogo && !isMobile && (
         <div className="flex items-center mr-4">
           <a href="/" className="flex items-center">
             <img
@@ -349,8 +349,8 @@ function ConditionalHeader({ content, customComponent, hideLogo = false }) {
         </>
       )}
 
-      {/* Total Ads Counter - Always on the right */}
-      {totalAdsCount > 0 && (
+      {/* Total Ads Counter - Solo en desktop, en móviles se muestra en DiscoverSearchBar */}
+      {totalAdsCount > 0 && !isMobile && (
         <div className="flex items-center gap-1.5 ml-auto">
           {/* Two overlapping green circles - centered */}
           <div className="relative flex items-center justify-center" style={{ width: '18px', height: '18px' }}>
