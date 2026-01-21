@@ -276,7 +276,7 @@ function VersionListItem({ versionData, onDeleteDraft }) {
                   variant="ghost"
                   size="sm"
                   onClick={handleViewDetailsClick}
-                  className="text-primary hover:text-primary/80"
+                  className="hidden md:flex text-primary hover:bg-primary hover:text-white"
                 >
                   {displayStatus === 'COMPLETED'
                     ? 'View Generated'
