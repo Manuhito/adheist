@@ -29,6 +29,22 @@ import { ThemeSwitch } from "@/components/theme-switch"
 import { PanelLeftClose, Menu, Compass, Bookmark, Zap, Library, Folders, User2, ChevronUp, CreditCard, Settings, LogOut, Sparkles } from "lucide-react"
 import * as ProgressPrimitive from "@radix-ui/react-progress"
 
+function MobileSidebarOverlay() {
+  const { isMobile, openMobile, setOpenMobile } = useSidebar();
+
+  if (!isMobile || !openMobile) {
+    return null;
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity md:hidden"
+      onClick={() => setOpenMobile(false)}
+      aria-hidden="true"
+    />
+  );
+}
+
 function CreditsProgressBar() {
   const creditsData = window.__USER_CREDITS__;
 
@@ -249,6 +265,7 @@ function AppSidebarLayout() {
 
   return (
     <SidebarProvider>
+      <MobileSidebarOverlay />
       <div className="flex min-h-screen w-full">
         <AppSidebar activeTab={activeTab} sidebarComponent={sidebarComponent} />
         <SidebarInset>
@@ -272,7 +289,7 @@ function AppSidebarLayout() {
 }
 
 function ConditionalHeader({ content, customComponent, hideLogo = false }) {
-  const { open } = useSidebar();
+  const { open, isMobile } = useSidebar();
 
   // Priority: customComponent > content > empty
   const headerContent = customComponent || content;
@@ -287,7 +304,8 @@ function ConditionalHeader({ content, customComponent, hideLogo = false }) {
 
   return (
     <header className="flex h-20 shrink-0 items-center px-6 py-4">
-      {!open && (
+      {/* En móviles siempre mostrar trigger, en desktop solo cuando está cerrado */}
+      {(isMobile || !open) && (
         <CustomSidebarTrigger className="-ml-1 mr-2">
           <Menu className="h-5 w-5" />
         </CustomSidebarTrigger>
