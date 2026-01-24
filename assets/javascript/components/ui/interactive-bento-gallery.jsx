@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Check, Star, Trash2, ExternalLink, ChevronDown } from 'lucide-react';
+import { X, Check, Star, Trash2, ExternalLink, ChevronDown, Zap } from 'lucide-react';
 import { useTranslation } from '../../lib/useTranslation';
 import { Switch } from '../ui/switch';
 import { useIsMobile } from '../../hooks/use-mobile';
@@ -188,6 +188,23 @@ const MediaItem = ({ item, className, onClick, isSelected, userPermissions = { i
                         )}
                     </div>
                     <h3 className="text-sm font-semibold break-words line-clamp-2 flex-1">{item.title}</h3>
+
+                    {/* Runtime Score Badge */}
+                    {item.runtime_score && (
+                        <div
+                            className="inline-flex items-center gap-1 px-2 py-1 flex-shrink-0"
+                            style={{
+                                borderRadius: '10.8px',
+                                border: '0.51px solid #C6FDD2',
+                                backgroundColor: '#EDFFF1'
+                            }}
+                        >
+                            <Zap className="w-3 h-3" style={{ color: '#16B55B' }} />
+                            <span className="text-xs font-semibold" style={{ color: '#16B55B' }}>
+                                {item.runtime_score}
+                            </span>
+                        </div>
+                    )}
                 </div>
 
                 {/* Ad Creative Bodies */}

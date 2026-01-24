@@ -220,6 +220,8 @@ const DiscoverFilterModal = forwardRef(({ onFiltersApply, onFiltersChange, selec
               <SimpleSelectItem value="newest">Newest</SimpleSelectItem>
               <SimpleSelectItem value="oldest">Oldest</SimpleSelectItem>
               <SimpleSelectItem value="popular">Most Popular</SimpleSelectItem>
+              <SimpleSelectItem value="score_desc">Score: High to Low</SimpleSelectItem>
+              <SimpleSelectItem value="score_asc">Score: Low to High</SimpleSelectItem>
             </SimpleSelect>
           </div>
 

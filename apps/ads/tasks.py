@@ -217,3 +217,96 @@ def _send_analysis_sse(user_id: int, success: bool, extracted_assets: dict = Non
         logger.info(f"[_send_analysis_sse] Sent notification to user {user_id} (success={success})")
     except Exception as e:
         logger.error(f"[_send_analysis_sse] Error sending SSE: {str(e)}")
+
+
+@shared_task
+def update_ad_runtime_scores():
+    """
+    Update runtime_days and runtime_score for all ads.
+    Runs daily at midnight.
+    
+    Logic:
+    1. Update runtime_days ONLY for active ads (meta_status=ACTIVE)
+    2. Calculate company statistics using ALL ads (active + inactive)
+    3. Calculate runtime_score for ALL ads based on Z-score
+    
+    Returns:
+        Dictionary with update statistics
+    """
+    from django.utils import timezone
+    from django.db.models import Avg, StdDev, Count
+    from apps.ads.models import AdLibrary
+    
+    logger.info("[update_ad_runtime_scores] Starting task")
+    today = timezone.now().date()
+    
+    # Step 1: Update runtime_days ONLY for active ads
+    active_ads = AdLibrary.objects.filter(
+        meta_status=AdLibrary.STATUS_ACTIVE,
+        ad_delivery_start_time__isnull=False
+    )
+    
+    updated_runtime = 0
+    for ad in active_ads:
+        new_runtime = (today - ad.ad_delivery_start_time).days
+        if ad.runtime_days != new_runtime:
+            ad.runtime_days = new_runtime
+            updated_runtime += 1
+    
+    AdLibrary.objects.bulk_update(active_ads, ['runtime_days'], batch_size=500)
+    logger.info(f"[update_ad_runtime_scores] Updated runtime_days for {updated_runtime} active ads")
+    
+    # Step 2 & 3: Calculate Z-scores and runtime_score by company
+    # Include ALL ads (active + inactive) for statistics
+    all_ads = AdLibrary.objects.filter(
+        ad_delivery_start_time__isnull=False,
+        runtime_days__isnull=False
+    )
+    
+    companies = all_ads.values_list('facebook_page_id', flat=True).distinct()
+    total_scored = 0
+    
+    for company_id in companies:
+        # Get ALL ads from this company (active + inactive)
+        company_ads = all_ads.filter(facebook_page_id=company_id)
+        
+        # Calculate μ_company and σ_company
+        stats = company_ads.aggregate(
+            mean=Avg('runtime_days'),
+            stddev=StdDev('runtime_days'),
+            count=Count('id')
+        )
+        
+        # Need at least 2 ads to calculate standard deviation
+        if not stats['stddev'] or stats['stddev'] == 0 or stats['count'] < 2:
+            # Without sufficient variation, all ads get median score
+            for ad in company_ads:
+                ad.runtime_score = 50
+            AdLibrary.objects.bulk_update(company_ads, ['runtime_score'], batch_size=500)
+            continue
+        
+        # Calculate Z-score and runtime_score for each ad
+        for ad in company_ads:
+            # Z_i = (R_i − μ_company) / σ_company
+            z_score = (ad.runtime_days - stats['mean']) / stats['stddev']
+            
+            # Convert Z-score to 5-100 scale
+            # Z <= 0 → score = 5-50 (below average)
+            # Z > 0 → score = 50-100 (above average)
+            if z_score <= 0:
+                runtime_score = max(5, int(50 + (z_score * 15)))  # From 5 to 50
+            else:
+                runtime_score = min(100, int(50 + (z_score * 16.67)))  # From 50 to 100
+            
+            ad.runtime_score = runtime_score
+        
+        AdLibrary.objects.bulk_update(company_ads, ['runtime_score'], batch_size=500)
+        total_scored += company_ads.count()
+    
+    logger.info(f"[update_ad_runtime_scores] Calculated runtime_score for {total_scored} ads across {len(companies)} companies")
+    
+    return {
+        'updated_runtime': updated_runtime,
+        'total_scored': total_scored,
+        'companies': len(companies)
+    }
