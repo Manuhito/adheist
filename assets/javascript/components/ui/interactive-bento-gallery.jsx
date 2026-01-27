@@ -245,8 +245,8 @@ const MediaItem = ({ item, className, onClick, isSelected, userPermissions = { i
                         </>
                     )}
 
-                    {/* Runtime Score Badge with dynamic colors */}
-                    {item.runtime_score && (() => {
+                    {/* Runtime Score Badge with dynamic colors - only show if alert badge is not shown */}
+                    {item.runtime_score && !(item.company_ad_count > 0 && item.company_ad_count < 10) && (() => {
                         const colors = getScoreColors(item.runtime_score);
                         return (
                             <div
