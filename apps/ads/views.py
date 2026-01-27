@@ -1345,6 +1345,16 @@ def get_adlibrary_filters(request):
         # Si la página está fuera de rango, mostrar la última página
         paginated_adlibraries = paginator.page(paginator.num_pages)
     
+    # Pre-calculate ad counts per company for efficiency (single query)
+    company_ids = [ad.facebook_page_id for ad in paginated_adlibraries]
+    company_ad_counts = AdLibrary.objects.filter(
+        facebook_page_id__in=company_ids,
+        is_active=True
+    ).values('facebook_page_id').annotate(
+        total_ads=Count('id')
+    )
+    ad_count_map = {item['facebook_page_id']: item['total_ads'] for item in company_ad_counts}
+    
     # Convert to list of dictionaries with all required fields
     adlibrary_list = []
     for adlibrary in paginated_adlibraries:
@@ -1391,6 +1401,7 @@ def get_adlibrary_filters(request):
             'cta_link': cta_link,  # New field for CTA link
             'click_count': adlibrary.click_count,
             'runtime_score': adlibrary.runtime_score,  # Runtime performance score
+            'company_ad_count': ad_count_map.get(facebook_page_id, 0),  # Total ads for this company
         }
         adlibrary_list.append(adlibrary_data)
     

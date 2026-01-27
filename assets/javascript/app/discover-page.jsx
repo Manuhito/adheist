@@ -286,7 +286,8 @@ function DiscoverContent() {
         publisher_platform: item.publisher_platform || [], // Plataformas de publicación
         ad_creative_link_titles: item.ad_creative_link_titles || null, // Títulos de enlaces creativos
         cta_link: item.cta_link || null, // CTA link extraído del backend
-        runtime_score: item.runtime_score || null // Runtime performance score
+        runtime_score: item.runtime_score || null, // Runtime performance score
+        company_ad_count: item.company_ad_count || 0 // Total ads for this company
       };
     });
   };
