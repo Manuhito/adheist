@@ -19,6 +19,8 @@ class StaticViewSitemap(sitemaps.Sitemap):
             "terms",
             "privacy",
             "web:pricing_page",
+            "web:facebook_ads_calculator",
+            "web:facebook_ad_budget_calculator",
             "web:marketing_pages_index",
             "web:ngo_page",
             "web:pharmacy_page",
