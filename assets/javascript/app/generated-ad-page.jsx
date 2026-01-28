@@ -401,30 +401,33 @@ const GeneratedAdPage = () => {
         </div>
 
         {/* Action buttons */}
-        <div className="flex items-center justify-center gap-6">
+        <div className="flex items-center justify-center gap-2 md:gap-6">
           <button
-            className="flex items-center gap-2 px-4 py-3 rounded-full transition-colors hover:text-primary"
+            className="flex items-center gap-2 px-2 py-2 md:px-4 md:py-3 rounded-full transition-colors hover:text-primary"
             onClick={() => setRevisionModalOpen(true)}
+            title="Open AI Editor"
           >
-            <WandSparkles className="h-6 w-6" />
-            <span className="text-sm font-medium">Open AI Editor</span>
+            <WandSparkles className="h-5 w-5 md:h-6 md:w-6" />
+            <span className="text-sm font-medium hidden md:inline">Open AI Editor</span>
           </button>
 
           <button
-            className="flex items-center gap-2 px-4 py-3 rounded-full transition-colors hover:text-primary"
+            className="flex items-center gap-2 px-2 py-2 md:px-4 md:py-3 rounded-full transition-colors hover:text-primary"
             onClick={() => setDetailsModalOpen(true)}
+            title="More Details"
           >
-            <Info className="h-6 w-6" />
-            <span className="text-sm font-medium">More Details</span>
+            <Info className="h-5 w-5 md:h-6 md:w-6" />
+            <span className="text-sm font-medium hidden md:inline">More Details</span>
           </button>
 
           <div className="relative">
             <button
-              className={`p-3 rounded-full transition-colors ${feedbackDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:text-primary'}`}
+              className={`p-2 md:p-3 rounded-full transition-colors ${feedbackDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:text-primary'}`}
               onClick={() => !feedbackDisabled && handleOpenRating('positive')}
               disabled={feedbackDisabled}
+              title="Like this ad"
             >
-              <ThumbsUp className="h-6 w-6" />
+              <ThumbsUp className="h-5 w-5 md:h-6 md:w-6" />
             </button>
 
             {/* Tooltip */}
@@ -448,25 +451,28 @@ const GeneratedAdPage = () => {
           </div>
 
           <button
-            className={`p-3 rounded-full transition-colors ${feedbackDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:text-primary'}`}
+            className={`p-2 md:p-3 rounded-full transition-colors ${feedbackDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:text-primary'}`}
             onClick={() => !feedbackDisabled && handleOpenRating('negative')}
             disabled={feedbackDisabled}
+            title="Dislike this ad"
           >
-            <ThumbsDown className="h-6 w-6" />
+            <ThumbsDown className="h-5 w-5 md:h-6 md:w-6" />
           </button>
 
           <button
-            className="p-3 rounded-full transition-colors hover:text-primary"
+            className="p-2 md:p-3 rounded-full transition-colors hover:text-primary"
             onClick={handleDownload}
+            title="Download image"
           >
-            <Download className="h-6 w-6" />
+            <Download className="h-5 w-5 md:h-6 md:w-6" />
           </button>
 
           <button
-            className="p-3 rounded-full transition-colors hover:text-primary"
+            className="p-2 md:p-3 rounded-full transition-colors hover:text-primary"
             onClick={handleExpand}
+            title="View fullscreen"
           >
-            <Expand className="h-6 w-6" />
+            <Expand className="h-5 w-5 md:h-6 md:w-6" />
           </button>
         </div>
       </div>

@@ -164,16 +164,44 @@ function DiscoverSearchBar({ onSearch, onFiltersApply }) {
     }
   };
 
-  const placeholder = selectedCompany
-    ? `Filtering by: ${selectedCompany.label}`
-    : keywordSearch
-      ? `Filtering by: "${keywordSearch}"`
-      : "Search for a brand name or keywords....";
+  // Placeholder adaptativo para móviles
+  const getPlaceholder = () => {
+    if (selectedCompany) return `Filtering by: ${selectedCompany.label}`;
+    if (keywordSearch) return `Filtering by: "${keywordSearch}"`;
+
+    // Placeholder más corto en móviles
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      return "Search brands...";
+    }
+    return "Search for a brand name or keywords....";
+  };
+
+  const [placeholder, setPlaceholder] = React.useState(getPlaceholder());
+
+  // Actualizar placeholder en resize
+  React.useEffect(() => {
+    const handleResize = () => {
+      setPlaceholder(getPlaceholder());
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [selectedCompany, keywordSearch]);
+
+  // Obtener contador de anuncios desde window data
+  const totalAdsCount = window.__DISCOVER_DATA__?.totalAdsCount || 0;
+
+  // Formatear número con comas
+  const formatNumber = (num) => {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  };
 
   return (
     <div className="w-full">
-      <div className="flex items-center gap-0">
-        <div className="flex-1 relative">
+      {/* Layout adaptativo: vertical en móviles, horizontal en desktop */}
+      <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-0">
+        {/* Fila 1: Barra de búsqueda a ancho completo */}
+        <div className="flex-1 relative w-full">
           <ActionSearchBar
             actions={companyActions}
             onSearch={handleSearch}
@@ -196,38 +224,57 @@ function DiscoverSearchBar({ onSearch, onFiltersApply }) {
             </Button>
           )}
         </div>
-        <DiscoverFilterModal
-          ref={filterModalRef}
-          onFiltersApply={onFiltersApply}
-          onFiltersChange={setModalFiltersApplied}
-          selectedCompany={selectedCompany}
-        />
-        {/* Clear All Filters Button */}
-        {(keywordSearch || selectedCompany || modalFiltersApplied) && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="ml-2 h-9 px-3 rounded-lg text-sm text-muted-foreground hover:text-foreground"
-            onClick={handleClearAllFilters}
-          >
-            Clear filters
-          </Button>
-        )}
-        {/* Request Brand Button */}
-        <div className="relative group">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 w-9 p-0 ml-2 rounded-lg"
-            onClick={() => setIsRequestModalOpen(true)}
-            disabled={isBrandRequestInProgress}
-          >
-            <Lightbulb className="h-5 w-5" />
-          </Button>
-          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1.5 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-lg">
-            Request a new Advertiser
-            <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-[6px] border-transparent border-b-gray-900 dark:border-b-gray-700"></div>
+
+        {/* Fila 2: Botones (en móviles aparece debajo, en desktop a la derecha) */}
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <DiscoverFilterModal
+            ref={filterModalRef}
+            onFiltersApply={onFiltersApply}
+            onFiltersChange={setModalFiltersApplied}
+            selectedCompany={selectedCompany}
+          />
+          {/* Clear All Filters Button */}
+          {(keywordSearch || selectedCompany || modalFiltersApplied) && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 px-3 rounded-lg text-sm text-muted-foreground hover:text-foreground"
+              onClick={handleClearAllFilters}
+            >
+              Clear filters
+            </Button>
+          )}
+          {/* Request Brand Button */}
+          <div className="relative group">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 w-9 p-0 rounded-lg"
+              onClick={() => setIsRequestModalOpen(true)}
+              disabled={isBrandRequestInProgress}
+            >
+              <Lightbulb className="h-5 w-5" />
+            </Button>
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1.5 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-lg">
+              Request a new Advertiser
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-[6px] border-transparent border-b-gray-900 dark:border-b-gray-700"></div>
+            </div>
           </div>
+
+          {/* Total Ads Counter - Solo visible en móviles, en desktop se muestra en el header */}
+          {totalAdsCount > 0 && (
+            <div className="flex items-center gap-1.5 ml-auto md:hidden">
+              {/* Two overlapping green circles - centered */}
+              <div className="relative flex items-center justify-center" style={{ width: '18px', height: '18px' }}>
+                <div className="absolute w-[18px] h-[18px] rounded-full bg-green-500/20"></div>
+                <div className="absolute w-3 h-3 rounded-full bg-green-500"></div>
+              </div>
+              {/* Ads count text */}
+              <span className="text-green-500 text-sm font-medium whitespace-nowrap">
+                {formatNumber(totalAdsCount)} Ads
+              </span>
+            </div>
+          )}
         </div>
       </div>
 

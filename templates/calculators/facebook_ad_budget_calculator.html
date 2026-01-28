@@ -1,0 +1,467 @@
+{% extends "web/base.html" %}
+{% load static %}
+
+{% block page_title %}Facebook Ad Budget Calculator - Plan Your Ad Spend | Adheist{% endblock page_title %}
+
+{% block meta_description %}
+<meta name="description"
+  content="Free Facebook Ad Budget Calculator. Calculate your minimum monthly budget based on CPA and sales goals. Optimize your ad spend for lead-based and e-commerce businesses.">
+{% endblock meta_description %}
+
+{% block content %}
+<div class="space-y-16">
+  <!-- Facebook Ad Budget Calculator Section -->
+  <section class="container mx-auto py-12 px-4 md:px-6">
+    <div class="max-w-7xl mx-auto">
+      <!-- Title -->
+      <div class="text-center mb-12">
+        <h1 class="text-5xl md:text-6xl font-bold text-primary mb-4">
+          Facebook Ad Budget Calculator
+        </h1>
+        <p class="text-xl text-neutral-700 dark:text-neutral-300 max-w-3xl mx-auto">
+          Calculate your minimum monthly ad budget based on your acceptable cost per acquisition and sales goals.
+          Choose between lead-based or direct sales business models.
+        </p>
+      </div>
+
+      <!-- Tabs -->
+      <div class="mb-8 flex justify-center">
+        <div
+          class="inline-flex rounded-lg border border-neutral-200 dark:border-neutral-800 p-1 bg-neutral-50 dark:bg-neutral-900">
+          <button type="button"
+            class="rounded-lg px-6 py-3 text-sm font-medium transition-all bg-primary text-white shadow-sm"
+            data-tab="leadBased" aria-pressed="true">
+            Lead-Based Business
+          </button>
+          <button type="button"
+            class="rounded-lg px-6 py-3 text-sm font-medium transition-all text-neutral-700 dark:text-neutral-300"
+            data-tab="directSales" aria-pressed="false">
+            Direct Sales / E-Com
+          </button>
+        </div>
+      </div>
+
+      <!-- Calculator -->
+      <div class="grid lg:grid-cols-2 gap-8">
+        <!-- Column A: Inputs -->
+        <div class="space-y-6">
+          <div
+            class="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-6 md:p-8">
+            <h2 class="text-2xl font-bold text-primary mb-6">Campaign Parameters</h2>
+
+            <div class="space-y-4">
+              <!-- Currency Selector -->
+              <div class="space-y-2">
+                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">
+                  Currency
+                </label>
+                <select id="currency"
+                  class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20">
+                  <option value="USD">USD ($)</option>
+                  <option value="EUR">EUR (€)</option>
+                  <option value="GBP">GBP (£)</option>
+                </select>
+              </div>
+
+              <!-- Average Ticket Size -->
+              <div class="space-y-2">
+                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">
+                  Average Ticket Size
+                </label>
+                <div class="relative">
+                  <span id="currency-symbol-1"
+                    class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400">$</span>
+                  <input type="number" id="avg_ticket" value="0" step="10" min="0" placeholder="100"
+                    class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 pl-8 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+                </div>
+              </div>
+
+              <!-- Acceptable CPA -->
+              <div class="space-y-2">
+                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">
+                  Acceptable Cost Per Acquisition (CPA)
+                </label>
+                <div class="relative">
+                  <span id="currency-symbol-2"
+                    class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400">$</span>
+                  <input type="number" id="acceptable_cpa" value="0" step="1" min="0" placeholder="5"
+                    class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 pl-8 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+                </div>
+              </div>
+
+              <!-- Monthly Sales Required -->
+              <div class="space-y-2">
+                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">
+                  Number of Monthly Sales Required
+                </label>
+                <input type="number" id="monthly_sales_required" value="0" step="1" min="0" placeholder="50"
+                  class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+              </div>
+
+              <!-- Lead-Based Only: Leads to Sales Rate -->
+              <div data-tab-content="leadBased" class="space-y-2">
+                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">
+                  Average Leads to Sales Conversion Rate
+                </label>
+                <div class="relative">
+                  <input type="number" id="leads_to_sales_rate_pct" value="0" step="1" min="0" max="100"
+                    placeholder="20"
+                    class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 pr-10 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+                  <span
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400">%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column B: Results -->
+        <div class="space-y-6">
+          <!-- Lead-Based Results -->
+          <div data-tab-panel="leadBased">
+            <div
+              class="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-6 md:p-8">
+              <h2 class="text-2xl font-bold text-primary mb-6">Budget Calculation</h2>
+              <div class="space-y-3">
+                <div
+                  class="p-4 rounded-lg bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
+                  <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-1">Acceptable Cost Per Lead (CPL)</p>
+                  <p class="text-2xl font-bold text-neutral-900 dark:text-white" id="result_acceptable_cpl">$0.00</p>
+                </div>
+                <div class="p-4 rounded-lg bg-primary/10 dark:bg-primary/20 border-2 border-primary">
+                  <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-1">Minimum Campaign Budget - Monthly</p>
+                  <p class="text-2xl font-bold text-primary" id="result_min_monthly_budget_lead">$0.00</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Direct Sales Results -->
+          <div data-tab-panel="directSales" class="hidden">
+            <div
+              class="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-6 md:p-8">
+              <h2 class="text-2xl font-bold text-primary mb-6">Budget Calculation</h2>
+              <div class="space-y-3">
+                <div class="p-4 rounded-lg bg-primary/10 dark:bg-primary/20 border-2 border-primary">
+                  <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-1">Minimum Campaign Budget - Monthly</p>
+                  <p class="text-2xl font-bold text-primary" id="result_min_monthly_budget_direct">$0.00</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Logos Section -->
+  <section id="logos" class="container mx-auto px-4 md:px-8 pt-4 pb-4">
+    <div class="relative mt-6 overflow-hidden">
+      <div class="flex justify-center items-center gap-x-12">
+        {% for logo in logo_list|slice:":6" %}
+        <img width="112" height="40" src="{% static logo %}"
+          class="h-10 w-28 dark:brightness-0 dark:invert grayscale opacity-30" alt="Brand logo" />
+        {% endfor %}
+      </div>
+      <div class="flex justify-center items-center gap-x-12 mt-4">
+        {% for logo in logo_list|slice:"6:" %}
+        <img width="112" height="40" src="{% static logo %}"
+          class="h-10 w-28 dark:brightness-0 dark:invert grayscale opacity-30" alt="Brand logo" />
+        {% endfor %}
+      </div>
+      <div class="pointer-events-none absolute inset-y-0 left-0 h-full w-1/3 bg-gradient-to-r from-background"></div>
+      <div class="pointer-events-none absolute inset-y-0 right-0 h-full w-1/3 bg-gradient-to-l from-background"></div>
+    </div>
+  </section>
+
+  <!-- Second Title Section -->
+  <section class="container mx-auto py-3 px-4 md:px-6 text-center">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-4xl font-bold tracking-tight text-primary sm:text-5xl">
+        Know Your Budget, Maximize Your Results
+      </h2>
+      <p class="mt-6 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+        Now that you know your minimum budget, let Adheist create high-converting Facebook ads that maximize every
+        dollar.
+        Generate AI-powered ad creatives optimized for your CPA goals in seconds.
+      </p>
+    </div>
+  </section>
+
+  <!-- Features Grid Section -->
+  <section class="container mx-auto py-3 px-4 md:px-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="target" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Budget-Optimized Ads</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            Create ads designed to hit your CPA targets and maximize ROI within your calculated budget.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="zap" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Lower Your CPA</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            Create multiple ad variations to test and optimize, reducing your cost per acquisition through AI-powered
+            iteration.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="trending-up" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Scale Efficiently</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            Know exactly how much budget you need to hit your sales goals and scale with confidence.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="search" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Competitor Intelligence</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            See what's working for competitors and replicate their success with your brand's unique messaging.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="clock" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Save Time & Money</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            Generate professional ad creatives in seconds instead of hours, eliminating expensive designer fees.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="repeat" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Continuous Testing</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            Create unlimited ad variations to A/B test and find the perfect combination that maximizes your budget.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="container mx-auto py-3 px-4 md:px-6 text-center">
+    <div class="flex flex-col items-center space-y-6">
+      <a href="{% url 'account_signup' %}"
+        class="inline-flex items-center justify-center rounded-lg px-8 py-4 text-lg font-medium text-white shadow-sm"
+        style="background-color: #5C67F2;">
+        Start Free Trial
+      </a>
+      <div class="flex flex-col md:flex-row items-center justify-center gap-x-8 gap-y-2 pt-4">
+        <div class="flex items-center gap-2">
+          <i data-lucide="check" class="w-5 h-5 text-primary"></i>
+          <span class="text-neutral-700 dark:text-neutral-300">Save $2K-$10K/month</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i data-lucide="check" class="w-5 h-5 text-primary"></i>
+          <span class="text-neutral-700 dark:text-neutral-300">Create Ads 24/7</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i data-lucide="check" class="w-5 h-5 text-primary"></i>
+          <span class="text-neutral-700 dark:text-neutral-300">100% Money Back Guarantee</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA Section -->
+  <section class="container mx-auto py-16 px-4 md:px-6">
+    <div class="bg-primary/10 dark:bg-primary/20 rounded-3xl p-8 md:p-16 text-center">
+      <h2 class="text-4xl font-bold text-primary">Ready to optimize your Facebook ad budget?</h2>
+      <p class="mt-4 text-lg text-neutral-700 dark:text-neutral-300 max-w-2xl mx-auto">
+        Join thousands of marketers who are creating high-converting Facebook ads with AI. Start your free trial today.
+      </p>
+      <div class="mt-8">
+        <a href="{% url 'account_signup' %}"
+          class="inline-flex items-center justify-center rounded-lg px-8 py-4 text-lg font-medium text-white shadow-sm"
+          style="background-color: #5C67F2;">
+          Start Free Trial
+        </a>
+      </div>
+      <div class="flex flex-col md:flex-row items-center justify-center gap-x-8 gap-y-2 pt-4">
+        <div class="flex items-center gap-2">
+          <i data-lucide="check" class="w-5 h-5 text-primary"></i>
+          <span class="text-neutral-700 dark:text-neutral-300">Save $2K-$10K/month</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i data-lucide="check" class="w-5 h-5 text-primary"></i>
+          <span class="text-neutral-700 dark:text-neutral-300">Create Ads 24/7</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i data-lucide="check" class="w-5 h-5 text-primary"></i>
+          <span class="text-neutral-700 dark:text-neutral-300">100% Money Back Guarantee</span>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+  (function () {
+    let activeTab = 'leadBased';
+
+    const setTab = (tab) => {
+      activeTab = tab;
+
+      // Update panels
+      const panels = document.querySelectorAll('[data-tab-panel]');
+      panels.forEach((panel) => {
+        const isActive = panel.getAttribute('data-tab-panel') === tab;
+        panel.classList.toggle('hidden', !isActive);
+      });
+
+      // Update tab content (lead-based field)
+      const contents = document.querySelectorAll('[data-tab-content]');
+      contents.forEach((content) => {
+        const isActive = content.getAttribute('data-tab-content') === tab;
+        content.classList.toggle('hidden', !isActive);
+      });
+
+      // Update buttons
+      const buttons = document.querySelectorAll('[data-tab]');
+      buttons.forEach((button) => {
+        const isActive = button.getAttribute('data-tab') === tab;
+        button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        button.classList.toggle('bg-primary', isActive);
+        button.classList.toggle('text-white', isActive);
+        button.classList.toggle('shadow-sm', isActive);
+        button.classList.toggle('text-neutral-700', !isActive);
+        button.classList.toggle('dark:text-neutral-300', !isActive);
+      });
+
+      recalculate();
+    };
+
+    document.addEventListener('click', (event) => {
+      const target = event.target instanceof Element ? event.target.closest('[data-tab]') : null;
+      if (!target) return;
+
+      event.preventDefault();
+      const tab = target.getAttribute('data-tab');
+      if (!tab) return;
+
+      setTab(tab);
+    });
+
+    // Currency formatting
+    function getCurrencyFormatter() {
+      const currency = document.getElementById('currency').value;
+      const localeMap = {
+        'USD': 'en-US',
+        'EUR': 'es-ES',
+        'GBP': 'en-GB'
+      };
+
+      return new Intl.NumberFormat(localeMap[currency] || 'en-US', {
+        style: 'currency',
+        currency: currency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function updateCurrencySymbols() {
+      const currency = document.getElementById('currency').value;
+      const symbolMap = {
+        'USD': '$',
+        'EUR': '€',
+        'GBP': '£'
+      };
+      const symbol = symbolMap[currency] || '$';
+
+      document.getElementById('currency-symbol-1').textContent = symbol;
+      document.getElementById('currency-symbol-2').textContent = symbol;
+    }
+
+    // Calculation function
+    function recalculate() {
+      // Read inputs
+      const acceptable_cpa = Math.max(0, parseFloat(document.getElementById('acceptable_cpa').value) || 0);
+      const monthly_sales_required = Math.max(0, parseFloat(document.getElementById('monthly_sales_required').value) || 0);
+      const leads_to_sales_rate_pct = Math.min(100, Math.max(0, parseFloat(document.getElementById('leads_to_sales_rate_pct').value) || 0));
+
+      // Calculate base metric (both tabs)
+      const min_monthly_budget = acceptable_cpa * monthly_sales_required;
+
+      const formatter = getCurrencyFormatter();
+
+      if (activeTab === 'leadBased') {
+        // Lead-Based calculations
+        const close_rate = leads_to_sales_rate_pct / 100;
+        const acceptable_cpl = close_rate > 0 ? acceptable_cpa * close_rate : 0;
+
+        // Update Lead-Based results
+        document.getElementById('result_acceptable_cpl').textContent = formatter.format(acceptable_cpl);
+        document.getElementById('result_min_monthly_budget_lead').textContent = formatter.format(min_monthly_budget);
+      } else {
+        // Direct Sales calculations
+        document.getElementById('result_min_monthly_budget_direct').textContent = formatter.format(min_monthly_budget);
+      }
+    }
+
+    const inputIds = [
+      'currency', 'avg_ticket', 'acceptable_cpa',
+      'monthly_sales_required', 'leads_to_sales_rate_pct'
+    ];
+
+    // Event delegation for input changes
+    document.body.addEventListener('input', function (e) {
+      if (e.target && inputIds.includes(e.target.id)) {
+        if (e.target.id === 'currency') {
+          updateCurrencySymbols();
+        }
+        recalculate();
+      }
+    });
+
+    document.body.addEventListener('change', function (e) {
+      if (e.target && inputIds.includes(e.target.id)) {
+        if (e.target.id === 'currency') {
+          updateCurrencySymbols();
+        }
+        recalculate();
+      }
+    });
+
+    // Initial calculation
+    updateCurrencySymbols();
+    recalculate();
+  })();
+</script>
+{% endblock %}

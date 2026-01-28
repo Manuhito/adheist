@@ -146,6 +146,20 @@ class AdLibrary(BaseModel):
         null=True,
         help_text="Locations targeted by the ad"
     )
+    
+    # Runtime score fields
+    runtime_days = models.IntegerField(
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text="Days ad has been running (updated daily, only for active ads)"
+    )
+    runtime_score = models.IntegerField(
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text="Performance score 5-100 based on Z-score vs company average"
+    )
 
     def __str__(self):
         return f"Ad Library for {self.facebook_page}"

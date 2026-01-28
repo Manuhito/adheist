@@ -1230,12 +1230,13 @@ def get_adlibrary_filters(request):
     if not tags and request.GET.get('tag'):
         tags = [request.GET.get('tag')]
     
-    # Check if any filter parameters are provided
-    # Note: meta_status being empty means "all" status, which is still a valid filter state
-    has_filters = company_name or page_id or industries or tags or media_type or publisher_platform or (meta_status is not None)
-    print(f"DEBUG: has_filters = {has_filters}")
+    # Check if any SELECTION filter parameters are provided
+    # Selection filters: page_id, company_name, industries, tags (change what ads to show)
+    # Refinement filters: meta_status, publisher_platform, media_type, sort_by (only filter/sort selected ads)
+    has_selection_filters = company_name or page_id or industries or tags
+    print(f"DEBUG: has_selection_filters = {has_selection_filters}")
     
-    if has_filters:
+    if has_selection_filters:
         # Comenzar con una consulta base con filtros básicos de estado
         # is_active filter: always True (transparent to user, shows ads active in our web)
         base_filters = Q(is_active=True)
@@ -1276,44 +1277,43 @@ def get_adlibrary_filters(request):
         # Apply the combined filter if any conditions exist
         if combined_query:
             adlibraries = adlibraries.filter(combined_query).distinct()
-        
-        # Apply media_type filter if provided
-        if media_type:
-            print(f"DEBUG: Filtering by media_type='{media_type}'")
-            print(f"DEBUG: Before filter count: {adlibraries.count()}")
-            adlibraries = adlibraries.filter(media_type=media_type)
-            print(f"DEBUG: After filter count: {adlibraries.count()}")
-            print(f"DEBUG: Sample media_types in filtered results: {list(adlibraries.values_list('media_type', flat=True).distinct())}")
-        
-        # Apply publisher_platform filter if provided
-        if publisher_platform:
-            print(f"DEBUG: Filtering by publisher_platform='{publisher_platform}'")
-            print(f"DEBUG: Before platform filter count: {adlibraries.count()}")
-            try:
-                # Handle comma-separated platforms (for "All" option)
-                if ',' in publisher_platform:
-                    platform_list = [p.strip() for p in publisher_platform.split(',')]
-                    print(f"DEBUG: Platform list: {platform_list}")
-                    adlibraries = adlibraries.filter(publisher_platform__overlap=platform_list)
-                else:
-                    print(f"DEBUG: Single platform: {publisher_platform}")
-                    adlibraries = adlibraries.filter(publisher_platform__contains=[publisher_platform])
-                print(f"DEBUG: After platform filter count: {adlibraries.count()}")
-            except Exception as e:
-                print(f"DEBUG: Error in publisher_platform filter: {e}")
-                raise
-        
-        # Apply meta_status filter if provided
-        if meta_status and meta_status != 'all':
-            adlibraries = adlibraries.filter(meta_status=meta_status.upper())
     else:
-        # Si no hay filtros específicos, mostrar solo favoritos
-        print("DEBUG: No filters detected, showing favorites only")
-        if is_active:
-            adlibraries = AdLibrary.objects.filter(is_fav=True, meta_status=AdLibrary.STATUS_ACTIVE, is_active=True)
-        else:
-            adlibraries = AdLibrary.objects.filter(is_fav=True, is_active=True)
+        # Si no hay filtros de selección, mostrar solo favoritos activos
+        print("DEBUG: No selection filters, showing favorites only")
+        adlibraries = AdLibrary.objects.filter(is_fav=True, is_active=True)
         print(f"DEBUG: Favorites query count: {adlibraries.count()}")
+    
+    # Apply refinement filters (these apply to both favorites and selected ads)
+    
+    # Apply media_type filter if provided
+    if media_type:
+        print(f"DEBUG: Filtering by media_type='{media_type}'")
+        print(f"DEBUG: Before filter count: {adlibraries.count()}")
+        adlibraries = adlibraries.filter(media_type=media_type)
+        print(f"DEBUG: After filter count: {adlibraries.count()}")
+        print(f"DEBUG: Sample media_types in filtered results: {list(adlibraries.values_list('media_type', flat=True).distinct())}")
+    
+    # Apply publisher_platform filter if provided
+    if publisher_platform:
+        print(f"DEBUG: Filtering by publisher_platform='{publisher_platform}'")
+        print(f"DEBUG: Before platform filter count: {adlibraries.count()}")
+        try:
+            # Handle comma-separated platforms (for "All" option)
+            if ',' in publisher_platform:
+                platform_list = [p.strip() for p in publisher_platform.split(',')]
+                print(f"DEBUG: Platform list: {platform_list}")
+                adlibraries = adlibraries.filter(publisher_platform__overlap=platform_list)
+            else:
+                print(f"DEBUG: Single platform: {publisher_platform}")
+                adlibraries = adlibraries.filter(publisher_platform__contains=[publisher_platform])
+            print(f"DEBUG: After platform filter count: {adlibraries.count()}")
+        except Exception as e:
+            print(f"DEBUG: Error in publisher_platform filter: {e}")
+            raise
+    
+    # Apply meta_status filter if provided
+    if meta_status and meta_status != 'all':
+        adlibraries = adlibraries.filter(meta_status=meta_status.upper())
     
     # Apply sorting if requested (must be before pagination)
     sort_by = request.GET.get('sort_by', '').lower()
@@ -1326,6 +1326,12 @@ def get_adlibrary_filters(request):
     elif sort_by == 'popular':
         # Most popular first -> highest click_count
         adlibraries = adlibraries.order_by('-click_count', '-id')
+    elif sort_by == 'score_desc':
+        # Highest score first -> runtime_score descending (nulls last)
+        adlibraries = adlibraries.order_by('-runtime_score', '-id')
+    elif sort_by == 'score_asc':
+        # Lowest score first -> runtime_score ascending (nulls last)
+        adlibraries = adlibraries.order_by('runtime_score', 'id')
 
     # Aplicar paginación a los resultados
     paginator = Paginator(adlibraries, page_size)
@@ -1338,6 +1344,16 @@ def get_adlibrary_filters(request):
     except EmptyPage:
         # Si la página está fuera de rango, mostrar la última página
         paginated_adlibraries = paginator.page(paginator.num_pages)
+    
+    # Pre-calculate ad counts per company for efficiency (single query)
+    company_ids = [ad.facebook_page_id for ad in paginated_adlibraries]
+    company_ad_counts = AdLibrary.objects.filter(
+        facebook_page_id__in=company_ids,
+        is_active=True
+    ).values('facebook_page_id').annotate(
+        total_ads=Count('id')
+    )
+    ad_count_map = {item['facebook_page_id']: item['total_ads'] for item in company_ad_counts}
     
     # Convert to list of dictionaries with all required fields
     adlibrary_list = []
@@ -1384,6 +1400,8 @@ def get_adlibrary_filters(request):
             'ad_creative_link_titles': adlibrary.ad_creative_link_titles,
             'cta_link': cta_link,  # New field for CTA link
             'click_count': adlibrary.click_count,
+            'runtime_score': adlibrary.runtime_score,  # Runtime performance score
+            'company_ad_count': ad_count_map.get(facebook_page_id, 0),  # Total ads for this company
         }
         adlibrary_list.append(adlibrary_data)
     

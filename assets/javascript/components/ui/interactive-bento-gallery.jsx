@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Check, Star, Trash2, ExternalLink } from 'lucide-react';
+import { X, Check, Star, Trash2, ExternalLink, ChevronDown, Zap, TriangleAlert } from 'lucide-react';
 import { useTranslation } from '../../lib/useTranslation';
 import { Switch } from '../ui/switch';
+import { useIsMobile } from '../../hooks/use-mobile';
+import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
 
 // Custom scrollbar styles
 const scrollbarStyles = `
@@ -123,12 +125,37 @@ const PlatformIcon = ({ platform }) => {
 };
 
 /**
+ * Get score colors based on runtime_score ranges (neutral palette)
+ */
+const getScoreColors = (score) => {
+    if (!score) return { bg: '#F5F5F5', border: '#E0E0E0', text: '#9E9E9E' }; // Gris neutro para null
+    if (score >= 75) return { bg: '#E8F5E9', border: '#A5D6A7', text: '#2E7D32' }; // Verde suave
+    if (score >= 50) return { bg: '#FFF9E6', border: '#FFE082', text: '#F57F17' }; // Amarillo/dorado suave
+    if (score >= 25) return { bg: '#FFF3E0', border: '#FFCC80', text: '#E65100' }; // Naranja suave
+    return { bg: '#FFEBEE', border: '#EF9A9A', text: '#C62828' }; // Rojo suave (no intenso)
+};
+
+/**
  * MediaItem component renders a card with company info, ad content, and image
  * Similar to GalleryModal but in card format without footer and close button
  */
 const MediaItem = ({ item, className, onClick, isSelected, userPermissions = { isStaff: false }, onToggleFavorite, onDeactivateImage }) => {
     const { t } = useTranslation();
     const [isAdBodiesExpanded, setIsAdBodiesExpanded] = useState(false);
+    const [showTooltip, setShowTooltip] = useState(false);
+    const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+    const badgeRef = useRef(null);
+
+    // Calculate tooltip position when hovering
+    useEffect(() => {
+        if (showTooltip && badgeRef.current) {
+            const rect = badgeRef.current.getBoundingClientRect();
+            setTooltipPosition({
+                top: rect.top - 8,
+                left: rect.left + rect.width / 2
+            });
+        }
+    }, [showTooltip]);
 
     // Determine if this item is marked as favorite
     const isFavorite = item.is_fav || false;
@@ -186,6 +213,57 @@ const MediaItem = ({ item, className, onClick, isSelected, userPermissions = { i
                         )}
                     </div>
                     <h3 className="text-sm font-semibold break-words line-clamp-2 flex-1">{item.title}</h3>
+
+                    {/* Low Ad Count Warning */}
+                    {item.company_ad_count > 0 && item.company_ad_count < 10 && (
+                        <>
+                            <div
+                                ref={badgeRef}
+                                className="inline-flex items-center gap-1 px-2 py-1 flex-shrink-0"
+                                style={{
+                                    borderRadius: '10.8px',
+                                    border: '0.51px solid #E0E0E0',
+                                    backgroundColor: '#F5F5F5'
+                                }}
+                                onMouseEnter={() => setShowTooltip(true)}
+                                onMouseLeave={() => setShowTooltip(false)}
+                            >
+                                <TriangleAlert className="w-3.5 h-3.5 my-0.5" style={{ color: '#757575' }} />
+                            </div>
+                            {showTooltip && (
+                                <div
+                                    className="fixed px-3 py-1.5 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-md whitespace-nowrap pointer-events-none z-[9999] shadow-lg -translate-x-1/2 -translate-y-full"
+                                    style={{
+                                        top: `${tooltipPosition.top}px`,
+                                        left: `${tooltipPosition.left}px`
+                                    }}
+                                >
+                                    An advertiser needs 10 ads or more before a score can be calculated
+                                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-gray-900 dark:border-t-gray-700"></div>
+                                </div>
+                            )}
+                        </>
+                    )}
+
+                    {/* Runtime Score Badge with dynamic colors - only show if alert badge is not shown */}
+                    {item.runtime_score && !(item.company_ad_count > 0 && item.company_ad_count < 10) && (() => {
+                        const colors = getScoreColors(item.runtime_score);
+                        return (
+                            <div
+                                className="inline-flex items-center gap-1 px-2 py-1 flex-shrink-0"
+                                style={{
+                                    borderRadius: '10.8px',
+                                    border: `0.51px solid ${colors.border}`,
+                                    backgroundColor: colors.bg
+                                }}
+                            >
+                                <Zap className="w-3 h-3" style={{ color: colors.text }} />
+                                <span className="text-xs font-semibold" style={{ color: colors.text }}>
+                                    {item.runtime_score}
+                                </span>
+                            </div>
+                        );
+                    })()}
                 </div>
 
                 {/* Ad Creative Bodies */}
@@ -306,7 +384,9 @@ const GalleryModal = ({
     onDeactivateImage
 }) => {
     const { t } = useTranslation();
+    const isMobile = useIsMobile();
     const [isAdBodiesExpanded, setIsAdBodiesExpanded] = useState(false);
+    const [sheetOpen, setSheetOpen] = useState(false);
     if (!isOpen) return null;
 
     // Determine if this item is marked as favorite
@@ -348,6 +428,258 @@ const GalleryModal = ({
         }
     };
 
+    // Mobile Layout: Fullscreen image with bottom sheet
+    if (isMobile) {
+        return (
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-50 bg-black"
+            >
+                {/* Close button - top right */}
+                <button
+                    onClick={onClose}
+                    className="absolute top-4 right-4 z-[60] p-2 rounded-full bg-black/50 hover:bg-black/70 text-white backdrop-blur-sm"
+                >
+                    <X className="w-5 h-5" />
+                </button>
+
+                {/* Fullscreen Image */}
+                <div className="absolute inset-0 flex items-center justify-center p-4">
+                    <img
+                        src={selectedItem.url}
+                        alt={selectedItem.title}
+                        className="max-w-full max-h-full object-contain"
+                    />
+                    {/* Action icons - only visible for staff users */}
+                    {canManageItems && (
+                        <div className="absolute top-4 left-4 flex space-x-2">
+                            {/* Favorite star icon */}
+                            <button
+                                type="button"
+                                className="cursor-pointer bg-black/50 hover:bg-black/70 backdrop-blur-sm border-0 p-2 rounded-full"
+                                onClick={handleToggleFavorite}
+                                title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                            >
+                                <Star
+                                    className={`w-5 h-5 ${isFavorite ? 'text-yellow-400 fill-yellow-400' : 'text-white'}`}
+                                    strokeWidth={1.5}
+                                />
+                            </button>
+
+                            {/* Delete trash icon */}
+                            <button
+                                type="button"
+                                className="cursor-pointer bg-black/50 hover:bg-black/70 backdrop-blur-sm border-0 p-2 rounded-full"
+                                onClick={handleDeactivateImage}
+                                title="Deactivate this image"
+                            >
+                                <Trash2
+                                    className="w-5 h-5 text-red-500 hover:text-red-600"
+                                    strokeWidth={1.5}
+                                />
+                            </button>
+                        </div>
+                    )}
+                </div>
+
+                {/* Bottom Sheet with Details */}
+                <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+                    <SheetTrigger asChild>
+                        <button className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/80 to-transparent flex items-end justify-center pb-3 text-white">
+                            <ChevronDown className="w-6 h-6 animate-bounce" />
+                            <span className="ml-2 text-sm font-medium">View Details</span>
+                        </button>
+                    </SheetTrigger>
+                    <SheetContent side="bottom" className="h-[70vh] rounded-t-3xl">
+                        <div className="flex flex-col h-full">
+                            {/* Scrollable Details */}
+                            <div className="flex-1 overflow-y-auto custom-scrollbar px-4 pb-4">
+                                {/* Company Header */}
+                                <div className="flex items-center gap-3 mb-4 pt-2">
+                                    <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                                        {selectedItem.page_url ? (
+                                            <img
+                                                src={`https://twenty-icons.com/${selectedItem.page_url.replace(/^https?:\/\//, '')}`}
+                                                alt={`${selectedItem.title} logo`}
+                                                className="w-full h-full object-cover"
+                                                onError={(e) => {
+                                                    e.target.style.display = 'none';
+                                                    e.target.parentNode.innerHTML = `<div class="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">${selectedItem.title.charAt(0).toUpperCase()}</div>`;
+                                                }}
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
+                                                {selectedItem.title.charAt(0).toUpperCase()}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <h3 className="text-lg font-semibold break-words">{selectedItem.title}</h3>
+                                </div>
+
+                                {/* Ad Creative Bodies */}
+                                {selectedItem.ad_creative_bodies && (
+                                    <div className="mb-4">
+                                        <div className="relative w-0 min-w-full">
+                                            {!isAdBodiesExpanded && selectedItem.ad_creative_bodies.length > 100 ? (
+                                                <p className="text-sm text-foreground leading-relaxed break-words whitespace-pre-line">
+                                                    {selectedItem.ad_creative_bodies.substring(0, 100)}...{' '}
+                                                    <button
+                                                        onClick={() => setIsAdBodiesExpanded(true)}
+                                                        className="text-primary hover:text-primary/80 text-sm underline inline"
+                                                    >
+                                                        {t('bento_gallery.read_more', 'read more')}
+                                                    </button>
+                                                </p>
+                                            ) : (
+                                                <div>
+                                                    <p className="text-sm text-foreground leading-relaxed break-words whitespace-pre-line">
+                                                        {selectedItem.ad_creative_bodies}
+                                                    </p>
+                                                    {isAdBodiesExpanded && selectedItem.ad_creative_bodies.length > 100 && (
+                                                        <button
+                                                            onClick={() => setIsAdBodiesExpanded(false)}
+                                                            className="text-primary hover:text-primary/80 text-sm underline mt-1"
+                                                        >
+                                                            {t('bento_gallery.read_less', 'Read less')}
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Ad Details */}
+                                <div className="space-y-4">
+                                    <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                                        {t('bento_gallery.ad_details', 'Ad Details')}
+                                    </h4>
+
+                                    <div className="space-y-3 text-sm">
+                                        {/* Status */}
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-medium">Status:</span>
+                                            <div className="flex items-center gap-1">
+                                                <div className={`w-2 h-2 rounded-full ${selectedItem.meta_status === 'ACTIVE' ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                                                <span className="text-muted-foreground capitalize">
+                                                    {selectedItem.meta_status ? selectedItem.meta_status.toLowerCase() : 'unknown'}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* Start Date */}
+                                        <div>
+                                            <span className="font-medium">Start Date:</span>
+                                            <span className="ml-2 text-muted-foreground">
+                                                {selectedItem.ad_creation_time ? new Date(selectedItem.ad_creation_time).toLocaleDateString() : 'Unknown'}
+                                            </span>
+                                        </div>
+
+                                        {/* Time Running */}
+                                        {selectedItem.ad_creation_time && (
+                                            <div>
+                                                <span className="font-medium">Time Running:</span>
+                                                <span className="ml-2 text-muted-foreground">
+                                                    {(() => {
+                                                        const days = calculateDaysRunning(selectedItem.ad_creation_time, selectedItem.ad_delivery_stop_time);
+                                                        return days ? `${days} days` : 'Unknown';
+                                                    })()}
+                                                </span>
+                                            </div>
+                                        )}
+
+                                        {/* Format */}
+                                        <div>
+                                            <span className="font-medium">Format:</span>
+                                            <span className="ml-2 text-muted-foreground capitalize">
+                                                {selectedItem.media_type ? selectedItem.media_type.toLowerCase() : 'unknown'}
+                                            </span>
+                                        </div>
+
+                                        {/* Niche */}
+                                        {selectedItem.industry && (
+                                            <div>
+                                                <span className="font-medium">Niche:</span>
+                                                <span className="ml-2 text-muted-foreground">
+                                                    {selectedItem.industry}
+                                                </span>
+                                            </div>
+                                        )}
+
+                                        {/* CTA Links */}
+                                        <div>
+                                            <span className="font-medium">CTA Links:</span>
+                                            <div className="mt-1">
+                                                {selectedItem.cta_link && selectedItem.cta_link !== 'Unknown' ? (
+                                                    <a
+                                                        href={selectedItem.cta_link}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-primary hover:text-primary/80 transition-colors text-xs flex items-center gap-1 truncate"
+                                                        title={selectedItem.cta_link}
+                                                    >
+                                                        <span className="truncate">
+                                                            {selectedItem.cta_link}
+                                                        </span>
+                                                        <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                                                    </a>
+                                                ) : (
+                                                    <span className="text-muted-foreground text-xs">Unknown</span>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Platforms */}
+                                        <div>
+                                            <span className="font-medium">Platforms:</span>
+                                            <div className="flex flex-wrap gap-2 mt-1">
+                                                {selectedItem.publisher_platform && selectedItem.publisher_platform.length > 0 ? (
+                                                    selectedItem.publisher_platform.map((platform, index) => (
+                                                        <div key={index} className="flex items-center gap-1 bg-muted/50 px-2 py-1 rounded-md">
+                                                            <PlatformIcon platform={platform} />
+                                                            <span className="text-xs capitalize">
+                                                                {platform.toLowerCase().replace('_', ' ')}
+                                                            </span>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <span className="text-muted-foreground text-xs">Not available</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Additional metadata */}
+                                    {selectedItem.ad_creative_link_captions && (
+                                        <div>
+                                            <span className="font-medium text-sm">Caption:</span>
+                                            <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                                                {selectedItem.ad_creative_link_captions}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Sticky Button */}
+                            <div className="border-t border-border p-4 bg-background">
+                                <button
+                                    onClick={() => onSelect(selectedItem)}
+                                    className="w-full py-3 px-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors font-medium"
+                                >
+                                    {t('bento_gallery.create_similar', 'Create similar Ad')}
+                                </button>
+                            </div>
+                        </div>
+                    </SheetContent>
+                </Sheet>
+            </motion.div>
+        );
+    }
+
+    // Desktop Layout: Horizontal layout (original)
     return (
         <motion.div
             initial={{ opacity: 0 }}

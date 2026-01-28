@@ -29,6 +29,22 @@ import { ThemeSwitch } from "@/components/theme-switch"
 import { PanelLeftClose, Menu, Compass, Bookmark, Zap, Library, Folders, User2, ChevronUp, CreditCard, Settings, LogOut, Sparkles } from "lucide-react"
 import * as ProgressPrimitive from "@radix-ui/react-progress"
 
+function MobileSidebarOverlay() {
+  const { isMobile, openMobile, setOpenMobile } = useSidebar();
+
+  if (!isMobile || !openMobile) {
+    return null;
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity md:hidden"
+      onClick={() => setOpenMobile(false)}
+      aria-hidden="true"
+    />
+  );
+}
+
 function CreditsProgressBar() {
   const creditsData = window.__USER_CREDITS__;
 
@@ -249,6 +265,7 @@ function AppSidebarLayout() {
 
   return (
     <SidebarProvider>
+      <MobileSidebarOverlay />
       <div className="flex min-h-screen w-full">
         <AppSidebar activeTab={activeTab} sidebarComponent={sidebarComponent} />
         <SidebarInset>
@@ -272,7 +289,7 @@ function AppSidebarLayout() {
 }
 
 function ConditionalHeader({ content, customComponent, hideLogo = false }) {
-  const { open } = useSidebar();
+  const { open, isMobile } = useSidebar();
 
   // Priority: customComponent > content > empty
   const headerContent = customComponent || content;
@@ -286,15 +303,16 @@ function ConditionalHeader({ content, customComponent, hideLogo = false }) {
   };
 
   return (
-    <header className="flex h-20 shrink-0 items-center px-6 py-4">
-      {!open && (
+    <header className="flex h-auto shrink-0 items-center px-6 py-6 md:h-20 md:py-4">
+      {/* En móviles siempre mostrar trigger, en desktop solo cuando está cerrado */}
+      {(isMobile || !open) && (
         <CustomSidebarTrigger className="-ml-1 mr-2">
           <Menu className="h-5 w-5" />
         </CustomSidebarTrigger>
       )}
 
-      {/* Logo de la app - se oculta si hideLogo es true */}
-      {!hideLogo && (
+      {/* Logo de la app - se oculta si hideLogo es true o si estamos en móviles */}
+      {!hideLogo && !isMobile && (
         <div className="flex items-center mr-4">
           <a href="/" className="flex items-center">
             <img
@@ -331,8 +349,8 @@ function ConditionalHeader({ content, customComponent, hideLogo = false }) {
         </>
       )}
 
-      {/* Total Ads Counter - Always on the right */}
-      {totalAdsCount > 0 && (
+      {/* Total Ads Counter - Solo en desktop, en móviles se muestra en DiscoverSearchBar */}
+      {totalAdsCount > 0 && !isMobile && (
         <div className="flex items-center gap-1.5 ml-auto">
           {/* Two overlapping green circles - centered */}
           <div className="relative flex items-center justify-center" style={{ width: '18px', height: '18px' }}>
