@@ -58,7 +58,6 @@ def decide_scrape_mode(url, selectors):
 
     return {"mode":"use_playwright", "reason":"content missing in HTML and no easy data endpoints"}
 
-
 def extract_text_from_html(html_content: bytes) -> str:
     """
     Extract visible text from HTML content, removing scripts, styles, and navigation elements.
@@ -110,8 +109,6 @@ def extract_text_from_html(html_content: bytes) -> str:
         log.error(f"Error extracting text from HTML: {str(e)}")
         return html_content[:10000]  # Fallback to raw HTML truncated
 
-
-# Anti-fingerprinting script to inject into pages
 ANTI_FINGERPRINT_SCRIPT = """
     Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
     Object.defineProperty(navigator, 'plugins', {get: () => [1, 2, 3, 4, 5]});
@@ -123,12 +120,6 @@ def download_website_content_with_playwright(url: str) -> str:
     """
     Download and extract text content from a website using Playwright.
     Includes anti-detection strategies to avoid bot blocking.
-    """
-    """Download HTML using Playwright with resilient timeout handling.
-
-    Tries a strict "networkidle" wait first and, on timeout, falls back
-    to a more permissive "load" event before continuing. Never raises
-    for timeout alone; callers can still fall back to requests.
     """
     with sync_playwright() as p:
         browser = p.chromium.launch(
@@ -168,22 +159,48 @@ def download_website_content_with_playwright(url: str) -> str:
                         str(e2),
                     )
             
-            # Try to accept cookie banners (multiple languages)
-            cookie_buttons = [
-                'Accept', 'Accept All', 'Accept Cookies', 'I Accept', 'OK', 'Got it',
-                'Aceptar', 'Aceptar todo', 'Aceptar cookies',
-                'Akzeptieren', 'Alle akzeptieren',
-                'Accepter', 'Tout accepter',
-            ]
-            for btn_text in cookie_buttons:
-                try:
-                    page.click(f'button:has-text("{btn_text}")', timeout=500)
-                    break
-                except Exception:
-                    pass
+            try:
+                page.evaluate(
+                    """
+                    () => {
+                      const patterns = [
+                        /accept/i,
+                        /accept all/i,
+                        /allow all/i,
+                        /i accept/i,
+                        /^ok$/i,
+                        /got it/i,
+                        /agree/i,
+                        /consent/i,
+                        /cookie/i,
+                        /cookies/i,
+                        /aceptar/i,
+                        /aceptar todo/i,
+                        /akzeptieren/i,
+                        /alle akzeptieren/i,
+                        /accepter/i,
+                        /tout accepter/i,
+                      ];
+
+                      const candidates = Array.from(document.querySelectorAll('button, [role="button"], a'));
+                      for (const el of candidates) {
+                        const text = (el.textContent || '').trim();
+                        if (!text) continue;
+                        if (!patterns.some((re) => re.test(text))) continue;
+                        const rect = el.getBoundingClientRect();
+                        const visible = rect.width > 0 && rect.height > 0;
+                        if (!visible) continue;
+                        el.click();
+                        return true;
+                      }
+                      return false;
+                    }
+                    """
+                )
+            except Exception:
+                pass
             
-            # Additional wait for dynamic content to render
-            page.wait_for_timeout(2000)  # Wait 2 seconds for JS to execute
+            page.wait_for_timeout(2000)
             
             content = page.content()
             log.info(f"Playwright captured {len(content)} characters of HTML")
@@ -279,13 +296,6 @@ def download_website_content(url: str, selectors: list) -> str:
     """
     Download and extract text content from a website.
     """
-    """Download and extract text content from a website.
-
-    This function is designed to be *best-effort* and avoid raising errors
-    for transient network / Playwright issues. It prefers Playwright for
-    JS-heavy sites but gracefully falls back to plain requests and, in the
-    worst case, returns a minimal placeholder string instead of raising.
-    """
     try:
         # Ensure URL has a scheme
         if not url.startswith(('http://', 'https://')):
@@ -358,11 +368,6 @@ def download_website_content(url: str, selectors: list) -> str:
         log.error(f"Error downloading website {url}: {str(e)}", exc_info=True)
         # Best-effort fallback: return an explanatory string instead of raising.
         return f"Failed to download website content for {url}: {str(e)}"
-    except Exception as e:
-        log.error(f"Unexpected error downloading website {url}: {str(e)}", exc_info=True)
-        # Final fallback: never raise, always return some text so analysis can proceed.
-        return f"Unexpected error while downloading website content for {url}: {str(e)}"
-
 
 def analyze_website_with_openai(website_content: str, url: str) -> Dict[str, Any]:
     """
@@ -455,7 +460,6 @@ Website content:
         log.error(f"Unexpected error in OpenAI analysis: {str(e)}")
         raise Exception(f"Analysis failed: {str(e)}")
 
-
 def check_user_credits(user) -> bool:
     """
     Check if user has enough credits for brand asset extraction.
@@ -472,7 +476,6 @@ def check_user_credits(user) -> bool:
         log.error(f"Error checking user credits: {str(e)}")
         return False
 
-
 def deduct_extraction_credits(user) -> bool:
     """
     Deduct credits for brand asset extraction.
@@ -485,7 +488,6 @@ def deduct_extraction_credits(user) -> bool:
     except Exception as e:
         log.error(f"Error deducting extraction credits: {str(e)}")
         return False
-
 
 def create_brand_from_extraction(user, extracted_assets: Dict[str, Any], website_url: str, ad_request_id: str = None, extraction_id: int = None) -> Dict[str, Any]:
     """
@@ -607,7 +609,6 @@ def create_brand_from_extraction(user, extracted_assets: Dict[str, Any], website
             'error': str(e)
         }
 
-
 def extract_brand_assets_from_website(user, website_url: str, ad_request_id: str = None) -> Dict[str, Any]:
     """
     Main function to extract brand assets from a website.
@@ -621,7 +622,6 @@ def extract_brand_assets_from_website(user, website_url: str, ad_request_id: str
         Dict containing extraction results and metadata
     """
     extraction = None
-    
     try:
         # Check if user has enough credits
         if not check_user_credits(user):
@@ -637,13 +637,12 @@ def extract_brand_assets_from_website(user, website_url: str, ad_request_id: str
         )
         
         log.info(f"Starting brand asset extraction for user {user.email}, URL: {website_url}")
-        
+         
         # Download website content
-                # Define selectors to look for
         selectors = ["article", ".card", "[data-test=item]"]
         website_content = download_website_content(website_url, selectors)
         log.info(f"Downloaded content preview: {website_content[:500]}...")
-        
+         
         # Analyze with OpenAI
         analysis_result = analyze_website_with_openai(website_content, website_url)
         
@@ -706,7 +705,6 @@ def extract_brand_assets_from_website(user, website_url: str, ad_request_id: str
             log.warning(f"Failed to create brand automatically: {brand_creation_result.get('error')}")
 
         extraction.save()
-        
         return result
         
     except Exception as e:
