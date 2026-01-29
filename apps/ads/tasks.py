@@ -226,7 +226,7 @@ def update_ad_runtime_scores():
     Runs daily at midnight.
     
     Logic:
-    1. Update runtime_days ONLY for active ads (meta_status=ACTIVE)
+    1. Update runtime_days for ads with known delivery dates
     2. Calculate company statistics using ALL ads (active + inactive)
     3. Calculate runtime_score for ALL ads based on Z-score
     
@@ -240,21 +240,35 @@ def update_ad_runtime_scores():
     logger.info("[update_ad_runtime_scores] Starting task")
     today = timezone.now().date()
     
-    # Step 1: Update runtime_days ONLY for active ads
-    active_ads = AdLibrary.objects.filter(
-        meta_status=AdLibrary.STATUS_ACTIVE,
+    # Step 1: Update runtime_days for ads with delivery dates
+    # - ACTIVE: today - start
+    # - INACTIVE: stop - start (fallback to today - start if stop missing)
+    ads_with_delivery_dates = AdLibrary.objects.filter(
         ad_delivery_start_time__isnull=False
-    )
-    
+    ).only('id', 'meta_status', 'ad_delivery_start_time', 'ad_delivery_stop_time', 'runtime_days')
+
     updated_runtime = 0
-    for ad in active_ads:
-        new_runtime = (today - ad.ad_delivery_start_time).days
+    batch = []
+    batch_size = 1000
+    for ad in ads_with_delivery_dates.iterator(chunk_size=batch_size):
+        if ad.meta_status == AdLibrary.STATUS_INACTIVE and ad.ad_delivery_stop_time:
+            new_runtime = (ad.ad_delivery_stop_time - ad.ad_delivery_start_time).days
+        else:
+            new_runtime = (today - ad.ad_delivery_start_time).days
+
         if ad.runtime_days != new_runtime:
             ad.runtime_days = new_runtime
+            batch.append(ad)
             updated_runtime += 1
-    
-    AdLibrary.objects.bulk_update(active_ads, ['runtime_days'], batch_size=500)
-    logger.info(f"[update_ad_runtime_scores] Updated runtime_days for {updated_runtime} active ads")
+
+        if len(batch) >= batch_size:
+            AdLibrary.objects.bulk_update(batch, ['runtime_days'], batch_size=batch_size)
+            batch = []
+
+    if batch:
+        AdLibrary.objects.bulk_update(batch, ['runtime_days'], batch_size=batch_size)
+
+    logger.info(f"[update_ad_runtime_scores] Updated runtime_days for {updated_runtime} ads")
     
     # Step 2 & 3: Calculate Z-scores and runtime_score by company
     # Include ALL ads (active + inactive) for statistics

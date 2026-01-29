@@ -520,6 +520,10 @@ function DiscoverContent() {
     return () => window.removeEventListener('scroll', handleWindowScroll);
   }, [isLoading, isLoadingMore, hasMorePages, currentPage]);
 
+  if (isGenerating) {
+    return <GeneratingLoadingPage adRequestId={selectedAdRequestId} />;
+  }
+
   return (
     <div className="flex-1 px-4 md:px-8">
       {/* Live Mode Indicator (green) */}
@@ -600,11 +604,7 @@ function DiscoverContent() {
           }}
         />
       )}
-
-      {isGenerating && (
-        <GeneratingLoadingPage adRequestId={selectedAdRequestId} />
-      )}
-    </div >
+    </div>
   );
 }
 
