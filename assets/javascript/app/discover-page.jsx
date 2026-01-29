@@ -6,6 +6,8 @@ import { useTranslation } from '../lib/useTranslation.ts';
 import { motion, AnimatePresence } from 'framer-motion';
 import DiscoverSearchBar from './components/DiscoverSearchBar.jsx';
 import RequestBrandModal from './components/RequestBrandModal.jsx';
+import IntegratedAdGenerator from './components/IntegratedAdGenerator.jsx';
+import GeneratingLoadingPage from './components/GeneratingLoadingPage.jsx';
 
 // SSE Event Handler hook for real-time ad updates (shared endpoint, filtered by event type)
 function useSSEListener(onEvent, enabled = false) {
@@ -90,6 +92,9 @@ function DiscoverContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isRequestBrandOpen, setIsRequestBrandOpen] = useState(false);
   const [activeFilterParams, setActiveFilterParams] = useState("meta_status=ACTIVE"); // Default filter on initial load
+  const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
+  const [selectedAdRequestId, setSelectedAdRequestId] = useState(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // Live mode state - for real-time ad updates via SSE
   const [isLiveMode, setIsLiveMode] = useState(false);
@@ -410,6 +415,13 @@ function DiscoverContent() {
     } else if (!searchQuery) {
       fetchFilteredResultsWithQuery(1, false, null);
     }
+
+    // Check for pre-loaded AdRequest from window data
+    const discoverData = window.__DISCOVER_DATA__ || {};
+    if (discoverData.adRequestId) {
+      setSelectedAdRequestId(discoverData.adRequestId);
+      setIsGeneratorOpen(true);
+    }
   }, []);
 
   // Función para cargar más resultados
@@ -443,6 +455,7 @@ function DiscoverContent() {
 
       const createData = await createResponse.json();
       console.log('AdRequest created with ID:', createData.id);
+      setSelectedAdRequestId(createData.id);
 
       // Step 2: Update the AdRequest with the selected ad_library
       console.log('Updating AdRequest with ad_library:', item.id);
@@ -464,7 +477,8 @@ function DiscoverContent() {
 
       const updateData = await updateResponse.json();
       console.log('AdRequest updated successfully:', updateData);
-      window.location.href = `/ads/discover/${createData.id}/create/`;
+      setIsGeneratorOpen(true);
+      // window.location.href = `/ads/discover/${createData.id}/create/`;
     } catch (error) {
       console.error('Error creating AdRequest:', error);
       // TODO: Show user-friendly error message
@@ -574,6 +588,22 @@ function DiscoverContent() {
         </div>
       )}
       <RequestBrandModal isOpen={isRequestBrandOpen} onOpenChange={setIsRequestBrandOpen} />
+
+      {isGeneratorOpen && (
+        <IntegratedAdGenerator
+          adRequestId={selectedAdRequestId}
+          onClose={() => setIsGeneratorOpen(false)}
+          onGenerate={(id) => {
+            setIsGeneratorOpen(false);
+            setSelectedAdRequestId(id);
+            setIsGenerating(true);
+          }}
+        />
+      )}
+
+      {isGenerating && (
+        <GeneratingLoadingPage adRequestId={selectedAdRequestId} />
+      )}
     </div >
   );
 }

@@ -1760,6 +1760,11 @@ def adrequest_get(request, pk):
         'user_id': safe_get(user, 'id'),
         'ad_library_id': safe_get(ad_library, 'id'),
         'ad_library_name': safe_get(ad_library, 'facebook_page.page_name'),
+        'ad_library': {
+            'id': safe_get(ad_library, 'id'),
+            'image_url': safe_image_url(safe_get(ad_library, 'ad_image')),
+            'company_name': safe_get(ad_library, 'company_name'),
+        } if ad_library else None,
         'canvas_size': safe_get(ad_request, 'canvas_size'),
         'status': safe_get(ad_request, 'status'),
         'created_at': created_at.isoformat() if created_at else None,
@@ -3628,7 +3633,7 @@ def discover_clone_adrequest_page(request, pk):
             'ad_generation_cost': ad_generation_cost,
         }
         
-        return render(request, 'ads/discover_clone.html', context)
+        return render(request, 'ads/discover.html', context)
         
     except AdRequest.DoesNotExist:
         return redirect('ads:discover_page')
