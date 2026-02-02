@@ -4,12 +4,14 @@ Celery tasks for AI interface operations.
 from typing import Dict, List, Optional, Union
 import logging
 from decimal import Decimal
+import random
 import json
 import os
 import requests
 import time
 
 from celery import shared_task, group
+from celery.exceptions import Retry
 from django.db import transaction
 from django.core.files.base import ContentFile
 from django.conf import settings
@@ -259,7 +261,7 @@ def generate_image_task(
                 title="Error in Image Generation Service"
             )
             
-            # If we have a version_id, update its status to failed
+            # If we have a version ID, update its status to failed
             if version_id:
                 try:
                     version = AdRequestVersion.objects.get(id=version_id)
@@ -321,6 +323,7 @@ def generate_image_task(
         # If version_id is provided, update the version with the generated image
         if version_id:
             try:
+                # Use the AdRequestVersion that was imported at the top of the file
                 from apps.ads.models import AdRequestVersion
                 version = AdRequestVersion.objects.get(id=version_id)
                 
@@ -648,7 +651,7 @@ def generate_image_task_replicate(
                         canvas_size=canvas_size,
                         version_id=v_id,
                         version_type=version_type,
-                    )
+                    ).set(countdown=idx * 2)
                 )
 
             # We processed all versions; return a simple status
@@ -727,7 +730,13 @@ def generate_image_task_replicate(
             if "error" in result:
                 error_message = result.get("error", "Unknown error")
                 logger.error(f"Replicate image generation failed: {error_message}")
-                
+
+                status_code = result.get("status_code")
+                if status_code == 429:
+                    if self.request.retries < self.max_retries:
+                        countdown = min(20, 2 ** self.request.retries) + random.random()
+                        raise self.retry(exc=Exception(error_message), countdown=countdown)
+
                 context = {
                     "prompt": text_prompt[:100] + "..." if text_prompt and len(text_prompt) > 100 else text_prompt,
                     "canvas_size": canvas_size,
@@ -738,12 +747,20 @@ def generate_image_task_replicate(
                     "response_data": result.get("response_data", "")[:200] if result.get("response_data") else "",
                     "service": "replicate"
                 }
-                send_slack_notification(
-                    error_message=error_message,
-                    context=context,
-                    title="Replicate Image Generation Error"
-                )
-                
+
+                if status_code == 429 and self.request.retries >= self.max_retries:
+                    send_slack_notification(
+                        error_message=error_message,
+                        context=context,
+                        title="Replicate Image Generation Error (429 - retries exhausted)"
+                    )
+                elif status_code != 429:
+                    send_slack_notification(
+                        error_message=error_message,
+                        context=context,
+                        title="Replicate Image Generation Error"
+                    )
+
                 if version_id:
                     try:
                         version = AdRequestVersion.objects.get(id=version_id)
@@ -759,6 +776,8 @@ def generate_image_task_replicate(
                     "details": result
                 }
                 
+        except Retry:
+            raise
         except Exception as service_error:
             error_msg = f"Unhandled exception in Replicate service: {str(service_error)}"
             logger.exception(error_msg)

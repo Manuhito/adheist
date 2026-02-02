@@ -395,11 +395,20 @@ class ReplicateImageGenerationService:
             return formatted_response
             
         except replicate.exceptions.ReplicateError as e:
-            error_msg = f"Replicate API error: {str(e)}"
+            raw_error = str(e)
+            error_msg = f"Replicate API error: {raw_error}"
             logger.exception(error_msg)
+
+            lowered = raw_error.lower()
+            is_throttled = (
+                "status: 429" in lowered
+                or "request was throttled" in lowered
+                or "rate limited" in lowered
+            )
+
             return {
                 "error": error_msg,
-                "status_code": 500
+                "status_code": 429 if is_throttled else 500
             }
         except Exception as e:
             error_msg = f"Unexpected error in Replicate nano-banana service: {str(e)}"
