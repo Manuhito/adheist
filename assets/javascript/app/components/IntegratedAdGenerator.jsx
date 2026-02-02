@@ -75,6 +75,9 @@ const IntegratedAdGenerator = ({ adRequestId, onClose, onGenerate }) => {
     maxHeight: 400,
   });
 
+  const discoverData = window.__DISCOVER_DATA__ || {};
+  const adGenerationCost = window.__AD_GENERATION_COST__ || discoverData.adGenerationCost || 1;
+
   const canvasSizes = [
     { id: "1024x1024", label: "Square", sub: "Instagram/LinkedIn" },
     { id: "1536x1024", label: "Landscape", sub: "FB/Twitter" },
@@ -455,23 +458,30 @@ const IntegratedAdGenerator = ({ adRequestId, onClose, onGenerate }) => {
                       </DropdownMenu>
                     </div>
 
-                    <button
-                      type="button"
-                      disabled={!selectedBrand || !userPrompt.trim()}
-                      onClick={handleGenerate}
-                      className={cn(
-                        "rounded-lg p-2 bg-black/5 dark:bg-white/5",
-                        "hover:bg-black/10 dark:hover:bg-white/10 focus-visible:ring-1 focus-visible:ring-offset-0 focus-visible:ring-blue-500"
-                      )}
-                      aria-label="Generate"
-                    >
-                      <ArrowRight
+                    <div className="relative group">
+                      <button
+                        type="button"
+                        disabled={!selectedBrand || !userPrompt.trim()}
+                        onClick={handleGenerate}
                         className={cn(
-                          "w-4 h-4 dark:text-white transition-opacity duration-200",
-                          userPrompt.trim() && selectedBrand ? "opacity-100" : "opacity-30"
+                          "rounded-lg p-2 bg-black/5 dark:bg-white/5",
+                          "hover:bg-black/10 dark:hover:bg-white/10 focus-visible:ring-1 focus-visible:ring-offset-0 focus-visible:ring-blue-500"
                         )}
-                      />
-                    </button>
+                        aria-label="Generate"
+                      >
+                        <ArrowRight
+                          className={cn(
+                            "w-4 h-4 dark:text-white transition-opacity duration-200",
+                            userPrompt.trim() && selectedBrand ? "opacity-100" : "opacity-30"
+                          )}
+                        />
+                      </button>
+
+                      <div className="absolute bottom-full right-0 mb-2 px-3 py-1.5 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-lg">
+                        Use {adGenerationCost} {adGenerationCost === 1 ? 'credit' : 'credits'} to generate this ad
+                        <div className="absolute top-full right-3 border-4 border-transparent border-t-gray-900 dark:border-t-gray-700"></div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

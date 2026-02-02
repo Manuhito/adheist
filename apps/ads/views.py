@@ -4138,7 +4138,6 @@ def generated_ad_page(request, version_id):
         
         # Check if user has already rated this version
         has_rated = version.rating is not None and version.review
-        
         context = {
             'version': version,
             'back_url': back_url,
@@ -4190,7 +4189,6 @@ def ad_request_versions_page(request, ad_request_id):
             # Company website can exist even if brand is None
             if ad_request.base_assets.company_website:
                 brand_url = ad_request.base_assets.company_website
-        
         context = {
             'ad_request': ad_request,
             'primary_versions': primary_versions,
@@ -4257,6 +4255,9 @@ def generated_versions_page(request, primary_version_id):
         brand_name = None
         if primary_version.ad_request.base_assets and primary_version.ad_request.base_assets.brand:
             brand_name = primary_version.ad_request.base_assets.brand.brand_name
+
+        app_config = AppConfiguration.get_config()
+        version_creation_cost = app_config.version_creation_credit_cost if app_config else 0
         
         context = {
             'version': primary_version,  # Main version for compatibility with generated_ad template
@@ -4264,6 +4265,7 @@ def generated_versions_page(request, primary_version_id):
             'is_free_tier': is_free_tier,
             'has_rated': has_rated,
             'brand_name': brand_name or f'Ad Request #{primary_version.ad_request.id}',
+            'version_creation_cost': version_creation_cost,
         }
         
         # Override ordered_versions with our filtered list
