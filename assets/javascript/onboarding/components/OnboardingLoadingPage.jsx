@@ -119,9 +119,6 @@ const OnboardingLoadingPage = ({ adRequestId }) => {
       <div className="flex flex-col items-center gap-6 sm:gap-8 w-full max-w-4xl text-center">
         {/* Text */}
         <div className="space-y-2">
-          <h1 className="text-3xl sm:text-4xl font-semibold text-foreground">
-            That&apos;s awesome!
-          </h1>
           <p className="text-sm sm:text-base text-muted-foreground">
             Let us show what you can achieve with AdHeist by your side
           </p>
