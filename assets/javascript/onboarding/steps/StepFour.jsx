@@ -258,49 +258,46 @@ const StepFour = ({ onNext, initialData, setMascotMessageOverride }) => {
     checkInitialStatus();
   }, []);
 
+  const hasAds = ads.length > 0;
+
   useEffect(() => {
     if (!setMascotMessageOverride) return;
 
-    const timeouts = [];
+    let intervalId = null;
+
+    const startMessageLoop = (messages, intervalMs = 5000) => {
+      let index = 0;
+      setMascotMessageOverride(messages[index]);
+      intervalId = setInterval(() => {
+        index = (index + 1) % messages.length;
+        setMascotMessageOverride(messages[index]);
+      }, intervalMs);
+    };
 
     if (isLoading) {
-      // Loading competitors: show two messages sequentially, then keep last
-      const loadingMessages = [
+      // Loading competitors: loop messages
+      startMessageLoop([
         "Okay, one last thing..",
         "We are going to build your first ad!"
-      ];
-      setMascotMessageOverride(loadingMessages[0]);
-
-      timeouts.push(
-        setTimeout(() => {
-          setMascotMessageOverride(loadingMessages[1]);
-        }, 5000)
-      );
-    } else if (error || ads.length === 0) {
+      ]);
+    } else if (error || !hasAds) {
       // Research finished but no ads / error
       setMascotMessageOverride("I couldn't find any competitor ads yet. You can skip this step or try again later.");
     } else if (selectedAdId) {
       // User has picked an ad
       setMascotMessageOverride("Nice Pick!");
     } else {
-      // Ads loaded successfully: show two messages sequentially, then keep last
-      const loadedMessages = [
+      // Ads loaded successfully: loop messages
+      startMessageLoop([
         "I found some ads that may be relevant to your niche...",
         "Pick a reference ad to get started"
-      ];
-      setMascotMessageOverride(loadedMessages[0]);
-
-      timeouts.push(
-        setTimeout(() => {
-          setMascotMessageOverride(loadedMessages[1]);
-        }, 5000)
-      );
+      ]);
     }
 
     return () => {
-      timeouts.forEach((id) => clearTimeout(id));
+      if (intervalId) clearInterval(intervalId);
     };
-  }, [isLoading, error, ads.length, selectedAdId, setMascotMessageOverride]);
+  }, [isLoading, error, hasAds, selectedAdId, setMascotMessageOverride]);
 
   const handleClone = () => {
     if (selectedAdId) {
