@@ -50,6 +50,7 @@ const StepTwo = ({ onNext, initialData, setMascotMessageOverride }) => {
   const [analyzing, setAnalyzing] = useState(true);
   const [data, setData] = useState({ screenshot: null, brandData: null });
   const [error, setError] = useState(null);
+  const [showSpinner, setShowSpinner] = useState(false);
 
   // Brand details state
   const [brandName, setBrandName] = useState('');
@@ -159,6 +160,19 @@ const StepTwo = ({ onNext, initialData, setMascotMessageOverride }) => {
     }
     // Otherwise, SSE will deliver the results
   }, [initialData]);
+
+  useEffect(() => {
+    if (!data?.screenshot || !analyzing) {
+      setShowSpinner(false);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setShowSpinner(true);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [data?.screenshot, analyzing]);
 
   // Focus effects for editing
   useEffect(() => {
@@ -319,6 +333,11 @@ const StepTwo = ({ onNext, initialData, setMascotMessageOverride }) => {
               alt="Website Screenshot"
               className="w-full h-auto object-contain"
             />
+            {analyzing && showSpinner && (
+              <div className="absolute inset-0 flex items-center justify-center bg-background/30">
+                <Bars size={48} className="text-primary" />
+              </div>
+            )}
           </div>
         )}
 
