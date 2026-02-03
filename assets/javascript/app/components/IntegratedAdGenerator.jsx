@@ -276,7 +276,7 @@ const IntegratedAdGenerator = ({ adRequestId, onClose, onGenerate }) => {
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-20 p-2 bg-black/10 dark:bg-white/10 hover:bg-black/20 dark:hover:bg-white/20 rounded-full text-black/50 dark:text-white/70 transition-colors shadow-sm"
+          className="absolute top-4 right-4 z-20 p-2 bg-black/10 dark:bg-white/10 hover:bg-black/20 dark:hover:bg-white/20 rounded-full text-black/80 dark:text-white transition-colors shadow-sm"
         >
           <X className="w-5 h-5" />
         </button>
