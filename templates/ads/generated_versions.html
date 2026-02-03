@@ -32,6 +32,7 @@
   {% endfor %}
     ]
   };
+  window.__VERSION_CREATION_COST__ = {{ version_creation_cost }};
 </script>
 <script src="{% static 'js/generated-ad-bundle.js' %}?v={{ STATIC_VERSION }}"></script>
 {% endblock %}

@@ -64,7 +64,7 @@ const ImageLibraryModal = ({ isOpen, onClose, onSelect }) => {
   // Fetch containers (brands + folders) from the API
   const fetchContainers = async () => {
     setLoading(true);
-    
+
     try {
       const response = await fetch('/ads/api/containers/', {
         method: 'GET',
@@ -318,9 +318,9 @@ const ImageLibraryModal = ({ isOpen, onClose, onSelect }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-        <style>{scrollbarStyles}</style>
-        <DialogContent className="sm:max-w-[900px] max-h-[90vh] flex flex-col">
-          <DialogHeader className="flex-shrink-0">
+      <style>{scrollbarStyles}</style>
+      <DialogContent className="sm:max-w-[900px] max-h-[90vh] flex flex-col z-[110]">
+        <DialogHeader className="flex-shrink-0">
           <div className="flex items-center gap-3">
             {(currentView === 'brand_assets' || currentView === 'folder_assets') && (
               <Button
