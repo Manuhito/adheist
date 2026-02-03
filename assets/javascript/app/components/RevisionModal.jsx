@@ -32,6 +32,9 @@ const RevisionModal = ({ open, onOpenChange, imageUrl, canvasSize, versions = []
   const displayImageUrl = imageUrl;
   const displayCanvasSize = canvasSize;
 
+  const generatedAdData = window.__GENERATED_AD_DATA__ || {};
+  const versionCreationCost = window.__VERSION_CREATION_COST__ || generatedAdData.version_creation_cost || 0;
+
   // Format canvas size for display (replace 'x' with ' x ')
   const formatCanvasSize = (size) => {
     if (!size) return '1024 x 1024';
@@ -203,18 +206,27 @@ const RevisionModal = ({ open, onOpenChange, imageUrl, canvasSize, versions = []
                     placeholder="Describe your edits (e.g. Make it more vibrant and colorful)"
                     className="w-full pl-10 pr-20 min-h-[80px] resize-none rounded-2xl border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   />
-                  <Button
-                    disabled={!editDescription.trim() || isGenerating}
-                    onClick={handleGenerateVersion}
-                    className={`absolute bottom-3 right-3 h-8 px-3 text-xs rounded-full ${!editDescription.trim() || isGenerating
-                      ? 'bg-gray-400 hover:bg-gray-400 text-white cursor-not-allowed'
-                      : ''
-                      }`}
-                    size="sm"
-                  >
-                    <ArrowUp className={`h-3 w-3 mr-1 ${isGenerating ? 'animate-spin' : ''}`} />
-                    {isGenerating ? 'Generating...' : 'Generate'}
-                  </Button>
+                  <div className="absolute bottom-3 right-3 group">
+                    <div className="relative">
+                      <Button
+                        disabled={!editDescription.trim() || isGenerating}
+                        onClick={handleGenerateVersion}
+                        className={`h-8 px-3 text-xs rounded-full ${!editDescription.trim() || isGenerating
+                          ? 'bg-gray-400 hover:bg-gray-400 text-white cursor-not-allowed'
+                          : ''
+                          }`}
+                        size="sm"
+                      >
+                        <ArrowUp className={`h-3 w-3 mr-1 ${isGenerating ? 'animate-spin' : ''}`} />
+                        {isGenerating ? 'Generating...' : 'Generate'}
+                      </Button>
+
+                      <div className="absolute bottom-full right-0 mb-2 px-3 py-1.5 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-lg">
+                        Use {versionCreationCost} {versionCreationCost === 1 ? 'credit' : 'credits'} to revise this ad
+                        <div className="absolute top-full right-3 border-4 border-transparent border-t-gray-900 dark:border-t-gray-700"></div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 

@@ -1760,6 +1760,11 @@ def adrequest_get(request, pk):
         'user_id': safe_get(user, 'id'),
         'ad_library_id': safe_get(ad_library, 'id'),
         'ad_library_name': safe_get(ad_library, 'facebook_page.page_name'),
+        'ad_library': {
+            'id': safe_get(ad_library, 'id'),
+            'image_url': safe_image_url(safe_get(ad_library, 'ad_image')),
+            'company_name': safe_get(ad_library, 'company_name'),
+        } if ad_library else None,
         'canvas_size': safe_get(ad_request, 'canvas_size'),
         'status': safe_get(ad_request, 'status'),
         'created_at': created_at.isoformat() if created_at else None,
@@ -3628,7 +3633,7 @@ def discover_clone_adrequest_page(request, pk):
             'ad_generation_cost': ad_generation_cost,
         }
         
-        return render(request, 'ads/discover_clone.html', context)
+        return render(request, 'ads/discover.html', context)
         
     except AdRequest.DoesNotExist:
         return redirect('ads:discover_page')
@@ -4133,7 +4138,6 @@ def generated_ad_page(request, version_id):
         
         # Check if user has already rated this version
         has_rated = version.rating is not None and version.review
-        
         context = {
             'version': version,
             'back_url': back_url,
@@ -4185,7 +4189,6 @@ def ad_request_versions_page(request, ad_request_id):
             # Company website can exist even if brand is None
             if ad_request.base_assets.company_website:
                 brand_url = ad_request.base_assets.company_website
-        
         context = {
             'ad_request': ad_request,
             'primary_versions': primary_versions,
@@ -4252,6 +4255,9 @@ def generated_versions_page(request, primary_version_id):
         brand_name = None
         if primary_version.ad_request.base_assets and primary_version.ad_request.base_assets.brand:
             brand_name = primary_version.ad_request.base_assets.brand.brand_name
+
+        app_config = AppConfiguration.get_config()
+        version_creation_cost = app_config.version_creation_credit_cost if app_config else 0
         
         context = {
             'version': primary_version,  # Main version for compatibility with generated_ad template
@@ -4259,6 +4265,7 @@ def generated_versions_page(request, primary_version_id):
             'is_free_tier': is_free_tier,
             'has_rated': has_rated,
             'brand_name': brand_name or f'Ad Request #{primary_version.ad_request.id}',
+            'version_creation_cost': version_creation_cost,
         }
         
         # Override ordered_versions with our filtered list
