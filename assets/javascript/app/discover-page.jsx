@@ -91,7 +91,7 @@ function DiscoverContent() {
   const [selectedAdLibrary, setSelectedAdLibrary] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isRequestBrandOpen, setIsRequestBrandOpen] = useState(false);
-  const [activeFilterParams, setActiveFilterParams] = useState("meta_status=ACTIVE"); // Default filter on initial load
+  const [activeFilterParams, setActiveFilterParams] = useState("meta_status=ACTIVE&sort_by=score_desc"); // Default filters on initial load
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
   const [selectedAdRequestId, setSelectedAdRequestId] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);

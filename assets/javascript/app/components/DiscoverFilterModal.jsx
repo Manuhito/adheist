@@ -24,7 +24,7 @@ const DiscoverFilterModal = forwardRef(({ onFiltersApply, onFiltersChange, selec
     platform: allPlatformsValue,
     industry: 'all',
     status: 'active',
-    sortBy: ''
+    sortBy: 'score_desc'
   });
 
   const createClearFilters = () => ({
