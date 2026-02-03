@@ -268,226 +268,221 @@ const IntegratedAdGenerator = ({ adRequestId, onClose, onGenerate }) => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          className="w-full max-w-2xl flex flex-col items-center gap-4 max-h-[95vh]"
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[70] flex flex-col bg-black/60"
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-20 p-2 bg-black/10 dark:bg-white/10 hover:bg-black/20 dark:hover:bg-white/20 rounded-full text-black/50 dark:text-white/70 transition-colors shadow-sm"
         >
-          {/* Reference Image - Floating entity */}
-          {adLibraryData && (
-            <div className="relative group">
-              <img
-                src={adLibraryData.image_url}
-                className="w-auto h-auto max-w-full max-h-[55vh] rounded-2xl object-cover border-[1px] border-white/20 shadow-2xl transition-transform group-hover:scale-[1.01]"
-                alt="Reference"
-              />
-            </div>
-          )}
+          <X className="w-5 h-5" />
+        </button>
 
-          {/* Integrated AI Input Container */}
-          <div className="w-full bg-neutral-200 dark:bg-white/10 rounded-2xl p-1.5 relative">
-            {/* Close button - now part of the floating set */}
-            <div className="absolute -top-12 -right-0 z-10">
-              <button
-                onClick={onClose}
-                className="p-2 bg-black/10 dark:bg-white/10 hover:bg-black/20 dark:hover:bg-white/20 rounded-full text-black/50 dark:text-white/70 transition-colors shadow-sm"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+        {/* Image Container */}
+        {adLibraryData && (
+          <div className="flex-1 relative flex items-center justify-center p-4 md:p-8 lg:p-12 overflow-hidden">
+            <img
+              src={adLibraryData.image_url}
+              className="w-auto h-auto max-w-full max-h-full rounded-2xl object-contain transition-transform group-hover:scale-[1.01]"
+              alt="Reference"
+            />
+          </div>
+        )}
 
-            <div className="relative">
-              <div className="relative flex flex-col bg-neutral-100 dark:bg-neutral-900 rounded-xl overflow-hidden shadow-2xl border border-black/5 dark:border-white/5">
-                <div className="overflow-y-auto" style={{ maxHeight: "400px" }}>
-                  <Textarea
-                    value={userPrompt}
-                    onChange={(e) => {
-                      setUserPrompt(e.target.value);
-                      adjustHeight();
-                    }}
-                    placeholder="Tell me what to change..."
-                    className={cn(
-                      "w-full rounded-xl rounded-b-none px-4 py-3 bg-black/5 dark:bg-white/5 border-none dark:text-white placeholder:text-black/70 dark:placeholder:text-white/70 resize-none focus-visible:ring-0 focus-visible:ring-offset-0",
-                      "min-h-[72px]"
-                    )}
-                    ref={textareaRef}
-                  />
-                </div>
+        {/* Input Container */}
+        <div className="w-full p-4 pt-0">
+          <div className="w-full max-w-2xl mx-auto bg-neutral-200 dark:bg-white/10 rounded-2xl p-1.5">
+            <div className="relative flex flex-col bg-neutral-100 dark:bg-neutral-900 rounded-xl overflow-hidden shadow-2xl border border-black/5 dark:border-white/5">
+              <div className="overflow-y-auto" style={{ maxHeight: "400px" }}>
+                <Textarea
+                  value={userPrompt}
+                  onChange={(e) => {
+                    setUserPrompt(e.target.value);
+                    adjustHeight();
+                  }}
+                  placeholder="Tell me what to change..."
+                  className={cn(
+                    "w-full rounded-xl rounded-b-none px-4 py-3 bg-black/5 dark:bg-white/5 border-none dark:text-white placeholder:text-black/70 dark:placeholder:text-white/70 resize-none focus-visible:ring-0 focus-visible:ring-offset-0",
+                    "min-h-[72px]"
+                  )}
+                  ref={textareaRef}
+                />
+              </div>
 
-                <div className="h-14 bg-black/5 dark:bg-white/5 rounded-b-xl flex items-center relative">
-                  <div className="absolute left-3 right-3 bottom-0 top-0 flex items-center justify-between w-[calc(100%-24px)]">
-                    <div className="flex items-center gap-2">
-                      {/* Brand Selector */}
-                      <div className="flex items-center">
-                        <DropdownMenu open={isBrandDropdownOpen} onOpenChange={setIsBrandDropdownOpen}>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              className="flex items-center gap-1 h-8 pl-1 pr-2 text-xs rounded-md dark:text-white hover:bg-black/10 dark:hover:bg-white/10 focus-visible:ring-1 focus-visible:ring-offset-0 focus-visible:ring-blue-500"
-                            >
-                              <AnimatePresence mode="wait">
-                                <motion.div
-                                  key={selectedBrand ? selectedBrand.id : 'no-brand'}
-                                  initial={{ opacity: 0, y: -5 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  exit={{ opacity: 0, y: 5 }}
-                                  transition={{ duration: 0.15 }}
-                                  className="flex items-center gap-1"
-                                >
-                                  {selectedBrand ? (
-                                    <span className="font-bold truncate max-w-[100px]">{selectedBrand.name}</span>
-                                  ) : (
-                                    <span className="opacity-50">Brand</span>
-                                  )}
-                                  <ChevronDown className="w-3 h-3 opacity-50" />
-                                </motion.div>
-                              </AnimatePresence>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent className="z-[90] w-64 p-2 rounded-xl shadow-xl border-black/10 dark:border-white/10 bg-gradient-to-b from-white via-white to-neutral-100 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-800" align="start">
-                            {brands.length === 0 ? (
-                              <div
-                                className="px-2 py-4 text-xs text-center cursor-pointer text-muted-foreground hover:text-foreground"
-                                onClick={() => setIsBrandModalOpen(true)}
-                              >
-                                {t('step_two.no_brands_click_to_create', 'No brands available - Click to create one')}
-                              </div>
-                            ) : (
-                              <div className="py-1 max-h-[300px] overflow-y-auto custom-scrollbar">
-                                {brands.map((brand) => (
-                                  <DropdownMenuItem
-                                    key={brand.id}
-                                    className="relative flex cursor-default select-none items-center rounded-lg px-2 py-1.5 text-xs outline-none hover:bg-black/5 dark:hover:bg-white/5"
-                                    onClick={() => handleBrandChange(brand)}
-                                  >
-                                    <span className="flex-1 font-medium truncate">{brand.name}</span>
-                                    <div className="flex items-center gap-2">
-                                      <button
-                                        onClick={(e) => handleEditBrand(brand, e)}
-                                        className="p-1 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
-                                      >
-                                        <Pen className="h-2.5 w-2.5 opacity-40 hover:opacity-100" />
-                                      </button>
-                                      <div className="w-4 h-4 flex items-center justify-center">
-                                        {selectedBrand?.id === brand.id && (
-                                          <Check className="h-3.5 w-3.5 text-primary" />
-                                        )}
-                                      </div>
-                                    </div>
-                                  </DropdownMenuItem>
-                                ))}
-                              </div>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setEditingBrand(null);
-                            setIsBrandModalOpen(true);
-                          }}
-                          className="w-7 h-7 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-black/50 dark:text-white/50"
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
-
-                      <div className="h-4 w-px bg-black/10 dark:bg-white/10 mx-0.5" />
-
-                      {/* Assets Picker */}
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <button
-                            type="button"
-                            disabled={!selectedBrand}
-                            className={cn(
-                              "rounded-lg p-2 bg-black/5 dark:bg-white/5 cursor-pointer",
-                              "hover:bg-black/10 dark:hover:bg-white/10 focus-visible:ring-1 focus-visible:ring-offset-0 focus-visible:ring-blue-500",
-                              imageCount > 0 ? "text-primary" : "text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white"
-                            )}
-                          >
-                            <Paperclip className="w-4 h-4 transition-colors" />
-                          </button>
-                        </PopoverTrigger>
-                        <PopoverContent className="z-[90] w-[400px] p-5 rounded-2xl shadow-2xl border-white/20 backdrop-blur-3xl" align="start">
-                          <div className="grid grid-cols-2 gap-4">
-                            <ImageLibrarySelect
-                              selectedImages={productImages}
-                              onSelectImage={(data) => handleOpenImageModal('product_library', data.field)}
-                              onDeleteImage={handleImageDelete}
-                            />
-                            <AppImageLibrarySelect
-                              selectedImages={appImages}
-                              onSelectImage={(data) => handleOpenImageModal('app_library', data.field)}
-                              onDeleteImage={handleImageDelete}
-                            />
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-
-                      {/* Format Selector */}
-                      <DropdownMenu>
+              <div className="h-14 bg-black/5 dark:bg-white/5 rounded-b-xl flex items-center relative">
+                <div className="absolute left-3 right-3 bottom-0 top-0 flex items-center justify-between w-[calc(100%-24px)]">
+                  <div className="flex items-center gap-2">
+                    {/* Brand Selector */}
+                    <div className="flex items-center">
+                      <DropdownMenu open={isBrandDropdownOpen} onOpenChange={setIsBrandDropdownOpen}>
                         <DropdownMenuTrigger asChild>
                           <Button
                             variant="ghost"
-                            className="h-8 pl-2 pr-1.5 rounded-lg flex items-center gap-1 hover:bg-black/10 dark:hover:bg-white/10 text-xs font-medium focus-visible:ring-1 focus-visible:ring-offset-0 focus-visible:ring-blue-500"
+                            className="flex items-center gap-1 h-8 pl-1 pr-2 text-xs rounded-md dark:text-white hover:bg-black/10 dark:hover:bg-white/10 focus-visible:ring-1 focus-visible:ring-offset-0 focus-visible:ring-blue-500"
                           >
-                            <Layout className="w-3.5 h-3.5 opacity-70" />
-                            <span className="opacity-70">{canvasSizes.find(s => s.id === selectedCanvasSize)?.label}</span>
-                            <ChevronDown className="w-3 h-3 opacity-40" />
+                            <AnimatePresence mode="wait">
+                              <motion.div
+                                key={selectedBrand ? selectedBrand.id : 'no-brand'}
+                                initial={{ opacity: 0, y: -5 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 5 }}
+                                transition={{ duration: 0.15 }}
+                                className="flex items-center gap-1"
+                              >
+                                {selectedBrand ? (
+                                  <span className="font-bold truncate max-w-[100px]">{selectedBrand.name}</span>
+                                ) : (
+                                  <span className="opacity-50">Brand</span>
+                                )}
+                                <ChevronDown className="w-3 h-3 opacity-50" />
+                              </motion.div>
+                            </AnimatePresence>
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent className="z-[90] w-48 p-2 rounded-xl shadow-xl border-black/10 dark:border-white/10 bg-gradient-to-b from-white via-white to-neutral-100 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-800" align="start">
-                          {canvasSizes.map(size => (
-                            <DropdownMenuItem
-                              key={size.id}
-                              onSelect={() => handleCanvasSizeChange(size.id)}
-                              className="rounded-lg flex flex-col items-start gap-0.5 p-2"
+                        <DropdownMenuContent className="z-[90] w-64 p-2 rounded-xl shadow-xl border-black/10 dark:border-white/10 bg-gradient-to-b from-white via-white to-neutral-100 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-800" align="start">
+                          {brands.length === 0 ? (
+                            <div
+                              className="px-2 py-4 text-xs text-center cursor-pointer text-muted-foreground hover:text-foreground"
+                              onClick={() => setIsBrandModalOpen(true)}
                             >
-                              <div className="flex items-center justify-between w-full text-xs">
-                                <span className="font-bold">{size.label}</span>
-                                {selectedCanvasSize === size.id && <Check className="w-3 h-3 text-primary" />}
-                              </div>
-                            </DropdownMenuItem>
-                          ))}
+                              {t('step_two.no_brands_click_to_create', 'No brands available - Click to create one')}
+                            </div>
+                          ) : (
+                            <div className="py-1 max-h-[300px] overflow-y-auto custom-scrollbar">
+                              {brands.map((brand) => (
+                                <DropdownMenuItem
+                                  key={brand.id}
+                                  className="relative flex cursor-default select-none items-center rounded-lg px-2 py-1.5 text-xs outline-none hover:bg-black/5 dark:hover:bg-white/5"
+                                  onClick={() => handleBrandChange(brand)}
+                                >
+                                  <span className="flex-1 font-medium truncate">{brand.name}</span>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      onClick={(e) => handleEditBrand(brand, e)}
+                                      className="p-1 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+                                    >
+                                      <Pen className="h-2.5 w-2.5 opacity-40 hover:opacity-100" />
+                                    </button>
+                                    <div className="w-4 h-4 flex items-center justify-center">
+                                      {selectedBrand?.id === brand.id && (
+                                        <Check className="h-3.5 w-3.5 text-primary" />
+                                      )}
+                                    </div>
+                                  </div>
+                                </DropdownMenuItem>
+                              ))}
+                            </div>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
+
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setEditingBrand(null);
+                          setIsBrandModalOpen(true);
+                        }}
+                        className="w-7 h-7 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-black/50 dark:text-white/50"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                      </Button>
                     </div>
 
-                    <div className="relative group">
-                      <button
-                        type="button"
-                        disabled={!selectedBrand || !userPrompt.trim()}
-                        onClick={handleGenerate}
-                        className={cn(
-                          "rounded-lg p-2 bg-black/5 dark:bg-white/5",
-                          "hover:bg-black/10 dark:hover:bg-white/10 focus-visible:ring-1 focus-visible:ring-offset-0 focus-visible:ring-blue-500"
-                        )}
-                        aria-label="Generate"
-                      >
-                        <ArrowRight
-                          className={cn(
-                            "w-4 h-4 dark:text-white transition-opacity duration-200",
-                            userPrompt.trim() && selectedBrand ? "opacity-100" : "opacity-30"
-                          )}
-                        />
-                      </button>
+                    <div className="h-4 w-px bg-black/10 dark:bg-white/10 mx-0.5" />
 
-                      <div className="absolute bottom-full right-0 mb-2 px-3 py-1.5 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-lg">
-                        Use {adGenerationCost} {adGenerationCost === 1 ? 'credit' : 'credits'} to generate this ad
-                        <div className="absolute top-full right-3 border-4 border-transparent border-t-gray-900 dark:border-t-gray-700"></div>
-                      </div>
+                    {/* Assets Picker */}
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button
+                          type="button"
+                          disabled={!selectedBrand}
+                          className={cn(
+                            "rounded-lg p-2 bg-black/5 dark:bg-white/5 cursor-pointer",
+                            "hover:bg-black/10 dark:hover:bg-white/10 focus-visible:ring-1 focus-visible:ring-offset-0 focus-visible:ring-blue-500",
+                            imageCount > 0 ? "text-primary" : "text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white"
+                          )}
+                        >
+                          <Paperclip className="w-4 h-4 transition-colors" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="z-[90] w-[400px] p-5 rounded-2xl shadow-2xl border-white/20 backdrop-blur-3xl" align="start">
+                        <div className="grid grid-cols-2 gap-4">
+                          <ImageLibrarySelect
+                            selectedImages={productImages}
+                            onSelectImage={(data) => handleOpenImageModal('product_library', data.field)}
+                            onDeleteImage={handleImageDelete}
+                          />
+                          <AppImageLibrarySelect
+                            selectedImages={appImages}
+                            onSelectImage={(data) => handleOpenImageModal('app_library', data.field)}
+                            onDeleteImage={handleImageDelete}
+                          />
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+
+                    {/* Format Selector */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          className="h-8 pl-2 pr-1.5 rounded-lg flex items-center gap-1 hover:bg-black/10 dark:hover:bg-white/10 text-xs font-medium focus-visible:ring-1 focus-visible:ring-offset-0 focus-visible:ring-blue-500"
+                        >
+                          <Layout className="w-3.5 h-3.5 opacity-70" />
+                          <span className="opacity-70">{canvasSizes.find(s => s.id === selectedCanvasSize)?.label}</span>
+                          <ChevronDown className="w-3 h-3 opacity-40" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="z-[90] w-48 p-2 rounded-xl shadow-xl border-black/10 dark:border-white/10 bg-gradient-to-b from-white via-white to-neutral-100 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-800" align="start">
+                        {canvasSizes.map(size => (
+                          <DropdownMenuItem
+                            key={size.id}
+                            onSelect={() => handleCanvasSizeChange(size.id)}
+                            className="rounded-lg flex flex-col items-start gap-0.5 p-2"
+                          >
+                            <div className="flex items-center justify-between w-full text-xs">
+                              <span className="font-bold">{size.label}</span>
+                              {selectedCanvasSize === size.id && <Check className="w-3 h-3 text-primary" />}
+                            </div>
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+
+                  <div className="relative group">
+                    <button
+                      type="button"
+                      disabled={!selectedBrand || !userPrompt.trim()}
+                      onClick={handleGenerate}
+                      className={cn(
+                        "rounded-lg p-2 bg-black/5 dark:bg-white/5",
+                        "hover:bg-black/10 dark:hover:bg-white/10 focus-visible:ring-1 focus-visible:ring-offset-0 focus-visible:ring-blue-500"
+                      )}
+                      aria-label="Generate"
+                    >
+                      <ArrowRight
+                        className={cn(
+                          "w-4 h-4 dark:text-white transition-opacity duration-200",
+                          userPrompt.trim() && selectedBrand ? "opacity-100" : "opacity-30"
+                        )}
+                      />
+                    </button>
+
+                    <div className="absolute bottom-full right-0 mb-2 px-3 py-1.5 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-lg">
+                      Use {adGenerationCost} {adGenerationCost === 1 ? 'credit' : 'credits'} to generate this ad
+                      <div className="absolute top-full right-3 border-4 border-transparent border-t-gray-900 dark:border-t-gray-700"></div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         <ImageLibraryModal
           isOpen={isImageModalOpen}
@@ -507,7 +502,7 @@ const IntegratedAdGenerator = ({ adRequestId, onClose, onGenerate }) => {
           editingBrand={editingBrand}
           brandAssetsCost={4}
         />
-      </div>
+      </motion.div>
     </AnimatePresence>
   );
 };
