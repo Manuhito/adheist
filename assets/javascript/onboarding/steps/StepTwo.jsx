@@ -142,21 +142,29 @@ const StepTwo = ({ onNext, initialData, setMascotMessageOverride }) => {
 
   useEffect(() => {
     // Check if data already loaded (from page refresh or revisiting step)
-    if (initialData?.brandData) {
+    const hasScreenshot = Boolean(initialData?.screenshot);
+    const hasBrandData = Boolean(initialData?.brandData);
+
+    if (hasScreenshot || hasBrandData) {
       setData({
-        screenshot: initialData.screenshot,
-        brandData: initialData.brandData
+        screenshot: initialData?.screenshot || null,
+        brandData: initialData?.brandData || null
       });
 
-      const bName = initialData.brandData.brand?.name || initialData.brandData.brand_name || 'Your Brand';
-      const bDesc = initialData.brandData.brand?.product_description || initialData.brandData.product_description || "No description available.";
-      const bId = initialData.brandData.brand?.id || initialData.brandData.brand_id;
+      if (hasBrandData) {
+        const bName = initialData.brandData.brand?.name || initialData.brandData.brand_name || 'Your Brand';
+        const bDesc = initialData.brandData.brand?.product_description || initialData.brandData.product_description || "No description available.";
+        const bId = initialData.brandData.brand?.id || initialData.brandData.brand_id;
 
-      setBrandName(bName);
-      setProductDescription(bDesc);
-      setBrandId(bId);
-      setLoading(false);
-      setAnalyzing(false);
+        setBrandName(bName);
+        setProductDescription(bDesc);
+        setBrandId(bId);
+        setAnalyzing(false);
+      }
+
+      if (hasScreenshot) {
+        setLoading(false);
+      }
     }
     // Otherwise, SSE will deliver the results
   }, [initialData]);

@@ -118,8 +118,6 @@ def analyze_website_task(user_id: int, website_url: str, is_onboarding: bool = F
                         onboarding.save()
                         logger.info(f"[analyze_website_task] Saved brand {brand_id} to UserOnboarding")
                         
-                        # Advance user onboarding step
-                        user.advance_onboarding()
                 except Exception as e:
                     logger.error(f"[analyze_website_task] Error saving brand to UserOnboarding: {str(e)}")
             
