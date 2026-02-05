@@ -17,9 +17,11 @@
   version_index: {% if version.version_index %} {{ version.version_index }} {% else %} 1{% endif %},
   created_at: "{{ version.created_at|date:'c' }}",
     brand_name: "{{ brand_name|escapejs }}",
-      canvas_size: "{{ version.ad_request.canvas_size|default:'1024x1024' }}",
-        back_url: "{{ back_url|escapejs }}",
-          is_free_tier: {% if is_free_tier %} true{% else %} false{% endif %},
+      brand_url: "{{ brand_url|escapejs }}",
+        brand_logo_url: {% if brand_logo_url %} "{{ brand_logo_url|escapejs }}"{% else %} null{% endif %},
+  canvas_size: "{{ version.ad_request.canvas_size|default:'1024x1024' }}",
+    back_url: "{{ back_url|escapejs }}",
+      is_free_tier: {% if is_free_tier %} true{% else %} false{% endif %},
   has_rated: {% if has_rated %} true{% else %} false{% endif %},
   versions: [
     {% for v in version.ad_request.ordered_versions %}

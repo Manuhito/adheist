@@ -94,11 +94,25 @@ const GeneratedAdHeader = ({ brandName, backUrl }) => {
 const GeneratedAdPage = () => {
   const { t } = useTranslation();
   const generatedAdData = window.__GENERATED_AD_DATA__ || {};
+  const brandName = generatedAdData.brand_name || 'Generated Ad';
+  const brandUrl = generatedAdData.brand_url || '';
+  const brandLogoUrl = generatedAdData.brand_logo_url || null;
+
+  const getFaviconUrl = (url) => {
+    try {
+      if (!url) return null;
+      const parsedUrl = new URL(url);
+      return `https://www.google.com/s2/favicons?domain=${parsedUrl.hostname}&sz=64`;
+    } catch (_) {
+      return null;
+    }
+  };
+  const fallbackFavicon = getFaviconUrl(brandUrl);
+  const brandInitial = brandName.trim().charAt(0).toUpperCase();
 
   // Set custom header when component mounts
   useEffect(() => {
     if (window.setAppHeader) {
-      const brandName = generatedAdData.brand_name || 'Generated Ad';
       const backUrl = generatedAdData.back_url || '/ads/discover/';
       window.setAppHeader(<GeneratedAdHeader brandName={brandName} backUrl={backUrl} />);
     }
@@ -109,7 +123,7 @@ const GeneratedAdPage = () => {
         window.clearAppHeader();
       }
     };
-  }, [generatedAdData.brand_name, generatedAdData.back_url]);
+  }, [brandName, generatedAdData.back_url]);
 
   // Rating states
   const [ratingOpen, setRatingOpen] = useState(false);
@@ -369,6 +383,34 @@ const GeneratedAdPage = () => {
               {/* Unified card with aspect ratio */}
               <div className="relative h-full w-full">
                 <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm absolute inset-0 flex flex-col p-3">
+                  {/* Card Header - Brand */}
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 rounded-full overflow-hidden bg-muted flex-shrink-0">
+                      {brandLogoUrl ? (
+                        <img
+                          src={brandLogoUrl}
+                          alt={brandName}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : fallbackFavicon ? (
+                        <img
+                          src={fallbackFavicon}
+                          alt={brandName}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.parentNode.innerHTML = `<div class=\"w-full h-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-xs\">${brandInitial || '?'}<\/div>`;
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-xs">
+                          {brandInitial || '?'}
+                        </div>
+                      )}
+                    </div>
+                    <h3 className="text-sm font-semibold truncate">{brandName}</h3>
+                  </div>
+
                   {/* Card Header - Ad Copy Text */}
                   {currentAdCopyText && (
                     <div className="mb-2">

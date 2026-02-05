@@ -4138,11 +4138,27 @@ def generated_ad_page(request, version_id):
         
         # Check if user has already rated this version
         has_rated = version.rating is not None and version.review
+        brand_name = None
+        brand_url = None
+        brand_logo_url = None
+        if version.ad_request.base_assets:
+            if version.ad_request.base_assets.brand:
+                brand_name = version.ad_request.base_assets.brand.brand_name
+            if version.ad_request.base_assets.company_website:
+                brand_url = version.ad_request.base_assets.company_website
+            if version.ad_request.base_assets.logo:
+                brand_logo_url = version.ad_request.base_assets.logo.url
+        if version.ad_request.logo_override:
+            brand_logo_url = version.ad_request.logo_override.url
+
         context = {
             'version': version,
             'back_url': back_url,
             'is_free_tier': is_free_tier,
             'has_rated': has_rated,
+            'brand_name': brand_name or f'Ad Request #{version.ad_request.id}',
+            'brand_url': brand_url or '',
+            'brand_logo_url': brand_logo_url,
         }
         
         return render(request, 'ads/generated_ad.html', context)
@@ -4251,10 +4267,18 @@ def generated_versions_page(request, primary_version_id):
         # Check if user has already rated this version
         has_rated = primary_version.rating is not None and primary_version.review
         
-        # Get brand name
+        # Get brand name, website, and logo
         brand_name = None
+        brand_url = None
+        brand_logo_url = None
         if primary_version.ad_request.base_assets and primary_version.ad_request.base_assets.brand:
             brand_name = primary_version.ad_request.base_assets.brand.brand_name
+        if primary_version.ad_request.base_assets and primary_version.ad_request.base_assets.company_website:
+            brand_url = primary_version.ad_request.base_assets.company_website
+        if primary_version.ad_request.base_assets and primary_version.ad_request.base_assets.logo:
+            brand_logo_url = primary_version.ad_request.base_assets.logo.url
+        if primary_version.ad_request.logo_override:
+            brand_logo_url = primary_version.ad_request.logo_override.url
 
         app_config = AppConfiguration.get_config()
         version_creation_cost = app_config.version_creation_credit_cost if app_config else 0
@@ -4265,6 +4289,8 @@ def generated_versions_page(request, primary_version_id):
             'is_free_tier': is_free_tier,
             'has_rated': has_rated,
             'brand_name': brand_name or f'Ad Request #{primary_version.ad_request.id}',
+            'brand_url': brand_url or '',
+            'brand_logo_url': brand_logo_url,
             'version_creation_cost': version_creation_cost,
         }
         
