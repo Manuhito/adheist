@@ -1278,10 +1278,18 @@ def get_adlibrary_filters(request):
         if combined_query:
             adlibraries = adlibraries.filter(combined_query).distinct()
     else:
-        # Si no hay filtros de selección, mostrar solo favoritos activos
-        print("DEBUG: No selection filters, showing favorites only")
-        adlibraries = AdLibrary.objects.filter(is_fav=True, is_active=True)
-        print(f"DEBUG: Favorites query count: {adlibraries.count()}")
+        # Sin filtros de selección, mostrar ads con score > 75 (cached diariamente)
+        cache_key = 'adlibrary_high_score_ids'
+        high_score_ids = cache.get(cache_key)
+        
+        if high_score_ids is None:
+            high_score_ids = list(
+                AdLibrary.objects.filter(runtime_score__gt=75)
+                .values_list('id', flat=True)
+            )
+            cache.set(cache_key, high_score_ids, 86400)  # 24 hours
+        
+        adlibraries = AdLibrary.objects.filter(id__in=high_score_ids)
     
     # Apply refinement filters (these apply to both favorites and selected ads)
     
