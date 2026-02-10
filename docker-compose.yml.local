@@ -52,11 +52,91 @@ services:
         condition: service_healthy
     restart: unless-stopped
   
-  celery:
+  celery-interactive:
     build:
       context: .
       dockerfile: Dockerfile.local
-    command: celery -A adheist worker -l INFO --beat --pool=solo
+    command: celery -A adheist worker -l INFO -Q interactive --pool=solo
+    volumes:
+      - .:/code
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      - DJANGO_SETTINGS_MODULE=adheist.settings
+    env_file:
+      - ./.env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  celery-user-ingestion:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    command: celery -A adheist worker -l INFO -Q user_ingestion --pool=solo
+    volumes:
+      - .:/code
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      - DJANGO_SETTINGS_MODULE=adheist.settings
+    env_file:
+      - ./.env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  celery-batch:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    command: celery -A adheist worker -l INFO -Q batch_ingestion --pool=solo
+    volumes:
+      - .:/code
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      - DJANGO_SETTINGS_MODULE=adheist.settings
+    env_file:
+      - ./.env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  celery-low:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    command: celery -A adheist worker -l INFO -Q low --pool=solo
+    volumes:
+      - .:/code
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      - DJANGO_SETTINGS_MODULE=adheist.settings
+    env_file:
+      - ./.env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    command: celery -A adheist beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
     volumes:
       - .:/code
     environment:
