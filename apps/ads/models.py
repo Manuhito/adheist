@@ -424,43 +424,7 @@ class AdRequest(BaseModel):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=STATUS_NEW)
     
     def save(self, *args, **kwargs):
-        """Override save method to update base_assets with overrides and validate status transitions"""
-        # Check if this is an existing instance
-        if self.pk:
-            # Get the current status from the database
-            try:
-                current_instance = AdRequest.objects.get(pk=self.pk)
-                current_status = current_instance.status
-                
-                # Validate status transitions
-                if current_status == self.STATUS_NEW and self.status != self.STATUS_DRAFT and self.status != self.STATUS_NEW:
-                    from django.core.exceptions import ValidationError
-                    raise ValidationError(f"Cannot transition from {current_status} to {self.status}. Only transition to DRAFT is allowed.")
-                
-                elif current_status == self.STATUS_DRAFT and self.status not in [self.STATUS_NEW, self.STATUS_FILLED, self.STATUS_SUBMITTED, self.STATUS_DRAFT]:
-                    from django.core.exceptions import ValidationError
-                    raise ValidationError(f"Cannot transition from {current_status} to {self.status}. Only transitions to NEW, FILLED, or SUBMITTED are allowed.")
-                
-                elif current_status == self.STATUS_FILLED and self.status not in [self.STATUS_DRAFT, self.STATUS_SUBMITTED, self.STATUS_FILLED]:
-                    from django.core.exceptions import ValidationError
-                    raise ValidationError(f"Cannot transition from {current_status} to {self.status}. Only transitions to DRAFT or SUBMITTED are allowed.")
-                
-                elif current_status == self.STATUS_SUBMITTED and self.status != self.STATUS_APPROVED and self.status != self.STATUS_SUBMITTED:
-                    from django.core.exceptions import ValidationError
-                    raise ValidationError(f"Cannot transition from {current_status} to {self.status}. Only transition to COMPLETED is allowed.")
-                
-                elif current_status == self.STATUS_APPROVED and self.status != self.STATUS_REOPENED and self.status != self.STATUS_APPROVED:
-                    from django.core.exceptions import ValidationError
-                    raise ValidationError(f"Cannot transition from {current_status} to {self.status}. Only transition to REOPENED is allowed.")
-                
-                elif current_status == self.STATUS_REOPENED and self.status != self.STATUS_APPROVED and self.status != self.STATUS_REOPENED:
-                    from django.core.exceptions import ValidationError
-                    raise ValidationError(f"Cannot transition from {current_status} to {self.status}. Only transition to COMPLETED is allowed.")
-                    
-            except AdRequest.DoesNotExist:
-                # This should not happen, but just in case
-                pass
-        
+        """Override save method to update base_assets with overrides"""
         # First save the model to ensure it has an ID
         super().save(*args, **kwargs)
         
