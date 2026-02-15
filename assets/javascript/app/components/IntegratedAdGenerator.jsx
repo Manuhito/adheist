@@ -65,6 +65,8 @@ const IntegratedAdGenerator = ({ adRequestId, selectedAdLibraryItem, onClose, on
   const [isBrandModalOpen, setIsBrandModalOpen] = useState(false);
   const [editingBrand, setEditingBrand] = useState(null);
   const [isBrandDropdownOpen, setIsBrandDropdownOpen] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const isGeneratingRef = useRef(false);
   const chatContainerRef = useRef(null);
   const [chatHeight, setChatHeight] = useState(0);
 
@@ -225,7 +227,11 @@ const IntegratedAdGenerator = ({ adRequestId, selectedAdLibraryItem, onClose, on
   };
 
   const handleGenerate = async () => {
-    if (!selectedBrand || !userPrompt.trim()) return;
+    if (isGeneratingRef.current || !selectedBrand || !userPrompt.trim()) return;
+
+    isGeneratingRef.current = true;
+    setIsGenerating(true);
+
     try {
       let currentAdRequestId = adRequestId;
 
@@ -299,6 +305,9 @@ const IntegratedAdGenerator = ({ adRequestId, selectedAdLibraryItem, onClose, on
       }
     } catch (error) {
       console.error('Error generating ad:', error);
+    } finally {
+      isGeneratingRef.current = false;
+      setIsGenerating(false);
     }
   };
 
@@ -547,11 +556,13 @@ const IntegratedAdGenerator = ({ adRequestId, selectedAdLibraryItem, onClose, on
                 <div className="relative group">
                   <button
                     type="button"
-                    disabled={!selectedBrand || !userPrompt.trim()}
+                    disabled={isGenerating || !selectedBrand || !userPrompt.trim()}
                     onClick={handleGenerate}
                     className={cn(
                       "rounded-lg p-2 bg-white/70 dark:bg-white/5",
-                      "hover:bg-white/90 dark:hover:bg-white/10 focus-visible:ring-1 focus-visible:ring-offset-0 focus-visible:ring-blue-500"
+                      "focus-visible:ring-1 focus-visible:ring-offset-0 focus-visible:ring-blue-500",
+                      !isGenerating && "hover:bg-white/90 dark:hover:bg-white/10",
+                      (isGenerating || !selectedBrand || !userPrompt.trim()) && "opacity-50 cursor-not-allowed"
                     )}
                     aria-label="Generate"
                   >
