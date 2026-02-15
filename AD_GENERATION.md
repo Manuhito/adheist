@@ -31,7 +31,7 @@ Initial ad generation creates **three AdRequestVersion records**, generates **th
 - Brand data (from base assets/overrides)
 - `original_ad_copy` (from `ad_library.ad_creative_bodies`)
 - `user_prompt`
-- Context images (see below)
+- Reference image (see below)
 
 **`generate_version_prompt`** sends GPT-5 a system prompt that:
 - Preserves the **original ad concept and structure**
@@ -47,15 +47,20 @@ Initial ad generation creates **three AdRequestVersion records**, generates **th
 }
 ```
 
-### Context Images (Initial)
-When `version_type="initial"`:
+### Images sent to GPT-5 (Initial)
+When `version_type="initial"`, GPT-5 prompt generation receives only:
+- `ad_library.ad_image` (reference ad image)
+
+No logo/product/app/marketing override images are sent to GPT-5 in initial flow.
+
+### Images sent to Replicate (Initial)
+Replicate image generation still receives full context from the view task payload:
 - `ad_library.ad_image`
+- `user_uploaded_image` (fallback when `ad_library.ad_image` is not available)
 - `logo_override`
 - `product_image_1_override`, `product_image_2_override`
 - `app_image_1_override`, `app_image_2_override`
 - `marketing_image_1_override`, `marketing_image_2_override`, `marketing_image_3_override`
-
-These are sent to GPT-5 as base64 image inputs.
 
 ## Image Generation (Replicate)
 **File:** `apps/aiinterface/services.py`

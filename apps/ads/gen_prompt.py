@@ -960,41 +960,17 @@ def generate_prompt(ad_request, version_type='initial', user_prompt_override=Non
         'value_propositions': ad_request.get_asset_value('value_propositions') or ''
     }
     
-    # Collect image URLs for context
+    # Collect image URLs used by GPT prompt generation
     image_urls = []
-    
+
     # For revisions, use ONLY the provided override_image_urls (expected: [revision_image_url, logo_url])
     if version_type == 'revision' and override_image_urls:
         image_urls = list(override_image_urls)
     else:
-        # Initial flow (or no overrides provided): collect all available context images from AdRequest
-        # Add AdLibrary ad_image if available (canvas size already extracted above)
+        # Initial flow: only send the reference ad image to GPT prompt generation.
+        # Other context images are still sent to Replicate in the generation task pipeline.
         if ad_request.ad_library and ad_request.ad_library.ad_image:
             image_urls.append(ad_request.ad_library.ad_image.url)
-        
-        # Add logo if available
-        if logo_override:
-            image_urls.append(logo_override.url)
-        
-        # Add product images if available
-        if product_image_1_override:
-            image_urls.append(product_image_1_override.url)
-        if product_image_2_override:
-            image_urls.append(product_image_2_override.url)
-            
-        # Add app images if available
-        if app_image_1_override:
-            image_urls.append(app_image_1_override.url)
-        if app_image_2_override:
-            image_urls.append(app_image_2_override.url)
-            
-        # Add marketing images if available
-        if marketing_image_1_override:
-            image_urls.append(marketing_image_1_override.url)
-        if marketing_image_2_override:
-            image_urls.append(marketing_image_2_override.url)
-        if marketing_image_3_override:
-            image_urls.append(marketing_image_3_override.url)
         
     # Log the number of images collected
     if image_urls:
