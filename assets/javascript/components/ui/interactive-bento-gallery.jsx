@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Check, Star, Trash2, ExternalLink, ChevronDown, Zap, TriangleAlert } from 'lucide-react';
+import { X, Check, Star, Trash2, ExternalLink, ChevronDown, Zap, TriangleAlert, Info } from 'lucide-react';
 import { useTranslation } from '../../lib/useTranslation';
 import { Switch } from '../ui/switch';
 import { useIsMobile } from '../../hooks/use-mobile';
@@ -139,7 +139,7 @@ const getScoreColors = (score) => {
  * MediaItem component renders a card with company info, ad content, and image
  * Similar to GalleryModal but in card format without footer and close button
  */
-const MediaItem = ({ item, className, onClick, isSelected, userPermissions = { isStaff: false }, onToggleFavorite, onDeactivateImage }) => {
+const MediaItem = ({ item, className, onClick, isSelected, userPermissions = { isStaff: false }, onToggleFavorite, onDeactivateImage, onInfoClick }) => {
     const { t } = useTranslation();
     const [isAdBodiesExpanded, setIsAdBodiesExpanded] = useState(false);
     const [showTooltip, setShowTooltip] = useState(false);
@@ -362,8 +362,21 @@ const MediaItem = ({ item, className, onClick, isSelected, userPermissions = { i
 
             {/* Date Information */}
             <div className="p-3 pt-2">
-                <div className="text-xs text-gray-500">
-                    {item.ad_creation_time ? new Date(item.ad_creation_time).toLocaleDateString() : 'Unknown'} - {item.ad_delivery_stop_time ? new Date(item.ad_delivery_stop_time).toLocaleDateString() : 'Present'}
+                <div className="flex items-center justify-between gap-2">
+                    <div className="text-xs text-gray-500">
+                        {item.ad_creation_time ? new Date(item.ad_creation_time).toLocaleDateString() : 'Unknown'} - {item.ad_delivery_stop_time ? new Date(item.ad_delivery_stop_time).toLocaleDateString() : 'Present'}
+                    </div>
+                    <button
+                        type="button"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onInfoClick?.(item);
+                        }}
+                        className="h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+                        aria-label={t('bento_gallery.info', 'Ad info')}
+                    >
+                        <Info className="h-3.5 w-3.5" />
+                    </button>
                 </div>
             </div>
         </div>
@@ -492,7 +505,7 @@ const GalleryModal = ({
                             <span className="ml-2 text-sm font-medium">View Details</span>
                         </button>
                     </SheetTrigger>
-                    <SheetContent side="bottom" className="h-[70vh] rounded-t-3xl">
+                    <SheetContent side="bottom" className="h-[70vh] rounded-t-3xl z-[90]">
                         <div className="flex flex-col h-full">
                             {/* Scrollable Details */}
                             <div className="flex-1 overflow-y-auto custom-scrollbar px-4 pb-4">
@@ -685,7 +698,7 @@ const GalleryModal = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
             onClick={handleBackdropClick}
         >
             <motion.div
@@ -994,6 +1007,12 @@ const InteractiveBentoGallery = ({
     const [updatedItems, setUpdatedItems] = useState({});
     const [showOnlyActive, setShowOnlyActive] = useState(initialActiveFilter);
 
+    useEffect(() => {
+        if (!selectedItemId) {
+            setSelectedAdStyle(null);
+        }
+    }, [selectedItemId]);
+
     const handleSelectAdStyle = (item) => {
         setSelectedAdStyle(item);
         setSelectedItem(null);
@@ -1004,6 +1023,13 @@ const InteractiveBentoGallery = ({
         }
 
         console.log('Selected ad style:', item);
+    };
+
+    const handleCardSelect = (item) => {
+        setSelectedAdStyle(item);
+        if (onItemSelect && typeof onItemSelect === 'function') {
+            onItemSelect(item);
+        }
     };
 
     // Handle toggling favorite status
@@ -1166,32 +1192,8 @@ const InteractiveBentoGallery = ({
         return csrfCookie ? csrfCookie.split('=')[1] : '';
     };
 
-    // Track click when opening the modal from a card, then open it
-    const handleCardOpen = async (item) => {
-        try {
-            // Extract the real ID from the compound ID if present
-            let adlibraryId;
-            if (item.original_id) {
-                adlibraryId = item.original_id;
-            } else if (item.id && typeof item.id === 'string' && item.id.includes('-')) {
-                adlibraryId = item.id.split('-')[0];
-            } else {
-                adlibraryId = item.id;
-            }
-
-            if (adlibraryId) {
-                await fetch(`/ads/api/adlibrary/${adlibraryId}/click/`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': getCsrfToken(),
-                    },
-                });
-            }
-        } catch (e) {
-            // Non-blocking: ignore tracking errors
-        } finally {
-            setSelectedItem(item);
-        }
+    const handleInfoOpen = (item) => {
+        setSelectedItem(item);
     };
 
     return (
@@ -1220,28 +1222,6 @@ const InteractiveBentoGallery = ({
                     </motion.p>
                 </div>
             </div>
-
-            {selectedAdStyle && (
-                <div className="mb-6 p-4 bg-accent/20 border border-border rounded-lg flex items-center">
-                    <div className="w-16 h-16 rounded-md overflow-hidden mr-4 flex-shrink-0">
-                        <img
-                            src={selectedAdStyle.url}
-                            alt={selectedAdStyle.title}
-                            className="w-full h-full object-cover"
-                        />
-                    </div>
-                    <div className="flex-1">
-                        <h3 className="font-medium">{t('bento_gallery.selected_style', 'Selected Style: {style}', { style: selectedAdStyle.title })}</h3>
-                        <p className="text-sm text-muted-foreground">{selectedAdStyle.desc}</p>
-                    </div>
-                    <button
-                        onClick={() => setSelectedAdStyle(null)}
-                        className="ml-4 p-2 text-muted-foreground hover:text-foreground"
-                    >
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
-            )}
 
             <AnimatePresence mode="wait">
                 {selectedItem && (
@@ -1274,10 +1254,7 @@ const InteractiveBentoGallery = ({
                         key={item.id}
                         layoutId={`media-${item.id}`}
                         className={`${selectedItemId === item.id ? 'ring-2 ring-primary ring-offset-2 rounded-xl' : ''}`}
-                        onClick={() => {
-                            // Open modal and track click for popularity
-                            handleCardOpen(item);
-                        }}
+                        onClick={() => handleCardSelect(item)}
                         variants={{
                             hidden: { y: 20, opacity: 0 },
                             visible: {
@@ -1301,6 +1278,7 @@ const InteractiveBentoGallery = ({
                             userPermissions={userPermissions}
                             onToggleFavorite={handleToggleFavorite}
                             onDeactivateImage={handleDeactivateImage}
+                            onInfoClick={handleInfoOpen}
                         />
                     </motion.div>
                 ))}

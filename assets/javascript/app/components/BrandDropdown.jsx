@@ -189,7 +189,7 @@ const BrandDropdown = ({ initialBrandId, onBrandChange, adRequestId = null, bran
               </Button>
             </PopoverTrigger>
             <PopoverContent
-              className="p-0 overflow-hidden"
+              className="p-0 overflow-hidden z-[90]"
               align="start"
               style={contentWidth ? { width: `${contentWidth}px` } : undefined}
             >

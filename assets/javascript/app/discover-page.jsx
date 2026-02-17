@@ -6,6 +6,8 @@ import { useTranslation } from '../lib/useTranslation.ts';
 import { motion, AnimatePresence } from 'framer-motion';
 import DiscoverSearchBar from './components/DiscoverSearchBar.jsx';
 import RequestBrandModal from './components/RequestBrandModal.jsx';
+import IntegratedAdGenerator from './components/IntegratedAdGenerator.jsx';
+import GeneratingLoadingPage from './components/GeneratingLoadingPage.jsx';
 
 // SSE Event Handler hook for real-time ad updates (shared endpoint, filtered by event type)
 function useSSEListener(onEvent, enabled = false) {
@@ -58,22 +60,6 @@ function useSSEListener(onEvent, enabled = false) {
   return eventSourceRef.current;
 }
 
-// Function to get CSRF token from cookie
-const getCsrfToken = () => {
-  const name = 'csrftoken';
-  let cookieValue = null;
-  if (document.cookie && document.cookie !== '') {
-    const cookies = document.cookie.split(';');
-    for (let i = 0; i < cookies.length; i++) {
-      const cookie = cookies[i].trim();
-      if (cookie.substring(0, name.length + 1) === (name + '=')) {
-        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        break;
-      }
-    }
-  }
-  return cookieValue;
-};
 
 /**
  * DiscoverContent component displays a gallery of ad examples
@@ -87,9 +73,12 @@ function DiscoverContent() {
   const [hasMorePages, setHasMorePages] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [selectedAdLibrary, setSelectedAdLibrary] = useState(null);
+  const [selectedAdLibraryItem, setSelectedAdLibraryItem] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isRequestBrandOpen, setIsRequestBrandOpen] = useState(false);
-  const [activeFilterParams, setActiveFilterParams] = useState("meta_status=ACTIVE"); // Default filter on initial load
+  const [activeFilterParams, setActiveFilterParams] = useState("meta_status=ACTIVE&sort_by=score_desc"); // Default filters on initial load
+  const [selectedAdRequestId, setSelectedAdRequestId] = useState(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // Live mode state - for real-time ad updates via SSE
   const [isLiveMode, setIsLiveMode] = useState(false);
@@ -410,6 +399,12 @@ function DiscoverContent() {
     } else if (!searchQuery) {
       fetchFilteredResultsWithQuery(1, false, null);
     }
+
+    // Check for pre-loaded AdRequest from window data
+    const discoverData = window.__DISCOVER_DATA__ || {};
+    if (discoverData.adRequestId) {
+      setSelectedAdRequestId(discoverData.adRequestId);
+    }
   }, []);
 
   // Función para cargar más resultados
@@ -421,55 +416,11 @@ function DiscoverContent() {
     }
   };
 
-  // Handle gallery item selection - create AdRequest with selected ad library
-  const handleGalleryItemSelect = async (item) => {
+  // Handle gallery item selection - preview only
+  const handleGalleryItemSelect = (item) => {
     console.log('Selected gallery item:', item);
     setSelectedAdLibrary(item.id);
-
-    try {
-      // Step 1: Create a new AdRequest
-      console.log('Creating new AdRequest...');
-      const createResponse = await fetch('/ads/adrequest/create/', {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': getCsrfToken(),
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-      });
-
-      if (!createResponse.ok) {
-        throw new Error('Failed to create AdRequest');
-      }
-
-      const createData = await createResponse.json();
-      console.log('AdRequest created with ID:', createData.id);
-
-      // Step 2: Update the AdRequest with the selected ad_library
-      console.log('Updating AdRequest with ad_library:', item.id);
-      const formData = new FormData();
-      formData.append('ad_library', item.id);
-      formData.append('status', 'DRAFT'); // Set status to DRAFT
-
-      const updateResponse = await fetch(`/ads/adrequest/${createData.id}/update/`, {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'X-CSRFToken': getCsrfToken(),
-        },
-      });
-
-      if (!updateResponse.ok) {
-        throw new Error('Failed to update AdRequest with ad_library');
-      }
-
-      const updateData = await updateResponse.json();
-      console.log('AdRequest updated successfully:', updateData);
-      window.location.href = `/ads/discover/${createData.id}/create/`;
-    } catch (error) {
-      console.error('Error creating AdRequest:', error);
-      // TODO: Show user-friendly error message
-      alert('Error creating ad request. Please try again.');
-    }
+    setSelectedAdLibraryItem(item);
   };
 
   // Handle toggle favorite functionality (placeholder for now)
@@ -505,6 +456,10 @@ function DiscoverContent() {
     window.addEventListener('scroll', handleWindowScroll);
     return () => window.removeEventListener('scroll', handleWindowScroll);
   }, [isLoading, isLoadingMore, hasMorePages, currentPage]);
+
+  if (isGenerating) {
+    return <GeneratingLoadingPage adRequestId={selectedAdRequestId} />;
+  }
 
   return (
     <div className="flex-1 px-4 md:px-8">
@@ -574,7 +529,20 @@ function DiscoverContent() {
         </div>
       )}
       <RequestBrandModal isOpen={isRequestBrandOpen} onOpenChange={setIsRequestBrandOpen} />
-    </div >
+
+      <IntegratedAdGenerator
+        adRequestId={selectedAdRequestId}
+        selectedAdLibraryItem={selectedAdLibraryItem}
+        onClose={() => {
+          setSelectedAdLibraryItem(null);
+          setSelectedAdLibrary(null);
+        }}
+        onGenerate={(id) => {
+          setSelectedAdRequestId(id);
+          setIsGenerating(true);
+        }}
+      />
+    </div>
   );
 }
 

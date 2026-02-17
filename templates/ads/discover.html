@@ -10,7 +10,10 @@
       name: "{{ request.user.get_full_name|default:'' }}",
       email: "{{ request.user.email|default:'' }}"
     },
-    totalAdsCount: {{ total_ads_count }}
+    totalAdsCount: {{ total_ads_count|default:0 }},
+    adRequestId: {% if ad_request %}{{ ad_request.id }}{% else %}null{% endif %},
+    brandAssetsCost: {{ brand_assets_cost|default:4 }},
+    adGenerationCost: {{ ad_generation_cost|default:1 }}
   };
 
   // Pass user permissions to JavaScript
