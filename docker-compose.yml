@@ -42,11 +42,47 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-  celery:
+  celery-priority:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    command: celery -A adheist worker -l INFO --beat --pool=prefork --concurrency=4
+    command: celery -A adheist worker -l INFO -Q priority --pool=prefork --concurrency=2
+    volumes:
+      - .:/code
+    environment:
+      PYTHONUNBUFFERED: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+    env_file:
+      - ./.env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery-general:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: celery -A adheist worker -l INFO -Q general --pool=prefork --concurrency=2
+    volumes:
+      - .:/code
+    environment:
+      PYTHONUNBUFFERED: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+    env_file:
+      - ./.env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: celery -A adheist beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
     volumes:
       - .:/code
     environment:

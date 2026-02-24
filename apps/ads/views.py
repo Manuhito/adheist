@@ -166,8 +166,12 @@ def competitor_research(request):
     if not website_url:
         return JsonResponse({'error': 'Missing website_url'}, status=400)
         
-    # Trigger task asynchronously
-    task = competitor_research_task.delay(request.user.id, website_url)
+    # Trigger task asynchronously on the general queue with high priority (onboarding)
+    task = competitor_research_task.apply_async(
+        args=[request.user.id, website_url],
+        queue="general",
+        priority=1,
+    )
     
     return JsonResponse({
         'success': True,
@@ -3300,14 +3304,18 @@ def request_brand(request):
         url = backload.get_facebook_ads_url_for_page(facebook_page_id)
         
         # Launch Celery task in background with automated flag
-        fetch_apify_ads.delay(
-            output_dir=output_dir,
-            urls=[{'url': url}],
-            page_id=facebook_page_id,
-            backload_id=backload.pk,
-            is_automated=True,
-            user_id=request.user.id,
-            limit_per_source=1000
+        fetch_apify_ads.apply_async(
+            kwargs={
+                'output_dir': output_dir,
+                'urls': [{'url': url}],
+                'page_id': facebook_page_id,
+                'backload_id': backload.pk,
+                'is_automated': True,
+                'user_id': request.user.id,
+                'limit_per_source': 1000,
+            },
+            queue="general",
+            priority=3,
         )
         
         # Send Slack notification for tracking
