@@ -43,12 +43,12 @@ def home(request):
         ]
 
         feature_cards = [
-            {"icon_name": "clock-9", "title": "Stop wasting valuable time on poor-performing ads", "text": "Use AI-generated copy based on proven conversion patterns to dramatically increase your campaign goals."},
-            {"icon_name": "refresh-cw", "title": "Recover from failed campaigns quickly", "text": "Analyze what went wrong and generate new creatives that address performance issues."},
-            {"icon_name": "rocket", "title": "Scale your ad production 10x faster", "text": "Create hundreds of professional ads in the time it takes a design team to make one."},
-            {"icon_name": "target", "title": "Identify your best results", "text": "Discover which visual styles, layouts, and messaging combinations work best for small business owners."},
-            {"icon_name": "maximize", "title": "Dominate any platform with perfect formatting", "text": "Never worry about aspect ratios, text limits, or image specifications again—take your marketing efforts to the next level."},
-            {"icon_name": "trending-up", "title": "Improve your digital marketing ROI instantly", "text": "Cut design costs while increasing real results with ads scientifically optimized for performance marketers."}
+            {"icon_name": "badge-dollar-sign", "title": "Stop wasting money on ads that don’t convert", "text": "Generate AI ads built on proven patterns designed to attract clicks and customers."},
+            {"icon_name": "wallet", "title": "Grow your marketing without growing your costs", "text": "Skip expensive agencies and freelancers while improving your return on ad spend."},
+            {"icon_name": "refresh-cw", "title": "Fix underperforming campaigns fast", "text": "If an ad isn’t working, create improved versions instantly with stronger messaging and better angles."},
+            {"icon_name": "rocket", "title": "Create more ads in less time", "text": "Launch dozens — even hundreds — of professional creatives in minutes."},
+            {"icon_name": "line-chart", "title": "See what actually drives results", "text": "Find out which headlines, visuals, and offers perform best for businesses like yours."},
+            {"icon_name": "maximize", "title": "Launch anywhere without the technical hassle", "text": "Every ad is automatically sized and formatted for each platform."}
         ]
 
         # Simplified pricing data logic for landing page

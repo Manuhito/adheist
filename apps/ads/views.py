@@ -4333,6 +4333,8 @@ def analyze_website_for_brand_assets(request):
     Result will be sent via SSE notification.
     """
     from .tasks import analyze_website_task
+    from .website_analysis import check_user_credits
+    from apps.ads.models import AppConfiguration
     
     website_url = request.POST.get('website_url')
     is_onboarding = request.POST.get('is_onboarding', '').lower() == 'true'
@@ -4346,6 +4348,20 @@ def analyze_website_for_brand_assets(request):
     # Ensure URL has scheme
     if not website_url.startswith(("http://", "https://")):
         website_url = "https://" + website_url
+
+    # Check credits before launching async task so the frontend can fail fast.
+    # Frontend expects HTTP 402 for insufficient credits.
+    if not check_user_credits(request.user):
+        app_config = AppConfiguration.get_config()
+        required_credits = app_config.brand_assets_generation_cost if app_config else 0
+        return JsonResponse(
+            {
+                'success': False,
+                'error': 'insufficient_credits',
+                'required_credits': required_credits,
+            },
+            status=402,
+        )
     
     # Launch async task
     task = analyze_website_task.delay(request.user.id, website_url, is_onboarding)

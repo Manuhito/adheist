@@ -65,24 +65,37 @@ const OnboardingLoadingPage = ({ adRequestId }) => {
   useEffect(() => {
     const timeouts = [];
 
-    // After 3s, show second message
+    // After 5s, show second message
     timeouts.push(
       setTimeout(() => {
         setMascotMessageIndex(1);
-      }, 3000)
+      }, 5000)
     );
 
-    // After 6s, show third message and keep it
+    // After 10s, show third message and keep it
     timeouts.push(
       setTimeout(() => {
         setMascotMessageIndex(2);
-      }, 6000)
+      }, 10000)
     );
 
     return () => {
       timeouts.forEach((id) => clearTimeout(id));
     };
   }, []);
+
+  useEffect(() => {
+    const redirectTimeout = setTimeout(() => {
+      if (adRequestId) {
+        window.location.href = `/ads/adrequest/${adRequestId}/versions/`;
+        return;
+      }
+
+      window.location.href = '/ads/my-ads/';
+    }, 15000);
+
+    return () => clearTimeout(redirectTimeout);
+  }, [adRequestId]);
 
   // Handle SSE events
   const handleSSEEvent = (eventType, data) => {

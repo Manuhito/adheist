@@ -60,22 +60,6 @@ function useSSEListener(onEvent, enabled = false) {
   return eventSourceRef.current;
 }
 
-// Function to get CSRF token from cookie
-const getCsrfToken = () => {
-  const name = 'csrftoken';
-  let cookieValue = null;
-  if (document.cookie && document.cookie !== '') {
-    const cookies = document.cookie.split(';');
-    for (let i = 0; i < cookies.length; i++) {
-      const cookie = cookies[i].trim();
-      if (cookie.substring(0, name.length + 1) === (name + '=')) {
-        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        break;
-      }
-    }
-  }
-  return cookieValue;
-};
 
 /**
  * DiscoverContent component displays a gallery of ad examples
@@ -89,10 +73,10 @@ function DiscoverContent() {
   const [hasMorePages, setHasMorePages] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [selectedAdLibrary, setSelectedAdLibrary] = useState(null);
+  const [selectedAdLibraryItem, setSelectedAdLibraryItem] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isRequestBrandOpen, setIsRequestBrandOpen] = useState(false);
   const [activeFilterParams, setActiveFilterParams] = useState("meta_status=ACTIVE&sort_by=score_desc"); // Default filters on initial load
-  const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
   const [selectedAdRequestId, setSelectedAdRequestId] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -420,7 +404,6 @@ function DiscoverContent() {
     const discoverData = window.__DISCOVER_DATA__ || {};
     if (discoverData.adRequestId) {
       setSelectedAdRequestId(discoverData.adRequestId);
-      setIsGeneratorOpen(true);
     }
   }, []);
 
@@ -433,57 +416,11 @@ function DiscoverContent() {
     }
   };
 
-  // Handle gallery item selection - create AdRequest with selected ad library
-  const handleGalleryItemSelect = async (item) => {
+  // Handle gallery item selection - preview only
+  const handleGalleryItemSelect = (item) => {
     console.log('Selected gallery item:', item);
     setSelectedAdLibrary(item.id);
-
-    try {
-      // Step 1: Create a new AdRequest
-      console.log('Creating new AdRequest...');
-      const createResponse = await fetch('/ads/adrequest/create/', {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': getCsrfToken(),
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-      });
-
-      if (!createResponse.ok) {
-        throw new Error('Failed to create AdRequest');
-      }
-
-      const createData = await createResponse.json();
-      console.log('AdRequest created with ID:', createData.id);
-      setSelectedAdRequestId(createData.id);
-
-      // Step 2: Update the AdRequest with the selected ad_library
-      console.log('Updating AdRequest with ad_library:', item.id);
-      const formData = new FormData();
-      formData.append('ad_library', item.id);
-      formData.append('status', 'DRAFT'); // Set status to DRAFT
-
-      const updateResponse = await fetch(`/ads/adrequest/${createData.id}/update/`, {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'X-CSRFToken': getCsrfToken(),
-        },
-      });
-
-      if (!updateResponse.ok) {
-        throw new Error('Failed to update AdRequest with ad_library');
-      }
-
-      const updateData = await updateResponse.json();
-      console.log('AdRequest updated successfully:', updateData);
-      setIsGeneratorOpen(true);
-      // window.location.href = `/ads/discover/${createData.id}/create/`;
-    } catch (error) {
-      console.error('Error creating AdRequest:', error);
-      // TODO: Show user-friendly error message
-      alert('Error creating ad request. Please try again.');
-    }
+    setSelectedAdLibraryItem(item);
   };
 
   // Handle toggle favorite functionality (placeholder for now)
@@ -593,17 +530,18 @@ function DiscoverContent() {
       )}
       <RequestBrandModal isOpen={isRequestBrandOpen} onOpenChange={setIsRequestBrandOpen} />
 
-      {isGeneratorOpen && (
-        <IntegratedAdGenerator
-          adRequestId={selectedAdRequestId}
-          onClose={() => setIsGeneratorOpen(false)}
-          onGenerate={(id) => {
-            setIsGeneratorOpen(false);
-            setSelectedAdRequestId(id);
-            setIsGenerating(true);
-          }}
-        />
-      )}
+      <IntegratedAdGenerator
+        adRequestId={selectedAdRequestId}
+        selectedAdLibraryItem={selectedAdLibraryItem}
+        onClose={() => {
+          setSelectedAdLibraryItem(null);
+          setSelectedAdLibrary(null);
+        }}
+        onGenerate={(id) => {
+          setSelectedAdRequestId(id);
+          setIsGenerating(true);
+        }}
+      />
     </div>
   );
 }
