@@ -112,12 +112,16 @@ class BackloadAdmin(admin.ModelAdmin):
                 url = obj.get_facebook_ads_url_for_page(page.page_id)
                 
                 # Ejecutar la tarea de Celery en segundo plano para esta página
-                fetch_apify_ads.delay(
-                    output_dir=f"{output_dir}_{page.page_id}",
-                    urls=[{'url': url}],
-                    page_id=page.page_id,
-                    backload_id=obj.pk,
-                    limit_per_source=1000
+                fetch_apify_ads.apply_async(
+                    kwargs={
+                        'output_dir': f"{output_dir}_{page.page_id}",
+                        'urls': [{'url': url}],
+                        'page_id': page.page_id,
+                        'backload_id': obj.pk,
+                        'limit_per_source': 1000
+                    },
+                    queue="general",
+                    priority=3,
                 )
                 tasks_launched += 1
             

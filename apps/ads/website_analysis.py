@@ -138,14 +138,14 @@ def download_website_content_with_playwright(url: str) -> str:
             # Inject anti-fingerprinting script
             page.add_init_script(ANTI_FINGERPRINT_SCRIPT)
             
-            # Navigate and wait for content. Prefer networkidle but degrade
-            # gracefully on timeout.
+            # Navigate and wait for content. Use domcontentloaded to capture
+            # content before SPA routing (same as screenshot)
             try:
-                log.info(f"Playwright navigating to %s with wait_until='networkidle'", url)
-                page.goto(url, wait_until='networkidle', timeout=30000)
+                log.info(f"Playwright navigating to %s with wait_until='domcontentloaded'", url)
+                page.goto(url, wait_until='domcontentloaded', timeout=15000)
             except PlaywrightTimeoutError as e:
                 log.warning(
-                    "Playwright networkidle timeout for %s: %s. Falling back to wait_until='load'",
+                    "Playwright domcontentloaded timeout for %s: %s. Falling back to wait_until='load'",
                     url,
                     str(e),
                 )

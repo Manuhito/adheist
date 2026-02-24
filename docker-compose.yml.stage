@@ -57,11 +57,11 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  celery-interactive:
+  celery-priority:
     build:
       context: .
       dockerfile: Dockerfile.stage
-    command: celery -A adheist worker -l INFO -Q interactive --pool=prefork --concurrency=2
+    command: celery -A adheist worker -l INFO -Q priority --pool=prefork --concurrency=2
     volumes:
       - .:/code
     environment:
@@ -77,51 +77,11 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  celery-user-ingestion:
+  celery-general:
     build:
       context: .
       dockerfile: Dockerfile.stage
-    command: celery -A adheist worker -l INFO -Q user_ingestion --pool=prefork --concurrency=1
-    volumes:
-      - .:/code
-    environment:
-      - PYTHONUNBUFFERED=1
-      - PYTHONDONTWRITEBYTECODE=1
-      - DJANGO_SETTINGS_MODULE=adheist.settings
-    env_file:
-      - ./.env
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    restart: unless-stopped
-
-  celery-batch:
-    build:
-      context: .
-      dockerfile: Dockerfile.stage
-    command: celery -A adheist worker -l INFO -Q batch_ingestion --pool=prefork --concurrency=1
-    volumes:
-      - .:/code
-    environment:
-      - PYTHONUNBUFFERED=1
-      - PYTHONDONTWRITEBYTECODE=1
-      - DJANGO_SETTINGS_MODULE=adheist.settings
-    env_file:
-      - ./.env
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    restart: unless-stopped
-
-  celery-low:
-    build:
-      context: .
-      dockerfile: Dockerfile.stage
-    command: celery -A adheist worker -l INFO -Q low --pool=prefork --concurrency=1
+    command: celery -A adheist worker -l INFO -Q general --pool=prefork --concurrency=2
     volumes:
       - .:/code
     environment:

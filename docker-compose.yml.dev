@@ -41,11 +41,11 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-  celery-interactive:
+  celery-priority:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    command: celery -A adheist worker -l INFO -Q interactive --pool=solo
+    command: celery -A adheist worker -l INFO -Q priority --pool=solo
     volumes:
       - .:/code
     environment:
@@ -59,47 +59,11 @@ services:
       redis:
         condition: service_healthy
 
-  celery-user-ingestion:
+  celery-general:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    command: celery -A adheist worker -l INFO -Q user_ingestion --pool=solo
-    volumes:
-      - .:/code
-    environment:
-      PYTHONUNBUFFERED: '1'
-      PYTHONDONTWRITEBYTECODE: '1'
-    env_file:
-      - ./.env
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-
-  celery-batch:
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
-    command: celery -A adheist worker -l INFO -Q batch_ingestion --pool=solo
-    volumes:
-      - .:/code
-    environment:
-      PYTHONUNBUFFERED: '1'
-      PYTHONDONTWRITEBYTECODE: '1'
-    env_file:
-      - ./.env
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-
-  celery-low:
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
-    command: celery -A adheist worker -l INFO -Q low --pool=solo
+    command: celery -A adheist worker -l INFO -Q general --pool=solo
     volumes:
       - .:/code
     environment:

@@ -166,10 +166,11 @@ def competitor_research(request):
     if not website_url:
         return JsonResponse({'error': 'Missing website_url'}, status=400)
         
-    # Trigger task asynchronously on the user_ingestion queue
+    # Trigger task asynchronously on the general queue with high priority (onboarding)
     task = competitor_research_task.apply_async(
         args=[request.user.id, website_url],
-        queue="user_ingestion",
+        queue="general",
+        priority=1,
     )
     
     return JsonResponse({
@@ -3313,7 +3314,8 @@ def request_brand(request):
                 'user_id': request.user.id,
                 'limit_per_source': 1000,
             },
-            queue="user_ingestion",
+            queue="general",
+            priority=3,
         )
         
         # Send Slack notification for tracking

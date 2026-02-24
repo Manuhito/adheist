@@ -432,34 +432,36 @@ CELERY_BROKER_URL = CELERY_RESULT_BACKEND = REDIS_URL
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 
 # Celery queues and routing
-CELERY_TASK_DEFAULT_QUEUE = "batch_ingestion"
+CELERY_TASK_DEFAULT_QUEUE = "general"
 CELERY_TASK_QUEUES = (
-    Queue("interactive"),
-    Queue("user_ingestion"),
-    Queue("batch_ingestion"),
-    Queue("low"),
+    Queue("priority"),
+    Queue("general"),
 )
 
 CELERY_TASK_ROUTES = {
-    # Interactive, user-facing tasks
-    "apps.aiinterface.tasks.generate_image_task": {"queue": "interactive"},
-    "apps.aiinterface.tasks.generate_image_task_replicate": {"queue": "interactive"},
-    "apps.aiinterface.tasks.generate_ad_copy_text_task": {"queue": "interactive"},
-    "apps.ads.tasks.capture_screenshot_task": {"queue": "interactive"},
-    "apps.ads.tasks.analyze_website_task": {"queue": "interactive"},
-    # User-triggered ingestion
-    "apps.apify.tasks.competitor_research_task": {"queue": "user_ingestion"},
-    # Bulk ingestion (default)
-    "apps.apify.tasks.fetch_apify_ads": {"queue": "batch_ingestion"},
-    "apps.apify.tasks.create_adlibrary_from_single_ad_task": {"queue": "batch_ingestion"},
-    "apps.apify.tasks.create_adlibrary_from_cards_task": {"queue": "batch_ingestion"},
-    "apps.apify.tasks.create_ad_library_entry": {"queue": "batch_ingestion"},
-    "apps.apify.tasks.run_backload_queries": {"queue": "batch_ingestion"},
-    "apps.meta.tasks.fetch_meta_ads": {"queue": "batch_ingestion"},
-    "apps.meta.tasks.create_ad_library_entry": {"queue": "batch_ingestion"},
-    # Low-priority background
-    "apps.blog.tasks.import_blog_posts_task": {"queue": "low"},
-    "apps.ads.tasks.update_ad_runtime_scores": {"queue": "low"},
+    # Priority queue (tareas críticas de UX, SLA estricto)
+    "apps.aiinterface.tasks.generate_image_task": {"queue": "priority"},
+    "apps.aiinterface.tasks.generate_image_task_replicate": {"queue": "priority"},
+    
+    # General queue (resto de tareas, prioridad se fija en apply_async por contexto)
+    # Prioridad 1 (alta): onboarding, user-triggered interactivo
+    "apps.ads.tasks.capture_screenshot_task": {"queue": "general"},
+    "apps.ads.tasks.analyze_website_task": {"queue": "general"},
+    "apps.apify.tasks.competitor_research_task": {"queue": "general"},
+    
+    # Prioridad 2 (media): creación de AdLibrary desde datasets
+    "apps.apify.tasks.create_adlibrary_from_single_ad_task": {"queue": "general"},
+    "apps.apify.tasks.create_adlibrary_from_cards_task": {"queue": "general"},
+    
+    # Prioridad 3 (baja): fetch batch, backload, tareas programadas
+    "apps.apify.tasks.fetch_apify_ads": {"queue": "general"},
+    "apps.apify.tasks.run_backload_queries": {"queue": "general"},
+    "apps.blog.tasks.import_blog_posts_task": {"queue": "general"},
+    "apps.ads.tasks.update_ad_runtime_scores": {"queue": "general"},
+    
+    # Obsoletas (Meta API, mantener por compatibilidad)
+    "apps.meta.tasks.fetch_meta_ads": {"queue": "general"},
+    "apps.meta.tasks.create_ad_library_entry": {"queue": "general"},
 }
 
 # Wagtail config
