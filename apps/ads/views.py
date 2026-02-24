@@ -859,10 +859,17 @@ def discover_page(request):
     # Get total count of AdLibrary entries
     total_ads_count = AdLibrary.objects.count()
     
+    # Get costs from AppConfiguration
+    app_config = AppConfiguration.get_config()
+    brand_assets_cost = app_config.brand_assets_generation_cost if app_config else 4
+    ad_generation_cost = app_config.ad_generation_credit_cost if app_config else 1
+    
     template = "ads/discover.html"
     context = {
         "active_tab": "discover",
         "total_ads_count": total_ads_count,
+        "brand_assets_cost": brand_assets_cost,
+        "ad_generation_cost": ad_generation_cost,
     }
     
     return TemplateResponse(request, template, context)
