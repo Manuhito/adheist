@@ -316,6 +316,12 @@ def marketing_pages_index(request):
             "description": "AI Ad Generator for Travel Agents"
         },
         {
+            "name": "Wedding Planner",
+            "url": "web:wedding_planner_page",
+            "image_filename": "wedding-planner.webp",
+            "description": "AI Ad Generator for Wedding Planners"
+        },
+        {
             "name": "Luxury",
             "url": "web:luxury_page",
             "image_filename": "luxury.webp",

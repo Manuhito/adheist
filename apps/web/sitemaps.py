@@ -34,6 +34,7 @@ class StaticViewSitemap(sitemaps.Sitemap):
             "web:mortgage_broker_page",
             "web:notary_page",
             "web:travel_agent_page",
+            "web:wedding_planner_page",
             "web:lawyers_page",
             "web:retailers_page",
             "web:restaurants_page",

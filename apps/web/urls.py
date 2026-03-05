@@ -41,6 +41,7 @@ urlpatterns = [
     path("industry/create-mortgage-broker-ads/", TemplateView.as_view(template_name="marketing_pages/mortgage-broker.html"), name="mortgage_broker_page"),
     path("industry/create-notary-ads/", TemplateView.as_view(template_name="marketing_pages/notary.html"), name="notary_page"),
     path("industry/create-travel-agent-ads/", TemplateView.as_view(template_name="marketing_pages/travel-agent.html"), name="travel_agent_page"),
+    path("industry/create-wedding-planner-ads/", TemplateView.as_view(template_name="marketing_pages/wedding-planner.html"), name="wedding_planner_page"),
     path("industry/create-plumber-ads/", TemplateView.as_view(template_name="marketing_pages/plumber.html"), name="plumber_page"),
     path("industry/create-electrician-ads/", TemplateView.as_view(template_name="marketing_pages/electrician.html"), name="electrician_page"),
     path("industry/create-hvac-contractor-ads/", TemplateView.as_view(template_name="marketing_pages/hvac-contractor.html"), name="hvac_contractor_page"),
