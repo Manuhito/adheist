@@ -268,6 +268,12 @@ def marketing_pages_index(request):
             "description": "AI Ad Generator for Law Firms"
         },
         {
+            "name": "Accountant",
+            "url": "web:accountant_page",
+            "image_filename": "accountant.webp",
+            "description": "AI Ad Generator for Accountants"
+        },
+        {
             "name": "Luxury",
             "url": "web:luxury_page",
             "image_filename": "luxury.webp",

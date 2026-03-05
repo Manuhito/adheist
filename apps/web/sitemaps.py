@@ -26,6 +26,7 @@ class StaticViewSitemap(sitemaps.Sitemap):
             "web:pharmacy_page",
             "web:saas_page",
             "web:luxury_page",
+            "web:accountant_page",
             "web:lawyers_page",
             "web:retailers_page",
             "web:restaurants_page",

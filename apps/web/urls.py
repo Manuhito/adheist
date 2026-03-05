@@ -29,6 +29,7 @@ urlpatterns = [
     path("industry/create-pharmacy-ads/", TemplateView.as_view(template_name="marketing_pages/pharmacy.html"), name="pharmacy_page"),
     path("industry/create-saas-ads/", TemplateView.as_view(template_name="marketing_pages/saas.html"), name="saas_page"),
     path("industry/create-luxury-ads/", TemplateView.as_view(template_name="marketing_pages/luxury.html"), name="luxury_page"),
+    path("industry/create-accountant-ads/", TemplateView.as_view(template_name="marketing_pages/accountant.html"), name="accountant_page"),
     path("industry/create-lawyers-ads/", TemplateView.as_view(template_name="marketing_pages/lawyers.html"), name="lawyers_page"),
     path("industry/create-retailers-ads/", TemplateView.as_view(template_name="marketing_pages/retailers.html"), name="retailers_page"),
     path("industry/create-restaurants-ads/", TemplateView.as_view(template_name="marketing_pages/restaurants.html"), name="restaurants_page"),
