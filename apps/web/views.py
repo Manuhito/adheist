@@ -298,6 +298,12 @@ def marketing_pages_index(request):
             "description": "AI Ad Generator for Financial Advisors"
         },
         {
+            "name": "Mortgage Broker",
+            "url": "web:mortgage_broker_page",
+            "image_filename": "mortgage-broker.webp",
+            "description": "AI Ad Generator for Mortgage Brokers"
+        },
+        {
             "name": "Luxury",
             "url": "web:luxury_page",
             "image_filename": "luxury.webp",
