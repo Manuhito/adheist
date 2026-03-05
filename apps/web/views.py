@@ -274,6 +274,12 @@ def marketing_pages_index(request):
             "description": "AI Ad Generator for Accountants"
         },
         {
+            "name": "CPA",
+            "url": "web:cpa_page",
+            "image_filename": "cpa.webp",
+            "description": "AI Ad Generator for CPA Firms"
+        },
+        {
             "name": "Luxury",
             "url": "web:luxury_page",
             "image_filename": "luxury.webp",
