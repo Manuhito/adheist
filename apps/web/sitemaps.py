@@ -114,6 +114,7 @@ class StaticViewSitemap(sitemaps.Sitemap):
             "web:auto_body_shop_page",
             "web:oil_change_service_page",
             "web:car_wash_page",
+            "web:towing_page",
         ]
 
     def location(self, item):

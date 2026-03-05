@@ -813,6 +813,12 @@ def marketing_pages_index(request):
             "image_filename": "car-wash.webp",
             "description": "AI Ad Generator for Car Washes"
         },
+        {
+            "name": "Towing",
+            "url": "web:towing_page",
+            "image_filename": "towing.webp",
+            "description": "AI Ad Generator for Towing Services"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
