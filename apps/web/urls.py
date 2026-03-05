@@ -123,4 +123,5 @@ urlpatterns = [
     path("industry/create-muffler-shop-ads/", TemplateView.as_view(template_name="marketing_pages/muffler-shop.html"), name="muffler_shop_page"),
     path("industry/create-auto-parts-store-ads/", TemplateView.as_view(template_name="marketing_pages/auto-parts-store.html"), name="auto_parts_store_page"),
     path("industry/create-motorcycle-dealer-ads/", TemplateView.as_view(template_name="marketing_pages/motorcycle-dealer.html"), name="motorcycle_dealer_page"),
+    path("industry/create-motorcycle-repair-ads/", TemplateView.as_view(template_name="marketing_pages/motorcycle-repair.html"), name="motorcycle_repair_page"),
 ]

@@ -120,6 +120,7 @@ class StaticViewSitemap(sitemaps.Sitemap):
             "web:muffler_shop_page",
             "web:auto_parts_store_page",
             "web:motorcycle_dealer_page",
+            "web:motorcycle_repair_page",
         ]
 
     def location(self, item):

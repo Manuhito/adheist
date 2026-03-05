@@ -849,6 +849,12 @@ def marketing_pages_index(request):
             "image_filename": "motorcycle-dealer.webp",
             "description": "AI Ad Generator for Motorcycle Dealers"
         },
+        {
+            "name": "Motorcycle Repair",
+            "url": "web:motorcycle_repair_page",
+            "image_filename": "motorcycle-repair.webp",
+            "description": "AI Ad Generator for Motorcycle Repair Shops"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
