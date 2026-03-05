@@ -819,6 +819,12 @@ def marketing_pages_index(request):
             "image_filename": "towing.webp",
             "description": "AI Ad Generator for Towing Services"
         },
+        {
+            "name": "Auto Glass Repair",
+            "url": "web:auto_glass_repair_page",
+            "image_filename": "auto-glass-repair.webp",
+            "description": "AI Ad Generator for Auto Glass Repair Shops"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
