@@ -120,4 +120,5 @@ urlpatterns = [
     path("industry/create-towing-ads/", TemplateView.as_view(template_name="marketing_pages/towing.html"), name="towing_page"),
     path("industry/create-auto-glass-repair-ads/", TemplateView.as_view(template_name="marketing_pages/auto-glass-repair.html"), name="auto_glass_repair_page"),
     path("industry/create-transmission-shop-ads/", TemplateView.as_view(template_name="marketing_pages/transmission-shop.html"), name="transmission_shop_page"),
+    path("industry/create-muffler-shop-ads/", TemplateView.as_view(template_name="marketing_pages/muffler-shop.html"), name="muffler_shop_page"),
 ]
