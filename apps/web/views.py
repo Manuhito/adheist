@@ -304,6 +304,12 @@ def marketing_pages_index(request):
             "description": "AI Ad Generator for Mortgage Brokers"
         },
         {
+            "name": "Notary",
+            "url": "web:notary_page",
+            "image_filename": "notary.webp",
+            "description": "AI Ad Generator for Notaries"
+        },
+        {
             "name": "Luxury",
             "url": "web:luxury_page",
             "image_filename": "luxury.webp",
