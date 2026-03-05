@@ -286,6 +286,12 @@ def marketing_pages_index(request):
             "description": "AI Ad Generator for Insurance Agents"
         },
         {
+            "name": "Real Estate Agent",
+            "url": "web:real_estate_agent_page",
+            "image_filename": "real-estate-agent.webp",
+            "description": "AI Ad Generator for Real Estate Agents"
+        },
+        {
             "name": "Luxury",
             "url": "web:luxury_page",
             "image_filename": "luxury.webp",

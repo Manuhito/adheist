@@ -36,6 +36,7 @@ urlpatterns = [
     path("industry/create-retailers-ads/", TemplateView.as_view(template_name="marketing_pages/retailers.html"), name="retailers_page"),
     path("industry/create-restaurants-ads/", TemplateView.as_view(template_name="marketing_pages/restaurants.html"), name="restaurants_page"),
     path("industry/create-real-estate-ads/", TemplateView.as_view(template_name="marketing_pages/real-estate.html"), name="real_estate_page"),
+    path("industry/create-real-estate-agent-ads/", TemplateView.as_view(template_name="marketing_pages/real-estate-agent.html"), name="real_estate_agent_page"),
     path("industry/create-plumber-ads/", TemplateView.as_view(template_name="marketing_pages/plumber.html"), name="plumber_page"),
     path("industry/create-electrician-ads/", TemplateView.as_view(template_name="marketing_pages/electrician.html"), name="electrician_page"),
     path("industry/create-hvac-contractor-ads/", TemplateView.as_view(template_name="marketing_pages/hvac-contractor.html"), name="hvac_contractor_page"),
