@@ -1,0 +1,322 @@
+{% extends "web/base.html" %}
+{% load static socialaccount marketing_tags %}
+
+{% block page_title %}AI Ad Generator for Insurance Agents | Ad Heist{% endblock page_title %}
+
+{% block meta_description %}
+<meta name="description"
+    content="Insurance agent ads that sell protection plans, coverage upgrades, and local expertise with AI-crafted campaigns.">
+{% endblock meta_description %}
+
+{% block page_head %}
+<style>
+    /* Page-specific styles */
+</style>
+{% endblock page_head %}
+
+{% block content %}
+<div class="text-gray-800 dark:text-gray-200">
+
+    <!-- Hero Section -->
+    <section class="container mx-auto py-12 px-4 md:px-6">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-12 items-center">
+            <div class="md:col-span-3 text-left">
+                <h1
+                    class="text-5xl lg:text-6xl font-bold tracking-tight text-neutral-800 dark:text-white leading-tight lg:leading-snug">
+                    AI Ads for Insurance Agents
+                </h1>
+                <p class="mt-6 text-lg text-neutral-600 dark:text-neutral-300 max-w-2xl">
+                    Launch compliant campaigns that highlight bundled coverage, proactive service, and protection
+                    clients understand instantly.
+                </p>
+                <div class="mt-8 flex flex-col sm:flex-row items-center justify-start gap-4">
+                    <a href="{% url 'account_signup' %}"
+                        class="inline-flex items-center justify-center rounded-lg px-6 py-3 text-base font-medium text-white shadow-sm"
+                        style="background-color: #5C67F2;">
+                        Start Free Trial
+                    </a>
+                    <form method="post" action="{% provider_login_url 'google' %}">
+                        {% csrf_token %}
+                        <button type="submit"
+                            class="inline-flex items-center justify-center rounded-lg border border-neutral-300 bg-white px-6 py-3 text-base font-medium text-neutral-700 hover:bg-neutral-100 w-full sm:w-auto">
+                            <img src="{% static 'images/socialauth/google-logo.svg' %}" alt="Google"
+                                class="h-5 w-5 mr-3">
+                            Login with Google
+                        </button>
+                    </form>
+                </div>
+                <div class="mt-8 flex flex-col items-start">
+                    <div class="flex items-center">
+                        {% for _ in "12345" %}
+                        <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path
+                                d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z">
+                            </path>
+                        </svg>
+                        {% endfor %}
+                        <span class="ml-2 text-base font-medium text-neutral-800 dark:text-white">5.0</span>
+                    </div>
+                    <p class="mt-2 text-sm text-neutral-500 dark:text-neutral-400">From 60+ agency reviews</p>
+                </div>
+            </div>
+            <div class="md:col-span-2">
+                <img src="{% industry_image 'insurance-agent.webp' %}" alt="AI Ads for Insurance Agents"
+                    class="rounded-3xl w-full">
+            </div>
+        </div>
+    </section>
+
+    <!-- PAS Claim Section -->
+    <section class="container mx-auto py-12 px-4 md:px-6 text-center">
+        <div class="max-w-3xl mx-auto">
+            <h2 class="text-4xl font-bold tracking-tight text-primary sm:text-5xl">
+                Manual Prospecting Drains Your Pipeline
+            </h2>
+            <p class="mt-6 text-lg leading-8 text-neutral-600 dark:text-neutral-300">
+                Outbound calls, fragmented CRMs, and generic ad copy stall homeowners, commercial clients, and families
+                from booking policy reviews.
+            </p>
+        </div>
+    </section>
+
+    <!-- Problems Section -->
+    <section class="container mx-auto py-12 px-4 md:px-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div
+                class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-3xl flex flex-col items-start space-y-4 aspect-[2/1]">
+                <div class="w-12 h-12 flex items-center justify-center text-primary">
+                    <i data-lucide="shield" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-primary pt-2">Explain Coverage Clearly</h3>
+                <p class="text-neutral-600 dark:text-neutral-300">Turn complex riders and exclusions into plain
+                    language, benefit-focused ads.</p>
+            </div>
+            <div
+                class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-3xl flex flex-col items-start space-y-4 aspect-[2/1]">
+                <div class="w-12 h-12 flex items-center justify-center text-primary">
+                    <i data-lucide="clock-9" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-primary pt-2">Respond to Life Events</h3>
+                <p class="text-neutral-600 dark:text-neutral-300">Swap creative instantly when renewals, storms, or rate
+                    changes hit.</p>
+            </div>
+            <div
+                class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-3xl flex flex-col items-start space-y-4 aspect-[2/1]">
+                <div class="w-12 h-12 flex items-center justify-center text-primary">
+                    <i data-lucide="users" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-primary pt-2">Target Ideal Households</h3>
+                <p class="text-neutral-600 dark:text-neutral-300">Segment ads by premium size, industry, or life stage
+                    without manual filters.</p>
+            </div>
+            <div
+                class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-3xl flex flex-col items-start space-y-4 aspect-[2/1]">
+                <div class="w-12 h-12 flex items-center justify-center text-primary">
+                    <i data-lucide="briefcase" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-primary pt-2">Grow Commercial Lines</h3>
+                <p class="text-neutral-600 dark:text-neutral-300">Position workers comp, cyber, and fleet protection
+                    with credibility.</p>
+            </div>
+            <div
+                class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-3xl flex flex-col items-start space-y-4 aspect-[2/1]">
+                <div class="w-12 h-12 flex items-center justify-center text-primary">
+                    <i data-lucide="sparkles" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-primary pt-2">Show Differentiated Service</h3>
+                <p class="text-neutral-600 dark:text-neutral-300">Highlight concierge claims support and proactive
+                    policy reviews.</p>
+            </div>
+            <div
+                class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-3xl flex flex-col items-start space-y-4 aspect-[2/1]">
+                <div class="w-12 h-12 flex items-center justify-center text-primary">
+                    <i data-lucide="activity" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-primary pt-2">Track Lead Quality</h3>
+                <p class="text-neutral-600 dark:text-neutral-300">See which offers convert into bindable quotes and
+                    annualized premium.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature 1: Ad Library Search -->
+    <section class="container mx-auto py-16 px-4 md:px-6">
+        <div class="grid md:grid-cols-2 gap-24 items-center">
+            <div class="space-y-12">
+                <div>
+                    <h2 class="text-4xl font-bold text-primary leading-tight">Study Top Insurance Campaigns</h2>
+                    <p class="mt-4 text-lg text-neutral-600 dark:text-neutral-300">Analyze ad creative from independent
+                        brokers, captive agencies, and MGA partners before you launch.</p>
+                </div>
+                <div class="space-y-8">
+                    <div class="flex items-start gap-4">
+                        <div class="bg-primary/10 p-3 rounded-lg flex-shrink-0">
+                            <i data-lucide="search" class="w-6 h-6 text-primary"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-primary text-lg">Filter by Policy Type</h3>
+                            <p class="mt-2 text-neutral-600 dark:text-neutral-300">Search home, auto, umbrella,
+                                benefits, or specialty lines with one click.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="bg-primary/10 p-3 rounded-lg flex-shrink-0">
+                            <i data-lucide="book-open" class="w-6 h-6 text-primary"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-primary text-lg">Learn Message Patterns</h3>
+                            <p class="mt-2 text-neutral-600 dark:text-neutral-300">See how top agencies speak about
+                                deductibles, risk mitigation, and renewal perks.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <img src="{% marketing_image '1-Search.webp' %}" alt="Insurance Ad Library" class="rounded-3xl w-full">
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature 2: Brand Understanding -->
+    <section class="container mx-auto py-16 px-4 md:px-6">
+        <div class="grid md:grid-cols-2 gap-24 items-center">
+            <div class="order-last md:order-first">
+                <img src="{% marketing_image '2-brand-details.webp' %}" alt="Brand Understanding"
+                    class="rounded-3xl w-full">
+            </div>
+            <div class="space-y-12">
+                <div>
+                    <h2 class="text-4xl font-bold text-primary leading-tight">Understands Your Agency Voice</h2>
+                    <p class="mt-4 text-lg text-neutral-600 dark:text-neutral-300">Ad Heist scans your quote forms,
+                        testimonials, and carrier list to produce copy that sounds like your producers.</p>
+                </div>
+                <div class="space-y-8">
+                    <div class="flex items-start gap-4">
+                        <div class="bg-primary/10 p-3 rounded-lg flex-shrink-0">
+                            <i data-lucide="scan" class="w-6 h-6 text-primary"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-primary text-lg">Automatic Service Mapping</h3>
+                            <p class="mt-2 text-neutral-600 dark:text-neutral-300">Captures carriers, coverage tiers,
+                                and service promises straight from your site.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="bg-primary/10 p-3 rounded-lg flex-shrink-0">
+                            <i data-lucide="message-circle" class="w-6 h-6 text-primary"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-primary text-lg">Voice Matching</h3>
+                            <p class="mt-2 text-neutral-600 dark:text-neutral-300">Keeps every line conversational,
+                                reassuring, and compliant with carrier guidelines.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature 3: Ad Creation & Editor -->
+    <section class="container mx-auto py-16 px-4 md:px-6">
+        <div class="grid md:grid-cols-2 gap-24 items-center">
+            <div class="space-y-12">
+                <div>
+                    <h2 class="text-4xl font-bold text-primary leading-tight">Create Better Campaigns Fast</h2>
+                    <p class="mt-4 text-lg text-neutral-600 dark:text-neutral-300">Spin up ads for policy reviews,
+                        cross-sell drives, and referral pushes without waiting on agencies.</p>
+                </div>
+                <div class="space-y-8">
+                    <div class="flex items-start gap-4">
+                        <div class="bg-primary/10 p-3 rounded-lg flex-shrink-0">
+                            <i data-lucide="zap" class="w-6 h-6 text-primary"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-primary text-lg">Instant Variations</h3>
+                            <p class="mt-2 text-neutral-600 dark:text-neutral-300">Generate multiple angles for life
+                                insurance, Medicare, or commercial policies in seconds.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="bg-primary/10 p-3 rounded-lg flex-shrink-0">
+                            <i data-lucide="edit-3" class="w-6 h-6 text-primary"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-primary text-lg">Precise AI Editor</h3>
+                            <p class="mt-2 text-neutral-600 dark:text-neutral-300">Adjust tone, compliance notes, and
+                                CTA urgency without starting over.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <img src="{% marketing_image '3-creating-ads.webp' %}" alt="Ad Creation" class="rounded-3xl w-full">
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature 4: Industry AI -->
+    <section class="container mx-auto py-16 px-4 md:px-6">
+        <div class="grid md:grid-cols-2 gap-24 items-center">
+            <div class="order-last md:order-first">
+                <img src="{% marketing_image '4-ad-details.webp' %}" alt="Industry AI" class="rounded-3xl w-full">
+            </div>
+            <div class="space-y-12">
+                <div>
+                    <h2 class="text-4xl font-bold text-primary leading-tight">AI Tuned for Insurance Growth</h2>
+                    <p class="mt-4 text-lg text-neutral-600 dark:text-neutral-300">Optimize every campaign for quote
+                        requests, policy binds, and renewal retention.</p>
+                </div>
+                <div class="space-y-8">
+                    <div class="flex items-start gap-4">
+                        <div class="bg-primary/10 p-3 rounded-lg flex-shrink-0">
+                            <i data-lucide="target" class="w-6 h-6 text-primary"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-primary text-lg">Industry Intelligence</h3>
+                            <p class="mt-2 text-neutral-600 dark:text-neutral-300">Optimizes messaging for bundled
+                                discounts, claims support, and risk audits.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="bg-primary/10 p-3 rounded-lg flex-shrink-0">
+                            <i data-lucide="bar-chart-3" class="w-6 h-6 text-primary"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-primary text-lg">Actionable Insights</h3>
+                            <p class="mt-2 text-neutral-600 dark:text-neutral-300">See which creatives attract higher
+                                lifetime premium and replicate them.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="container mx-auto py-16 px-4 md:px-6">
+        <div class="bg-primary/10 dark:bg-primary/20 rounded-3xl p-8 md:p-16 text-center">
+            <h2 class="text-4xl font-bold text-primary">Fill Your Pipeline with Better Policies</h2>
+            <p class="mt-4 text-lg text-neutral-600 dark:text-neutral-300 max-w-2xl mx-auto">
+                Join insurance agents using Ad Heist to book policy reviews, cross-sell bundles, and delight every
+                client touchpoint.
+            </p>
+            <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a href="{% url 'account_signup' %}"
+                    class="inline-flex items-center justify-center rounded-lg px-8 py-4 text-lg font-medium text-white shadow-sm"
+                    style="background-color: #5C67F2;">
+                    Start Free Trial
+                </a>
+                <form method="post" action="{% provider_login_url 'google' %}">
+                    {% csrf_token %}
+                    <button type="submit"
+                        class="inline-flex items-center justify-center rounded-lg border border-neutral-300 bg-white px-8 py-4 text-lg font-medium text-neutral-700 hover:bg-neutral-100 w-full sm:w-auto">
+                        <img src="{% static 'images/socialauth/google-logo.svg' %}" alt="Google" class="h-5 w-5 mr-3">
+                        Login with Google
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+</div>
+{% endblock %}

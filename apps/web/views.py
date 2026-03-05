@@ -280,6 +280,12 @@ def marketing_pages_index(request):
             "description": "AI Ad Generator for CPA Firms"
         },
         {
+            "name": "Insurance Agent",
+            "url": "web:insurance_agent_page",
+            "image_filename": "insurance-agent.webp",
+            "description": "AI Ad Generator for Insurance Agents"
+        },
+        {
             "name": "Luxury",
             "url": "web:luxury_page",
             "image_filename": "luxury.webp",
