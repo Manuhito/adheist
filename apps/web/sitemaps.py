@@ -30,6 +30,7 @@ class StaticViewSitemap(sitemaps.Sitemap):
             "web:cpa_page",
             "web:insurance_agent_page",
             "web:real_estate_agent_page",
+            "web:financial_advisor_page",
             "web:lawyers_page",
             "web:retailers_page",
             "web:restaurants_page",

@@ -292,6 +292,12 @@ def marketing_pages_index(request):
             "description": "AI Ad Generator for Real Estate Agents"
         },
         {
+            "name": "Financial Advisor",
+            "url": "web:financial_advisor_page",
+            "image_filename": "financial-advisor.webp",
+            "description": "AI Ad Generator for Financial Advisors"
+        },
+        {
             "name": "Luxury",
             "url": "web:luxury_page",
             "image_filename": "luxury.webp",
