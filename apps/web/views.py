@@ -825,6 +825,12 @@ def marketing_pages_index(request):
             "image_filename": "auto-glass-repair.webp",
             "description": "AI Ad Generator for Auto Glass Repair Shops"
         },
+        {
+            "name": "Transmission Shop",
+            "url": "web:transmission_shop_page",
+            "image_filename": "transmission-shop.webp",
+            "description": "AI Ad Generator for Transmission Shops"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
