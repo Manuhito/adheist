@@ -310,6 +310,12 @@ def marketing_pages_index(request):
             "description": "AI Ad Generator for Notaries"
         },
         {
+            "name": "Travel Agent",
+            "url": "web:travel_agent_page",
+            "image_filename": "travel-agent.webp",
+            "description": "AI Ad Generator for Travel Agents"
+        },
+        {
             "name": "Luxury",
             "url": "web:luxury_page",
             "image_filename": "luxury.webp",

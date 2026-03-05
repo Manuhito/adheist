@@ -33,6 +33,7 @@ class StaticViewSitemap(sitemaps.Sitemap):
             "web:financial_advisor_page",
             "web:mortgage_broker_page",
             "web:notary_page",
+            "web:travel_agent_page",
             "web:lawyers_page",
             "web:retailers_page",
             "web:restaurants_page",
