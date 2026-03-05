@@ -837,6 +837,12 @@ def marketing_pages_index(request):
             "image_filename": "muffler-shop.webp",
             "description": "AI Ad Generator for Muffler Shops"
         },
+        {
+            "name": "Auto Parts Store",
+            "url": "web:auto_parts_store_page",
+            "image_filename": "auto-parts-store.webp",
+            "description": "AI Ad Generator for Auto Parts Stores"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
