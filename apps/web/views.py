@@ -843,6 +843,12 @@ def marketing_pages_index(request):
             "image_filename": "auto-parts-store.webp",
             "description": "AI Ad Generator for Auto Parts Stores"
         },
+        {
+            "name": "Motorcycle Dealer",
+            "url": "web:motorcycle_dealer_page",
+            "image_filename": "motorcycle-dealer.webp",
+            "description": "AI Ad Generator for Motorcycle Dealers"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
