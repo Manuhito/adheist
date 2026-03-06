@@ -1,0 +1,463 @@
+{% extends "web/base.html" %}
+{% load static %}
+
+{% block page_title %}ROAS Calculator - Return on Ad Spend | Adheist{% endblock page_title %}
+
+{% block meta_description %}
+<meta name="description"
+  content="Free ROAS Calculator. Compute real or target ROAS with ad spend and revenue. Switch modes if you don't know revenue to set revenue or ROAS goals.">
+{% endblock meta_description %}
+
+{% block content %}
+<div class="space-y-16">
+  <!-- ROAS Calculator Section -->
+  <section class="container mx-auto py-12 px-4 md:px-6">
+    <div class="max-w-7xl mx-auto">
+      <!-- Title -->
+      <div class="text-center mb-12">
+        <h1 class="text-5xl md:text-6xl font-bold text-primary mb-4">
+          ROAS Calculator
+        </h1>
+        <p class="text-xl text-neutral-700 dark:text-neutral-300 max-w-3xl mx-auto">
+          Calculate real or target ROAS. Enter your ad spend and revenue, or set ROAS goals when revenue is unknown.
+        </p>
+      </div>
+
+      <!-- Calculator -->
+      <div class="space-y-6">
+        <div
+          class="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-6 md:p-8">
+          <h2 class="text-2xl font-bold text-primary mb-6">Inputs</h2>
+
+          <div class="space-y-4">
+            <!-- Currency Selector -->
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">Currency</label>
+              <select id="currency"
+                class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20">
+                <option value="USD">USD ($)</option>
+                <option value="EUR">EUR (€)</option>
+                <option value="GBP">GBP (£)</option>
+              </select>
+            </div>
+
+            <!-- Ad spend -->
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">Ad spend</label>
+              <div class="relative">
+                <span id="symbol-spend"
+                  class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400">$</span>
+                <input type="number" id="ad_spend" value="1000" step="10" min="0"
+                  class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 pl-8 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+              </div>
+            </div>
+
+            <!-- Know revenue toggle -->
+            <div class="space-y-2">
+              <p class="text-sm font-medium text-neutral-700 dark:text-neutral-200">Do you know your revenue?</p>
+              <div class="flex items-center gap-4">
+                <label class="inline-flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-200">
+                  <input type="radio" name="know_revenue" id="know_revenue_yes" value="yes" class="h-4 w-4" checked />
+                  Yes
+                </label>
+                <label class="inline-flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-200">
+                  <input type="radio" name="know_revenue" id="know_revenue_no" value="no" class="h-4 w-4" />
+                  No (set targets)
+                </label>
+              </div>
+            </div>
+
+            <!-- Revenue known -->
+            <div id="panel-known" class="space-y-4">
+              <div id="result-known" class="space-y-3">
+                <div class="p-4 rounded-lg bg-primary/10 dark:bg-primary/20 border-2 border-primary">
+                  <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-1">ROAS</p>
+                  <p class="text-3xl font-bold text-primary" id="result_roas_pct">300%</p>
+                </div>
+                <p id="roas_warning" class="hidden text-sm text-amber-600 dark:text-amber-400">
+                  Ad spend must be greater than zero to compute ROAS. Increase spend to see results.
+                </p>
+              </div>
+              <div class="space-y-2">
+                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">Ad revenue</label>
+                <div class="relative">
+                  <span id="symbol-revenue"
+                    class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400">$</span>
+                  <input type="number" id="ad_revenue" value="3000" step="50" min="0"
+                    class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 pl-8 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Revenue unknown / targets -->
+            <div id="panel-target" class="space-y-4 hidden">
+              <div class="space-y-2">
+                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">Ad revenue
+                  target</label>
+                <div class="relative">
+                  <span id="symbol-revenue-target"
+                    class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400">$</span>
+                  <input type="number" id="ad_revenue_target" value="1000" step="10" min="0"
+                    class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 pl-8 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+                </div>
+              </div>
+              <div class="space-y-2">
+                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">ROAS target
+                  (%)</label>
+                <div class="relative">
+                  <input type="number" id="roas_target_pct" value="100" step="1" min="0"
+                    class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 pr-10 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+                  <span
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400">%</span>
+                </div>
+              </div>
+            </div>
+
+            <p class="text-sm text-neutral-500 dark:text-neutral-400">
+              ROAS = (ad revenue / ad spend) × 100%. In target mode, set either revenue target or ROAS target and the
+              other will update automatically.
+            </p>
+            <p id="roas_warning" class="hidden text-sm text-amber-600 dark:text-amber-400">
+              Ad spend must be greater than zero to compute ROAS. Increase spend to see results.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Logos Section -->
+  <section id="logos" class="container mx-auto px-4 md:px-8 pt-4 pb-4">
+    <div class="relative mt-6 overflow-hidden">
+      <div class="flex justify-center items-center gap-x-12">
+        {% for logo in logo_list|slice:":6" %}
+        <img width="112" height="40" src="{% static logo %}"
+          class="h-10 w-28 dark:brightness-0 dark:invert grayscale opacity-30" alt="Brand logo" />
+        {% endfor %}
+      </div>
+      <div class="flex justify-center items-center gap-x-12 mt-4">
+        {% for logo in logo_list|slice:"6:" %}
+        <img width="112" height="40" src="{% static logo %}"
+          class="h-10 w-28 dark:brightness-0 dark:invert grayscale opacity-30" alt="Brand logo" />
+        {% endfor %}
+      </div>
+      <div class="pointer-events-none absolute inset-y-0 left-0 h-full w-1/3 bg-gradient-to-r from-background"></div>
+      <div class="pointer-events-none absolute inset-y-0 right-0 h-full w-1/3 bg-gradient-to-l from-background"></div>
+    </div>
+  </section>
+
+  <!-- Second Title Section -->
+  <section class="container mx-auto py-3 px-4 md:px-6 text-center">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-4xl font-bold tracking-tight text-primary sm:text-5xl">
+        Know your ROAS to optimize spend
+      </h2>
+      <p class="mt-6 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+        Measure actual ROAS or set revenue and ROAS targets to plan budgets with clarity.
+      </p>
+    </div>
+  </section>
+
+  <!-- Features Grid Section -->
+  <section class="container mx-auto py-3 px-4 md:px-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="gauge" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Instant ROAS</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            Calculate ROAS in one step from spend and revenue.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="target" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Hit targets</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            Set revenue or ROAS goals and see the required performance instantly.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="calculator" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Plan budgets</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            Use ROAS to inform ad spend allocations across channels.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="refresh-ccw" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Compare scenarios</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            Adjust spend, revenue, or goals to see ROAS shifts immediately.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="shield-check" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Validate performance</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            Ensure campaigns meet profitability thresholds before scaling.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="sparkles" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Share insights</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            Communicate ROAS results and targets with stakeholders quickly.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="container mx-auto py-3 px-4 md:px-6 text-center">
+    <div class="flex flex-col items-center space-y-6">
+      <a href="{% url 'account_signup' %}"
+        class="inline-flex items-center justify-center rounded-lg px-8 py-4 text-lg font-medium text-white shadow-sm"
+        style="background-color: #5C67F2;">
+        Start Free Trial
+      </a>
+      <div class="flex flex-col md:flex-row items-center justify-center gap-x-8 gap-y-2 pt-4">
+        <div class="flex items-center gap-2">
+          <i data-lucide="check" class="w-5 h-5 text-primary"></i>
+          <span class="text-neutral-700 dark:text-neutral-300">Plan with ROAS clarity</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i data-lucide="check" class="w-5 h-5 text-primary"></i>
+          <span class="text-neutral-700 dark:text-neutral-300">Optimize budgets</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i data-lucide="check" class="w-5 h-5 text-primary"></i>
+          <span class="text-neutral-700 dark:text-neutral-300">Share targets easily</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA Section -->
+  <section class="container mx-auto py-16 px-4 md:px-6">
+    <div class="bg-primary/10 dark:bg-primary/20 rounded-3xl p-8 md:p-16 text-center">
+      <h2 class="text-4xl font-bold text-primary">Ready to improve ROAS?</h2>
+      <p class="mt-4 text-lg text-neutral-700 dark:text-neutral-300 max-w-2xl mx-auto">
+        Measure current performance or set ROAS targets to guide smarter ad spend. Start your free trial today.
+      </p>
+      <div class="mt-8">
+        <a href="{% url 'account_signup' %}"
+          class="inline-flex items-center justify-center rounded-lg px-8 py-4 text-lg font-medium text-white shadow-sm"
+          style="background-color: #5C67F2;">
+          Start Free Trial
+        </a>
+      </div>
+      <div class="flex flex-col md:flex-row items-center justify-center gap-x-8 gap-y-2 pt-4">
+        <div class="flex items-center gap-2">
+          <i data-lucide="check" class="w-5 h-5 text-primary"></i>
+          <span class="text-neutral-700 dark:text-neutral-300">Search 1M+ Ads Library</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i data-lucide="check" class="w-5 h-5 text-primary"></i>
+          <span class="text-neutral-700 dark:text-neutral-300">Unlimited ads with feedback</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i data-lucide="check" class="w-5 h-5 text-primary"></i>
+          <span class="text-neutral-700 dark:text-neutral-300">100% money back guarantee</span>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+  (function () {
+    const inputIds = [
+      'currency', 'ad_spend', 'ad_revenue', 'ad_revenue_target', 'roas_target_pct', 'know_revenue_yes', 'know_revenue_no'
+    ];
+
+    const localeMap = {
+      'USD': 'en-US',
+      'EUR': 'es-ES',
+      'GBP': 'en-GB'
+    };
+
+    const symbolMap = {
+      'USD': '$',
+      'EUR': '€',
+      'GBP': '£'
+    };
+
+    let lastEdited = 'roasTarget';
+    let isSyncing = false;
+    let modeIsYes = true;
+
+    function getCurrency() {
+      return document.getElementById('currency')?.value || 'USD';
+    }
+
+    function getFormatter() {
+      const currency = getCurrency();
+      return new Intl.NumberFormat(localeMap[currency] || 'en-US', {
+        style: 'currency',
+        currency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function updateSymbols() {
+      const symbol = symbolMap[getCurrency()] || '$';
+      ['symbol-spend', 'symbol-revenue', 'symbol-revenue-target'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = symbol;
+      });
+    }
+
+    function parseNumber(id) {
+      const raw = document.getElementById(id)?.value ?? '';
+      const normalized = String(raw).replace(/\s+/g, '').replace(/\./g, '').replace(/,/g, '.');
+      const num = parseFloat(normalized);
+      if (Number.isNaN(num)) return 0;
+      return num;
+    }
+
+    function toggleMode() {
+      const knowYes = document.getElementById('know_revenue_yes');
+      const isYes = !!knowYes?.checked;
+      const panelKnown = document.getElementById('panel-known');
+      const panelTarget = document.getElementById('panel-target');
+      const resultKnown = document.getElementById('result-known');
+
+      if (panelKnown) panelKnown.classList.toggle('hidden', !isYes);
+      if (panelTarget) panelTarget.classList.toggle('hidden', isYes);
+      if (resultKnown) resultKnown.classList.toggle('hidden', !isYes);
+    }
+
+    function initTargetFromCurrentRoas() {
+      const adSpend = Math.max(0, parseNumber('ad_spend'));
+      const adRevenue = Math.max(0, parseNumber('ad_revenue'));
+      const roasPct = adSpend > 0 ? (adRevenue / adSpend) * 100 : 0;
+      const roasInput = document.getElementById('roas_target_pct');
+      const revenueInput = document.getElementById('ad_revenue_target');
+      isSyncing = true;
+      if (roasInput) roasInput.value = roasPct.toFixed(2);
+      if (revenueInput) revenueInput.value = (adSpend > 0 ? (roasPct / 100) * adSpend : 0).toFixed(2);
+      isSyncing = false;
+      lastEdited = 'roasTarget';
+    }
+
+    function formatPercent(value) {
+      const num = Number.isFinite(value) ? value : 0;
+      return `${num.toFixed(2)}%`;
+    }
+
+    function recalc() {
+      updateSymbols();
+
+      const formatter = getFormatter();
+      const adSpend = Math.max(0, parseNumber('ad_spend'));
+      const knowRevenue = !!document.getElementById('know_revenue_yes')?.checked;
+
+      const warning = document.getElementById('roas_warning');
+      const spendZero = adSpend <= 0;
+      if (warning) warning.classList.toggle('hidden', !spendZero);
+
+      if (knowRevenue) {
+        const adRevenue = Math.max(0, parseNumber('ad_revenue'));
+        let roasPct = 0;
+        if (!spendZero) {
+          roasPct = (adRevenue / adSpend) * 100;
+        }
+        const roasEl = document.getElementById('result_roas_pct');
+        if (roasEl) roasEl.textContent = formatPercent(roasPct);
+      } else {
+        let adRevenueTarget = Math.max(0, parseNumber('ad_revenue_target'));
+        let roasTargetPct = Math.max(0, parseNumber('roas_target_pct'));
+
+        if (spendZero) {
+          if (lastEdited === 'roasTarget') {
+            adRevenueTarget = 0;
+          } else {
+            roasTargetPct = 0;
+          }
+        } else if (lastEdited === 'roasTarget') {
+          adRevenueTarget = (roasTargetPct / 100) * adSpend;
+        } else {
+          roasTargetPct = (adRevenueTarget / adSpend) * 100;
+        }
+
+        const revenueTargetInput = document.getElementById('ad_revenue_target');
+        const roasTargetInput = document.getElementById('roas_target_pct');
+
+        isSyncing = true;
+        if (lastEdited === 'roasTarget' && revenueTargetInput) {
+          revenueTargetInput.value = adRevenueTarget.toFixed(2);
+        }
+        if (lastEdited === 'revenueTarget' && roasTargetInput) {
+          roasTargetInput.value = roasTargetPct.toFixed(2);
+        }
+        isSyncing = false;
+      }
+    }
+
+    function handleInput(e) {
+      if (isSyncing) return;
+      if (!e.target || !inputIds.includes(e.target.id) && !(e.target.name === 'know_revenue')) return;
+
+      if (e.target.id === 'currency') updateSymbols();
+      if (e.target.id === 'know_revenue_yes' || e.target.id === 'know_revenue_no' || e.target.name === 'know_revenue') {
+        const nowYes = !!document.getElementById('know_revenue_yes')?.checked;
+        if (nowYes !== modeIsYes) {
+          modeIsYes = nowYes;
+          toggleMode();
+          if (!modeIsYes) initTargetFromCurrentRoas();
+        }
+      }
+      if (e.target.id === 'roas_target_pct') lastEdited = 'roasTarget';
+      if (e.target.id === 'ad_revenue_target') lastEdited = 'revenueTarget';
+
+      recalc();
+    }
+
+    document.body.addEventListener('input', handleInput);
+    document.body.addEventListener('change', handleInput);
+
+    // Initial state
+    updateSymbols();
+    toggleMode();
+    recalc();
+  })();
+</script>
+{% endblock %}
