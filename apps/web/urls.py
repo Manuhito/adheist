@@ -25,6 +25,7 @@ urlpatterns = [
     path("facebook-ads-cost/", views.facebook_ads_calculator, name="facebook_ads_calculator"),
     path("facebook-ad-budget/", views.facebook_ad_budget_calculator, name="facebook_ad_budget_calculator"),
     path("churn-rate-calculator/", views.churn_rate_calculator, name="churn_rate_calculator"),
+    path("saas-ltv-calculator/", views.saas_ltv_calculator, name="saas_ltv_calculator"),
     path("industries/", views.marketing_pages_index, name="marketing_pages_index"),
     path("industry/create-ngo-ads/", TemplateView.as_view(template_name="marketing_pages/ngo.html"), name="ngo_page"),
     path("industry/create-pharmacy-ads/", TemplateView.as_view(template_name="marketing_pages/pharmacy.html"), name="pharmacy_page"),
