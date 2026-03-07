@@ -1,0 +1,438 @@
+{% extends "web/base.html" %}
+{% load static %}
+
+{% block page_title %}Online Marketing Conversion Calculator | Adheist{% endblock page_title %}
+
+{% block meta_description %}
+<meta name="description"
+  content="Free Online Marketing Conversion Calculator. Model your funnel from impressions to customers, costs, revenue, and ROI with flexible inputs." />
+{% endblock meta_description %}
+
+{% block content %}
+<div class="space-y-16">
+  <section class="container mx-auto py-12 px-4 md:px-6">
+    <div class="max-w-6xl mx-auto space-y-10">
+      <div class="text-center space-y-4">
+        <h1 class="text-4xl md:text-5xl font-bold text-primary">Online Marketing Conversion Calculator</h1>
+        <p class="text-lg text-neutral-700 dark:text-neutral-300 max-w-3xl mx-auto">
+          Model your funnel end-to-end: impressions → visits → leads → customers, plus costs, revenue, and ROI. Edit any
+          field and we’ll solve the rest.
+        </p>
+      </div>
+
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">Currency</label>
+          <select id="currency"
+            class="w-44 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20">
+            <option value="USD">USD ($)</option>
+            <option value="EUR">EUR (€)</option>
+            <option value="GBP">GBP (£)</option>
+          </select>
+        </div>
+        <p class="text-sm text-neutral-500 dark:text-neutral-400">Percents are 0–100 in the UI, calculated as 0–1 in
+          formulas.</p>
+      </div>
+
+      <div class="space-y-6">
+        <!-- Conversions -->
+        <div
+          class="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-6 md:p-8 space-y-6">
+          <div class="flex items-center justify-between">
+            <h2 class="text-2xl font-bold text-primary">Conversions</h2>
+            <span class="text-sm text-neutral-500 dark:text-neutral-400">Impressions → Visits → Leads → Customers</span>
+          </div>
+
+          <div class="space-y-4">
+            <div class="grid md:grid-cols-2 gap-4">
+              <div class="space-y-2">
+                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">Impressions</label>
+                <input type="number" id="impressions" min="0" step="1" value="100000"
+                  class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+              </div>
+              <div class="space-y-2">
+                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">Click-through rate
+                  (CTR)</label>
+                <div class="relative">
+                  <input type="number" id="ctr_pct" min="0" max="100" step="0.1" value="2"
+                    class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 pr-10 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+                  <span
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400">%</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-4">
+              <div class="space-y-2">
+                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">Visits</label>
+                <input type="number" id="visits" min="0" step="1" value="2000"
+                  class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+              </div>
+              <div class="space-y-2">
+                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">Visit → Lead
+                  rate</label>
+                <div class="relative">
+                  <input type="number" id="visits_to_leads_pct" min="0" max="100" step="0.1" value="5"
+                    class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 pr-10 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+                  <span
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400">%</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-4">
+              <div class="space-y-2">
+                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">Leads</label>
+                <input type="number" id="leads" min="0" step="1" value="100"
+                  class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+              </div>
+              <div class="space-y-2">
+                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">Lead → Customer
+                  rate</label>
+                <div class="relative">
+                  <input type="number" id="leads_to_customers_pct" min="0" max="100" step="0.1" value="10"
+                    class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 pr-10 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+                  <span
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400">%</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">Customers</label>
+              <input type="number" id="customers" min="0" step="1" value="10"
+                class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Costs -->
+        <div
+          class="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-6 md:p-8 space-y-6">
+          <div class="flex items-center justify-between">
+            <h2 class="text-2xl font-bold text-primary">Costs</h2>
+            <span class="text-sm text-neutral-500 dark:text-neutral-400">Cost equivalents share the same total</span>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">Total cost</label>
+              <div class="relative">
+                <span id="symbol-total"
+                  class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400">$</span>
+                <input type="number" id="total_cost" min="0" step="0.01" value="3000"
+                  class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 pl-8 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+              </div>
+            </div>
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">CPM (per 1000
+                impressions)</label>
+              <div class="relative">
+                <span id="symbol-cpm"
+                  class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400">$</span>
+                <input type="number" id="cpm" min="0" step="0.01" value="30"
+                  class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 pl-8 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+              </div>
+            </div>
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">CPC (per visit)</label>
+              <div class="relative">
+                <span id="symbol-cpc"
+                  class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400">$</span>
+                <input type="number" id="cpc" min="0" step="0.01" value="1.5"
+                  class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 pl-8 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+              </div>
+            </div>
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">CPL (per lead)</label>
+              <div class="relative">
+                <span id="symbol-cpl"
+                  class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400">$</span>
+                <input type="number" id="cpl" min="0" step="0.01" value="30"
+                  class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 pl-8 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+              </div>
+            </div>
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">Cost per customer</label>
+              <div class="relative">
+                <span id="symbol-cpcust"
+                  class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400">$</span>
+                <input type="number" id="cp_customer" min="0" step="0.01" value="300"
+                  class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 pl-8 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Revenue -->
+        <div
+          class="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-6 md:p-8 space-y-6">
+          <div class="flex items-center justify-between">
+            <h2 class="text-2xl font-bold text-primary">Revenue</h2>
+            <span class="text-sm text-neutral-500 dark:text-neutral-400">Revenue equivalents share the same total</span>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">Revenue</label>
+              <div class="relative">
+                <span id="symbol-revenue"
+                  class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400">$</span>
+                <input type="number" id="revenue" min="0" step="0.01" value="8000"
+                  class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 pl-8 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+              </div>
+            </div>
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">ROI</label>
+              <div class="relative">
+                <input type="number" id="roi_pct" min="-100" step="0.1" value="166.67"
+                  class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 pr-10 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400">%</span>
+              </div>
+            </div>
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">Revenue per click</label>
+              <div class="relative">
+                <span id="symbol-rpc"
+                  class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400">$</span>
+                <input type="number" id="revenue_per_click" min="0" step="0.01" value="4"
+                  class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 pl-8 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+              </div>
+            </div>
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">Revenue per lead</label>
+              <div class="relative">
+                <span id="symbol-rpl"
+                  class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400">$</span>
+                <input type="number" id="revenue_per_lead" min="0" step="0.01" value="80"
+                  class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 pl-8 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+              </div>
+            </div>
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">Revenue per
+                customer</label>
+              <div class="relative">
+                <span id="symbol-rpcustomer"
+                  class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400">$</span>
+                <input type="number" id="revenue_per_customer" min="0" step="0.01" value="800"
+                  class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 pl-8 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="text-sm text-neutral-500 dark:text-neutral-400">Tip: You can edit any field. The calculator back-solves
+        using
+        funnel, cost, and revenue identities while keeping your last edited value intact.</p>
+    </div>
+  </section>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+  (function () {
+    const ids = [
+      'currency', 'impressions', 'ctr_pct', 'visits', 'visits_to_leads_pct', 'leads', 'leads_to_customers_pct', 'customers',
+      'total_cost', 'cpm', 'cpc', 'cpl', 'cp_customer', 'revenue', 'roi_pct', 'revenue_per_click', 'revenue_per_lead', 'revenue_per_customer'
+    ];
+
+    const localeMap = { USD: 'en-US', EUR: 'es-ES', GBP: 'en-GB' };
+    const symbolMap = { USD: '$', EUR: '€', GBP: '£' };
+
+    let lastEdited = null;
+    let isSyncing = false;
+
+    const state = {};
+
+    function getCurrency() {
+      return document.getElementById('currency')?.value || 'USD';
+    }
+
+    function currencyFormatter() {
+      const currency = getCurrency();
+      return new Intl.NumberFormat(localeMap[currency] || 'en-US', { style: 'currency', currency });
+    }
+
+    function updateSymbols() {
+      const symbol = symbolMap[getCurrency()] || '$';
+      ['symbol-total', 'symbol-cpm', 'symbol-cpc', 'symbol-cpl', 'symbol-cpcust', 'symbol-revenue', 'symbol-rpc', 'symbol-rpl', 'symbol-rpcustomer'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = symbol;
+      });
+    }
+
+    function clampPercent(v) {
+      if (!Number.isFinite(v)) return null;
+      return Math.min(100, Math.max(0, v));
+    }
+
+    function parseNumber(id) {
+      const raw = document.getElementById(id)?.value ?? '';
+      const trimmed = String(raw).replace(/\s+/g, '');
+      const hasComma = trimmed.includes(',');
+      const hasDot = trimmed.includes('.');
+      let normalized = trimmed;
+
+      if (hasComma && hasDot) {
+        // Assume commas are thousand separators, keep dot as decimal
+        normalized = trimmed.replace(/,/g, '');
+      } else if (hasComma && !hasDot) {
+        // Comma as decimal
+        normalized = trimmed.replace(/,/g, '.');
+      }
+
+      const num = parseFloat(normalized);
+      if (Number.isNaN(num)) return null;
+      return num;
+    }
+
+    function readState() {
+      state.impressions = Math.max(0, parseNumber('impressions') ?? 0);
+      state.ctr_pct = clampPercent(parseNumber('ctr_pct'));
+      state.visits = Math.max(0, parseNumber('visits') ?? 0);
+      state.v2l_pct = clampPercent(parseNumber('visits_to_leads_pct'));
+      state.leads = Math.max(0, parseNumber('leads') ?? 0);
+      state.l2c_pct = clampPercent(parseNumber('leads_to_customers_pct'));
+      state.customers = Math.max(0, parseNumber('customers') ?? 0);
+
+      state.total_cost = Math.max(0, parseNumber('total_cost') ?? 0);
+      state.cpm = Math.max(0, parseNumber('cpm') ?? 0);
+      state.cpc = Math.max(0, parseNumber('cpc') ?? 0);
+      state.cpl = Math.max(0, parseNumber('cpl') ?? 0);
+      state.cp_customer = Math.max(0, parseNumber('cp_customer') ?? 0);
+
+      state.revenue = Math.max(0, parseNumber('revenue') ?? 0);
+      state.roi_pct = parseNumber('roi_pct');
+      state.revenue_per_click = Math.max(0, parseNumber('revenue_per_click') ?? 0);
+      state.revenue_per_lead = Math.max(0, parseNumber('revenue_per_lead') ?? 0);
+      state.revenue_per_customer = Math.max(0, parseNumber('revenue_per_customer') ?? 0);
+    }
+
+    function setVal(key, val, allowNegative = false) {
+      if (!Number.isFinite(val)) return false;
+      if (!allowNegative) val = Math.max(0, val);
+      if (lastEdited === key) return false;
+      if (!Number.isFinite(state[key]) || Math.abs(state[key] - val) > 1e-9) {
+        state[key] = val;
+        return true;
+      }
+      return false;
+    }
+
+    function setPercent(key, pctVal) {
+      if (!Number.isFinite(pctVal)) return false;
+      pctVal = clampPercent(pctVal);
+      if (pctVal === null) return false;
+      if (lastEdited === key) return false;
+      if (!Number.isFinite(state[key]) || Math.abs(state[key] - pctVal) > 1e-9) {
+        state[key] = pctVal;
+        return true;
+      }
+      return false;
+    }
+
+    function solve() {
+      let iterations = 0;
+      let changed = true;
+      while (iterations < 20 && changed) {
+        changed = false;
+        iterations += 1;
+
+        // Conversions
+        const ctr = Number.isFinite(state.ctr_pct) ? state.ctr_pct / 100 : null;
+        const v2l = Number.isFinite(state.v2l_pct) ? state.v2l_pct / 100 : null;
+        const l2c = Number.isFinite(state.l2c_pct) ? state.l2c_pct / 100 : null;
+
+        if (ctr !== null && Number.isFinite(state.impressions)) changed = setVal('visits', state.impressions * ctr) || changed;
+        if (v2l !== null && Number.isFinite(state.visits)) changed = setVal('leads', state.visits * v2l) || changed;
+        if (l2c !== null && Number.isFinite(state.leads)) changed = setVal('customers', state.leads * l2c) || changed;
+
+        if (Number.isFinite(state.visits) && Number.isFinite(state.impressions) && state.impressions > 0) changed = setPercent('ctr_pct', (state.visits / state.impressions) * 100) || changed;
+        if (Number.isFinite(state.leads) && Number.isFinite(state.visits) && state.visits > 0) changed = setPercent('v2l_pct', (state.leads / state.visits) * 100) || changed;
+        if (Number.isFinite(state.customers) && Number.isFinite(state.leads) && state.leads > 0) changed = setPercent('l2c_pct', (state.customers / state.leads) * 100) || changed;
+
+        if (Number.isFinite(state.visits) && v2l !== null && v2l > 0) changed = setVal('leads', state.visits * v2l) || changed;
+        if (Number.isFinite(state.leads) && l2c !== null && l2c > 0) changed = setVal('customers', state.leads * l2c) || changed;
+        if (ctr !== null && ctr > 0 && Number.isFinite(state.visits)) changed = setVal('impressions', state.visits / ctr) || changed;
+        if (v2l !== null && v2l > 0 && Number.isFinite(state.leads)) changed = setVal('visits', state.leads / v2l) || changed;
+        if (l2c !== null && l2c > 0 && Number.isFinite(state.customers)) changed = setVal('leads', state.customers / l2c) || changed;
+
+        // Costs
+        if (Number.isFinite(state.impressions) && Number.isFinite(state.cpm)) changed = setVal('total_cost', (state.impressions / 1000) * state.cpm) || changed;
+        if (Number.isFinite(state.visits) && Number.isFinite(state.cpc)) changed = setVal('total_cost', state.visits * state.cpc) || changed;
+        if (Number.isFinite(state.leads) && Number.isFinite(state.cpl)) changed = setVal('total_cost', state.leads * state.cpl) || changed;
+        if (Number.isFinite(state.customers) && Number.isFinite(state.cp_customer)) changed = setVal('total_cost', state.customers * state.cp_customer) || changed;
+
+        if (Number.isFinite(state.total_cost) && Number.isFinite(state.impressions) && state.impressions > 0) changed = setVal('cpm', (state.total_cost * 1000) / state.impressions) || changed;
+        if (Number.isFinite(state.total_cost) && Number.isFinite(state.visits) && state.visits > 0) changed = setVal('cpc', state.total_cost / state.visits) || changed;
+        if (Number.isFinite(state.total_cost) && Number.isFinite(state.leads) && state.leads > 0) changed = setVal('cpl', state.total_cost / state.leads) || changed;
+        if (Number.isFinite(state.total_cost) && Number.isFinite(state.customers) && state.customers > 0) changed = setVal('cp_customer', state.total_cost / state.customers) || changed;
+
+        // Revenue
+        if (Number.isFinite(state.visits) && Number.isFinite(state.revenue_per_click)) changed = setVal('revenue', state.visits * state.revenue_per_click) || changed;
+        if (Number.isFinite(state.leads) && Number.isFinite(state.revenue_per_lead)) changed = setVal('revenue', state.leads * state.revenue_per_lead) || changed;
+        if (Number.isFinite(state.customers) && Number.isFinite(state.revenue_per_customer)) changed = setVal('revenue', state.customers * state.revenue_per_customer) || changed;
+
+        if (Number.isFinite(state.revenue) && Number.isFinite(state.visits) && state.visits > 0) changed = setVal('revenue_per_click', state.revenue / state.visits) || changed;
+        if (Number.isFinite(state.revenue) && Number.isFinite(state.leads) && state.leads > 0) changed = setVal('revenue_per_lead', state.revenue / state.leads) || changed;
+        if (Number.isFinite(state.revenue) && Number.isFinite(state.customers) && state.customers > 0) changed = setVal('revenue_per_customer', state.revenue / state.customers) || changed;
+
+        // ROI
+        if (Number.isFinite(state.revenue) && Number.isFinite(state.total_cost) && state.total_cost > 0) changed = setVal('roi_pct', ((state.revenue - state.total_cost) / state.total_cost) * 100, true) || changed;
+        if (Number.isFinite(state.total_cost) && Number.isFinite(state.roi_pct)) changed = setVal('revenue', state.total_cost * (1 + state.roi_pct / 100)) || changed;
+      }
+    }
+
+    function render() {
+      const currencyFmt = currencyFormatter();
+      const percentIds = ['ctr_pct', 'visits_to_leads_pct', 'leads_to_customers_pct', 'roi_pct'];
+      const moneyIds = ['total_cost', 'cpm', 'cpc', 'cpl', 'cp_customer', 'revenue', 'revenue_per_click', 'revenue_per_lead', 'revenue_per_customer'];
+      const volumeIds = ['impressions', 'visits', 'leads', 'customers'];
+
+      isSyncing = true;
+      percentIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const val = state[id === 'ctr_pct' ? 'ctr_pct' : id === 'visits_to_leads_pct' ? 'v2l_pct' : id === 'leads_to_customers_pct' ? 'l2c_pct' : 'roi_pct'];
+        if (Number.isFinite(val)) el.value = val.toFixed(2);
+      });
+      volumeIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const val = state[id];
+        if (Number.isFinite(val)) el.value = Math.round(val);
+      });
+      moneyIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const val = state[id];
+        if (Number.isFinite(val)) el.value = val.toFixed(2);
+      });
+      isSyncing = false;
+    }
+
+    function recalc() {
+      updateSymbols();
+      readState();
+      solve();
+      render();
+    }
+
+    function onInput(e) {
+      if (!e.target || !ids.includes(e.target.id)) return;
+      if (isSyncing) return;
+      lastEdited = e.target.id;
+      recalc();
+    }
+
+    document.body.addEventListener('input', onInput);
+    document.body.addEventListener('change', onInput);
+
+    updateSymbols();
+    recalc();
+  })();
+</script>
+{% endblock extra_js %}
