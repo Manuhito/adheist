@@ -227,6 +227,147 @@
         funnel, cost, and revenue identities while keeping your last edited value intact.</p>
     </div>
   </section>
+
+  <!-- Logos Section -->
+  <section id="logos" class="container mx-auto px-4 md:px-8 pt-4 pb-4">
+    <div class="relative mt-6 overflow-hidden">
+      <div class="flex justify-center items-center gap-x-12">
+        {% for logo in logo_list|slice:":6" %}
+        <img width="112" height="40" src="{% static logo %}"
+          class="h-10 w-28 dark:brightness-0 dark:invert grayscale opacity-30" alt="Brand logo" />
+        {% endfor %}
+      </div>
+      <div class="flex justify-center items-center gap-x-12 mt-4">
+        {% for logo in logo_list|slice:"6:" %}
+        <img width="112" height="40" src="{% static logo %}"
+          class="h-10 w-28 dark:brightness-0 dark:invert grayscale opacity-30" alt="Brand logo" />
+        {% endfor %}
+      </div>
+      <div class="pointer-events-none absolute inset-y-0 left-0 h-full w-1/3 bg-gradient-to-r from-background"></div>
+      <div class="pointer-events-none absolute inset-y-0 right-0 h-full w-1/3 bg-gradient-to-l from-background"></div>
+    </div>
+  </section>
+
+  <!-- Secondary Title Section -->
+  <section class="container mx-auto py-3 px-4 md:px-6 text-center">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-4xl font-bold tracking-tight text-primary sm:text-5xl">
+        See the full journey from impression to revenue
+      </h2>
+      <p class="mt-6 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+        Model every step of your funnel, your costs, and your returns so you can decide where to spend and what to fix
+        first.
+      </p>
+    </div>
+  </section>
+
+  <!-- Features Grid Section -->
+  <section class="container mx-auto py-3 px-4 md:px-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="split" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Trace every conversion</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            Connect impressions, clicks, leads, and customers to spot weak links and prioritize fixes.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="wallet" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Tie spend to returns</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            Compare CPM, CPC, CPL, and CAC in one view to understand true acquisition costs.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="line-chart" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Simulate ROI instantly</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            Edit any field and see revenue and ROI recalculated so you can test scenarios fast.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="target" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Optimize the right step</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            Decide whether to improve CTR, landing page, or sales conversion based on impact.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="sparkles" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Keep your targets intact</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            Last-edited protection ensures the solver respects your chosen inputs while back-solving the rest.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="zap" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Ready for stakeholders</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            Clear numbers for finance, marketing, and sales in one shared model.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="container mx-auto py-3 px-4 md:px-6 text-center">
+    <div class="flex flex-col items-center space-y-6">
+      <a href="{% url 'account_signup' %}"
+        class="inline-flex items-center justify-center rounded-lg px-8 py-4 text-lg font-medium text-white shadow-sm"
+        style="background-color: #5C67F2;">
+        Start Free Trial
+      </a>
+      <div class="flex flex-col md:flex-row items-center justify-center gap-x-8 gap-y-2 pt-4">
+        <div class="flex items-center gap-2">
+          <i data-lucide="check" class="w-5 h-5 text-primary"></i>
+          <span class="text-neutral-700 dark:text-neutral-300">Map the full funnel</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i data-lucide="check" class="w-5 h-5 text-primary"></i>
+          <span class="text-neutral-700 dark:text-neutral-300">See true costs</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i data-lucide="check" class="w-5 h-5 text-primary"></i>
+          <span class="text-neutral-700 dark:text-neutral-300">Simulate ROI quickly</span>
+        </div>
+      </div>
+    </div>
+  </section>
 </div>
 {% endblock content %}
 
