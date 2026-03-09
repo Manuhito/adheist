@@ -23,6 +23,7 @@ class StaticViewSitemap(sitemaps.Sitemap):
             "web:facebook_ad_budget_calculator",
             "web:churn_rate_calculator",
             "web:attrition_rate_calculator",
+            "web:burn_rate_calculator",
             "web:bounce_rate_calculator",
             "web:saas_ltv_calculator",
             "web:roas_calculator",
