@@ -1073,6 +1073,30 @@ def attrition_rate_calculator(request):
     })
 
 
+def bounce_rate_calculator(request):
+    """
+    Render the Bounce Rate Calculator page.
+    """
+    logo_list = [
+        "images/landing/brands-icons/hello-fresh-logo.svg",
+        "images/landing/brands-icons/true-classic.svg",
+        "images/landing/brands-icons/huel.svg",
+        "images/landing/brands-icons/ag1-logo.svg",
+        "images/landing/brands-icons/logo-clickup.svg",
+        "images/landing/brands-icons/monday.svg",
+        "images/landing/brands-icons/calm.svg",
+        "images/landing/brands-icons/lululemon.svg",
+        "images/landing/brands-icons/magicspoon.svg",
+        "images/landing/brands-icons/gymshark.svg",
+        "images/landing/brands-icons/canva.svg",
+        "images/landing/brands-icons/the-ridge.svg",
+    ]
+
+    return render(request, "calculators/bounce_rate_calculator.html", {
+        "logo_list": logo_list,
+    })
+
+
 def saas_ltv_calculator(request):
     """
     Render the SaaS LTV Calculator page.
