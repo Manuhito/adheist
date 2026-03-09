@@ -1,0 +1,466 @@
+{% extends "web/base.html" %}
+{% load static %}
+
+{% block page_title %}Attrition Rate Calculator - Measure Employee Attrition | Adheist{% endblock page_title %}
+
+{% block meta_description %}
+<meta name="description"
+  content="Free Attrition Rate Calculator. Calculate employee attrition rate using employees at the start, employees at the end, and employees that left.">
+{% endblock meta_description %}
+
+{% block content %}
+<div class="space-y-16">
+  <section class="container mx-auto py-12 px-4 md:px-6">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <h1 class="text-5xl md:text-6xl font-bold text-primary mb-4">
+          Attrition Rate Calculator
+        </h1>
+        <p class="text-xl text-neutral-700 dark:text-neutral-300 max-w-3xl mx-auto">
+          Calculate employee attrition rate from your starting headcount, ending headcount, and employees that left.
+          Edit any field and the rest updates automatically when possible.
+        </p>
+      </div>
+
+      <div class="grid lg:grid-cols-2 gap-8">
+        <div class="space-y-6">
+          <div
+            class="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-6 md:p-8">
+            <h2 class="text-2xl font-bold text-primary mb-6">Inputs</h2>
+
+            <div class="space-y-4">
+              <div class="space-y-2">
+                <label for="employees_start" class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">
+                  Employees at the start
+                </label>
+                <input type="number" id="employees_start" value="100" step="1" min="0"
+                  class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+              </div>
+
+              <div class="space-y-2">
+                <label for="employees_end" class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">
+                  Employees at the end
+                </label>
+                <input type="number" id="employees_end" value="80" step="1" min="0"
+                  class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+              </div>
+
+              <div class="space-y-2">
+                <label for="employees_left" class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">
+                  Employees that left
+                </label>
+                <input type="number" id="employees_left" value="20" step="1" min="0"
+                  class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+              </div>
+
+              <div class="space-y-2">
+                <label for="attrition_rate_pct"
+                  class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">
+                  Attrition rate
+                </label>
+                <div class="relative">
+                  <input type="number" id="attrition_rate_pct" value="22.22" step="0.01" min="0"
+                    class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 pr-10 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+                  <span
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400">%</span>
+                </div>
+              </div>
+
+              <p id="calculator_error" class="hidden text-sm text-amber-600 dark:text-amber-400"></p>
+              <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                Attrition rate uses the average headcount: employees that left / ((start + end) / 2).
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-6">
+          <div
+            class="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-6 md:p-8">
+            <h2 class="text-2xl font-bold text-primary mb-6">Results</h2>
+            <div class="space-y-3">
+              <div
+                class="p-4 rounded-lg bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
+                <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-1">Average headcount</p>
+                <p class="text-3xl font-bold text-neutral-900 dark:text-white" id="result_average_headcount">90</p>
+              </div>
+              <div class="p-4 rounded-lg bg-primary/10 dark:bg-primary/20 border-2 border-primary">
+                <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-1">Attrition rate</p>
+                <p class="text-3xl font-bold text-primary" id="result_attrition_rate">22.22%</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="logos" class="container mx-auto px-4 md:px-8 pt-4 pb-4">
+    <div class="relative mt-6 overflow-hidden">
+      <div class="flex justify-center items-center gap-x-12">
+        {% for logo in logo_list|slice:":6" %}
+        <img width="112" height="40" src="{% static logo %}"
+          class="h-10 w-28 dark:brightness-0 dark:invert grayscale opacity-30" alt="Brand logo" />
+        {% endfor %}
+      </div>
+      <div class="flex justify-center items-center gap-x-12 mt-4">
+        {% for logo in logo_list|slice:"6:" %}
+        <img width="112" height="40" src="{% static logo %}"
+          class="h-10 w-28 dark:brightness-0 dark:invert grayscale opacity-30" alt="Brand logo" />
+        {% endfor %}
+      </div>
+      <div class="pointer-events-none absolute inset-y-0 left-0 h-full w-1/3 bg-gradient-to-r from-background"></div>
+      <div class="pointer-events-none absolute inset-y-0 right-0 h-full w-1/3 bg-gradient-to-l from-background"></div>
+    </div>
+  </section>
+
+  <section class="container mx-auto py-3 px-4 md:px-6 text-center">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-4xl font-bold tracking-tight text-primary sm:text-5xl">
+        Understand workforce stability faster
+      </h2>
+      <p class="mt-6 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+        Measure attrition clearly, spot staffing risks early, and plan hiring or retention actions with confidence.
+      </p>
+    </div>
+  </section>
+
+  <section class="container mx-auto py-3 px-4 md:px-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="users" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Track team changes</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            Monitor employee attrition across periods to understand how your workforce is changing.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="activity" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Spot attrition trends</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            Compare attrition rates over time to detect retention issues before they impact performance.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="briefcase-business" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Plan hiring better</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            Use accurate attrition numbers to improve hiring forecasts and headcount planning.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="shield-alert" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Catch inconsistent inputs</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            Validate impossible scenarios such as zero average headcount with employees leaving.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="calculator" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Edit any field</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            Update start, end, left, or attrition rate and let the calculator solve the remaining field when possible.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="line-chart" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Make HR reporting easier</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            Share a clean attrition metric with finance, operations, and HR stakeholders.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="container mx-auto py-3 px-4 md:px-6 text-center">
+    <div class="flex flex-col items-center space-y-6">
+      <a href="{% url 'account_signup' %}"
+        class="inline-flex items-center justify-center rounded-lg px-8 py-4 text-lg font-medium text-white shadow-sm"
+        style="background-color: #5C67F2;">
+        Start Free Trial
+      </a>
+      <div class="flex flex-col md:flex-row items-center justify-center gap-x-8 gap-y-2 pt-4">
+        <div class="flex items-center gap-2">
+          <i data-lucide="check" class="w-5 h-5 text-primary"></i>
+          <span class="text-neutral-700 dark:text-neutral-300">Track attrition clearly</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i data-lucide="check" class="w-5 h-5 text-primary"></i>
+          <span class="text-neutral-700 dark:text-neutral-300">Plan headcount faster</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i data-lucide="check" class="w-5 h-5 text-primary"></i>
+          <span class="text-neutral-700 dark:text-neutral-300">Improve retention decisions</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="container mx-auto py-16 px-4 md:px-6">
+    <div class="bg-primary/10 dark:bg-primary/20 rounded-3xl p-8 md:p-16 text-center">
+      <h2 class="text-4xl font-bold text-primary">Ready to improve employee retention?</h2>
+      <p class="mt-4 text-lg text-neutral-700 dark:text-neutral-300 max-w-2xl mx-auto">
+        Measure attrition, understand workforce health, and make better staffing decisions with faster insights.
+      </p>
+      <div class="mt-8">
+        <a href="{% url 'account_signup' %}"
+          class="inline-flex items-center justify-center rounded-lg px-8 py-4 text-lg font-medium text-white shadow-sm"
+          style="background-color: #5C67F2;">
+          Start Free Trial
+        </a>
+      </div>
+      <div class="flex flex-col md:flex-row items-center justify-center gap-x-8 gap-y-2 pt-4">
+        <div class="flex items-center gap-2">
+          <i data-lucide="check" class="w-5 h-5 text-primary"></i>
+          <span class="text-neutral-700 dark:text-neutral-300">Analyze faster</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i data-lucide="check" class="w-5 h-5 text-primary"></i>
+          <span class="text-neutral-700 dark:text-neutral-300">Create better reports</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i data-lucide="check" class="w-5 h-5 text-primary"></i>
+          <span class="text-neutral-700 dark:text-neutral-300">Support smarter growth</span>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+  (function () {
+    function initializeCalculator() {
+      const elements = {
+        start: document.getElementById('employees_start'),
+        end: document.getElementById('employees_end'),
+        left: document.getElementById('employees_left'),
+        rate: document.getElementById('attrition_rate_pct'),
+        averageResult: document.getElementById('result_average_headcount'),
+        rateResult: document.getElementById('result_attrition_rate'),
+        error: document.getElementById('calculator_error')
+      };
+
+      if (!elements.start || !elements.end || !elements.left || !elements.rate || !elements.averageResult || !elements.rateResult || !elements.error) {
+        return false;
+      }
+
+      if (elements.start.dataset.attritionBound === 'true') {
+        return true;
+      }
+
+      let lastEdited = 'L';
+      let isSyncing = false;
+
+      function parseValue(value) {
+        if (value === '') return null;
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : null;
+      }
+
+      function parseIntegerInput(input) {
+        const parsed = parseValue(input.value);
+        if (parsed === null) return null;
+        return Math.max(0, Math.round(parsed));
+      }
+
+      function parseRateInput(input) {
+        const parsed = parseValue(input.value);
+        if (parsed === null) return null;
+        return Math.max(0, parsed);
+      }
+
+      function formatInteger(value) {
+        return new Intl.NumberFormat('en-US', {
+          maximumFractionDigits: 0
+        }).format(value);
+      }
+
+      function formatRate(value) {
+        return value.toLocaleString('en-US', {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 2
+        });
+      }
+
+      function setInputValue(input, value, isInteger) {
+        if (value === null || !Number.isFinite(value)) {
+          return;
+        }
+
+        input.value = isInteger ? String(Math.round(value)) : formatRate(value);
+      }
+
+      function showError(message) {
+        elements.error.textContent = message;
+        elements.error.classList.toggle('hidden', !message);
+      }
+
+      function getAttritionRate(S, E, L) {
+        if (S === null || E === null || L === null) {
+          return null;
+        }
+
+        const total = S + E;
+        if (total === 0) {
+          return L === 0 ? 0 : null;
+        }
+
+        return (2 * L / total) * 100;
+      }
+
+      function renderResults(S, E, L) {
+        const average = S !== null && E !== null ? (S + E) / 2 : null;
+        const rate = getAttritionRate(S, E, L);
+
+        elements.averageResult.textContent = average !== null ? formatInteger(average) : '—';
+        elements.rateResult.textContent = rate !== null ? `${formatRate(rate)}%` : '—';
+      }
+
+      function recalculate() {
+        if (isSyncing) return;
+
+        let S = parseIntegerInput(elements.start);
+        let E = parseIntegerInput(elements.end);
+        let L = parseIntegerInput(elements.left);
+        let A = parseRateInput(elements.rate);
+        let errorMessage = '';
+
+        if (lastEdited === 'S' || lastEdited === 'E' || lastEdited === 'L') {
+          if (S !== null && E !== null && L !== null) {
+            const total = S + E;
+            if (total === 0) {
+              if (L === 0) {
+                A = 0;
+              } else {
+                errorMessage = 'S + E no puede ser 0 si L > 0.';
+              }
+            } else {
+              A = (2 * L / total) * 100;
+            }
+          }
+        }
+
+        if (lastEdited === 'A' && A !== null) {
+          if (A === 0) {
+            if (S !== null && E !== null) {
+              L = 0;
+            } else if (L !== null && L !== 0) {
+              errorMessage = 'A = 0 solo es consistente cuando Employees that left es 0.';
+            }
+          } else if (S !== null && E !== null) {
+            const total = S + E;
+            if (total === 0) {
+              errorMessage = 'No se puede calcular con average headcount igual a 0.';
+            } else {
+              L = (A * total) / 200;
+            }
+          } else if (E !== null && L !== null) {
+            S = (200 * L / A) - E;
+          } else if (S !== null && L !== null) {
+            E = (200 * L / A) - S;
+          }
+        }
+
+        if (!errorMessage) {
+          if (S !== null) S = Math.round(S);
+          if (E !== null) E = Math.round(E);
+          if (L !== null) L = Math.round(L);
+
+          if ((S !== null && S < 0) || (E !== null && E < 0) || (L !== null && L < 0)) {
+            errorMessage = 'Inputs inconsistentes: algún valor calculado es negativo.';
+          }
+
+          if (S !== null && E !== null && L !== null && (S + E) === 0 && L > 0) {
+            errorMessage = 'S + E no puede ser 0 si L > 0.';
+          }
+        }
+
+        isSyncing = true;
+        if (S !== null) setInputValue(elements.start, S, true);
+        if (E !== null) setInputValue(elements.end, E, true);
+        if (L !== null) setInputValue(elements.left, L, true);
+        if (A !== null) setInputValue(elements.rate, A, false);
+        isSyncing = false;
+
+        showError(errorMessage);
+        renderResults(S, E, L);
+      }
+
+      const inputMap = {
+        employees_start: 'S',
+        employees_end: 'E',
+        employees_left: 'L',
+        attrition_rate_pct: 'A'
+      };
+
+      document.body.addEventListener('input', function (e) {
+        if (e.target && inputMap[e.target.id]) {
+          if (isSyncing) return;
+          lastEdited = inputMap[e.target.id];
+          recalculate();
+        }
+      });
+
+      document.body.addEventListener('change', function (e) {
+        if (e.target && inputMap[e.target.id]) {
+          if (isSyncing) return;
+          lastEdited = inputMap[e.target.id];
+          recalculate();
+        }
+      });
+
+      elements.start.dataset.attritionBound = 'true';
+      recalculate();
+      return true;
+    }
+
+    function mountWhenReady() {
+      if (window.baseLayoutReady) {
+        initializeCalculator();
+      } else {
+        setTimeout(mountWhenReady, 50);
+      }
+    }
+
+    mountWhenReady();
+  })();
+</script>
+{% endblock %}
