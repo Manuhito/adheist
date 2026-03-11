@@ -1,0 +1,452 @@
+{% extends "web/base.html" %}
+{% load static %}
+
+{% block page_title %}Burn Rate Calculator - Estimate Cash Burn and Runway | Adheist{% endblock page_title %}
+
+{% block meta_description %}
+<meta name="description"
+  content="Free Burn Rate Calculator. Calculate monthly burn rate, annualized burn rate, and cash runway from your initial and final cash balance over a period.">
+{% endblock meta_description %}
+
+{% block content %}
+<div class="space-y-16">
+  <section class="container mx-auto py-12 px-4 md:px-6">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <h1 class="text-5xl md:text-6xl font-bold text-primary mb-4">
+          Burn Rate Calculator
+        </h1>
+        <p class="text-xl text-neutral-700 dark:text-neutral-300 max-w-3xl mx-auto">
+          Calculate how quickly your business is consuming cash and estimate how many months of runway remain.
+        </p>
+        <p class="mt-4 text-lg text-neutral-600 dark:text-neutral-400 max-w-3xl mx-auto">
+          Enter your starting cash, ending cash, and the period length. The calculator returns monthly burn, annualized burn, and cash runway when it applies.
+        </p>
+      </div>
+
+      <div class="grid lg:grid-cols-2 gap-8">
+        <div class="space-y-6">
+          <div
+            class="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-6 md:p-8">
+            <h2 class="text-2xl font-bold text-primary mb-6">Inputs</h2>
+
+            <div class="space-y-4">
+              <div class="space-y-2">
+                <label for="currency" class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">
+                  Currency
+                </label>
+                <select id="currency"
+                  class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20">
+                  <option value="USD">USD ($)</option>
+                  <option value="EUR">EUR (€)</option>
+                  <option value="GBP">GBP (£)</option>
+                </select>
+              </div>
+
+              <div class="space-y-2">
+                <label for="initial_balance" class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">
+                  Initial balance
+                </label>
+                <div class="relative">
+                  <span id="currency-symbol-initial"
+                    class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400">$</span>
+                  <input type="number" id="initial_balance" value="1000000" step="1000" min="0"
+                    class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 pl-8 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+                </div>
+              </div>
+
+              <div class="space-y-2">
+                <label for="final_balance" class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">
+                  Final balance
+                </label>
+                <div class="relative">
+                  <span id="currency-symbol-final"
+                    class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400">$</span>
+                  <input type="number" id="final_balance" value="500000" step="1000" min="0"
+                    class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 pl-8 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+                </div>
+              </div>
+
+              <div class="space-y-2">
+                <label for="duration_months" class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">
+                  Duration (months)
+                </label>
+                <input type="number" id="duration_months" value="10" step="0.1" min="0.1"
+                  class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+              </div>
+
+              <p id="calculator_error" class="hidden text-sm text-amber-600 dark:text-amber-400"></p>
+              <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                Burn rate uses the formula: (initial balance - final balance) / duration. Runway is shown only when monthly burn is greater than 0.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-6">
+          <div
+            class="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-6 md:p-8">
+            <h2 class="text-2xl font-bold text-primary mb-6">Results</h2>
+            <div class="space-y-3">
+              <div
+                class="p-4 rounded-lg bg-primary/10 dark:bg-primary/20 border-2 border-primary">
+                <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-1">Burn rate (monthly)</p>
+                <p class="text-3xl font-bold text-primary" id="result_monthly_burn">$50,000.00</p>
+              </div>
+              <div
+                class="p-4 rounded-lg bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
+                <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-1">Annualized burn rate</p>
+                <p class="text-3xl font-bold text-neutral-900 dark:text-white" id="result_annual_burn">$600,000.00</p>
+              </div>
+              <div
+                class="p-4 rounded-lg bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
+                <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-1">Cash runway</p>
+                <p class="text-3xl font-bold text-neutral-900 dark:text-white" id="result_runway">10 months</p>
+              </div>
+              <div
+                class="p-4 rounded-lg bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
+                <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-1">Cash flow status</p>
+                <p class="text-2xl font-bold text-neutral-900 dark:text-white" id="result_status">Burning cash</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="logos" class="container mx-auto px-4 md:px-8 pt-4 pb-4">
+    <div class="relative mt-6 overflow-hidden">
+      <div class="flex justify-center items-center gap-x-12">
+        {% for logo in logo_list|slice:":6" %}
+        <img width="112" height="40" src="{% static logo %}"
+          class="h-10 w-28 dark:brightness-0 dark:invert grayscale opacity-30" alt="Brand logo" />
+        {% endfor %}
+      </div>
+      <div class="flex justify-center items-center gap-x-12 mt-4">
+        {% for logo in logo_list|slice:"6:" %}
+        <img width="112" height="40" src="{% static logo %}"
+          class="h-10 w-28 dark:brightness-0 dark:invert grayscale opacity-30" alt="Brand logo" />
+        {% endfor %}
+      </div>
+      <div class="pointer-events-none absolute inset-y-0 left-0 h-full w-1/3 bg-gradient-to-r from-background"></div>
+      <div class="pointer-events-none absolute inset-y-0 right-0 h-full w-1/3 bg-gradient-to-l from-background"></div>
+    </div>
+  </section>
+
+  <section class="container mx-auto py-3 px-4 md:px-6 text-center">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-4xl font-bold tracking-tight text-primary sm:text-5xl">
+        Make cash planning easier
+      </h2>
+      <p class="mt-6 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+        Understand your burn rate faster, estimate runway clearly, and make better funding, hiring, and spending decisions.
+      </p>
+    </div>
+  </section>
+
+  <section class="container mx-auto py-3 px-4 md:px-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="wallet" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Measure cash burn clearly</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            See your average monthly cash consumption using only starting cash, ending cash, and period length.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="calendar-range" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Estimate runway in months</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            Know how long your current cash balance can last if you continue operating at the same burn rate.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="badge-dollar-sign" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Compare monthly and yearly burn</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            View both monthly burn and annualized burn so finance discussions stay aligned across reporting periods.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="shield-alert" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Handle edge cases safely</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            Catch invalid duration values and distinguish between burning cash, flat cash, and cash-flow positive periods.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="line-chart" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Support fundraising conversations</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            Use a simple burn and runway snapshot to explain your cash position to investors and stakeholders.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="calculator" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Keep planning simple</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            Recalculate instantly as cash balances change so you can update hiring, spending, and growth plans faster.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="container mx-auto py-3 px-4 md:px-6 text-center">
+    <div class="flex flex-col items-center space-y-6">
+      <a href="{% url 'account_signup' %}"
+        class="inline-flex items-center justify-center rounded-lg px-8 py-4 text-lg font-medium text-white shadow-sm"
+        style="background-color: #5C67F2;">
+        Start Free Trial
+      </a>
+      <div class="flex flex-col md:flex-row items-center justify-center gap-x-8 gap-y-2 pt-4">
+        <div class="flex items-center gap-2">
+          <i data-lucide="check" class="w-5 h-5 text-primary"></i>
+          <span class="text-neutral-700 dark:text-neutral-300">Track burn rate clearly</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i data-lucide="check" class="w-5 h-5 text-primary"></i>
+          <span class="text-neutral-700 dark:text-neutral-300">Estimate runway faster</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i data-lucide="check" class="w-5 h-5 text-primary"></i>
+          <span class="text-neutral-700 dark:text-neutral-300">Plan with confidence</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="container mx-auto py-16 px-4 md:px-6">
+    <div class="bg-primary/10 dark:bg-primary/20 rounded-3xl p-8 md:p-16 text-center">
+      <h2 class="text-4xl font-bold text-primary">Ready to plan your cash runway better?</h2>
+      <p class="mt-4 text-lg text-neutral-700 dark:text-neutral-300 max-w-2xl mx-auto">
+        Calculate burn rate, understand your financial runway, and make smarter growth decisions with clearer numbers.
+      </p>
+      <div class="mt-8">
+        <a href="{% url 'account_signup' %}"
+          class="inline-flex items-center justify-center rounded-lg px-8 py-4 text-lg font-medium text-white shadow-sm"
+          style="background-color: #5C67F2;">
+          Start Free Trial
+        </a>
+      </div>
+      <div class="flex flex-col md:flex-row items-center justify-center gap-x-8 gap-y-2 pt-4">
+        <div class="flex items-center gap-2">
+          <i data-lucide="check" class="w-5 h-5 text-primary"></i>
+          <span class="text-neutral-700 dark:text-neutral-300">Monitor cash health</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i data-lucide="check" class="w-5 h-5 text-primary"></i>
+          <span class="text-neutral-700 dark:text-neutral-300">Improve financial planning</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i data-lucide="check" class="w-5 h-5 text-primary"></i>
+          <span class="text-neutral-700 dark:text-neutral-300">Prepare for growth</span>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+  (function () {
+    function initializeCalculator() {
+      const elements = {
+        currency: document.getElementById('currency'),
+        initialBalance: document.getElementById('initial_balance'),
+        finalBalance: document.getElementById('final_balance'),
+        durationMonths: document.getElementById('duration_months'),
+        monthlyBurn: document.getElementById('result_monthly_burn'),
+        annualBurn: document.getElementById('result_annual_burn'),
+        runway: document.getElementById('result_runway'),
+        status: document.getElementById('result_status'),
+        error: document.getElementById('calculator_error'),
+        initialSymbol: document.getElementById('currency-symbol-initial'),
+        finalSymbol: document.getElementById('currency-symbol-final')
+      };
+
+      if (!elements.currency || !elements.initialBalance || !elements.finalBalance || !elements.durationMonths || !elements.monthlyBurn || !elements.annualBurn || !elements.runway || !elements.status || !elements.error || !elements.initialSymbol || !elements.finalSymbol) {
+        return false;
+      }
+
+      if (elements.currency.dataset.burnRateBound === 'true') {
+        return true;
+      }
+
+      function parseValue(value) {
+        if (value === '') return null;
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : null;
+      }
+
+      function showError(message) {
+        elements.error.textContent = message;
+        elements.error.classList.toggle('hidden', !message);
+      }
+
+      function getCurrencySymbol(currency) {
+        const symbolMap = {
+          USD: '$',
+          EUR: '€',
+          GBP: '£'
+        };
+
+        return symbolMap[currency] || '$';
+      }
+
+      function getCurrencyFormatter() {
+        const currency = elements.currency.value;
+        const localeMap = {
+          USD: 'en-US',
+          EUR: 'es-ES',
+          GBP: 'en-GB'
+        };
+
+        return new Intl.NumberFormat(localeMap[currency] || 'en-US', {
+          style: 'currency',
+          currency,
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        });
+      }
+
+      function formatMonths(value) {
+        return `${value.toLocaleString('en-US', {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 2
+        })} months`;
+      }
+
+      function updateCurrencySymbols() {
+        const symbol = getCurrencySymbol(elements.currency.value);
+        elements.initialSymbol.textContent = symbol;
+        elements.finalSymbol.textContent = symbol;
+      }
+
+      function recalculate() {
+        const C0 = parseValue(elements.initialBalance.value);
+        const C1 = parseValue(elements.finalBalance.value);
+        const T = parseValue(elements.durationMonths.value);
+        const formatter = getCurrencyFormatter();
+        let errorMessage = '';
+
+        if (C0 === null || C1 === null || T === null) {
+          showError('Enter valid numbers in all fields to calculate burn rate and runway.');
+          elements.monthlyBurn.textContent = '—';
+          elements.annualBurn.textContent = '—';
+          elements.runway.textContent = '—';
+          elements.status.textContent = '—';
+          return;
+        }
+
+        if (C0 < 0 || C1 < 0) {
+          errorMessage = 'Initial balance and final balance must be 0 or greater.';
+        } else if (T <= 0) {
+          errorMessage = 'Duration must be greater than 0.';
+        }
+
+        if (errorMessage) {
+          showError(errorMessage);
+          elements.monthlyBurn.textContent = '—';
+          elements.annualBurn.textContent = '—';
+          elements.runway.textContent = '—';
+          elements.status.textContent = '—';
+          return;
+        }
+
+        const monthlyBurn = (C0 - C1) / T;
+        const annualBurn = monthlyBurn * 12;
+
+        elements.monthlyBurn.textContent = formatter.format(monthlyBurn);
+        elements.annualBurn.textContent = formatter.format(annualBurn);
+
+        if (monthlyBurn > 0) {
+          const runway = C1 / monthlyBurn;
+          elements.runway.textContent = formatMonths(runway);
+          elements.status.textContent = 'Burning cash';
+        } else if (monthlyBurn === 0) {
+          elements.runway.textContent = '∞';
+          elements.status.textContent = 'Cash stable';
+        } else {
+          elements.runway.textContent = 'N/A';
+          elements.status.textContent = 'Cash-flow positive';
+        }
+
+        showError('');
+      }
+
+      const inputIds = ['currency', 'initial_balance', 'final_balance', 'duration_months'];
+
+      document.body.addEventListener('input', function (e) {
+        if (e.target && inputIds.includes(e.target.id)) {
+          if (e.target.id === 'currency') {
+            updateCurrencySymbols();
+          }
+          recalculate();
+        }
+      });
+
+      document.body.addEventListener('change', function (e) {
+        if (e.target && inputIds.includes(e.target.id)) {
+          if (e.target.id === 'currency') {
+            updateCurrencySymbols();
+          }
+          recalculate();
+        }
+      });
+
+      elements.currency.dataset.burnRateBound = 'true';
+      updateCurrencySymbols();
+      recalculate();
+      return true;
+    }
+
+    function mountWhenReady() {
+      if (window.baseLayoutReady) {
+        initializeCalculator();
+      } else {
+        setTimeout(mountWhenReady, 50);
+      }
+    }
+
+    mountWhenReady();
+  })();
+</script>
+{% endblock %}

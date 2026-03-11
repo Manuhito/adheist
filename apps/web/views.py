@@ -268,6 +268,60 @@ def marketing_pages_index(request):
             "description": "AI Ad Generator for Law Firms"
         },
         {
+            "name": "Accountant",
+            "url": "web:accountant_page",
+            "image_filename": "accountant.webp",
+            "description": "AI Ad Generator for Accountants"
+        },
+        {
+            "name": "CPA",
+            "url": "web:cpa_page",
+            "image_filename": "cpa.webp",
+            "description": "AI Ad Generator for CPA Firms"
+        },
+        {
+            "name": "Insurance Agent",
+            "url": "web:insurance_agent_page",
+            "image_filename": "insurance-agent.webp",
+            "description": "AI Ad Generator for Insurance Agents"
+        },
+        {
+            "name": "Real Estate Agent",
+            "url": "web:real_estate_agent_page",
+            "image_filename": "real-estate-agent.webp",
+            "description": "AI Ad Generator for Real Estate Agents"
+        },
+        {
+            "name": "Financial Advisor",
+            "url": "web:financial_advisor_page",
+            "image_filename": "financial-advisor.webp",
+            "description": "AI Ad Generator for Financial Advisors"
+        },
+        {
+            "name": "Mortgage Broker",
+            "url": "web:mortgage_broker_page",
+            "image_filename": "mortgage-broker.webp",
+            "description": "AI Ad Generator for Mortgage Brokers"
+        },
+        {
+            "name": "Notary",
+            "url": "web:notary_page",
+            "image_filename": "notary.webp",
+            "description": "AI Ad Generator for Notaries"
+        },
+        {
+            "name": "Travel Agent",
+            "url": "web:travel_agent_page",
+            "image_filename": "travel-agent.webp",
+            "description": "AI Ad Generator for Travel Agents"
+        },
+        {
+            "name": "Wedding Planner",
+            "url": "web:wedding_planner_page",
+            "image_filename": "wedding-planner.webp",
+            "description": "AI Ad Generator for Wedding Planners"
+        },
+        {
             "name": "Luxury",
             "url": "web:luxury_page",
             "image_filename": "luxury.webp",
@@ -813,6 +867,48 @@ def marketing_pages_index(request):
             "image_filename": "car-wash.webp",
             "description": "AI Ad Generator for Car Washes"
         },
+        {
+            "name": "Towing",
+            "url": "web:towing_page",
+            "image_filename": "towing.webp",
+            "description": "AI Ad Generator for Towing Services"
+        },
+        {
+            "name": "Auto Glass Repair",
+            "url": "web:auto_glass_repair_page",
+            "image_filename": "auto-glass-repair.webp",
+            "description": "AI Ad Generator for Auto Glass Repair Shops"
+        },
+        {
+            "name": "Transmission Shop",
+            "url": "web:transmission_shop_page",
+            "image_filename": "transmission-shop.webp",
+            "description": "AI Ad Generator for Transmission Shops"
+        },
+        {
+            "name": "Muffler Shop",
+            "url": "web:muffler_shop_page",
+            "image_filename": "muffler-shop.webp",
+            "description": "AI Ad Generator for Muffler Shops"
+        },
+        {
+            "name": "Auto Parts Store",
+            "url": "web:auto_parts_store_page",
+            "image_filename": "auto-parts-store.webp",
+            "description": "AI Ad Generator for Auto Parts Stores"
+        },
+        {
+            "name": "Motorcycle Dealer",
+            "url": "web:motorcycle_dealer_page",
+            "image_filename": "motorcycle-dealer.webp",
+            "description": "AI Ad Generator for Motorcycle Dealers"
+        },
+        {
+            "name": "Motorcycle Repair",
+            "url": "web:motorcycle_repair_page",
+            "image_filename": "motorcycle-repair.webp",
+            "description": "AI Ad Generator for Motorcycle Repair Shops"
+        },
     ]
     
     return render(request, 'marketing_pages/index.html', {
@@ -928,3 +1024,188 @@ def facebook_ad_budget_calculator(request):
         "logo_list": logo_list,
     })
 
+
+def churn_rate_calculator(request):
+    """
+    Render the Churn Rate Calculator page.
+    """
+    logo_list = [
+        "images/landing/brands-icons/hello-fresh-logo.svg",
+        "images/landing/brands-icons/true-classic.svg",
+        "images/landing/brands-icons/huel.svg",
+        "images/landing/brands-icons/ag1-logo.svg",
+        "images/landing/brands-icons/logo-clickup.svg",
+        "images/landing/brands-icons/monday.svg",
+        "images/landing/brands-icons/calm.svg",
+        "images/landing/brands-icons/lululemon.svg",
+        "images/landing/brands-icons/magicspoon.svg",
+        "images/landing/brands-icons/gymshark.svg",
+        "images/landing/brands-icons/canva.svg",
+        "images/landing/brands-icons/the-ridge.svg",
+    ]
+
+    return render(request, "calculators/churn_rate_calculator.html", {
+        "logo_list": logo_list,
+    })
+
+
+def attrition_rate_calculator(request):
+    """
+    Render the Attrition Rate Calculator page.
+    """
+    logo_list = [
+        "images/landing/brands-icons/hello-fresh-logo.svg",
+        "images/landing/brands-icons/true-classic.svg",
+        "images/landing/brands-icons/huel.svg",
+        "images/landing/brands-icons/ag1-logo.svg",
+        "images/landing/brands-icons/logo-clickup.svg",
+        "images/landing/brands-icons/monday.svg",
+        "images/landing/brands-icons/calm.svg",
+        "images/landing/brands-icons/lululemon.svg",
+        "images/landing/brands-icons/magicspoon.svg",
+        "images/landing/brands-icons/gymshark.svg",
+        "images/landing/brands-icons/canva.svg",
+        "images/landing/brands-icons/the-ridge.svg",
+    ]
+
+    return render(request, "calculators/attrition_rate_calculator.html", {
+        "logo_list": logo_list,
+    })
+
+
+def burn_rate_calculator(request):
+    """
+    Render the Burn Rate Calculator page.
+    """
+    logo_list = [
+        "images/landing/brands-icons/hello-fresh-logo.svg",
+        "images/landing/brands-icons/true-classic.svg",
+        "images/landing/brands-icons/huel.svg",
+        "images/landing/brands-icons/ag1-logo.svg",
+        "images/landing/brands-icons/logo-clickup.svg",
+        "images/landing/brands-icons/monday.svg",
+        "images/landing/brands-icons/calm.svg",
+        "images/landing/brands-icons/lululemon.svg",
+        "images/landing/brands-icons/magicspoon.svg",
+        "images/landing/brands-icons/gymshark.svg",
+        "images/landing/brands-icons/canva.svg",
+        "images/landing/brands-icons/the-ridge.svg",
+    ]
+
+    return render(request, "calculators/burn_rate_calculator.html", {
+        "logo_list": logo_list,
+    })
+
+
+def bounce_rate_calculator(request):
+    """
+    Render the Bounce Rate Calculator page.
+    """
+    logo_list = [
+        "images/landing/brands-icons/hello-fresh-logo.svg",
+        "images/landing/brands-icons/true-classic.svg",
+        "images/landing/brands-icons/huel.svg",
+        "images/landing/brands-icons/ag1-logo.svg",
+        "images/landing/brands-icons/logo-clickup.svg",
+        "images/landing/brands-icons/monday.svg",
+        "images/landing/brands-icons/calm.svg",
+        "images/landing/brands-icons/lululemon.svg",
+        "images/landing/brands-icons/magicspoon.svg",
+        "images/landing/brands-icons/gymshark.svg",
+        "images/landing/brands-icons/canva.svg",
+        "images/landing/brands-icons/the-ridge.svg",
+    ]
+
+    return render(request, "calculators/bounce_rate_calculator.html", {
+        "logo_list": logo_list,
+    })
+
+
+def saas_ltv_calculator(request):
+    """
+    Render the SaaS LTV Calculator page.
+    """
+    logo_list = [
+        "images/landing/brands-icons/hello-fresh-logo.svg",
+        "images/landing/brands-icons/true-classic.svg",
+        "images/landing/brands-icons/huel.svg",
+        "images/landing/brands-icons/ag1-logo.svg",
+        "images/landing/brands-icons/logo-clickup.svg",
+        "images/landing/brands-icons/monday.svg",
+        "images/landing/brands-icons/calm.svg",
+        "images/landing/brands-icons/lululemon.svg",
+        "images/landing/brands-icons/magicspoon.svg",
+        "images/landing/brands-icons/gymshark.svg",
+        "images/landing/brands-icons/canva.svg",
+        "images/landing/brands-icons/the-ridge.svg",
+    ]
+
+    return render(request, "calculators/saas_ltv_calculator.html", {
+        "logo_list": logo_list,
+    })
+
+
+def roas_calculator(request):
+    """Render the ROAS Calculator page."""
+    logo_list = [
+        "images/landing/brands-icons/hello-fresh-logo.svg",
+        "images/landing/brands-icons/true-classic.svg",
+        "images/landing/brands-icons/huel.svg",
+        "images/landing/brands-icons/ag1-logo.svg",
+        "images/landing/brands-icons/logo-clickup.svg",
+        "images/landing/brands-icons/monday.svg",
+        "images/landing/brands-icons/calm.svg",
+        "images/landing/brands-icons/lululemon.svg",
+        "images/landing/brands-icons/magicspoon.svg",
+        "images/landing/brands-icons/gymshark.svg",
+        "images/landing/brands-icons/canva.svg",
+        "images/landing/brands-icons/the-ridge.svg",
+    ]
+
+    return render(request, "calculators/roas_calculator.html", {
+        "logo_list": logo_list,
+    })
+
+
+def online_marketing_conversion_calculator(request):
+    """Render the Online Marketing Conversion Calculator page."""
+    logo_list = [
+        "images/landing/brands-icons/hello-fresh-logo.svg",
+        "images/landing/brands-icons/true-classic.svg",
+        "images/landing/brands-icons/huel.svg",
+        "images/landing/brands-icons/ag1-logo.svg",
+        "images/landing/brands-icons/logo-clickup.svg",
+        "images/landing/brands-icons/monday.svg",
+        "images/landing/brands-icons/calm.svg",
+        "images/landing/brands-icons/lululemon.svg",
+        "images/landing/brands-icons/magicspoon.svg",
+        "images/landing/brands-icons/gymshark.svg",
+        "images/landing/brands-icons/canva.svg",
+        "images/landing/brands-icons/the-ridge.svg",
+    ]
+
+    return render(request, "calculators/online_marketing_conversion_calculator.html", {
+        "logo_list": logo_list,
+    })
+
+
+def cpc_cpm_calculator(request):
+    """Render the CPC and CPM Calculator page."""
+    logo_list = [
+        "images/landing/brands-icons/hello-fresh-logo.svg",
+        "images/landing/brands-icons/true-classic.svg",
+        "images/landing/brands-icons/huel.svg",
+        "images/landing/brands-icons/ag1-logo.svg",
+        "images/landing/brands-icons/logo-clickup.svg",
+        "images/landing/brands-icons/monday.svg",
+        "images/landing/brands-icons/calm.svg",
+        "images/landing/brands-icons/lululemon.svg",
+        "images/landing/brands-icons/magicspoon.svg",
+        "images/landing/brands-icons/gymshark.svg",
+        "images/landing/brands-icons/canva.svg",
+        "images/landing/brands-icons/the-ridge.svg",
+    ]
+
+    return render(request, "calculators/cpc_cpm_calculator.html", {
+        "logo_list": logo_list,
+    })

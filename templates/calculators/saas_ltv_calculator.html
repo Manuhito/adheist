@@ -1,0 +1,448 @@
+{% extends "web/base.html" %}
+{% load static %}
+
+{% block page_title %}SaaS Lifetime Value (LTV) Calculator | Adheist{% endblock page_title %}
+
+{% block meta_description %}
+<meta name="description"
+  content="Free SaaS LTV Calculator. Compute customer lifetime value using ARPA, margin, churn, and expansion. Includes MRR-based mode when ARPA is unknown.">
+{% endblock meta_description %}
+
+{% block content %}
+<div class="space-y-16">
+  <!-- SaaS LTV Calculator Section -->
+  <section class="container mx-auto py-12 px-4 md:px-6">
+    <div class="max-w-7xl mx-auto">
+      <!-- Title -->
+      <div class="text-center mb-12">
+        <h1 class="text-5xl md:text-6xl font-bold text-primary mb-4">
+          SaaS Lifetime Value (LTV) Calculator
+        </h1>
+        <p class="text-xl text-neutral-700 dark:text-neutral-300 max-w-3xl mx-auto">
+          Estimate customer lifetime value with margin, churn, and expansion. Switch to MRR mode if you don't know your
+          ARPA.
+        </p>
+      </div>
+
+      <!-- Calculator -->
+      <div class="grid lg:grid-cols-2 gap-8">
+        <!-- Inputs -->
+        <div class="space-y-6">
+          <div
+            class="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-6 md:p-8">
+            <h2 class="text-2xl font-bold text-primary mb-6">Inputs</h2>
+
+            <div class="space-y-4">
+              <!-- Currency Selector -->
+              <div class="space-y-2">
+                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">Currency</label>
+                <select id="currency"
+                  class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20">
+                  <option value="USD">USD ($)</option>
+                  <option value="EUR">EUR (€)</option>
+                  <option value="GBP">GBP (£)</option>
+                </select>
+              </div>
+
+              <!-- ARPA -->
+              <div class="space-y-2">
+                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">
+                  Average revenue per account (ARPA)
+                </label>
+                <div class="relative">
+                  <span id="symbol-arpa"
+                    class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400">$</span>
+                  <input type="number" id="arpa" value="250" step="10" min="0" placeholder="250"
+                    class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 pl-8 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+                </div>
+              </div>
+
+              <!-- Gross Margin -->
+              <div class="space-y-2">
+                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">
+                  Gross margin (%)
+                </label>
+                <div class="relative">
+                  <input type="number" id="gross_margin_pct" value="65" step="1" min="0" max="100" placeholder="65"
+                    class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 pr-10 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+                  <span class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400">%</span>
+                </div>
+              </div>
+
+              <!-- Churn -->
+              <div class="space-y-2">
+                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">
+                  Churn (%) per period
+                </label>
+                <div class="relative">
+                  <input type="number" id="churn_pct" value="4" step="0.1" min="0" max="100" placeholder="4"
+                    class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 pr-10 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+                  <span class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400">%</span>
+                </div>
+              </div>
+
+              <!-- Account expansion -->
+              <div class="space-y-2">
+                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">
+                  Account expansion per period
+                </label>
+                <div class="relative">
+                  <span id="symbol-expansion"
+                    class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400">$</span>
+                  <input type="number" id="account_expansion" value="0" step="5" min="0" placeholder="0"
+                    class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 pl-8 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+                </div>
+              </div>
+
+              <!-- Unknown ARPA toggle -->
+              <div class="flex items-center gap-3 pt-1">
+                <input id="unknown_arpa" type="checkbox"
+                  class="h-4 w-4 rounded border-neutral-300 text-primary focus:ring-primary" />
+                <label for="unknown_arpa" class="text-sm font-medium text-neutral-700 dark:text-neutral-200">
+                  I don't know the ARPA (use MRR / # customers)
+                </label>
+              </div>
+
+              <!-- ARPA alternative fields -->
+              <div id="arpa-alt" class="space-y-4 hidden">
+                <div class="space-y-2">
+                  <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">
+                    # of customers
+                  </label>
+                  <input type="number" id="customers" value="25" step="1" min="0"
+                    class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+                </div>
+                <div class="space-y-2">
+                  <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-200">
+                    MRR (monthly recurring revenue)
+                  </label>
+                  <div class="relative">
+                    <span id="symbol-mrr"
+                      class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400">$</span>
+                    <input type="number" id="mrr" value="6000" step="50" min="0"
+                      class="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 pl-8 text-neutral-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20" />
+                  </div>
+                </div>
+              </div>
+
+              <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                Period can be month/quarter; LTV is expressed in the same period. Churn and margin are capped 0–100%.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Results -->
+        <div class="space-y-6">
+          <div
+            class="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-6 md:p-8">
+            <h2 class="text-2xl font-bold text-primary mb-6">Results</h2>
+            <div class="space-y-3">
+              <div
+                class="p-4 rounded-lg bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
+                <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-1">Effective ARPA used</p>
+                <p class="text-2xl font-bold text-neutral-900 dark:text-white" id="result_arpa_effective">$250.00</p>
+              </div>
+              <div class="p-4 rounded-lg bg-primary/10 dark:bg-primary/20 border-2 border-primary">
+                <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-1">Customer lifetime value (LTV)</p>
+                <p class="text-3xl font-bold text-primary" id="result_ltv">$4,062.50</p>
+              </div>
+              <p id="ltv_warning" class="hidden text-sm text-amber-600 dark:text-amber-400">
+                Churn is zero. LTV tends to infinity. Increase churn above 0 to see a finite estimate.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Logos Section -->
+  <section id="logos" class="container mx-auto px-4 md:px-8 pt-4 pb-4">
+    <div class="relative mt-6 overflow-hidden">
+      <div class="flex justify-center items-center gap-x-12">
+        {% for logo in logo_list|slice:":6" %}
+        <img width="112" height="40" src="{% static logo %}"
+          class="h-10 w-28 dark:brightness-0 dark:invert grayscale opacity-30" alt="Brand logo" />
+        {% endfor %}
+      </div>
+      <div class="flex justify-center items-center gap-x-12 mt-4">
+        {% for logo in logo_list|slice:"6:" %}
+        <img width="112" height="40" src="{% static logo %}"
+          class="h-10 w-28 dark:brightness-0 dark:invert grayscale opacity-30" alt="Brand logo" />
+        {% endfor %}
+      </div>
+      <div class="pointer-events-none absolute inset-y-0 left-0 h-full w-1/3 bg-gradient-to-r from-background"></div>
+      <div class="pointer-events-none absolute inset-y-0 right-0 h-full w-1/3 bg-gradient-to-l from-background"></div>
+    </div>
+  </section>
+
+  <!-- Second Title Section -->
+  <section class="container mx-auto py-3 px-4 md:px-6 text-center">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-4xl font-bold tracking-tight text-primary sm:text-5xl">
+        Understand LTV to fund growth with confidence
+      </h2>
+      <p class="mt-6 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+        Model retention and expansion to decide where to invest in product, success, and acquisition.
+      </p>
+    </div>
+  </section>
+
+  <!-- Features Grid Section -->
+  <section class="container mx-auto py-3 px-4 md:px-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="dollar-sign" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Price with LTV clarity</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            See how margin, churn, and expansion shape lifetime value to guide pricing decisions.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="infinity" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Balance churn & expansion</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            Evaluate how small churn changes or upsells lift LTV and CAC payback.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="line-chart" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Forecast confidently</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            Use LTV to fund GTM programs, budget CS, and plan sustainable growth.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="users" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Segment insights</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            Compare LTV across cohorts to prioritize the customers who drive profit.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="shield-check" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Defend CS budgets</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            Show how retention programs increase LTV and justify investment in success teams.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-[2rem] flex flex-col justify-between aspect-square">
+        <div class="w-12 h-12 flex items-center justify-center text-primary">
+          <i data-lucide="sparkles" class="w-10 h-10"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-medium text-primary pt-2">Communicate wins</h3>
+          <p class="mt-3 text-lg font-medium leading-relaxed tracking-normal text-neutral-700 dark:text-neutral-300">
+            Share quick LTV shifts from churn or expansion changes with stakeholders.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="container mx-auto py-3 px-4 md:px-6 text-center">
+    <div class="flex flex-col items-center space-y-6">
+      <a href="{% url 'account_signup' %}"
+        class="inline-flex items-center justify-center rounded-lg px-8 py-4 text-lg font-medium text-white shadow-sm"
+        style="background-color: #5C67F2;">
+        Start Free Trial
+      </a>
+      <div class="flex flex-col md:flex-row items-center justify-center gap-x-8 gap-y-2 pt-4">
+        <div class="flex items-center gap-2">
+          <i data-lucide="check" class="w-5 h-5 text-primary"></i>
+          <span class="text-neutral-700 dark:text-neutral-300">Plan with real LTV</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i data-lucide="check" class="w-5 h-5 text-primary"></i>
+          <span class="text-neutral-700 dark:text-neutral-300">Improve retention</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i data-lucide="check" class="w-5 h-5 text-primary"></i>
+          <span class="text-neutral-700 dark:text-neutral-300">Optimize expansion</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA Section -->
+  <section class="container mx-auto py-16 px-4 md:px-6">
+    <div class="bg-primary/10 dark:bg-primary/20 rounded-3xl p-8 md:p-16 text-center">
+      <h2 class="text-4xl font-bold text-primary">Ready to grow LTV?</h2>
+      <p class="mt-4 text-lg text-neutral-700 dark:text-neutral-300 max-w-2xl mx-auto">
+        Forecast lifetime value, reduce churn, and fund growth efficiently. Start your free trial today.
+      </p>
+      <div class="mt-8">
+        <a href="{% url 'account_signup' %}"
+          class="inline-flex items-center justify-center rounded-lg px-8 py-4 text-lg font-medium text-white shadow-sm"
+          style="background-color: #5C67F2;">
+          Start Free Trial
+        </a>
+      </div>
+      <div class="flex flex-col md:flex-row items-center justify-center gap-x-8 gap-y-2 pt-4">
+        <div class="flex items-center gap-2">
+          <i data-lucide="check" class="w-5 h-5 text-primary"></i>
+          <span class="text-neutral-700 dark:text-neutral-300">Search 1M+ Ads Library</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i data-lucide="check" class="w-5 h-5 text-primary"></i>
+          <span class="text-neutral-700 dark:text-neutral-300">Unlimited ads with feedback</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i data-lucide="check" class="w-5 h-5 text-primary"></i>
+          <span class="text-neutral-700 dark:text-neutral-300">100% money back guarantee</span>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+  (function () {
+    const inputIds = ['currency', 'arpa', 'gross_margin_pct', 'churn_pct', 'account_expansion', 'customers', 'mrr', 'unknown_arpa'];
+
+    const localeMap = {
+      'USD': 'en-US',
+      'EUR': 'es-ES',
+      'GBP': 'en-GB'
+    };
+
+    const symbolMap = {
+      'USD': '$',
+      'EUR': '€',
+      'GBP': '£'
+    };
+
+    function getFormatter() {
+      const currency = document.getElementById('currency')?.value || 'USD';
+      return new Intl.NumberFormat(localeMap[currency] || 'en-US', {
+        style: 'currency',
+        currency: currency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function updateSymbols() {
+      const currency = document.getElementById('currency')?.value || 'USD';
+      const symbol = symbolMap[currency] || '$';
+      const targets = ['symbol-arpa', 'symbol-expansion', 'symbol-mrr'];
+      targets.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = symbol;
+      });
+    }
+
+    function toggleArpaMode() {
+      const unknown = document.getElementById('unknown_arpa');
+      const arpaField = document.getElementById('arpa');
+      const alt = document.getElementById('arpa-alt');
+      const isUnknown = !!unknown?.checked;
+      if (alt) alt.classList.toggle('hidden', !isUnknown);
+      if (arpaField) arpaField.disabled = isUnknown;
+    }
+
+    function clampPercent(value) {
+      const num = parseFloat(value);
+      if (Number.isNaN(num)) return 0;
+      return Math.min(100, Math.max(0, num));
+    }
+
+    function readNumber(id) {
+      const val = parseFloat(document.getElementById(id)?.value);
+      if (Number.isNaN(val)) return 0;
+      return Math.max(0, val);
+    }
+
+    function recalc() {
+      const formatter = getFormatter();
+
+      const grossMarginPct = clampPercent(document.getElementById('gross_margin_pct')?.value);
+      const churnPct = clampPercent(document.getElementById('churn_pct')?.value);
+      const margin = grossMarginPct / 100;
+      const churn = churnPct / 100;
+
+      const unknownArpa = !!document.getElementById('unknown_arpa')?.checked;
+
+      const arpa = readNumber('arpa');
+      const accountExpansion = readNumber('account_expansion');
+      const customers = readNumber('customers');
+      const mrr = readNumber('mrr');
+
+      const arpaEffective = unknownArpa ? (customers > 0 ? (mrr / customers) : 0) : arpa;
+
+      const churnIsZero = churn === 0;
+      let ltvDisplay = '∞';
+
+      if (churnIsZero) {
+        ltvDisplay = '∞';
+      } else {
+        const invChurn = 1 / churn;
+        const arpaGrowth = accountExpansion;
+        const ltv = (0.5 * invChurn * (2 * arpaEffective + arpaGrowth * (invChurn - 1))) * margin;
+        ltvDisplay = formatter.format(ltv);
+      }
+
+      // Outputs
+      const arpaEffectiveEl = document.getElementById('result_arpa_effective');
+      const ltvEl = document.getElementById('result_ltv');
+      const warningEl = document.getElementById('ltv_warning');
+
+      if (arpaEffectiveEl) arpaEffectiveEl.textContent = formatter.format(arpaEffective);
+      if (ltvEl) ltvEl.textContent = ltvDisplay;
+      if (warningEl) warningEl.classList.toggle('hidden', !churnIsZero);
+    }
+
+    function handleInput(e) {
+      if (e.target && inputIds.includes(e.target.id)) {
+        if (e.target.id === 'currency') updateSymbols();
+        if (e.target.id === 'unknown_arpa') toggleArpaMode();
+        recalc();
+      }
+    }
+
+    document.body.addEventListener('input', handleInput);
+    document.body.addEventListener('change', handleInput);
+
+    // Initial state
+    updateSymbols();
+    toggleArpaMode();
+    recalc();
+  })();
+</script>
+{% endblock %}

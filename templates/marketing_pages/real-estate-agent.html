@@ -1,0 +1,280 @@
+{% extends "web/base.html" %}
+{% load static socialaccount marketing_tags %}
+
+{% block page_title %}AI Ad Generator for Real Estate Agents | Ad Heist{% endblock page_title %}
+
+{% block meta_description %}
+<meta name="description" content="Real estate agent ads that attract buyers, sellers, and investors with AI-crafted campaigns.">
+{% endblock meta_description %}
+
+{% block page_head %}
+    <style>
+        /* Page-specific styles */
+    </style>
+{% endblock page_head %}
+
+{% block content %}
+<div class="text-gray-800 dark:text-gray-200">
+
+    <!-- Hero Section -->
+    <section class="container mx-auto py-12 px-4 md:px-6">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-12 items-center">
+            <div class="md:col-span-3 text-left">
+                <h1 class="text-5xl lg:text-6xl font-bold tracking-tight text-neutral-800 dark:text-white leading-tight lg:leading-snug">
+                    AI Ads for Real Estate Agents
+                </h1>
+                <p class="mt-6 text-lg text-neutral-600 dark:text-neutral-300 max-w-2xl">
+                    Promote listings, win listings, and nurture relationships with compliant, ready-to-launch campaigns built for your market.
+                </p>
+                <div class="mt-8 flex flex-col sm:flex-row items-center justify-start gap-4">
+                    <a href="{% url 'account_signup' %}" class="inline-flex items-center justify-center rounded-lg px-6 py-3 text-base font-medium text-white shadow-sm" style="background-color: #5C67F2;">
+                        Start Free Trial
+                    </a>
+                    <form method="post" action="{% provider_login_url 'google' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="inline-flex items-center justify-center rounded-lg border border-neutral-300 bg-white px-6 py-3 text-base font-medium text-neutral-700 hover:bg-neutral-100 w-full sm:w-auto">
+                            <img src="{% static 'images/socialauth/google-logo.svg' %}" alt="Google" class="h-5 w-5 mr-3">
+                            Login with Google
+                        </button>
+                    </form>
+                </div>
+                <div class="mt-8 flex flex-col items-start">
+                    <div class="flex items-center">
+                        {% for _ in "12345" %}
+                        <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"></path></svg>
+                        {% endfor %}
+                        <span class="ml-2 text-base font-medium text-neutral-800 dark:text-white">5.0</span>
+                    </div>
+                    <p class="mt-2 text-sm text-neutral-500 dark:text-neutral-400">From 120+ agent reviews</p>
+                </div>
+            </div>
+            <div class="md:col-span-2">
+                <img src="{% industry_image 'real-estate-agent.webp' %}" alt="AI Ads for Real Estate Agents" class="rounded-3xl w-full">
+            </div>
+        </div>
+    </section>
+
+    <!-- PAS Claim Section -->
+    <section class="container mx-auto py-12 px-4 md:px-6 text-center">
+        <div class="max-w-3xl mx-auto">
+            <h2 class="text-4xl font-bold tracking-tight text-primary sm:text-5xl">
+                Manual Marketing Slows Every Deal
+            </h2>
+            <p class="mt-6 text-lg leading-8 text-neutral-600 dark:text-neutral-300">
+                Listing updates, follow-ups, and custom flyers steal hours from selling. Outdated ads keep quality buyers and sellers from noticing your expertise.
+            </p>
+        </div>
+    </section>
+
+    <!-- Problems Section -->
+    <section class="container mx-auto py-12 px-4 md:px-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-3xl flex flex-col items-start space-y-4 aspect-[2/1]">
+                <div class="w-12 h-12 flex items-center justify-center text-primary">
+                    <i data-lucide="home" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-primary pt-2">Spotlight Every Listing</h3>
+                <p class="text-neutral-600 dark:text-neutral-300">Showcase key upgrades, lifestyle perks, and pricing proof instantly.</p>
+            </div>
+            <div class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-3xl flex flex-col items-start space-y-4 aspect-[2/1]">
+                <div class="w-12 h-12 flex items-center justify-center text-primary">
+                    <i data-lucide="users" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-primary pt-2">Win More Sellers</h3>
+                <p class="text-neutral-600 dark:text-neutral-300">Demonstrate modern marketing plans that earn listing agreements.</p>
+            </div>
+            <div class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-3xl flex flex-col items-start space-y-4 aspect-[2/1]">
+                <div class="w-12 h-12 flex items-center justify-center text-primary">
+                    <i data-lucide="key" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-primary pt-2">Move Buyers Faster</h3>
+                <p class="text-neutral-600 dark:text-neutral-300">Create urgency with timelines, incentives, and neighborhood insights.</p>
+            </div>
+            <div class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-3xl flex flex-col items-start space-y-4 aspect-[2/1]">
+                <div class="w-12 h-12 flex items-center justify-center text-primary">
+                    <i data-lucide="map" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-primary pt-2">Own Your Farming Area</h3>
+                <p class="text-neutral-600 dark:text-neutral-300">Hyper-target subdivisions, zip codes, or investor niches with ease.</p>
+            </div>
+            <div class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-3xl flex flex-col items-start space-y-4 aspect-[2/1]">
+                <div class="w-12 h-12 flex items-center justify-center text-primary">
+                    <i data-lucide="sparkles" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-primary pt-2">Stand Out from Portals</h3>
+                <p class="text-neutral-600 dark:text-neutral-300">Share concierge-level service and personal follow-through.</p>
+            </div>
+            <div class="border border-neutral-200 dark:border-neutral-800 p-8 rounded-3xl flex flex-col items-start space-y-4 aspect-[2/1]">
+                <div class="w-12 h-12 flex items-center justify-center text-primary">
+                    <i data-lucide="activity" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-primary pt-2">Track Real Results</h3>
+                <p class="text-neutral-600 dark:text-neutral-300">Know which ads bring showings, offers, and referrals.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature 1: Ad Library Search -->
+    <section class="container mx-auto py-16 px-4 md:px-6">
+        <div class="grid md:grid-cols-2 gap-24 items-center">
+            <div class="space-y-12">
+                <div>
+                    <h2 class="text-4xl font-bold text-primary leading-tight">Study Top Real Estate Ads</h2>
+                    <p class="mt-4 text-lg text-neutral-600 dark:text-neutral-300">Review winning campaigns from luxury teams, boutique brokerages, and high-volume agents.</p>
+                </div>
+                <div class="space-y-8">
+                    <div class="flex items-start gap-4">
+                        <div class="bg-primary/10 p-3 rounded-lg flex-shrink-0">
+                            <i data-lucide="search" class="w-6 h-6 text-primary"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-primary text-lg">Filter by Property or Goal</h3>
+                            <p class="mt-2 text-neutral-600 dark:text-neutral-300">Browse ads for open houses, relocations, pre-sales, or investment deals.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="bg-primary/10 p-3 rounded-lg flex-shrink-0">
+                            <i data-lucide="book-open" class="w-6 h-6 text-primary"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-primary text-lg">Learn Before You Launch</h3>
+                            <p class="mt-2 text-neutral-600 dark:text-neutral-300">See what headlines, visuals, and CTAs converted in markets like yours.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <img src="{% marketing_image '1-Search.webp' %}" alt="Real Estate Ad Library" class="rounded-3xl w-full">
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature 2: Brand Understanding -->
+    <section class="container mx-auto py-16 px-4 md:px-6">
+        <div class="grid md:grid-cols-2 gap-24 items-center">
+            <div class="order-last md:order-first">
+                <img src="{% marketing_image '2-brand-details.webp' %}" alt="Brand Understanding" class="rounded-3xl w-full">
+            </div>
+            <div class="space-y-12">
+                <div>
+                    <h2 class="text-4xl font-bold text-primary leading-tight">Understands Your Voice</h2>
+                    <p class="mt-4 text-lg text-neutral-600 dark:text-neutral-300">Ad Heist learns your brand story, brokerage positioning, and service promises automatically.</p>
+                </div>
+                <div class="space-y-8">
+                    <div class="flex items-start gap-4">
+                        <div class="bg-primary/10 p-3 rounded-lg flex-shrink-0">
+                            <i data-lucide="scan" class="w-6 h-6 text-primary"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-primary text-lg">Smart Website Scan</h3>
+                            <p class="mt-2 text-neutral-600 dark:text-neutral-300">Captures testimonials, service areas, and listing types straight from your site.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="bg-primary/10 p-3 rounded-lg flex-shrink-0">
+                            <i data-lucide="message-circle" class="w-6 h-6 text-primary"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-primary text-lg">Voice Matching</h3>
+                            <p class="mt-2 text-neutral-600 dark:text-neutral-300">Keeps your tone warm, luxury, or data-driven to match your clientele.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature 3: Ad Creation & Editor -->
+    <section class="container mx-auto py-16 px-4 md:px-6">
+        <div class="grid md:grid-cols-2 gap-24 items-center">
+            <div class="space-y-12">
+                <div>
+                    <h2 class="text-4xl font-bold text-primary leading-tight">Create Campaigns in Minutes</h2>
+                    <p class="mt-4 text-lg text-neutral-600 dark:text-neutral-300">Build ad sets for new listings, price improvements, and nurture flows without waiting on agencies.</p>
+                </div>
+                <div class="space-y-8">
+                    <div class="flex items-start gap-4">
+                        <div class="bg-primary/10 p-3 rounded-lg flex-shrink-0">
+                            <i data-lucide="zap" class="w-6 h-6 text-primary"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-primary text-lg">Instant Variations</h3>
+                            <p class="mt-2 text-neutral-600 dark:text-neutral-300">Generate multiple hooks for single-family, condos, land, or multi-family listings.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="bg-primary/10 p-3 rounded-lg flex-shrink-0">
+                            <i data-lucide="edit-3" class="w-6 h-6 text-primary"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-primary text-lg">Precision AI Editor</h3>
+                            <p class="mt-2 text-neutral-600 dark:text-neutral-300">Adjust tone, compliance language, and CTA urgency without rebuilding.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <img src="{% marketing_image '3-creating-ads.webp' %}" alt="Ad Creation" class="rounded-3xl w-full">
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature 4: Industry AI -->
+    <section class="container mx-auto py-16 px-4 md:px-6">
+        <div class="grid md:grid-cols-2 gap-24 items-center">
+            <div class="order-last md:order-first">
+                <img src="{% marketing_image '4-ad-details.webp' %}" alt="Industry AI" class="rounded-3xl w-full">
+            </div>
+            <div class="space-y-12">
+                <div>
+                    <h2 class="text-4xl font-bold text-primary leading-tight">AI Tuned for Real Estate Growth</h2>
+                    <p class="mt-4 text-lg text-neutral-600 dark:text-neutral-300">Maximize showings, offer volume, and referral flywheels with industry-trained AI.</p>
+                </div>
+                <div class="space-y-8">
+                    <div class="flex items-start gap-4">
+                        <div class="bg-primary/10 p-3 rounded-lg flex-shrink-0">
+                            <i data-lucide="target" class="w-6 h-6 text-primary"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-primary text-lg">Market Intelligence</h3>
+                            <p class="mt-2 text-neutral-600 dark:text-neutral-300">Optimizes messaging for inventory shifts, interest-rate news, and neighborhood buzz.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="bg-primary/10 p-3 rounded-lg flex-shrink-0">
+                            <i data-lucide="bar-chart-3" class="w-6 h-6 text-primary"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-primary text-lg">Actionable Insights</h3>
+                            <p class="mt-2 text-neutral-600 dark:text-neutral-300">See which creatives drive highest viewing-to-offer ratios and repeat what works.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="container mx-auto py-16 px-4 md:px-6">
+        <div class="bg-primary/10 dark:bg-primary/20 rounded-3xl p-8 md:p-16 text-center">
+            <h2 class="text-4xl font-bold text-primary">Fill Your Calendar with Serious Clients</h2>
+            <p class="mt-4 text-lg text-neutral-600 dark:text-neutral-300 max-w-2xl mx-auto">
+                Join real estate agents using Ad Heist to launch polished campaigns, secure listings, and close faster.
+            </p>
+            <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a href="{% url 'account_signup' %}" class="inline-flex items-center justify-center rounded-lg px-8 py-4 text-lg font-medium text-white shadow-sm" style="background-color: #5C67F2;">
+                    Start Free Trial
+                </a>
+                <form method="post" action="{% provider_login_url 'google' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="inline-flex items-center justify-center rounded-lg border border-neutral-300 bg-white px-8 py-4 text-lg font-medium text-neutral-700 hover:bg-neutral-100 w-full sm:w-auto">
+                        <img src="{% static 'images/socialauth/google-logo.svg' %}" alt="Google" class="h-5 w-5 mr-3">
+                        Login with Google
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+</div>
+{% endblock %}
