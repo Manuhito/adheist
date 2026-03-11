@@ -31,6 +31,7 @@ urlpatterns = [
     path("saas-ltv-calculator/", views.saas_ltv_calculator, name="saas_ltv_calculator"),
     path("roas-calculator/", views.roas_calculator, name="roas_calculator"),
     path("online-marketing-conversion-calculator/", views.online_marketing_conversion_calculator, name="online_marketing_conversion_calculator"),
+    path("cpc-cpm-calculator/", views.cpc_cpm_calculator, name="cpc_cpm_calculator"),
     path("industries/", views.marketing_pages_index, name="marketing_pages_index"),
     path("industry/create-ngo-ads/", TemplateView.as_view(template_name="marketing_pages/ngo.html"), name="ngo_page"),
     path("industry/create-pharmacy-ads/", TemplateView.as_view(template_name="marketing_pages/pharmacy.html"), name="pharmacy_page"),

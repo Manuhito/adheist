@@ -28,6 +28,7 @@ class StaticViewSitemap(sitemaps.Sitemap):
             "web:saas_ltv_calculator",
             "web:roas_calculator",
             "web:online_marketing_conversion_calculator",
+            "web:cpc_cpm_calculator",
             "web:marketing_pages_index",
             "web:ngo_page",
             "web:pharmacy_page",
