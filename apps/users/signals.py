@@ -8,16 +8,30 @@ from django.utils import timezone
 from apps.users.models import CustomUser
 import posthog
 import logging
+import requests
 
 logger = logging.getLogger(__name__)
 
 
 @receiver(user_signed_up)
 def handle_sign_up(request, user, **kwargs):
-    # customize this function to do custom logic on sign up, e.g. send a welcome email
-    # or subscribe them to your mailing list.
-    # This example notifies the admins, in case you want to keep track of sign ups
-    _notify_admins_of_signup(user)
+    signup_method = "email"
+    sociallogin = kwargs.get("sociallogin")
+    if sociallogin and getattr(sociallogin, "account", None):
+        signup_method = getattr(sociallogin.account, "provider", "social") or "social"
+    else:
+        social_login = request.session.get("socialaccount_login") if request and hasattr(request, "session") else None
+        if isinstance(social_login, dict):
+            signup_method = social_login.get("provider", "social")
+
+    timestamp = timezone.now().isoformat()
+    channels = _get_signup_notification_channels()
+
+    if "MAIL" in channels:
+        _notify_admins_of_signup(user, signup_method, timestamp)
+
+    if "SLACK" in channels:
+        _notify_slack_of_signup(user, signup_method, timestamp)
 
 
 @receiver(email_confirmed)
@@ -30,12 +44,86 @@ def update_user_email(sender, request, email_address, **kwargs):
     email_address.set_as_primary()
 
 
-def _notify_admins_of_signup(user):
+def _get_signup_notification_channels():
+    raw_channels = getattr(settings, "SIGNUP_NOTIFICATION_CHANNELS", "MAIL")
+    channels = {channel.strip().upper() for channel in raw_channels.split(",") if channel.strip()}
+    valid_channels = {"MAIL", "SLACK"}
+    selected = channels & valid_channels
+
+    if not selected:
+        logger.warning(
+            f"Invalid SIGNUP_NOTIFICATION_CHANNELS={raw_channels!r}. Falling back to MAIL."
+        )
+        return {"MAIL"}
+
+    return selected
+
+
+def _notify_admins_of_signup(user, signup_method, timestamp):
     mail_admins(
         f"Yowsers, someone signed up for {settings.PROJECT_METADATA['NAME']}!",
-        "Email: {}".format(user.email),
+        "Email: {}\nUser ID: {}\nSignup method: {}\nTimestamp: {}".format(
+            user.email,
+            user.id,
+            signup_method,
+            timestamp,
+        ),
         fail_silently=True,
     )
+
+
+def _notify_slack_of_signup(user, signup_method, timestamp):
+    app_env = getattr(settings, "APP_ENV", "dev")
+    env_prefix = f"[{app_env.upper()}]"
+    title = f"{env_prefix} New User Signup"
+
+    if app_env == "dev":
+        logger.info(f"Slack signup notification skipped in development environment: {title}")
+        return False
+
+    webhook_url = getattr(settings, "SIGNUP_SLACK_WEBHOOK_URL", "") or getattr(settings, "SLACK_WEBHOOK_URL", "")
+    if not webhook_url:
+        logger.warning("SIGNUP_SLACK_WEBHOOK_URL/SLACK_WEBHOOK_URL not configured. Signup notification not sent.")
+        return False
+
+    blocks = [
+        {
+            "type": "header",
+            "text": {
+                "type": "plain_text",
+                "text": title,
+                "emoji": True,
+            },
+        },
+        {
+            "type": "section",
+            "fields": [
+                {"type": "mrkdwn", "text": f"*Email:*\n{user.email}"},
+                {"type": "mrkdwn", "text": f"*User ID:*\n{user.id}"},
+                {"type": "mrkdwn", "text": f"*Signup Method:*\n{signup_method}"},
+                {"type": "mrkdwn", "text": f"*Timestamp:*\n{timestamp}"},
+            ],
+        },
+    ]
+
+    try:
+        response = requests.post(
+            webhook_url,
+            json={"blocks": blocks},
+            timeout=5,
+        )
+    except Exception as exc:
+        logger.error(f"Error sending Slack signup notification: {exc}")
+        return False
+
+    if response.status_code != 200:
+        logger.error(
+            "Error sending Slack signup notification. "
+            f"Status: {response.status_code}, Response: {response.text[:200]}"
+        )
+        return False
+
+    return True
 
 
 @receiver(pre_save, sender=CustomUser)
