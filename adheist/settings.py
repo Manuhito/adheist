@@ -290,6 +290,12 @@ if APP_ENV == 'dev':
     EMAIL_BACKEND = "django.core.mail.backends.dummy.EmailBackend"  # No emails sent in dev
 else:
     EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
+
+SLACK_WEBHOOK_URL = env("SLACK_WEBHOOK_URL", default="")
+# Comma-separated channels. Options: "MAIL", "SLACK", or "MAIL,SLACK".
+SIGNUP_NOTIFICATION_CHANNELS = env("SIGNUP_NOTIFICATION_CHANNELS", default="MAIL")
+SIGNUP_SLACK_WEBHOOK_URL = env("SIGNUP_SLACK_WEBHOOK_URL", default="")
+
 ANYMAIL = {
     "RESEND_API_KEY": env("RESEND_API_KEY", default=None),
     "RESEND_API_URL": env("RESEND_API_URL", default="https://api.resend.com"),
