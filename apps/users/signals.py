@@ -16,9 +16,13 @@ logger = logging.getLogger(__name__)
 @receiver(user_signed_up)
 def handle_sign_up(request, user, **kwargs):
     signup_method = "email"
-    social_login = request.session.get("socialaccount_login") if request and hasattr(request, "session") else None
-    if isinstance(social_login, dict):
-        signup_method = social_login.get("provider", "social")
+    sociallogin = kwargs.get("sociallogin")
+    if sociallogin and getattr(sociallogin, "account", None):
+        signup_method = getattr(sociallogin.account, "provider", "social") or "social"
+    else:
+        social_login = request.session.get("socialaccount_login") if request and hasattr(request, "session") else None
+        if isinstance(social_login, dict):
+            signup_method = social_login.get("provider", "social")
 
     timestamp = timezone.now().isoformat()
     channels = _get_signup_notification_channels()
