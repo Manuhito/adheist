@@ -396,26 +396,88 @@ class ReplicateImageGenerationService:
             
         except replicate.exceptions.ReplicateError as e:
             raw_error = str(e)
-            error_msg = f"Replicate API error: {raw_error}"
-            logger.exception(error_msg)
+            prediction = getattr(e, "prediction", None)
 
-            lowered = raw_error.lower()
+            prediction_id = None
+            prediction_status = None
+            prediction_error = None
+            prediction_logs = None
+
+            if prediction:
+                if isinstance(prediction, dict):
+                    prediction_id = prediction.get("id")
+                    prediction_status = prediction.get("status")
+                    prediction_error = prediction.get("error")
+                    prediction_logs = prediction.get("logs")
+                else:
+                    prediction_id = getattr(prediction, "id", None)
+                    prediction_status = getattr(prediction, "status", None)
+                    prediction_error = getattr(prediction, "error", None)
+                    prediction_logs = getattr(prediction, "logs", None)
+
+            combined_error_text = " | ".join(
+                part for part in [raw_error, str(prediction_error or ""), str(prediction_logs or "")] if part
+            ).lower()
+
             is_throttled = (
-                "status: 429" in lowered
-                or "request was throttled" in lowered
-                or "rate limited" in lowered
+                "status: 429" in combined_error_text
+                or "request was throttled" in combined_error_text
+                or "rate limited" in combined_error_text
+            )
+            is_timeout = (
+                "readtimeout" in combined_error_text
+                or "timeout" in combined_error_text
+                or "timed out" in combined_error_text
+            )
+            is_transient_failure = (
+                "temporar" in combined_error_text
+                or "connection reset" in combined_error_text
+                or "upstream" in combined_error_text
+                or "internal server error" in combined_error_text
+                or "status: 5" in combined_error_text
             )
 
+            is_retryable = is_throttled or is_timeout or is_transient_failure
+            status_code = 429 if is_throttled else 500
+
+            error_msg = (
+                f"Replicate API error: {raw_error or 'No message provided'}"
+                f" | prediction_id={prediction_id}"
+                f" | prediction_status={prediction_status}"
+                f" | prediction_error={prediction_error or ''}"
+            )
+            logger.exception(error_msg)
+
             return {
                 "error": error_msg,
-                "status_code": 429 if is_throttled else 500
+                "status_code": status_code,
+                "is_retryable": is_retryable,
+                "error_type": "replicate_api_error",
+                "prediction_id": prediction_id,
+                "prediction_status": prediction_status,
+                "prediction_error": prediction_error,
+                "prediction_logs": (prediction_logs[:1000] if isinstance(prediction_logs, str) else prediction_logs),
             }
         except Exception as e:
-            error_msg = f"Unexpected error in Replicate nano-banana service: {str(e)}"
+            raw_error = str(e)
+            lowered = raw_error.lower()
+            is_retryable = (
+                "timeout" in lowered
+                or "timed out" in lowered
+                or "temporar" in lowered
+                or "connection reset" in lowered
+            )
+
+            error_msg = (
+                f"Unexpected error in Replicate nano-banana service: {raw_error}"
+                f" | error_type={type(e).__name__}"
+            )
             logger.exception(error_msg)
             return {
                 "error": error_msg,
-                "status_code": 500
+                "status_code": 500,
+                "is_retryable": is_retryable,
+                "error_type": type(e).__name__,
             }
 
 
