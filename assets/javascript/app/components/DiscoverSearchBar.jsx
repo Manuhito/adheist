@@ -72,14 +72,10 @@ function DiscoverSearchBar({ onSearch, onFiltersApply }) {
         const companyParam = urlParams.get('company');
 
         if (companyParam) {
-          console.log(`🔗 DiscoverSearchBar: Found company parameter in URL: ${companyParam}`);
           // Find the company in the loaded list
           const matchedCompany = actions.find(action => action.pageId === companyParam);
           if (matchedCompany) {
-            console.log(`✅ Found matching company:`, matchedCompany);
             setSelectedCompany(matchedCompany);
-          } else {
-            console.log(`⚠️ Company ${companyParam} not found in company list`);
           }
         }
       })

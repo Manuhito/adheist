@@ -166,7 +166,6 @@ const MediaItem = ({ item, className, onClick, isSelected, userPermissions = { i
     const handleToggleFavorite = (e) => {
         e.stopPropagation(); // Prevent triggering the parent onClick
         e.preventDefault(); // Prevent default behavior
-        console.log('Star icon clicked in MediaItem for item:', item);
         if (onToggleFavorite && typeof onToggleFavorite === 'function') {
             onToggleFavorite(item);
         } else {
@@ -179,7 +178,6 @@ const MediaItem = ({ item, className, onClick, isSelected, userPermissions = { i
     const handleDeactivateImage = (e) => {
         e.stopPropagation(); // Prevent triggering the parent onClick
         e.preventDefault(); // Prevent default behavior
-        console.log('Trash icon clicked in MediaItem for item:', item);
         if (onDeactivateImage && typeof onDeactivateImage === 'function') {
             onDeactivateImage(item);
         } else {
@@ -411,7 +409,6 @@ const GalleryModal = ({
     const handleToggleFavorite = (e) => {
         e.stopPropagation(); // Prevent triggering the parent onClick
         e.preventDefault(); // Prevent default behavior
-        console.log('Star icon clicked in GalleryModal for item:', selectedItem);
         if (onToggleFavorite && typeof onToggleFavorite === 'function') {
             onToggleFavorite(selectedItem);
         } else {
@@ -424,7 +421,6 @@ const GalleryModal = ({
     const handleDeactivateImage = (e) => {
         e.stopPropagation(); // Prevent triggering the parent onClick
         e.preventDefault(); // Prevent default behavior
-        console.log('Trash icon clicked in GalleryModal for item:', selectedItem);
         if (onDeactivateImage && typeof onDeactivateImage === 'function') {
             onDeactivateImage(selectedItem);
             // Close the modal after deactivating the image
@@ -1021,8 +1017,6 @@ const InteractiveBentoGallery = ({
         if (onItemSelect && typeof onItemSelect === 'function') {
             onItemSelect(item);
         }
-
-        console.log('Selected ad style:', item);
     };
 
     const handleCardSelect = (item) => {
@@ -1034,8 +1028,6 @@ const InteractiveBentoGallery = ({
 
     // Handle toggling favorite status
     const handleToggleFavorite = async (item) => {
-        console.log('Toggle favorite clicked for item:', item);
-
         // Check if we have the necessary data
         if (!item) {
             console.error('Item is undefined');
@@ -1060,8 +1052,6 @@ const InteractiveBentoGallery = ({
 
         setIsLoading(true);
         try {
-            console.log('Sending toggle favorite request for adlibrary ID:', adlibraryId);
-
             const response = await fetch('/ads/api/toggle-favorite/', {
                 method: 'POST',
                 headers: {
@@ -1079,7 +1069,6 @@ const InteractiveBentoGallery = ({
             }
 
             const data = await response.json();
-            console.log('Toggled favorite status response:', data);
 
             // Update the item in local state
             const updatedItem = { ...item, is_fav: data.is_fav };
@@ -1104,8 +1093,6 @@ const InteractiveBentoGallery = ({
 
     // Handle deactivating an image
     const handleDeactivateImage = async (item) => {
-        console.log('Deactivate image clicked for item:', item);
-
         // Check if we have the necessary data
         if (!item) {
             console.error('Item is undefined');
@@ -1137,8 +1124,6 @@ const InteractiveBentoGallery = ({
 
         setIsLoading(true);
         try {
-            console.log('Sending deactivate image request for:', { adlibraryId, imageUrl });
-
             const response = await fetch('/ads/api/deactivate-image/', {
                 method: 'POST',
                 headers: {
@@ -1156,8 +1141,7 @@ const InteractiveBentoGallery = ({
                 throw new Error(`Failed to deactivate image: ${errorText}`);
             }
 
-            const data = await response.json();
-            console.log('Deactivated image response:', data);
+            await response.json();
 
             // Remove the item from the UI immediately
             // First, close the modal if it's open
@@ -1173,8 +1157,6 @@ const InteractiveBentoGallery = ({
                 // Force a re-render
                 setIsLoading(prev => !prev);
             }
-
-            console.log('Image has been deactivated successfully');
         } catch (error) {
             console.error('Error deactivating image:', error);
             alert('Error deactivating image. See console for details.');
