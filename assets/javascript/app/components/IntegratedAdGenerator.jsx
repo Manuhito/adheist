@@ -226,8 +226,11 @@ const IntegratedAdGenerator = ({ adRequestId, selectedAdLibraryItem, onClose, on
     setAttachedImages((prev) => prev.filter((image) => image.id !== attachmentId));
   };
 
+  const selectedAdLibraryId = selectedAdLibraryItem?.original_id || selectedAdLibraryItem?.id || adLibraryData?.id;
+  const canGenerate = !isGenerating && !!selectedBrand && !!selectedAdLibraryId;
+
   const handleGenerate = async () => {
-    if (isGeneratingRef.current || !selectedBrand || !userPrompt.trim()) return;
+    if (isGeneratingRef.current || !selectedBrand || !selectedAdLibraryId) return;
 
     isGeneratingRef.current = true;
     setIsGenerating(true);
@@ -259,10 +262,7 @@ const IntegratedAdGenerator = ({ adRequestId, selectedAdLibraryItem, onClose, on
         updateFormData.append('brand_id', selectedBrand.id);
       }
 
-      const adLibraryId = selectedAdLibraryItem?.original_id || selectedAdLibraryItem?.id || adLibraryData?.id;
-      if (adLibraryId) {
-        updateFormData.append('ad_library', adLibraryId);
-      }
+      updateFormData.append('ad_library', selectedAdLibraryId);
 
       const attachmentFields = [
         'product_image_1',
@@ -556,20 +556,20 @@ const IntegratedAdGenerator = ({ adRequestId, selectedAdLibraryItem, onClose, on
                 <div className="relative group">
                   <button
                     type="button"
-                    disabled={isGenerating || !selectedBrand || !userPrompt.trim()}
+                    disabled={!canGenerate}
                     onClick={handleGenerate}
                     className={cn(
                       "rounded-lg p-2 bg-white/70 dark:bg-white/5",
                       "focus-visible:ring-1 focus-visible:ring-offset-0 focus-visible:ring-blue-500",
                       !isGenerating && "hover:bg-white/90 dark:hover:bg-white/10",
-                      (isGenerating || !selectedBrand || !userPrompt.trim()) && "opacity-50 cursor-not-allowed"
+                      !canGenerate && "opacity-50 cursor-not-allowed"
                     )}
                     aria-label="Generate"
                   >
                     <ArrowRight
                       className={cn(
                         "w-4 h-4 dark:text-white transition-opacity duration-200",
-                        userPrompt.trim() && selectedBrand ? "opacity-100" : "opacity-30"
+                        canGenerate ? "opacity-100" : "opacity-30"
                       )}
                     />
                   </button>
