@@ -166,7 +166,6 @@ function DiscoverContent() {
       .then(data => {
         // Actualizar estado de paginación
         if (data && data.pagination) {
-          console.log(`📊 Page ${data.pagination.current_page} loaded - Has next: ${data.pagination.has_next}, Total: ${data.pagination.total_count}`);
           setHasMorePages(data.pagination.has_next);
           setCurrentPage(data.pagination.current_page);
         } else {
@@ -199,9 +198,7 @@ function DiscoverContent() {
         // Si estamos añadiendo más resultados (append), concatenar con los existentes
         if (append && page > 1) {
           setFilteredResults(prevResults => {
-            const combined = [...prevResults, ...newResults];
-            console.log(`📈 Total results: ${combined.length}`);
-            return combined;
+            return [...prevResults, ...newResults];
           });
         } else {
           setFilteredResults(newResults);
@@ -283,7 +280,6 @@ function DiscoverContent() {
 
   // Función para manejar la búsqueda desde el componente de búsqueda
   const handleSearch = (query) => {
-    console.log(`🔎 handleSearch called with:`, query, typeof query);
     setSearchQuery(query);
     setCurrentPage(1); // Reiniciar la paginación
     fetchFilteredResultsWithQuery(1, false, query);
@@ -291,7 +287,6 @@ function DiscoverContent() {
 
   // Función para manejar los filtros aplicados
   const handleFiltersApply = (filterParams) => {
-    console.log(`🔧 handleFiltersApply called with:`, filterParams);
     setCurrentPage(1);
 
     // Clear searchQuery when filters are cleared
@@ -316,21 +311,17 @@ function DiscoverContent() {
     }
 
     const finalUrl = `/ads/adlibraries/?${params.toString()}`;
-    console.log(`🌐 Making API call to: ${finalUrl}`);
 
     // Call the API with filters
     setIsLoading(true);
     fetch(finalUrl)
       .then(response => response.json())
       .then(data => {
-        console.log(`📊 API Response:`, data);
         if (data && data.adlibraries) {
-          console.log(`✅ Setting ${data.adlibraries.length} filtered results`);
           setFilteredResults(data.adlibraries);
           setHasMorePages(data.pagination && data.pagination.has_next);
           setCurrentPage(1);
         } else {
-          console.log(`❌ No results in API response, setting empty array`);
           setFilteredResults([]);
           setHasMorePages(false);
         }
@@ -411,27 +402,23 @@ function DiscoverContent() {
   const loadMoreResults = () => {
     if (!isLoading && !isLoadingMore && hasMorePages) {
       const nextPage = currentPage + 1;
-      console.log(`📄 Loading page ${nextPage}`);
       fetchFilteredResultsWithQuery(nextPage, true, null);
     }
   };
 
   // Handle gallery item selection - preview only
   const handleGalleryItemSelect = (item) => {
-    console.log('Selected gallery item:', item);
     setSelectedAdLibrary(item.id);
     setSelectedAdLibraryItem(item);
   };
 
   // Handle toggle favorite functionality (placeholder for now)
   const handleToggleFavorite = async (item) => {
-    console.log('Toggle favorite for item:', item);
     // TODO: Implement favorite toggle API call
   };
 
   // Handle deactivate image functionality (placeholder for now)
   const handleDeactivateImage = async (item) => {
-    console.log('Deactivate image for item:', item);
     // TODO: Implement deactivate image API call
   };
 
@@ -448,7 +435,6 @@ function DiscoverContent() {
 
       // Si estamos a 200px o menos del final, cargar más resultados
       if (distanceFromBottom <= 200) {
-        console.log(`🎯 Loading more results...`);
         loadMoreResults();
       }
     };

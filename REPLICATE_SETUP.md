@@ -11,13 +11,13 @@ Se ha implementado una integración completa con Replicate API usando el modelo 
 REPLICATE_API_KEY = env("REPLICATE_API_KEY", default="")
 ```
 
-**Nota**: Se usa el SDK de Python de Replicate (`replicate` package) en lugar de la REST API directa.
+**Nota**: Se usa el SDK de Python de Replicate (`replicate` package) con `replicate.run(...)`.
 
 ### 2. **Modelo de Configuración (apps/aiinterface/models.py)**
 - `ReplicateConfiguration`: Modelo singleton para gestionar configuración
 - Campos configurables:
-  - `replicate_model`: Modelo a usar (default: "black-forest-labs/flux-1.1-pro")
-  - `replicate_model_version`: Versión específica del modelo (opcional)
+  - `image_replicate_model`: Modelo a usar (default: `google/nano-banana`)
+  - `image_replicate_model_version`: Versión específica del modelo (opcional)
   - `image_generation_price`: Precio por imagen (default: $0.04)
   - `timeout_seconds`: Timeout para generación (default: 300s)
   - `polling_interval_seconds`: Intervalo de polling (default: 2s)
@@ -26,12 +26,13 @@ REPLICATE_API_KEY = env("REPLICATE_API_KEY", default="")
 ### 3. **Servicio (apps/aiinterface/services.py)**
 - `ReplicateImageGenerationService`: Servicio para generación de imágenes
 - Características:
-  - Conversión automática de imágenes a base64
-  - Soporte para múltiples imágenes (hasta 16)
-  - Polling asíncrono para obtener resultados
+  - Entrada por `image_input` con URLs HTTP/HTTPS (no rutas locales)
+  - Soporte para múltiples imágenes de contexto
+  - Manejo de salida compatible con `nano-banana` (URL directa de imagen)
   - Manejo robusto de errores
-  - Limpieza automática de archivos temporales
   - Formato de respuesta compatible con sistema existente
+  - Extracción de diagnóstico de predicción (`prediction_id`, `prediction_status`, `prediction_error`, `prediction_logs`)
+  - Clasificación de fallos transitorios como `is_retryable` (timeout/throttle/errores temporales)
 
 ### 4. **Tarea Celery (apps/aiinterface/tasks.py)**
 - `generate_image_task_replicate`: Tarea asíncrona para generación
@@ -41,7 +42,7 @@ REPLICATE_API_KEY = env("REPLICATE_API_KEY", default="")
   - Tracking en PostHog con identificador 'service': 'replicate'
   - Notificaciones Slack en caso de error
   - Guardado de metadata en AdRequestVersion
-  - Reintentos automáticos (max 3)
+  - Reintentos automáticos (max 3) en errores `retryable` (incluye timeout/transitorio), no solo 429
 
 ### 5. **Admin de Django (apps/aiinterface/admin.py)**
 - Panel de administración para `ReplicateConfiguration`
@@ -57,8 +58,9 @@ REPLICATE_API_KEY = env("REPLICATE_API_KEY", default="")
 Añadir al archivo `.env`:
 ```bash
 REPLICATE_API_KEY=tu_api_key_aqui
-REPLICATE_API_URL=https://api.replicate.com/v1
 ```
+
+`REPLICATE_API_URL` no es requerido por el flujo actual basado en SDK.
 
 ### 2. Migraciones
 Ejecutar migraciones para crear el modelo:
@@ -71,7 +73,7 @@ python manage.py migrate
 1. Acceder al admin de Django: `/admin/`
 2. Ir a "Replicate Configuration"
 3. Configurar:
-   - Modelo (ej: "black-forest-labs/flux-1.1-pro")
+   - Modelo (ej: `google/nano-banana-2`)
    - Precio por imagen
    - Timeouts según necesidad
 
@@ -82,7 +84,7 @@ El sistema **ya está configurado** para usar Replicate en lugar de OpenAI:
 ### Archivos Actualizados:
 1. **`apps/ads/views.py`**:
    - `adrequest_version_create`: Usa `generate_image_task_replicate`
-   - `adrequest_version_revision`: Usa `generate_image_task_replicate`
+   - `adrequest_revision_create`: Usa `generate_image_task_replicate`
 
 2. **`apps/aiinterface/api.py`**:
    - Endpoint `generate_image`: Usa `generate_image_task_replicate`
@@ -103,19 +105,19 @@ task = generate_image_task.delay(...)
 
 | Aspecto | OpenAI | Replicate |
 |---------|--------|-----------|
-| API | SDK oficial | REST API |
-| Imágenes | Archivos binarios | Base64 |
-| Respuesta | Inmediata | Polling asíncrono |
+| API | SDK oficial | SDK oficial (`replicate.run`) |
+| Imágenes de entrada | Archivos/URLs (se procesan a binario para OpenAI edit) | URLs HTTP/HTTPS en `image_input` |
+| Respuesta | Objeto con `b64_json` | URL de salida (string en nano-banana) |
 | Metadata | `service` no incluido | `service: 'replicate'` |
 | Pricing | Por tokens | Por imagen |
-| Timeout | Default SDK | Configurable (300s) |
+| Retry | Genérico según tarea | Reintento condicional por `is_retryable`/429 |
 
 ## Metadata Guardada
 
 En `AdRequestVersion.openai_response_metadata`:
 ```json
 {
-  "model": "black-forest-labs/flux-1.1-pro",
+  "model": "google/nano-banana-2",
   "service": "replicate",
   "prediction_id": "abc123...",
   "generation_time_seconds": 45.2,
@@ -134,7 +136,7 @@ Evento: `'Ad Generated'`
 properties={
     'version_type': 'initial' | 'revision',
     'service': 'replicate',
-    'model': 'black-forest-labs/flux-1.1-pro',
+    'model': 'google/nano-banana-2',
     'total_cost': '0.04',
     'generated_image': 'https://...',
     'ad_request_id': 123,
@@ -155,7 +157,13 @@ Errores incluyen contexto:
     "has_images": True,
     "service": "replicate",
     "status_code": 500,
-    "response_data": "..."
+    "response_data": "...",
+    "is_retryable": True,
+    "error_type": "replicate_api_error",
+    "prediction_id": "...",
+    "prediction_status": "failed",
+    "prediction_error": "...",
+    "prediction_logs": "..."
 }
 ```
 
@@ -187,12 +195,17 @@ La arquitectura permite:
 - Reiniciar servidor Django
 
 **Error: "Replicate prediction timed out"**
-- Aumentar `timeout_seconds` en admin
+- Se marca como `is_retryable=True` y la tarea reintenta automáticamente (hasta `max_retries`)
+- Revisar `prediction_logs` para confirmar causa (`ReadTimeout`, upstream, etc.)
 - Verificar estado de Replicate API
 
 **Error: "No prediction URL returned"**
 - Verificar formato del modelo
 - Revisar logs de Replicate
+
+**Error con `ModelError` sin mensaje**
+- Consultar el prediction con su `prediction_id` (API de Replicate)
+- Revisar `prediction_logs`/`prediction_status` guardados en contexto y `error_logs`
 
 ## Próximos Pasos Sugeridos
 

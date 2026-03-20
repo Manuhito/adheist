@@ -732,7 +732,8 @@ def generate_image_task_replicate(
                 logger.error(f"Replicate image generation failed: {error_message}")
 
                 status_code = result.get("status_code")
-                if status_code == 429:
+                is_retryable = bool(result.get("is_retryable", False) or status_code == 429)
+                if is_retryable:
                     if self.request.retries < self.max_retries:
                         countdown = min(20, 2 ** self.request.retries) + random.random()
                         raise self.retry(exc=Exception(error_message), countdown=countdown)
@@ -745,16 +746,22 @@ def generate_image_task_replicate(
                     "has_images": bool(image_urls),
                     "status_code": result.get("status_code"),
                     "response_data": result.get("response_data", "")[:200] if result.get("response_data") else "",
-                    "service": "replicate"
+                    "service": "replicate",
+                    "is_retryable": is_retryable,
+                    "error_type": result.get("error_type"),
+                    "prediction_id": result.get("prediction_id"),
+                    "prediction_status": result.get("prediction_status"),
+                    "prediction_error": result.get("prediction_error"),
+                    "prediction_logs": result.get("prediction_logs", "")[:500] if result.get("prediction_logs") else "",
                 }
 
-                if status_code == 429 and self.request.retries >= self.max_retries:
+                if is_retryable and self.request.retries >= self.max_retries:
                     send_slack_notification(
                         error_message=error_message,
                         context=context,
-                        title="Replicate Image Generation Error (429 - retries exhausted)"
+                        title="Replicate Image Generation Error (retryable - retries exhausted)"
                     )
-                elif status_code != 429:
+                elif not is_retryable:
                     send_slack_notification(
                         error_message=error_message,
                         context=context,
@@ -765,7 +772,16 @@ def generate_image_task_replicate(
                     try:
                         version = AdRequestVersion.objects.get(id=version_id)
                         version.status = version.STATUS_FAILED
-                        version.error_logs = f"Replicate error: {error_message}"
+                        version.error_logs = (
+                            f"Replicate error: {error_message}\n"
+                            f"status_code: {result.get('status_code')}\n"
+                            f"is_retryable: {is_retryable}\n"
+                            f"error_type: {result.get('error_type')}\n"
+                            f"prediction_id: {result.get('prediction_id')}\n"
+                            f"prediction_status: {result.get('prediction_status')}\n"
+                            f"prediction_error: {result.get('prediction_error')}\n"
+                            f"prediction_logs: {str(result.get('prediction_logs', ''))[:1000]}"
+                        )
                         version.save(update_fields=['status', 'error_logs'])
                     except Exception as e:
                         logger.exception(f"Error updating AdRequestVersion with error: {str(e)}")
