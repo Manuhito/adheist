@@ -6,91 +6,12 @@
 {% block extra_js %}
 {{ block.super }}
 <script>
-  // Pass pricing data to the React component
-  window.__PRICING_DATA__ = {{ pricing_data | safe }};
+    // Pass pricing data to the React component
+    window.__PRICING_DATA__ = {{ pricing_data | safe }};
 </script>
 <script src="{% static 'js/pricing-bundle.js' %}?v={{ STATIC_VERSION }}"></script>
 {% endblock %}
 
 {% block content %}
-<div id="pricing-section-container"></div>
-
-<!-- Fallback pricing section in case JavaScript doesn't load -->
-<div class="container mx-auto py-12 px-4">
-    <div class="text-center mb-12">
-        <h1 class="text-4xl font-bold mb-4">Pricing Plans</h1>
-        <p class="text-xl text-gray-500">Choose the perfect plan for your needs</p>
-    </div>
-    
-    <div class="flex flex-wrap justify-center gap-8">
-        <!-- Free/Beta Plan -->
-        <div class="bg-card rounded-lg shadow-lg p-8 max-w-sm">
-            <h2 class="text-2xl font-bold mb-4">{{ free_plan_name }}</h2>
-            <p class="text-4xl font-bold mb-4">$0<span class="text-lg text-gray-500">/month</span></p>
-            <p class="mb-2 text-gray-500">Perfect for testing Ad Heist with your first campaigns</p>
-            <p class="text-sm text-gray-400 mb-6">* No credit card required</p>
-            
-            <ul class="mb-8 space-y-2">
-                <li class="flex items-center"><span class="mr-2">✓</span> Search 1M+ Ads Library</li>
-                <li class="flex items-center"><span class="mr-2">✓</span> Unlimited Ads (Providing Feedback)</li>
-                <li class="flex items-center"><span class="mr-2">✓</span> 20 BrandKits</li>
-                <li class="flex items-center"><span class="mr-2">✓</span> 5 GB of assets</li>
-            </ul>
-            
-            <a href="{% url 'account_signup' %}" class="block w-full py-3 px-4 bg-primary text-white text-center rounded-md hover:bg-primary-dark transition">Get Started</a>
-        </div>
-        
-        {% if not is_beta_pricing %}
-        <!-- Starter Plan -->
-        <div class="bg-card rounded-lg shadow-lg p-8 max-w-sm">
-            <h2 class="text-2xl font-bold mb-4">Starter</h2>
-            <p class="text-4xl font-bold mb-4">$129<span class="text-lg text-gray-500">/month</span></p>
-            <p class="mb-6 text-gray-500">Essential features for small businesses</p>
-            
-            <ul class="mb-8 space-y-2">
-                <li class="flex items-center"><span class="mr-2">✓</span> Search 1M+ Ads Library</li>
-                <li class="flex items-center"><span class="mr-2">✓</span> 4,000 Credits</li>
-                <li class="flex items-center"><span class="mr-2">✓</span> 40 BrandKits</li>
-                <li class="flex items-center"><span class="mr-2">✓</span> 5 GB of assets</li>
-            </ul>
-            
-            <a href="{% url 'account_signup' %}" class="block w-full py-3 px-4 bg-primary text-white text-center rounded-md hover:bg-primary-dark transition">Upgrade to Starter</a>
-        </div>
-        
-        <!-- Pro Plan -->
-        <div class="bg-card rounded-lg shadow-lg p-8 max-w-sm border-2 border-primary">
-            <div class="bg-primary text-white px-3 py-1 rounded-full text-sm font-medium inline-block mb-2">Most Popular</div>
-            <h2 class="text-2xl font-bold mb-4">Pro</h2>
-            <p class="text-4xl font-bold mb-4">$299<span class="text-lg text-gray-500">/month</span></p>
-            <p class="mb-6 text-gray-500">Advanced features for professionals</p>
-            
-            <ul class="mb-8 space-y-2">
-                <li class="flex items-center"><span class="mr-2">✓</span> Search 1M+ Ads Library</li>
-                <li class="flex items-center"><span class="mr-2">✓</span> 10,000 Credits</li>
-                <li class="flex items-center"><span class="mr-2">✓</span> 100 BrandKits</li>
-                <li class="flex items-center"><span class="mr-2">✓</span> 10 GB of assets</li>
-            </ul>
-            
-            <a href="{% url 'account_signup' %}" class="block w-full py-3 px-4 bg-primary text-white text-center rounded-md hover:bg-primary-dark transition">Upgrade to Pro</a>
-        </div>
-        
-        <!-- Enterprise Plan -->
-        <div class="bg-card rounded-lg shadow-lg p-8 max-w-sm">
-            <h2 class="text-2xl font-bold mb-4">Enterprise</h2>
-            <p class="text-4xl font-bold mb-4">Custom<span class="text-lg text-gray-500">/month</span></p>
-            <p class="mb-6 text-gray-500">For large organizations</p>
-            
-            <ul class="mb-8 space-y-2">
-                <li class="flex items-center"><span class="mr-2">✓</span> Unlimited ad requests</li>
-                <li class="flex items-center"><span class="mr-2">✓</span> Custom templates</li>
-                <li class="flex items-center"><span class="mr-2">✓</span> Dedicated support</li>
-                <li class="flex items-center"><span class="mr-2">✓</span> API access</li>
-                <li class="flex items-center"><span class="mr-2">✓</span> Advanced analytics</li>
-            </ul>
-            
-            <a href="{% url 'account_signup' %}" class="block w-full py-3 px-4 bg-primary text-white text-center rounded-md hover:bg-primary-dark transition">Contact Sales</a>
-        </div>
-        {% endif %}
-    </div>
-</div>
+<!-- Content intentionally empty: Pricing React app mounts in #page-content-mount -->
 {% endblock %}
